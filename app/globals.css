@@ -1108,3 +1108,24 @@ body{
     min-height:205px !important;
   }
 }
+
+
+/* Hero seam fix — remove visible mid-hero gradient boundary */
+.concept-master-hero-overlay{
+  background:
+    linear-gradient(90deg,
+      rgba(6,8,7,.985) 0%,
+      rgba(6,8,7,.95) 14%,
+      rgba(6,8,7,.88) 24%,
+      rgba(6,8,7,.76) 34%,
+      rgba(6,8,7,.61) 44%,
+      rgba(6,8,7,.43) 54%,
+      rgba(6,8,7,.27) 64%,
+      rgba(6,8,7,.14) 74%,
+      rgba(6,8,7,.06) 84%,
+      rgba(6,8,7,.015) 100%),
+    linear-gradient(180deg,
+      rgba(4,6,5,.02) 0%,
+      rgba(4,6,5,.02) 64%,
+      rgba(4,6,5,.22) 100%) !important;
+}
