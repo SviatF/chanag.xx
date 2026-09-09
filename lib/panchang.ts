@@ -1,8 +1,8 @@
 import { City } from "./cities";
-import { createDefaultSweData } from "@typescriptify/sweph/types";
-import { sweCalc, sweClose, sweSetSidMode } from "@typescriptify/sweph/sweph";
-import { sweRiseTrans } from "@typescriptify/sweph/swecl";
-import { julDay, revJul } from "@typescriptify/sweph/swedate";
+import { createDefaultSweData } from "@typescriptify/sweph/dist/types.js";
+import { sweCalc, sweClose, sweSetSidMode } from "@typescriptify/sweph/dist/sweph.js";
+import { sweRiseTrans } from "@typescriptify/sweph/dist/swecl.js";
+import { julDay, revJul } from "@typescriptify/sweph/dist/swedate.js";
 import {
   SE_SUN,
   SE_MOON,
@@ -13,7 +13,7 @@ import {
   SE_GREG_CAL,
   SE_CALC_RISE,
   SE_CALC_SET,
-} from "@typescriptify/sweph/constants";
+} from "@typescriptify/sweph/dist/constants.js";
 
 export type TimeWindow = { start: string; end: string };
 
