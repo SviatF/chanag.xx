@@ -25,16 +25,23 @@ export type GscTrafficSnapshot={
   queries:GscRow[];
 };
 
+const GOOGLE_TOKEN_URL="https://oauth2.googleapis.com/token";
+const GSC_SCOPE="https://www.googleapis.com/auth/webmasters.readonly";
+
 export function getGscConnectionStatus(){
   const required={
-    GOOGLE_CLIENT_ID:Boolean(process.env.GOOGLE_CLIENT_ID),
-    GOOGLE_CLIENT_SECRET:Boolean(process.env.GOOGLE_CLIENT_SECRET),
-    GOOGLE_REFRESH_TOKEN:Boolean(process.env.GOOGLE_REFRESH_TOKEN),
+    GOOGLE_SERVICE_ACCOUNT_EMAIL:Boolean(process.env.GOOGLE_SERVICE_ACCOUNT_EMAIL),
+    GOOGLE_SERVICE_ACCOUNT_PRIVATE_KEY:Boolean(process.env.GOOGLE_SERVICE_ACCOUNT_PRIVATE_KEY),
+    GSC_SITE_URL:Boolean(process.env.GSC_SITE_URL),
   };
   return {
-    configured:Object.values(required).every(Boolean),
+    configured:Boolean(
+      required.GOOGLE_SERVICE_ACCOUNT_EMAIL&&
+      required.GOOGLE_SERVICE_ACCOUNT_PRIVATE_KEY
+    ),
     required,
     siteUrl:process.env.GSC_SITE_URL??"sc-domain:panchvani.com",
+    authMode:"service-account" as const,
   };
 }
 
@@ -48,27 +55,82 @@ function shift(date:Date,days:number){
   return next;
 }
 
+function base64Url(input:Uint8Array|string){
+  const bytes=typeof input==="string"?new TextEncoder().encode(input):input;
+  let binary="";
+  for(const byte of bytes)binary+=String.fromCharCode(byte);
+  return btoa(binary).replace(/\+/g,"-").replace(/\//g,"_").replace(/=+$/,"");
+}
+
+function pemToArrayBuffer(pem:string){
+  const normalized=pem.replace(/\\n/g,"\n").trim();
+  const base64=normalized
+    .replace(/-----BEGIN PRIVATE KEY-----/g,"")
+    .replace(/-----END PRIVATE KEY-----/g,"")
+    .replace(/\s+/g,"");
+  const binary=atob(base64);
+  const bytes=new Uint8Array(binary.length);
+  for(let i=0;i<binary.length;i++)bytes[i]=binary.charCodeAt(i);
+  return bytes.buffer;
+}
+
+async function createServiceAccountJwt(){
+  const email=process.env.GOOGLE_SERVICE_ACCOUNT_EMAIL;
+  const privateKey=process.env.GOOGLE_SERVICE_ACCOUNT_PRIVATE_KEY;
+  if(!email||!privateKey)throw new Error("Google service account credentials are not configured.");
+
+  const now=Math.floor(Date.now()/1000);
+  const header=base64Url(JSON.stringify({alg:"RS256",typ:"JWT"}));
+  const payload=base64Url(JSON.stringify({
+    iss:email,
+    scope:GSC_SCOPE,
+    aud:GOOGLE_TOKEN_URL,
+    iat:now,
+    exp:now+3600,
+  }));
+  const unsigned=`${header}.${payload}`;
+
+  const key=await crypto.subtle.importKey(
+    "pkcs8",
+    pemToArrayBuffer(privateKey),
+    {name:"RSASSA-PKCS1-v1_5",hash:"SHA-256"},
+    false,
+    ["sign"]
+  );
+
+  const signature=await crypto.subtle.sign(
+    "RSASSA-PKCS1-v1_5",
+    key,
+    new TextEncoder().encode(unsigned)
+  );
+
+  return `${unsigned}.${base64Url(new Uint8Array(signature))}`;
+}
+
 async function accessToken(){
   const status=getGscConnectionStatus();
-  if(!status.configured)throw new Error("Google Search Console is not configured.");
+  if(!status.configured)throw new Error("Google Search Console service account is not configured.");
 
+  const assertion=await createServiceAccountJwt();
   const body=new URLSearchParams({
-    client_id:process.env.GOOGLE_CLIENT_ID!,
-    client_secret:process.env.GOOGLE_CLIENT_SECRET!,
-    refresh_token:process.env.GOOGLE_REFRESH_TOKEN!,
-    grant_type:"refresh_token",
+    grant_type:"urn:ietf:params:oauth:grant-type:jwt-bearer",
+    assertion,
   });
 
-  const response=await fetch("https://oauth2.googleapis.com/token",{
+  const response=await fetch(GOOGLE_TOKEN_URL,{
     method:"POST",
     headers:{"content-type":"application/x-www-form-urlencoded"},
     body,
     cache:"no-store",
   });
 
-  if(!response.ok)throw new Error(`Google OAuth failed (${response.status}).`);
+  if(!response.ok){
+    const text=await response.text();
+    throw new Error(`Google service-account auth failed (${response.status}): ${text.slice(0,240)}`);
+  }
+
   const json=await response.json() as {access_token?:string};
-  if(!json.access_token)throw new Error("Google OAuth returned no access token.");
+  if(!json.access_token)throw new Error("Google service-account auth returned no access token.");
   return json.access_token;
 }
 
@@ -119,9 +181,8 @@ function summary(rows:GscRow[]|undefined):GscSummary{
 
 export async function getGscTrafficSnapshot():Promise<GscTrafficSnapshot>{
   const status=getGscConnectionStatus();
-  if(!status.configured)throw new Error("Google Search Console is not configured.");
+  if(!status.configured)throw new Error("Google Search Console service account is not configured.");
 
-  // GSC final data normally trails real time. End two days ago for stable reporting.
   const today=new Date();
   const end=shift(today,-2);
   const start=shift(end,-27);
