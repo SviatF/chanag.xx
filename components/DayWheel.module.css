@@ -1,0 +1,80 @@
+.root{
+  width:100%;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  position:relative;
+}
+
+.svg{
+  width:min(472px,100%);
+  height:auto;
+  display:block;
+  overflow:visible;
+  filter:drop-shadow(0 24px 42px rgba(0,0,0,.34));
+}
+
+.hourLabel{
+  fill:rgba(245,234,216,.86);
+  font:9px "DM Sans",sans-serif;
+  text-anchor:middle;
+  dominant-baseline:middle;
+}
+
+.glyph{
+  font:20px "DM Sans",sans-serif;
+  text-anchor:middle;
+  dominant-baseline:middle;
+}
+
+.sliceLabel{
+  font:500 11px "DM Sans",sans-serif;
+  text-anchor:middle;
+}
+
+.sliceValue{
+  font:8.5px "DM Sans",sans-serif;
+  text-anchor:middle;
+}
+
+.centerGlyph{
+  fill:#d5ad5a;
+  font:25px "DM Sans",sans-serif;
+  text-anchor:middle;
+}
+
+.centerDay{
+  fill:#f7ecda;
+  font:27px "Instrument Serif",serif;
+  text-anchor:middle;
+}
+
+.centerDate{
+  fill:#eadbbd;
+  font:13px "DM Sans",sans-serif;
+  text-anchor:middle;
+}
+
+.centerMeta{
+  fill:rgba(235,223,200,.62);
+  font:9px "DM Sans",sans-serif;
+  text-anchor:middle;
+}
+
+.nowText{
+  fill:#e7c46f;
+  font:9px "DM Sans",sans-serif;
+  text-anchor:middle;
+}
+
+@media(max-width:760px){
+  .svg{width:min(420px,88vw)}
+  .sliceLabel{font-size:10px}
+  .sliceValue{font-size:7.5px}
+}
+
+@media(max-width:520px){
+  .svg{width:min(380px,91vw)}
+  .sliceLabel{font-size:9px}
+  .sliceValue{font-size:7px}
+}
