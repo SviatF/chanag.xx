@@ -4,3 +4,8 @@ node_modules
 .env.local
 .vercel
 .DS_Store
+/dist/
+.vinext/
+.wrangler/
+.dev.vars*
+!.dev.vars.example
