@@ -19,7 +19,7 @@ export default async function TrafficMonitor(){
       <header className="admin-page-head"><div><p className="admin-eyebrow">TRAFFIC / DEMAND</p><h1>Search demand monitor</h1><p>No fake traffic data is shown. Connect Search Console to activate this screen.</p></div><span className="admin-status warn">NOT CONNECTED</span></header>
       <section className="admin-panel">
         <h2>Google Search Console connection</h2>
-        <p>Add these secrets in Cloudflare Workers. The property defaults to <code>sc-domain:panchang.in</code>.</p>
+        <p>Add these secrets in Cloudflare Workers. The property defaults to <code>sc-domain:panchvani.com</code>.</p>
         <div className="admin-secret-list">
           <code>GOOGLE_CLIENT_ID</code>
           <code>GOOGLE_CLIENT_SECRET</code>
@@ -71,7 +71,7 @@ export default async function TrafficMonitor(){
           <div className="admin-mini-list">{topQueries.map((row,i)=><div key={i}><span>{row.keys?.[0]??"—"}</span><b>{n(row.impressions)} impr.</b><small>{n(row.clicks)} clicks · pos {row.position.toFixed(1)}</small></div>)}</div>
         </div>
         <div className="admin-panel"><div className="admin-panel-head"><div><small>LANDING PAGES</small><h2>Top pages</h2></div></div>
-          <div className="admin-mini-list">{topPages.map((row,i)=><div key={i}><span>{(row.keys?.[0]??"—").replace("https://panchang.in","")}</span><b>{n(row.impressions)} impr.</b><small>{n(row.clicks)} clicks · CTR {pct(row.ctr)}</small></div>)}</div>
+          <div className="admin-mini-list">{topPages.map((row,i)=><div key={i}><span>{(row.keys?.[0]??"—").replace("https://panchvani.com","")}</span><b>{n(row.impressions)} impr.</b><small>{n(row.clicks)} clicks · CTR {pct(row.ctr)}</small></div>)}</div>
         </div>
       </section>
     </div>;
