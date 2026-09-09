@@ -2,9 +2,16 @@
   width:100%;
   display:flex;
   align-items:center;
-  justify-content:flex-start;
   position:relative;
   padding-left:0;
+}
+
+.heroPlacement{
+  justify-content:flex-start;
+}
+
+.contentPlacement{
+  justify-content:center;
 }
 
 
