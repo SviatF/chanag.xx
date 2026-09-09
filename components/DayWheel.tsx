@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo } from "react";
+import { useEffect, useMemo, useState } from "react";
 import type { Panchang, TimeWindow } from "@/lib/panchang";
 import styles from "./DayWheel.module.css";
 
@@ -49,6 +49,38 @@ const labelColors:Record<Tone,string>={
 
 function formatWindow(value:TimeWindow|null){
   return value ? `${value.start} – ${value.end}` : "Not available today";
+}
+
+function indiaNow(){
+  const parts=new Intl.DateTimeFormat("en-GB",{
+    timeZone:"Asia/Kolkata",
+    hour:"2-digit",
+    minute:"2-digit",
+    hourCycle:"h23",
+  }).formatToParts(new Date());
+
+  const hour=Number(parts.find(part=>part.type==="hour")?.value||0);
+  const minute=Number(parts.find(part=>part.type==="minute")?.value||0);
+
+  return {
+    minutes:hour*60+minute,
+    label:`${String(hour).padStart(2,"0")}:${String(minute).padStart(2,"0")}`,
+  };
+}
+
+function indiaDateKey(){
+  return new Intl.DateTimeFormat("en-CA",{
+    timeZone:"Asia/Kolkata",
+    year:"numeric",
+    month:"2-digit",
+    day:"2-digit",
+  }).format(new Date());
+}
+
+function liveAngle(minutes:number){
+  // The approved concept runs counter-clockwise:
+  // 24:00 top, 06:00 left, 12:00 bottom, 18:00 right.
+  return (360-(minutes/1440)*360)%360;
 }
 
 function polar(radius:number,angle:number){
@@ -117,6 +149,20 @@ function sectorFill(key:Tone,muted?:boolean){
 
 export default function DayWheel({data}:{data:Panchang}){
   const wheelSectors=useMemo(()=>sectors(data),[data]);
+  const [clock,setClock]=useState<{minutes:number;label:string}|null>(null);
+
+  useEffect(()=>{
+    const update=()=>setClock(indiaNow());
+    update();
+    const id=window.setInterval(update,60000);
+    return ()=>window.clearInterval(id);
+  },[]);
+
+  const isToday=data.date===indiaDateKey();
+  const handAngle=clock&&isToday?liveAngle(clock.minutes):null;
+  const handTip=handAngle===null?null:polar(GOLD_RING_INNER_R-13,handAngle);
+  const handGlow=handAngle===null?null:polar(GOLD_RING_R-2,handAngle);
+  const handLabel=handAngle===null?null:polar(GOLD_RING_R+20,handAngle);
 
   const displayDate=new Date(data.date+"T00:00:00Z").toLocaleDateString(
     "en-IN",
@@ -226,6 +272,20 @@ export default function DayWheel({data}:{data:Panchang}){
         <filter id="soft-shadow" x="-50%" y="-50%" width="200%" height="200%">
           <feDropShadow dx="0" dy="8" stdDeviation="12" floodColor="#000" floodOpacity=".34"/>
         </filter>
+
+        <filter id="hand-glow" x="-120%" y="-120%" width="340%" height="340%">
+          <feGaussianBlur stdDeviation="3.2" result="blur"/>
+          <feMerge>
+            <feMergeNode in="blur"/>
+            <feMergeNode in="SourceGraphic"/>
+          </feMerge>
+        </filter>
+
+        <linearGradient id="hand-gold" x1="0%" y1="0%" x2="100%" y2="0%">
+          <stop offset="0%" stopColor="rgba(235,191,89,.18)"/>
+          <stop offset="52%" stopColor="#e7bd63"/>
+          <stop offset="100%" stopColor="#f4d98c"/>
+        </linearGradient>
       </defs>
 
       <circle cx={CX} cy={CY} r="282" fill="url(#outer-halo)"/>
@@ -300,6 +360,35 @@ export default function DayWheel({data}:{data:Panchang}){
         strokeWidth="1"
       />
 
+      {/* live IST hand — visible only for today's Panchang */}
+      {handAngle!==null&&handTip&&handGlow?<>
+        <line
+          x1={CX}
+          y1={CY}
+          x2={handTip.x}
+          y2={handTip.y}
+          stroke="url(#hand-gold)"
+          strokeWidth="2"
+          strokeLinecap="round"
+          opacity=".88"
+        />
+        <circle
+          cx={handGlow.x}
+          cy={handGlow.y}
+          r="10"
+          fill="rgba(241,202,111,.10)"
+          filter="url(#hand-glow)"
+        />
+        <circle
+          cx={handGlow.x}
+          cy={handGlow.y}
+          r="4.8"
+          fill="#f1ce78"
+          stroke="#5f441b"
+          strokeWidth="1"
+        />
+      </>:null}
+
       {/* center */}
       <circle
         cx={CX} cy={CY} r={CENTER_R+3}
@@ -351,6 +440,14 @@ export default function DayWheel({data}:{data:Panchang}){
       <text x={CX} y={CY+50} className={styles.centerMessage}>A mindful day</text>
       <text x={CX} y={CY+68} className={styles.centerMessage}>creates a brighter</text>
       <text x={CX} y={CY+86} className={styles.centerMessage}>tomorrow</text>
+
+      {handAngle!==null&&handLabel&&clock?<text
+        x={handLabel.x}
+        y={handLabel.y}
+        className={styles.nowLabel}
+      >
+        NOW · {clock.label}
+      </text>:null}
 
       {/* cardinal clock labels */}
       {[
