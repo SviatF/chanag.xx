@@ -11,3 +11,19 @@
 .wide-panel label{font-size:11px;color:var(--muted);display:grid;gap:7px;min-width:210px}
 .wide-panel select,.wide-panel input{width:100%;background:#0b0e0c;color:var(--text);border:1px solid var(--line);border-radius:8px;padding:12px 13px;font:13px "DM Sans",sans-serif;outline:none}
 .wide-panel select:focus,.wide-panel input:focus{border-color:#8a7043}
+
+.choghadiya-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-top:20px}
+.choghadiya-grid>section{border:1px solid var(--line);border-radius:10px;overflow:hidden;background:#0d100e}
+.choghadiya-head{display:flex;justify-content:space-between;align-items:center;padding:14px 16px;border-bottom:1px solid var(--line)}
+.choghadiya-head span{font:19px "Instrument Serif"}
+.choghadiya-head small{font-size:9px;color:var(--muted)}
+.choghadiya-list{display:grid}
+.choghadiya-row{display:flex;justify-content:space-between;align-items:center;padding:11px 14px;border-bottom:1px solid #1d211d;font-size:11px}
+.choghadiya-row:last-child{border-bottom:0}
+.choghadiya-row strong{font-size:10px;font-weight:500;color:#c8c5bb}
+.choghadiya-name{display:inline-flex;align-items:center;gap:7px}
+.choghadiya-name:before{content:"";width:6px;height:6px;border-radius:50%;background:#777}
+.choghadiya-row.good .choghadiya-name:before{background:#8ca968}
+.choghadiya-row.neutral .choghadiya-name:before{background:#c2a568}
+.choghadiya-row.bad .choghadiya-name:before{background:#a65a4c}
+@media(max-width:620px){.choghadiya-grid{grid-template-columns:1fr}}
