@@ -22,6 +22,7 @@
     "@typescriptify/sweph": "^1.0.4"
   },
   "devDependencies": {
-    "vitest": "^5.0.0"
+    "vitest": "^5.0.0",
+    "vite": "^8.2.2"
   }
 }
