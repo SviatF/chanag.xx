@@ -33,3 +33,6 @@ jobs:
 
       - name: Build Next.js
         run: npm run build
+
+      - name: Build Cloudflare vinext bundle
+        run: npm run build:vinext
