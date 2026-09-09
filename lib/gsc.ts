@@ -23,6 +23,7 @@ export type GscTrafficSnapshot={
   previous:GscSummary;
   pages:GscRow[];
   queries:GscRow[];
+  daily:GscRow[];
 };
 
 const GOOGLE_TOKEN_URL="https://oauth2.googleapis.com/token";
@@ -196,11 +197,12 @@ export async function getGscTrafficSnapshot():Promise<GscTrafficSnapshot>{
 
   const token=await accessToken();
 
-  const [currentRaw,previousRaw,pagesRaw,queriesRaw]=await Promise.all([
+  const [currentRaw,previousRaw,pagesRaw,queriesRaw,dailyRaw]=await Promise.all([
     query(token,status.siteUrl,{startDate,endDate,rowLimit:1}),
     query(token,status.siteUrl,{startDate:previousStartDate,endDate:previousEndDate,rowLimit:1}),
     query(token,status.siteUrl,{startDate,endDate,dimensions:["page"],rowLimit:5000}),
     query(token,status.siteUrl,{startDate,endDate,dimensions:["query"],rowLimit:10000}),
+    query(token,status.siteUrl,{startDate,endDate,dimensions:["date"],rowLimit:1000}),
   ]);
 
   return {
@@ -210,5 +212,6 @@ export async function getGscTrafficSnapshot():Promise<GscTrafficSnapshot>{
     previous:summary(previousRaw.rows),
     pages:pagesRaw.rows??[],
     queries:queriesRaw.rows??[],
+    daily:(dailyRaw.rows??[]).sort((a,b)=>(a.keys?.[0]??"").localeCompare(b.keys?.[0]??"")),
   };
 }
