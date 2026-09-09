@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import Header from "@/components/Header";
 import { cityBySlug } from "@/lib/cities";
 import { getPanchang, formatWindow } from "@/lib/panchang";
-import { regional } from "@/lib/regional";
+import { regional } from "@/lib/regional";\nimport { todayInIndia } from "@/lib/dates";
 
 export const dynamic = "force-dynamic";
 
@@ -31,7 +31,7 @@ export default async function RegionalPage({params}:{params:Promise<{language:st
   const p=await params;
   const city=cityBySlug(p.city);
   const lang=(regional as any)[p.language]??regional.bengali;
-  const data=await getPanchang(new Date(),city);
+  const data=await getPanchang(todayInIndia(),city);
   const t=lang.terms;
   return <main><Header city={city}/><div className="page-shell">
     <p className="page-kicker">{lang.label}</p>
