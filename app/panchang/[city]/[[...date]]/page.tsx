@@ -35,7 +35,7 @@ export default async function PanchangPage({params}:{params:Promise<{city:string
     {q:`What is today favorable for in ${city.name}?`,a:`Today's Panchang signals favor ${guidance.auspicious.map(x=>x.title.toLowerCase()).join(", ")} when scheduled outside the inauspicious periods.`}
   ];
   const ld={ "@context":"https://schema.org","@graph":[
-    {"@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"Home","item":"https://panchang.in/"},{"@type":"ListItem","position":2,"name":city.name,"item":`https://panchang.in/panchang/${city.slug}/`},{"@type":"ListItem","position":3,"name":data.date}]},
+    {"@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"Home","item":"https://panchvani.com/"},{"@type":"ListItem","position":2,"name":city.name,"item":`https://panchvani.com/panchang/${city.slug}/`},{"@type":"ListItem","position":3,"name":data.date}]},
     {"@type":"FAQPage","mainEntity":faq.map(x=>({"@type":"Question","name":x.q,"acceptedAnswer":{"@type":"Answer","text":x.a}}))}
   ]};
   return <main><Header city={city}/><div className="page-shell internal-visual internal-panchang">
