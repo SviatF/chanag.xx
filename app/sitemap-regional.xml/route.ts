@@ -1,10 +1,12 @@
 import { cities } from "@/lib/cities";
 import { urlset, xml } from "@/lib/xml";
+import { phase1PriorityCities } from "@/lib/seo-policy";
 export async function GET() {
   const langs = ["bengali","tamil","malayalam","gujarati","marathi"];
   const urls:string[] = [];
-  for (const lang of langs) for (const city of cities.slice(0, 20)) {
-    urls.push("https://panchang.in/regional/" + lang + "/" + city.slug);
+  const code:Record<string,string>={bengali:"bn",tamil:"ta",malayalam:"ml",gujarati:"gu",marathi:"mr"};
+  for (const lang of langs) for (const city of cities.filter(city=>phase1PriorityCities.includes(city.slug as any))) {
+    if(city.language.includes(code[lang])) urls.push("https://panchang.in/regional/" + lang + "/" + city.slug);
   }
   return xml(urlset(urls));
 }
