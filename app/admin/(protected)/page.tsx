@@ -21,7 +21,7 @@ export default function AdminOverview(){
 
   return <div className="admin-page">
     <header className="admin-page-head">
-      <div><p className="admin-eyebrow">CONTROL PLANE</p><h1>Overview</h1><p>SEO coverage, indexability and demand monitoring for the Panchang network.</p></div>
+      <div><p className="admin-eyebrow">CONTROL PLANE</p><h1>Overview</h1><p>SEO coverage, indexability and demand monitoring for the Panchvani network.</p></div>
       <span className={gsc.configured?"admin-status live":"admin-status warn"}>{gsc.configured?"GSC connected":"GSC not connected"}</span>
     </header>
 
