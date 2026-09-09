@@ -619,3 +619,492 @@ body:before{content:"";position:fixed;inset:0;pointer-events:none;z-index:-1;bac
   }
 }
 /* visual-pass-verified: bundled hero and your-day assets */
+
+
+/* =========================================================
+   CONCEPT LOCK — 2026-09-09
+   Authoritative desktop composition for the approved mockup.
+   ========================================================= */
+
+:root{
+  --concept-gold:#e2b654;
+  --concept-gold-soft:#c59a4a;
+  --concept-ivory:#f4ead8;
+  --concept-black:#070908;
+  --concept-panel:#0c100e;
+  --concept-line:#2b302a;
+}
+
+body{
+  background:#070908 !important;
+}
+
+/* Header */
+.site-header{
+  height:66px !important;
+  padding:0 max(34px,calc((100vw - var(--max))/2)) !important;
+  background:rgba(6,8,7,.97) !important;
+  border-bottom:1px solid #2b2d28 !important;
+  backdrop-filter:blur(12px) !important;
+}
+.brand{
+  font-size:25px !important;
+  letter-spacing:.17em !important;
+  color:var(--concept-ivory) !important;
+}
+.nav{
+  gap:29px !important;
+}
+.nav a{
+  font-size:12px !important;
+  color:#e6dece !important;
+}
+.header-actions{
+  gap:17px !important;
+}
+.location-pill{
+  border-color:#3b3b32 !important;
+  background:#0c0f0d !important;
+  color:#e7dfd0 !important;
+}
+.account-dot{
+  width:34px !important;
+  height:34px !important;
+  background:#0a0d0b !important;
+}
+
+/* Hero — one continuous visual, like the approved concept */
+.concept-master-hero{
+  min-height:590px !important;
+  grid-template-columns:.88fr 1.12fr !important;
+  position:relative !important;
+  isolation:isolate !important;
+  overflow:hidden !important;
+  background:#070908 !important;
+  border-left:1px solid #302f29 !important;
+  border-right:1px solid #302f29 !important;
+  border-bottom:1px solid #302f29 !important;
+}
+.concept-master-hero:after{
+  display:none !important;
+}
+.concept-master-hero-image{
+  position:absolute;
+  inset:0;
+  width:100%;
+  height:100%;
+  object-fit:cover;
+  object-position:center right;
+  z-index:0;
+  display:block;
+  filter:saturate(.98) contrast(1.04) brightness(.96);
+}
+.concept-master-hero-overlay{
+  position:absolute;
+  inset:0;
+  z-index:1;
+  pointer-events:none;
+  background:
+    linear-gradient(90deg,
+      rgba(6,8,7,.98) 0%,
+      rgba(6,8,7,.95) 20%,
+      rgba(6,8,7,.78) 35%,
+      rgba(6,8,7,.30) 53%,
+      rgba(6,8,7,.08) 72%,
+      rgba(6,8,7,.02) 100%),
+    linear-gradient(180deg,
+      rgba(4,6,5,.02) 0%,
+      rgba(4,6,5,.02) 62%,
+      rgba(4,6,5,.28) 100%);
+}
+.concept-hero-copy{
+  position:relative !important;
+  z-index:4 !important;
+  align-self:center;
+  padding:52px 34px 44px 54px !important;
+  background:transparent !important;
+}
+.concept-hero-copy:after{
+  display:none !important;
+}
+.concept-hero-copy .eyebrow{
+  font-size:10px !important;
+  letter-spacing:.20em !important;
+  color:#d5aa58 !important;
+  margin:0 0 17px !important;
+}
+.concept-hero-copy h1{
+  font-size:61px !important;
+  line-height:.98 !important;
+  color:#f6ecdc !important;
+  margin:0 0 5px !important;
+}
+.concept-hero-copy .hero-date{
+  font-size:28px !important;
+  color:#ead9bb !important;
+}
+.concept-hero-copy .lunar-summary{
+  margin-top:24px !important;
+  font-size:16px !important;
+  gap:9px !important;
+}
+.concept-hero-copy .lunar-summary small{
+  margin-top:6px !important;
+  color:#b8b1a4 !important;
+}
+.concept-hero-copy .sunline{
+  max-width:410px !important;
+  margin-top:21px !important;
+  padding-top:17px !important;
+  border-color:#4b4437 !important;
+}
+.concept-hero-copy .hero-status{
+  max-width:445px !important;
+  gap:12px !important;
+  margin:22px 0 20px !important;
+}
+.concept-hero-copy .status-card{
+  min-height:80px !important;
+  border-radius:8px !important;
+  padding:14px 15px !important;
+  box-shadow:inset 0 1px rgba(255,255,255,.025) !important;
+}
+.concept-hero-copy .status-card.good{
+  border-color:#31553c !important;
+  background:linear-gradient(135deg,rgba(14,35,23,.93),rgba(10,16,12,.96)) !important;
+}
+.concept-hero-copy .status-card.danger{
+  border-color:#71372d !important;
+  background:linear-gradient(135deg,rgba(43,19,17,.95),rgba(15,13,12,.96)) !important;
+}
+.concept-hero-copy .status-card strong{
+  font-size:17px !important;
+}
+.concept-hero-copy .gold-button{
+  min-width:250px !important;
+  min-height:48px !important;
+  border-radius:6px !important;
+  background:linear-gradient(135deg,#dca948,#f0c771) !important;
+  box-shadow:0 12px 32px rgba(201,145,52,.12) !important;
+}
+.hero-quote{
+  display:flex;
+  align-items:center;
+  gap:12px;
+  margin-top:20px;
+  color:#d7ba7c;
+  font:italic 15px/1.4 "Instrument Serif";
+  letter-spacing:.015em;
+}
+.hero-quote i{
+  display:block;
+  width:33px;
+  height:1px;
+  background:#d3a34b;
+}
+
+/* Wheel placement over the master hero artwork */
+.concept-hero-wheel{
+  position:relative !important;
+  z-index:4 !important;
+  display:flex !important;
+  align-items:center !important;
+  justify-content:center !important;
+  min-width:0 !important;
+  background:none !important;
+  filter:none !important;
+  overflow:visible !important;
+}
+.concept-hero-wheel .wheel-wrap{
+  position:relative !important;
+  z-index:5 !important;
+  transform:translateX(-2%) !important;
+}
+.concept-hero-wheel .wheel{
+  width:min(510px,78%) !important;
+  border:1px solid #a98138 !important;
+  background-color:rgba(7,9,8,.82) !important;
+  backdrop-filter:none !important;
+  box-shadow:
+    0 0 0 5px rgba(9,10,8,.74),
+    0 0 0 6px rgba(194,147,55,.76),
+    0 0 28px rgba(232,176,69,.08),
+    0 24px 52px rgba(0,0,0,.35) !important;
+}
+.concept-hero-wheel .wheel:before{
+  inset:5% !important;
+  border-color:rgba(226,181,83,.30) !important;
+}
+.concept-hero-wheel .wheel-ring.ring-a{
+  inset:18% !important;
+  border-color:rgba(227,183,87,.36) !important;
+}
+.concept-hero-wheel .wheel-ring.ring-b{
+  inset:31% !important;
+  border-color:rgba(227,183,87,.60) !important;
+}
+.concept-hero-wheel .wheel-center{
+  inset:31% !important;
+  background:radial-gradient(circle at 50% 34%,rgba(30,29,19,.97),rgba(7,9,8,.99) 72%) !important;
+  border-color:#967437 !important;
+}
+.concept-hero-wheel .wheel-center strong{
+  font-size:25px !important;
+}
+.concept-hero-wheel .wheel-segment{
+  mask:radial-gradient(transparent 0 30%,#000 30.5% 77%,transparent 77.5%) !important;
+}
+.concept-hero-wheel .arc-label>span{
+  font-size:9px !important;
+}
+.concept-hero-wheel .arc-label>small{
+  font-size:7px !important;
+}
+
+/* Decorative geometry similar to the concept, without rasterizing UI */
+.concept-corner{
+  position:absolute;
+  z-index:3;
+  pointer-events:none;
+  width:125px;
+  height:125px;
+  opacity:.14;
+  background:repeating-conic-gradient(from 0deg,#d8ac55 0deg 1deg,transparent 1deg 15deg);
+  mask:radial-gradient(transparent 0 50%,#000 51% 52%,transparent 53% 65%,#000 66% 67%,transparent 68%);
+}
+.concept-corner-tl{
+  left:-57px;
+  top:20px;
+}
+.concept-corner-bl{
+  left:-52px;
+  bottom:-55px;
+}
+
+/* Your Day */
+.your-day-section{
+  padding:24px 34px 22px !important;
+  position:relative !important;
+  overflow:hidden !important;
+}
+.your-day-section .section-head{
+  margin-bottom:15px !important;
+}
+.your-day-section .section-head h2{
+  font-size:31px !important;
+}
+.your-day-layout{
+  grid-template-columns:minmax(0,3.15fr) minmax(285px,1fr) !important;
+  gap:10px !important;
+}
+.your-day-layout .day-grid{
+  grid-template-columns:repeat(3,minmax(0,1fr)) !important;
+  gap:10px !important;
+}
+.your-day-layout .info-card{
+  min-height:148px !important;
+  padding:18px 17px !important;
+  border-radius:7px !important;
+}
+.your-day-layout .info-card h3{
+  font-size:20px !important;
+}
+.your-day-layout .info-card p{
+  font-size:10px !important;
+  line-height:1.45 !important;
+}
+.your-day-art{
+  min-height:148px !important;
+  margin-right:-34px !important;
+  border:0 !important;
+  border-left:1px solid #282c27 !important;
+  border-radius:0 !important;
+  background:none !important;
+}
+.your-day-photo-layer{
+  object-position:64% center !important;
+  filter:saturate(.98) contrast(1.04) brightness(.96) !important;
+}
+.your-day-photo-shade{
+  background:
+    linear-gradient(90deg,rgba(7,9,8,.50) 0%,rgba(7,9,8,.16) 35%,rgba(7,9,8,.03) 68%,rgba(7,9,8,.02) 100%),
+    linear-gradient(180deg,transparent 0%,rgba(7,9,8,.12) 72%,rgba(7,9,8,.28) 100%) !important;
+}
+.your-day-art span{
+  right:18px !important;
+  bottom:14px !important;
+  font-size:7px !important;
+  color:#e1bd73 !important;
+}
+
+/* Plan section */
+.ritual-section{
+  padding:24px 34px 25px !important;
+}
+.ritual-section .section-head{
+  margin-bottom:15px !important;
+}
+.ritual-section .section-head h2{
+  font-size:31px !important;
+}
+.moment-grid{
+  gap:8px !important;
+}
+.moment-card{
+  min-height:104px !important;
+  padding:16px 9px !important;
+  border-radius:7px !important;
+  border-color:#34372f !important;
+  background:linear-gradient(180deg,#0e120f,#0b0e0c) !important;
+}
+.moment-card svg{
+  width:27px !important;
+  height:27px !important;
+  color:#e0b350 !important;
+}
+.moment-card h3{
+  font-size:16px !important;
+  margin-top:8px !important;
+}
+.moment-card p{
+  font-size:9px !important;
+}
+
+/* Bottom split section */
+.split-section{
+  grid-template-columns:.92fr 1.08fr !important;
+  background:#080a09 !important;
+}
+.calendar-preview,
+.explore-stack{
+  padding:25px 27px !important;
+}
+.calendar-preview{
+  border-right-color:#30332c !important;
+}
+.calendar-box{
+  background:#0b0e0c !important;
+  border-color:#34372f !important;
+  border-radius:7px !important;
+}
+.calendar-title{
+  padding:12px 14px !important;
+}
+.calendar-grid a,
+.calendar-grid .calendar-blank{
+  min-height:54px !important;
+}
+.calendar-grid a.today{
+  background:linear-gradient(135deg,#d8a747,#efc66f) !important;
+  box-shadow:inset 0 0 0 1px rgba(255,255,255,.18) !important;
+}
+.city-row a{
+  min-height:95px !important;
+  border-radius:6px !important;
+}
+.tools-grid a,
+.language-grid a{
+  border-radius:6px !important;
+  border-color:#30342d !important;
+  background:#0d110e !important;
+}
+.tools-grid a{
+  min-height:60px !important;
+}
+.language-grid a{
+  min-height:62px !important;
+}
+
+/* Footer */
+.footer{
+  min-height:130px !important;
+  padding:31px 34px 42px !important;
+  border-color:#2e312b !important;
+  background:#070908 !important;
+}
+.footer>div:first-child strong{
+  font-size:22px !important;
+}
+.footer p{
+  color:#8f9189 !important;
+}
+
+/* Keep supported city cards exactly as-is; only spacing is harmonized. */
+.city-row{
+  grid-template-columns:repeat(5,1fr) !important;
+  gap:8px !important;
+}
+
+/* Tablet/mobile */
+@media(max-width:1180px){
+  .concept-master-hero{
+    grid-template-columns:1fr !important;
+  }
+  .concept-master-hero-image{
+    object-position:72% center;
+  }
+  .concept-master-hero-overlay{
+    background:
+      linear-gradient(180deg,rgba(6,8,7,.94) 0%,rgba(6,8,7,.62) 32%,rgba(6,8,7,.20) 62%,rgba(6,8,7,.42) 100%) !important;
+  }
+  .concept-hero-copy{
+    padding:46px 30px 28px !important;
+  }
+  .concept-hero-wheel{
+    min-height:500px !important;
+  }
+  .concept-hero-wheel .wheel-wrap{
+    transform:none !important;
+  }
+  .your-day-layout{
+    grid-template-columns:1fr !important;
+  }
+  .your-day-art{
+    min-height:235px !important;
+    margin-right:0 !important;
+    border:1px solid #2d302a !important;
+    border-radius:7px !important;
+  }
+}
+
+@media(max-width:760px){
+  .site-header{
+    height:62px !important;
+  }
+  .concept-hero-copy h1{
+    font-size:46px !important;
+  }
+  .concept-hero-copy .hero-date{
+    font-size:22px !important;
+  }
+  .concept-hero-wheel{
+    min-height:440px !important;
+  }
+  .concept-hero-wheel .wheel{
+    width:min(420px,82vw) !important;
+  }
+  .your-day-layout .day-grid{
+    grid-template-columns:1fr !important;
+  }
+  .city-row{
+    grid-template-columns:repeat(2,1fr) !important;
+  }
+  .split-section{
+    grid-template-columns:1fr !important;
+  }
+}
+
+@media(max-width:620px){
+  .concept-hero-copy{
+    padding:36px 18px 24px !important;
+  }
+  .concept-hero-wheel{
+    min-height:390px !important;
+  }
+  .hero-quote{
+    font-size:13px;
+  }
+  .your-day-art{
+    min-height:205px !important;
+  }
+}
