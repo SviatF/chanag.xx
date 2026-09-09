@@ -95,7 +95,7 @@ export default async function Home({searchParams}:{searchParams:Promise<{city?:s
         <div className="hero-quote"><i/> <span>“Good timing turns ordinary moments into blessings.”</span></div>
       </div>
       <div className="hero-wheel concept-hero-wheel">
-        <DayWheel data={data}/>
+        <DayWheel data={data} placement="hero"/>
       </div>
     </section>
 
