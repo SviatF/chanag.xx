@@ -10,7 +10,7 @@ export default async function AdminLogin({searchParams}:{searchParams:Promise<{e
 
   return <main className="admin-login">
     <section className="admin-login-card">
-      <p className="admin-eyebrow">PANCHANG CONTROL PLANE</p>
+      <p className="admin-eyebrow">PANCHVANI CONTROL PLANE</p>
       <h1>Admin access</h1>
       <p>{configured?"Enter the admin password configured in Cloudflare secrets.":"Admin authentication is not configured yet."}</p>
       {configured?<form action="/api/admin/login" method="post">
