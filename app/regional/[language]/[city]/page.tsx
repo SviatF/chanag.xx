@@ -6,7 +6,7 @@ import { cityBySlug } from "@/lib/cities";
 import { getPanchang, formatWindow } from "@/lib/panchang";
 import { regional } from "@/lib/regional";
 import { todayInIndia } from "@/lib/dates";
-import { getBengaliPanjikaProfile } from "@/lib/bengali-panjika";
+import { getRegionalCalendarProfile } from "@/lib/regional-calendar";
 import { isRegionalIndexable, robotsFor } from "@/lib/seo-policy";
 
 export const revalidate = 3600;
@@ -47,8 +47,7 @@ export default async function RegionalPage({params}:{params:Promise<{language:st
   const data=await getPanchang(todayInIndia(),city);
   const t=lang.terms;
   const isBengali=p.language==="bengali";
-  const bengali=isBengali?getBengaliPanjikaProfile(data):null;
-
+  const profile=getRegionalCalendarProfile(p.language,data);
   const displayTithi=isBengali?(bengaliTithi[data.tithi]??data.tithi):data.tithi;
 
   return <main><Header city={city}/><div className="page-shell internal-visual internal-regional">
@@ -56,30 +55,28 @@ export default async function RegionalPage({params}:{params:Promise<{language:st
     <p className="page-kicker">{lang.label} · {city.state}</p>
     <h1 className="page-title">{t.today}<br/>{city.name}</h1>
     <p className="page-subtitle">
-      {isBengali&&bengali
-        ? `${bengali.calendarLabel} · ${bengali.month.native} (${bengali.month.en}) · ${bengali.yearLabel}`
-        : `Regional Panchang terminology for ${city.name}, calculated from the same local astronomical engine.`}
+      {profile.calendarSystem} · {profile.monthNative?`${profile.monthNative} (${profile.month})`:profile.month}{profile.yearLabel?` · ${profile.yearLabel}`:""}
     </p>
 
     <div className="data-grid">
       <div className="data-card"><small>{t.tithi}</small><strong>{displayTithi}</strong><small>{data.paksha} Paksha · until {data.tithiEnd}</small></div>
-      <div className="data-card"><small>{t.nakshatra}</small><strong>{data.nakshatra}</strong><small>Pada {data.nakshatraPada} · until {data.nakshatraEnd}</small></div>
-      <div className="data-card"><small>Yoga</small><strong>{data.yoga}</strong></div>
-      <div className="data-card"><small>Karana</small><strong>{data.karana}</strong></div>
+      <div className="data-card"><small>{t.nakshatra}</small><strong>{profile.nakshatra}</strong><small>Pada {data.nakshatraPada} · until {data.nakshatraEnd}</small></div>
+      <div className="data-card"><small>{t.yoga}</small><strong>{data.yoga}</strong></div>
+      <div className="data-card"><small>{t.karana}</small><strong>{data.karana}</strong></div>
       <div className="data-card"><small>{t.sunrise}</small><strong>{data.sunrise}</strong></div>
       <div className="data-card"><small>{t.sunset}</small><strong>{data.sunset}</strong></div>
-      <div className="data-card"><small>Moonrise</small><strong>{data.moonrise}</strong></div>
-      <div className="data-card"><small>Moonset</small><strong>{data.moonset}</strong></div>
-      {bengali?<div className="data-card"><small>বাংলা মাস</small><strong>{bengali.month.native}</strong><small>{bengali.month.en} · {bengali.yearLabel}</small></div>:<div className="data-card"><small>Hindu Month</small><strong>{data.hinduMonth}</strong></div>}
-      {bengali?<div className="data-card"><small>সৌর রাশি</small><strong>{bengali.solarSign}</strong></div>:null}
+      <div className="data-card"><small>{t.moonrise}</small><strong>{data.moonrise}</strong></div>
+      <div className="data-card"><small>{t.moonset}</small><strong>{data.moonset}</strong></div>
+      <div className="data-card"><small>{t.month}</small><strong>{profile.monthNative??profile.month}</strong><small>{profile.monthNative?profile.month:profile.calendarSystem}{profile.yearLabel?` · ${profile.yearLabel}`:""}</small></div>
+      {profile.solarSign?<div className="data-card"><small>Solar Rashi</small><strong>{profile.solarSign}</strong></div>:null}
       <div className="data-card"><small>Vikram Samvat</small><strong>{data.vikramSamvat}</strong></div>
       <div className="data-card"><small>Shaka Samvat</small><strong>{data.shakaSamvat}</strong></div>
     </div>
 
     <div className="wide-panel"><div className="timing-row">
       <div className="timing-chip bad"><small>{t.rahu}</small><strong>{formatWindow(data.rahu)}</strong></div>
-      <div className="timing-chip bad"><small>Yamaganda</small><strong>{formatWindow(data.yamaganda)}</strong></div>
-      <div className="timing-chip bad"><small>Gulika</small><strong>{formatWindow(data.gulika)}</strong></div>
+      <div className="timing-chip bad"><small>{t.yamaganda}</small><strong>{formatWindow(data.yamaganda)}</strong></div>
+      <div className="timing-chip bad"><small>{t.gulika}</small><strong>{formatWindow(data.gulika)}</strong></div>
       <div className="timing-chip good"><small>{t.auspicious}</small><strong>{formatWindow(data.abhijit)}</strong></div>
     </div></div>
 
@@ -88,7 +85,7 @@ export default async function RegionalPage({params}:{params:Promise<{language:st
       <ChoghadiyaTable day={data.dayChoghadiya} night={data.nightChoghadiya}/>
     </div>
 
-    {bengali?<div className="seo-copy"><h2>Bengali Panjika system</h2><p>This Bengali version does not simply rename the English interface. Its displayed Bengali month is derived from the sidereal solar sign: Boishakh begins with Mesha, followed by Joishtho, Asharh, Srabon, Bhadro, Ashshin, Kartik, Ogrohaeon, Poush, Magh, Falgun and Choitro. The Bengali year is calculated against that solar-year boundary.</p></div>:null}
+    <div className="seo-copy"><h2>{profile.calendarSystem}</h2><p>{profile.note}</p><p>This regional page keeps the selected city's local sunrise, sunset and inauspicious periods while applying the regional calendar naming layer instead of presenting a generic English Panchang with translated headings only.</p></div>
 
     <div className="pill-links"><Link href={`/panchang/${city.slug}/${data.date}`}>English Daily Panchang</Link><Link href="/regional">All regional Panchang</Link></div>
   </div></main>;
