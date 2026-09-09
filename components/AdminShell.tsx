@@ -14,7 +14,7 @@ export default function AdminShell({children}:{children:ReactNode}){
   return <div className="admin-shell">
     <aside className="admin-sidebar">
       <Link className="admin-brand" href="/admin">
-        <small>PANCHANG</small>
+        <small>PANCHVANI</small>
         <strong>Control Plane</strong>
       </Link>
       <nav className="admin-nav">
