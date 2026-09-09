@@ -75,10 +75,7 @@ const amantaMonthByPreviousNewMoonSunSign = ["Vaishakha","Jyeshtha","Ashadha","S
 const dayChoghadiyaTable: ChoghadiyaName[][] = [
   ["Udveg","Char","Labh","Amrit","Kaal","Shubh","Rog","Udveg"],
   ["Amrit","Kaal","Shubh","Rog","Udveg","Char","Labh","Amrit"],
-  ["Rog","Udveg","Char","Labh","Shubh","Kaal","Shubh","Rog"].map((name, index) => {
-    const corrected: ChoghadiyaName[] = ["Rog","Udveg","Char","Labh","Amrit","Kaal","Shubh","Rog"];
-    return corrected[index];
-  }),
+  ["Rog","Udveg","Char","Labh","Amrit","Kaal","Shubh","Rog"],
   ["Labh","Amrit","Kaal","Shubh","Rog","Udveg","Char","Labh"],
   ["Shubh","Rog","Udveg","Char","Labh","Amrit","Kaal","Shubh"],
   ["Char","Labh","Amrit","Kaal","Shubh","Rog","Udveg","Char"],
