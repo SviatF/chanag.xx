@@ -247,3 +247,26 @@ body:before{content:"";position:fixed;inset:0;pointer-events:none;z-index:-1;bac
   .city-row{grid-template-columns:repeat(2,1fr)}
   .city-row a{min-height:118px}
 }
+
+/* Final pixel-fidelity adjustments */
+.site-header{height:72px}
+.nav{gap:27px}
+.nav a{font-size:12px}
+.account-dot{width:31px;height:31px;border:1px solid var(--line);border-radius:50%;display:grid;place-items:center;color:#9d9a91;background:#101310}
+.hero-wheel{background-position:center 56%!important}
+.hero-wheel:before{background:linear-gradient(90deg,rgba(6,8,7,.94) 0%,rgba(6,8,7,.60) 37%,rgba(5,6,5,.10) 75%),linear-gradient(180deg,rgba(6,7,6,.04),rgba(6,7,6,.27))}
+.info-card.festival-visual{background-position:88% 46%!important}
+.info-card.festival-visual>div{max-width:54%}
+.info-card.festival-visual>em{right:15px;bottom:16px;font-size:7px}
+.tools-grid a{min-height:68px;padding:13px 12px}
+.tools-grid strong{font-size:11px}.tools-grid small{font-size:8px;line-height:1.35}
+.language-grid a{min-height:72px}
+.language-grid strong{font-size:19px}
+.city-row a{min-height:112px}
+.footer{position:relative;padding-top:34px;padding-bottom:48px;overflow:hidden}
+.footer:after{content:"";position:absolute;right:-42px;bottom:-58px;width:185px;height:185px;border-radius:50%;opacity:.06;background:repeating-conic-gradient(from 22.5deg,#d8b46e 0 1deg,transparent 1deg 22.5deg);mask:radial-gradient(transparent 0 54%,#000 55% 55.5%,transparent 56% 70%,#000 70.5% 71%,transparent 71.5%)}
+.footer-links{display:flex;align-items:center;gap:17px;position:relative;z-index:2}
+.footer-social{font-size:13px;color:#c4bba8}
+.footer-divider{color:#5e5b53}
+@media(max-width:1000px){.account-dot{display:none}.footer-links{flex-wrap:wrap}}
+@media(max-width:620px){.nav{display:none}.footer-links{gap:12px}}
