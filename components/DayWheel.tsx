@@ -7,7 +7,7 @@ export default function DayWheel({data}:{data:Panchang}) {
       <div className="wheel-ring ring-a"/>
       <div className="wheel-ring ring-b"/>
       <div className="wheel-segment seg-rahu"/>
-      <div className="wheel-segment seg-abhijit"/>
+      {data.abhijit ? <div className="wheel-segment seg-abhijit"/> : null}
       <div className="wheel-label top"><Moon size={17}/>Night</div>
       <div className="wheel-label right danger"><span>Rahu Kalam</span><small>{formatWindow(data.rahu)}</small></div>
       <div className="wheel-label bottom good"><span>Abhijit Muhurat</span><small>{formatWindow(data.abhijit)}</small></div>
