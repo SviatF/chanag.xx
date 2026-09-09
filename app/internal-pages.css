@@ -508,3 +508,214 @@
     grid-template-columns:1fr;
   }
 }
+
+
+/* =========================================================
+   NEW INTERNAL VISUAL LIBRARY
+   User-provided assets mapped by internal page family.
+   Homepage is untouched because it has no .internal-visual class.
+   ========================================================= */
+
+.page-shell.internal-visual{
+  --internal-hero:url('/new-imgs/hero-2.webp');
+  --internal-accent:url('/new-imgs/model2.webp');
+  --internal-hero-position:center 48%;
+}
+
+.page-shell.internal-panchang{
+  --internal-hero:url('/new-imgs/hero-2.webp');
+  --internal-accent:url('/new-imgs/model2.webp');
+  --internal-hero-position:center 46%;
+}
+.page-shell.internal-calendar{
+  --internal-hero:url('/new-imgs/hero-3.webp');
+  --internal-accent:url('/new-imgs/model3.webp');
+  --internal-hero-position:center 48%;
+}
+.page-shell.internal-festival{
+  --internal-hero:url('/new-imgs/hero-4.webp');
+  --internal-accent:url('/new-imgs/hero5.webp');
+  --internal-hero-position:center 45%;
+}
+.page-shell.internal-muhurat{
+  --internal-hero:url('/new-imgs/hero5.webp');
+  --internal-accent:url('/new-imgs/hero-4.webp');
+  --internal-hero-position:center 46%;
+}
+.page-shell.internal-tools{
+  --internal-hero:url('/new-imgs/model2.webp');
+  --internal-accent:url('/new-imgs/hero-3.webp');
+  --internal-hero-position:center 42%;
+}
+.page-shell.internal-regional,
+.page-shell.internal-cities,
+.page-shell.internal-editorial{
+  --internal-hero:url('/new-imgs/model3.webp');
+  --internal-accent:url('/new-imgs/hero-2.webp');
+  --internal-hero-position:center 44%;
+}
+
+.page-shell.internal-visual::before{
+  height:390px;
+  border-color:rgba(171,129,55,.34);
+  background:
+    linear-gradient(90deg,rgba(6,8,7,.985) 0%,rgba(6,8,7,.94) 27%,rgba(6,8,7,.70) 47%,rgba(6,8,7,.34) 67%,rgba(6,8,7,.10) 100%),
+    linear-gradient(180deg,rgba(4,6,5,.03) 0%,rgba(4,6,5,.12) 58%,rgba(4,6,5,.58) 100%),
+    var(--internal-hero);
+  background-size:cover;
+  background-position:center,center,var(--internal-hero-position);
+  background-repeat:no-repeat;
+  box-shadow:inset 0 1px rgba(255,255,255,.03),inset 0 -70px 120px rgba(0,0,0,.36),0 34px 90px rgba(0,0,0,.28);
+}
+
+.page-shell.internal-visual::after{
+  right:-74px;
+  bottom:40px;
+  width:500px;
+  height:500px;
+  opacity:.075;
+  border-radius:28px;
+  background:linear-gradient(135deg,rgba(8,10,8,.82),rgba(8,10,8,.08)),var(--internal-accent);
+  background-size:cover;
+  background-position:center;
+  filter:saturate(.78) contrast(1.04);
+  -webkit-mask-image:linear-gradient(135deg,transparent 0%,#000 22%,#000 72%,transparent 100%);
+  mask-image:linear-gradient(135deg,transparent 0%,#000 22%,#000 72%,transparent 100%);
+}
+
+.page-shell.internal-visual>.breadcrumbs,
+.page-shell.internal-visual>.page-kicker,
+.page-shell.internal-visual>.page-title,
+.page-shell.internal-visual>.page-subtitle{max-width:690px}
+
+.page-shell.internal-visual>.page-title{
+  font-size:64px;
+  line-height:.96;
+  max-width:760px;
+  text-wrap:balance;
+}
+.page-shell.internal-visual>.page-subtitle{
+  max-width:650px;
+  color:#c8c1b4;
+}
+
+.page-shell.internal-panchang .wide-panel:has(svg[aria-label="Panchang day wheel"]){
+  min-height:600px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  background:
+    radial-gradient(circle at 50% 50%,rgba(211,164,70,.10),transparent 31%),
+    linear-gradient(90deg,rgba(8,11,9,.96),rgba(8,11,9,.88)),
+    var(--internal-accent);
+  background-size:auto,auto,cover;
+  background-position:center,center,center;
+}
+
+.page-shell.internal-visual .wide-panel:not(:has(svg[aria-label="Panchang day wheel"])){
+  isolation:isolate;
+}
+.page-shell.internal-visual .wide-panel:not(:has(svg[aria-label="Panchang day wheel"]))::before{
+  content:"";
+  position:absolute;
+  z-index:-1;
+  right:0;top:0;bottom:0;
+  width:38%;
+  background:linear-gradient(90deg,rgba(12,15,12,1) 0%,rgba(12,15,12,.82) 22%,rgba(12,15,12,.28) 64%,rgba(12,15,12,.10) 100%),var(--internal-accent);
+  background-size:cover;
+  background-position:center;
+  opacity:.13;
+  filter:saturate(.72) contrast(1.05);
+  pointer-events:none;
+}
+
+.page-shell.internal-visual>.seo-copy{
+  position:relative;
+  overflow:hidden;
+  min-height:176px;
+  max-width:100%;
+  padding:28px min(39%,460px) 28px 28px;
+  border:1px solid rgba(100,85,56,.36);
+  border-left:2px solid rgba(211,166,76,.70);
+  border-radius:14px;
+  background:linear-gradient(90deg,#101410 0%,#101410 58%,rgba(16,20,16,.88) 70%,rgba(16,20,16,.22) 100%),var(--internal-accent);
+  background-size:auto,cover;
+  background-position:center,88% center;
+  box-shadow:0 22px 54px rgba(0,0,0,.17);
+}
+.page-shell.internal-visual>.seo-copy::after{
+  content:"ANCIENT WISDOM · PRECISELY TIMED";
+  position:absolute;
+  right:24px;
+  bottom:22px;
+  max-width:220px;
+  color:rgba(224,186,112,.82);
+  font-size:8px;
+  line-height:1.8;
+  letter-spacing:.19em;
+  text-align:right;
+}
+
+.page-shell.internal-visual .tool-list a,
+.page-shell.internal-visual .city-directory a,
+.page-shell.internal-visual .regional-list a{
+  min-height:142px;
+  background:linear-gradient(145deg,rgba(15,19,16,.92),rgba(8,11,9,.985)),var(--internal-accent);
+  background-size:cover;
+  background-position:center;
+}
+.page-shell.internal-visual .tool-list a:nth-child(even),
+.page-shell.internal-visual .city-directory a:nth-child(3n),
+.page-shell.internal-visual .regional-list a:nth-child(even){
+  background:linear-gradient(145deg,rgba(15,19,16,.90),rgba(8,11,9,.985)),var(--internal-hero);
+  background-size:cover;
+  background-position:center;
+}
+
+.page-shell.internal-visual .wide-panel:has(.table){
+  background:linear-gradient(145deg,rgba(14,18,15,.985),rgba(8,11,9,.985)),var(--internal-accent);
+  background-size:auto,cover;
+  background-position:center,90% center;
+}
+.page-shell.internal-visual .wide-panel:has(.table) .table{
+  position:relative;
+  z-index:2;
+  background:rgba(8,11,9,.78);
+  backdrop-filter:blur(8px);
+  border-radius:10px;
+}
+
+.page-shell.internal-calendar .month-grid{
+  box-shadow:inset 0 1px rgba(255,255,255,.02),0 28px 70px rgba(0,0,0,.22);
+  background:radial-gradient(circle at 72% -10%,rgba(214,165,73,.08),transparent 36%),#0b0f0c;
+}
+
+.page-shell.internal-festival::before{filter:saturate(.90) contrast(1.04)}
+
+.page-shell.internal-tools::before{
+  background:
+    linear-gradient(90deg,rgba(6,8,7,.99) 0%,rgba(6,8,7,.95) 31%,rgba(6,8,7,.72) 53%,rgba(6,8,7,.38) 73%,rgba(6,8,7,.17) 100%),
+    linear-gradient(180deg,rgba(5,7,6,.05),rgba(5,7,6,.46)),
+    var(--internal-hero);
+  background-size:cover;
+  background-position:center,center,var(--internal-hero-position);
+}
+
+@media(max-width:1000px){
+  .page-shell.internal-visual::before{height:350px;background-position:center,center,68% center}
+  .page-shell.internal-visual>.page-title{font-size:52px}
+  .page-shell.internal-visual>.seo-copy{padding-right:30%}
+}
+@media(max-width:620px){
+  .page-shell.internal-visual::before{height:320px;background-position:center,center,72% center}
+  .page-shell.internal-visual>.page-title{font-size:43px}
+  .page-shell.internal-visual>.seo-copy{
+    min-height:0;
+    padding:22px;
+    background:linear-gradient(180deg,rgba(14,18,15,.92),rgba(9,12,10,.985)),var(--internal-accent);
+    background-size:cover;
+    background-position:center;
+  }
+  .page-shell.internal-visual>.seo-copy::after{display:none}
+  .page-shell.internal-visual .wide-panel:not(:has(svg[aria-label="Panchang day wheel"]))::before{width:52%;opacity:.08}
+}
