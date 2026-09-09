@@ -7,6 +7,8 @@ import {cityBySlug,cities} from "@/lib/cities";
 import {formatWindow,getPanchang} from "@/lib/panchang";
 import {todayInIndia} from "@/lib/dates";
 import {isDailyIndexable,robotsFor} from "@/lib/seo-policy";
+import {getDailyGuidance} from "@/lib/day-guidance";
+import {nextFestival} from "@/lib/festivals";
 
 export const revalidate=3600;
 
@@ -23,13 +25,14 @@ export async function generateMetadata({params}:{params:Promise<{city:string,dat
 }
 
 export default async function PanchangPage({params}:{params:Promise<{city:string,date?:string[]}>}){
-  const p=await params;const city=cityBySlug(p.city);const date=parseDate(p.date);const data=await getPanchang(date,city);
+  const p=await params;const city=cityBySlug(p.city);const date=parseDate(p.date);const data=await getPanchang(date,city);const guidance=getDailyGuidance(data,city);const festival=nextFestival(date);
   const prev=new Date(date);prev.setUTCDate(prev.getUTCDate()-1);const next=new Date(date);next.setUTCDate(next.getUTCDate()+1);
   const month=String(date.getUTCMonth()+1).padStart(2,"0");
   const faq=[
     {q:`What is Rahu Kalam today in ${city.name}?`,a:`Rahu Kalam in ${city.name} is ${formatWindow(data.rahu)} for ${data.date}.`},
     {q:`What is today's Tithi in ${city.name}?`,a:`Today's Tithi is ${data.tithi}, during ${data.paksha} Paksha.`},
-    {q:`What is today's Nakshatra in ${city.name}?`,a:`The Nakshatra calculated for the day is ${data.nakshatra}.`}
+    {q:`What is today's Nakshatra in ${city.name}?`,a:`The Nakshatra calculated for the day is ${data.nakshatra}.`},
+    {q:`What is today favorable for in ${city.name}?`,a:`Today's Panchang signals favor ${guidance.auspicious.map(x=>x.title.toLowerCase()).join(", ")} when scheduled outside the inauspicious periods.`}
   ];
   const ld={ "@context":"https://schema.org","@graph":[
     {"@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"Home","item":"https://panchang.in/"},{"@type":"ListItem","position":2,"name":city.name,"item":`https://panchang.in/panchang/${city.slug}/`},{"@type":"ListItem","position":3,"name":data.date}]},
@@ -60,8 +63,19 @@ export default async function PanchangPage({params}:{params:Promise<{city:string
       <div className="timing-chip bad"><small>Yamaganda</small><strong>{formatWindow(data.yamaganda)}</strong></div>
       <div className="timing-chip bad"><small>Gulika Kalam</small><strong>{formatWindow(data.gulika)}</strong></div>
     </div></div>
+    <div className="wide-panel">
+      <h2 className="page-title" style={{fontSize:32}}>Auspicious today for</h2>
+      <p className="page-subtitle">{guidance.summary}</p>
+      <div className="data-grid">
+        {guidance.auspicious.map(item=><div className="data-card" key={item.title}><small>Favorable signal</small><strong>{item.title}</strong><small>{item.detail}</small></div>)}
+      </div>
+      <h2 className="page-title" style={{fontSize:32,marginTop:28}}>Avoid today</h2>
+      <div className="data-grid">
+        {guidance.avoid.map(item=><div className="data-card" key={item.title}><small>Timing caution</small><strong>{item.title}</strong><small>{item.detail}</small></div>)}
+      </div>
+    </div>
     <div className="wide-panel"><h2 className="page-title" style={{fontSize:32}}>Choghadiya</h2><p className="page-subtitle">Eight daytime and eight nighttime periods calculated from local sunrise, sunset and the next sunrise.</p><ChoghadiyaTable day={data.dayChoghadiya} night={data.nightChoghadiya}/></div>
-    <div className="pill-links"><Link href={`/panchang/${city.slug}/${prev.toISOString().slice(0,10)}`}>← Previous day</Link><Link href={`/calendar/${city.slug}/${date.getUTCFullYear()}/${month}`}>Monthly calendar</Link><Link href={`/panchang/${city.slug}/${next.toISOString().slice(0,10)}`}>Next day →</Link>{cities.filter(c=>c.state===city.state&&c.slug!==city.slug).slice(0,4).map(c=><Link href={`/panchang/${c.slug}/${data.date}`} key={c.slug}>{c.name}</Link>)}</div>
+    <div className="pill-links"><Link href={`/panchang/${city.slug}/${prev.toISOString().slice(0,10)}`}>← Previous day</Link><Link href={`/calendar/${city.slug}/${date.getUTCFullYear()}/${month}`}>Monthly calendar</Link><Link href={`/festivals/${festival.slug}/2026`}>{festival.name}</Link><Link href={`/panchang/${city.slug}/${next.toISOString().slice(0,10)}`}>Next day →</Link>{cities.filter(c=>c.state===city.state&&c.slug!==city.slug).slice(0,4).map(c=><Link href={`/panchang/${c.slug}/${data.date}`} key={c.slug}>{c.name}</Link>)}</div>
     <div className="seo-copy"><h2>How to use today’s Panchang</h2><p>The daily Panchang combines lunar factors such as Tithi and Nakshatra with location-sensitive solar timings. Rahu Kalam, Yamaganda and Gulika change with local sunrise and sunset, which is why the selected city matters. Use the timing bands above as a practical daily reference, and consult a qualified practitioner for personal rites that depend on an individual birth chart.</p></div>
     <div className="wide-panel"><h2>Frequently asked questions</h2>{faq.map(x=><div key={x.q} className="seo-copy"><strong>{x.q}</strong><p>{x.a}</p></div>)}</div>
     <script type="application/ld+json" dangerouslySetInnerHTML={{__html:JSON.stringify(ld)}}/>
