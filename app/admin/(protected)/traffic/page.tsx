@@ -21,12 +21,11 @@ export default async function TrafficMonitor(){
         <h2>Google Search Console connection</h2>
         <p>Add these secrets in Cloudflare Workers. The property defaults to <code>sc-domain:panchvani.com</code>.</p>
         <div className="admin-secret-list">
-          <code>GOOGLE_CLIENT_ID</code>
-          <code>GOOGLE_CLIENT_SECRET</code>
-          <code>GOOGLE_REFRESH_TOKEN</code>
+          <code>GOOGLE_SERVICE_ACCOUNT_EMAIL</code>
+          <code>GOOGLE_SERVICE_ACCOUNT_PRIVATE_KEY</code>
           <code>GSC_SITE_URL</code>
         </div>
-        <p className="admin-muted">The OAuth account must have access to the Search Console property. After secrets are present, this page automatically switches to live data.</p>
+        <p className="admin-muted">The service-account email must be added to the Search Console property. After the Worker sees these variables, this page automatically switches to live data.</p>
       </section>
     </div>;
   }
