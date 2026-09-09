@@ -6,7 +6,7 @@ import Header from "@/components/Header";
 import DayWheel from "@/components/DayWheel";
 import { cities, cityBySlug } from "@/lib/cities";
 import { formatWindow, getPanchang } from "@/lib/panchang";
-import { festivals2026, nextFestival } from "@/lib/festivals";
+import { festivalsForYear, nextFestival } from "@/lib/festivals";
 import { todayInIndia } from "@/lib/dates";
 import mainHero from "@/lib/main-hero.webp";
 import geneshaYourDay from "@/lib/genesha-your_day.webp";
@@ -53,7 +53,7 @@ export default async function Home({searchParams}:{searchParams:Promise<{city?:s
   const monthData=await getMonthData(city.slug,year,month);
   const firstWeekday=new Date(Date.UTC(year,month-1,1)).getUTCDay();
   const featured=featuredSlugs.map(cityBySlug);
-  const monthFestivals=festivals2026.filter(f=>{
+  const monthFestivals=festivalsForYear(year).filter(f=>{
     const d=new Date(f.date+"T00:00:00Z");
     return d.getUTCFullYear()===year&&d.getUTCMonth()+1===month;
   });
