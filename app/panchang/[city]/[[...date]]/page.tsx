@@ -6,6 +6,7 @@ import ChoghadiyaTable from "@/components/ChoghadiyaTable";
 import {cityBySlug,cities} from "@/lib/cities";
 import {formatWindow,getPanchang} from "@/lib/panchang";
 import {todayInIndia} from "@/lib/dates";
+import {isDailyIndexable,robotsFor} from "@/lib/seo-policy";
 
 export const revalidate=3600;
 
@@ -18,7 +19,7 @@ function parseDate(parts?:string[]){
 export async function generateMetadata({params}:{params:Promise<{city:string,date?:string[]}>}):Promise<Metadata>{
   const p=await params;const city=cityBySlug(p.city);const date=parseDate(p.date);
   const ds=date.toISOString().slice(0,10);
-  return {title:`Today Panchang in ${city.name} — ${ds}`,description:`Panchang for ${city.name}: Tithi, Nakshatra, sunrise, sunset, Rahu Kalam, Yamaganda, Gulika and Abhijit Muhurat for ${ds}.`,alternates:{canonical:`/panchang/${city.slug}/${ds}`}};
+  return {title:`Today Panchang in ${city.name} — ${ds}`,description:`Panchang for ${city.name}: Tithi, Nakshatra, sunrise, sunset, Rahu Kalam, Yamaganda, Gulika and Abhijit Muhurat for ${ds}.`,alternates:{canonical:`/panchang/${city.slug}/${ds}`},robots:robotsFor(isDailyIndexable(city.slug,ds))};
 }
 
 export default async function PanchangPage({params}:{params:Promise<{city:string,date?:string[]}>}){
