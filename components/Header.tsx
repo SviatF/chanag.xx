@@ -92,7 +92,7 @@ export default function Header({city}:{city:City}) {
   }));
 
   return <header className="site-header">
-    <Link className="brand" href="/">PANCHANG</Link>
+    <Link className="brand" href="/">PANCHVANI</Link>
 
     <nav className="nav" aria-label="Primary navigation">
       <NavDropdown
