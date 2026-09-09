@@ -34,7 +34,7 @@ export default async function RegionalPage({params}:{params:Promise<{language:st
   const lang=(regional as any)[p.language]??regional.bengali;
   const data=await getPanchang(todayInIndia(),city);
   const t=lang.terms;
-  return <main><Header city={city}/><div className="page-shell">
+  return <main><Header city={city}/><div className="page-shell internal-visual internal-regional">
     <p className="page-kicker">{lang.label}</p>
     <h1 className="page-title">{t.today}<br/>{city.name}</h1>
     <div className="data-grid">
