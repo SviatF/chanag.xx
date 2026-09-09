@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { Search } from "lucide-react";
+import { ChevronDown, Search, UserRound } from "lucide-react";
 import { City, cities } from "@/lib/cities";
 import { todayInIndia } from "@/lib/dates";
 import CityCommand from "@/components/CityCommand";
@@ -11,16 +11,17 @@ export default function Header({city}:{city:City}) {
   return <header className="site-header">
     <Link className="brand" href="/">PANCHANG</Link>
     <nav className="nav">
-      <Link href={`/panchang/${city.slug}`}>Panchang</Link>
-      <Link href={`/calendar/${city.slug}/${year}/${month}`}>Calendar</Link>
-      <Link href={`/festivals-calendar/${year}`}>Festivals</Link>
-      <Link href={`/muhurat/wedding/${year}/${month}`}>Muhurat</Link>
-      <Link href="/tools">Tools</Link>
-      <Link href="/regional">Regional</Link>
+      <Link href={`/panchang/${city.slug}`}>Panchang <ChevronDown size={12}/></Link>
+      <Link href={`/calendar/${city.slug}/${year}/${month}`}>Calendar <ChevronDown size={12}/></Link>
+      <Link href={`/festivals-calendar/${year}`}>Festivals <ChevronDown size={12}/></Link>
+      <Link href={`/muhurat/wedding/${year}/${month}`}>Muhurat <ChevronDown size={12}/></Link>
+      <Link href="/tools">Tools <ChevronDown size={12}/></Link>
+      <Link href="/regional">Regional <ChevronDown size={12}/></Link>
     </nav>
     <div className="header-actions">
       <Link className="header-search" href="/cities" aria-label="Search cities"><Search size={18}/></Link>
       <CityCommand city={city} cities={cities}/>
+      <span className="account-dot" aria-hidden="true"><UserRound size={15}/></span>
     </div>
   </header>
 }
