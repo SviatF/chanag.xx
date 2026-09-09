@@ -2,75 +2,88 @@
   width:100%;
   display:flex;
   align-items:center;
-  justify-content:center;
+  justify-content:flex-start;
   position:relative;
+  padding-left:10px;
 }
 
 .svg{
-  width:min(486px,100%);
+  width:min(505px,100%);
   height:auto;
   display:block;
   overflow:visible;
-  filter:drop-shadow(0 22px 46px rgba(0,0,0,.30));
+  filter:drop-shadow(0 24px 46px rgba(0,0,0,.34));
 }
 
 .cardinal{
-  fill:rgba(247,237,219,.92);
+  fill:rgba(248,239,220,.95);
   font:10px "DM Sans",sans-serif;
   text-anchor:middle;
   dominant-baseline:middle;
+  letter-spacing:.02em;
 }
 
 .sectorIcon{
   font:22px "DM Sans",sans-serif;
   text-anchor:middle;
   dominant-baseline:middle;
+  filter:drop-shadow(0 1px 5px rgba(0,0,0,.48));
 }
 
 .sectorLabel{
   font:600 14px "DM Sans",sans-serif;
   text-anchor:middle;
+  filter:drop-shadow(0 1px 4px rgba(0,0,0,.55));
 }
 
 .sectorValue{
-  font:11px "DM Sans",sans-serif;
+  font:10.5px "DM Sans",sans-serif;
   text-anchor:middle;
+  filter:drop-shadow(0 1px 4px rgba(0,0,0,.55));
 }
 
 .centerSun{
-  fill:#e5b44d;
-  font:30px "DM Sans",sans-serif;
+  fill:#e8b849;
+  font:29px "DM Sans",sans-serif;
   text-anchor:middle;
+  filter:drop-shadow(0 0 8px rgba(225,173,63,.18));
 }
 
 .centerDay{
-  fill:#f8eddc;
-  font:31px "Instrument Serif",serif;
+  fill:#f8eddb;
+  font:30px "Instrument Serif",serif;
   text-anchor:middle;
 }
 
 .centerDate{
-  fill:#f0dfbe;
-  font:24px "Instrument Serif",serif;
+  fill:#f1dfbd;
+  font:23px "Instrument Serif",serif;
   text-anchor:middle;
 }
 
 .centerMessage{
-  fill:rgba(244,232,211,.72);
-  font:11px "DM Sans",sans-serif;
+  fill:rgba(244,232,211,.70);
+  font:10.5px "DM Sans",sans-serif;
   text-anchor:middle;
 }
 
+@media(max-width:1180px){
+  .root{
+    justify-content:center;
+    padding-left:0;
+  }
+}
+
 @media(max-width:760px){
-  .svg{width:min(430px,90vw)}
+  .svg{width:min(438px,90vw)}
   .sectorLabel{font-size:13px}
-  .sectorValue{font-size:10px}
+  .sectorValue{font-size:9.5px}
 }
 
 @media(max-width:520px){
-  .svg{width:min(385px,92vw)}
+  .svg{width:min(390px,92vw)}
   .sectorLabel{font-size:12px}
-  .sectorValue{font-size:9px}
-  .centerDay{font-size:29px}
-  .centerDate{font-size:22px}
+  .sectorValue{font-size:8.5px}
+  .centerDay{font-size:28px}
+  .centerDate{font-size:21px}
 }
