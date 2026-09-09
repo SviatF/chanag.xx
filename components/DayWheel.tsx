@@ -147,7 +147,7 @@ function sectorFill(key:Tone,muted?:boolean){
   return `url(#grad-${key})`;
 }
 
-export default function DayWheel({data}:{data:Panchang}){
+export default function DayWheel({data,placement="content"}:{data:Panchang;placement?:"hero"|"content"}){
   const wheelSectors=useMemo(()=>sectors(data),[data]);
   const [clock,setClock]=useState<{minutes:number;label:string}|null>(null);
 
@@ -169,7 +169,7 @@ export default function DayWheel({data}:{data:Panchang}){
     {day:"numeric",month:"short",year:"numeric",timeZone:"Asia/Kolkata"}
   );
 
-  return <div className={styles.root}>
+  return <div className={`${styles.root} ${placement==="hero"?styles.heroPlacement:styles.contentPlacement}`}>
     <svg
       viewBox={`0 0 ${SIZE} ${SIZE}`}
       className={styles.svg}
