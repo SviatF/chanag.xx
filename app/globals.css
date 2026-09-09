@@ -463,18 +463,12 @@ body:before{content:"";position:fixed;inset:0;pointer-events:none;z-index:-1;bac
 
 /* Desktop refinements */
 @media(min-width:1181px){
-  .concept-hero-art .wheel{
-    width:min(500px,76%);
-  }
 }
 
 /* Responsive */
 @media(max-width:1180px){
   .your-day-layout{
     grid-template-columns:minmax(0,1fr) 245px !important;
-  }
-  .concept-hero-art .wheel-wrap{
-    transform:translateX(-3%);
   }
 }
 @media(max-width:1000px){
@@ -916,9 +910,6 @@ body{
   .concept-hero-wheel{
     min-height:500px !important;
   }
-  .concept-hero-wheel .wheel-wrap{
-    transform:none !important;
-  }
   .your-day-layout{
     grid-template-columns:1fr !important;
   }
@@ -1022,12 +1013,6 @@ body{
   }
 
   /* Wheel: ~9% smaller and clearly further left, matching approved concept */
-  .concept-hero-wheel .wheel-wrap{
-    transform:translateX(-7.5%) !important;
-  }
-  .concept-hero-wheel .wheel{
-    width:min(466px,72%) !important;
-  }
 
   /* Left content follows the smaller hero rhythm */
   .concept-hero-copy{
@@ -1191,12 +1176,6 @@ body{
   }
   .concept-hero-wheel{
     overflow:visible !important;
-  }
-  .concept-hero-wheel .wheel-wrap{
-    transform:translateX(-12%) !important;
-  }
-  .concept-hero-wheel .wheel{
-    width:min(430px,66%) !important;
   }
 
   /* Your Day image is a proper editorial panel, not a strip. */
