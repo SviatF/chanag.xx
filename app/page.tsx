@@ -177,6 +177,6 @@ export default async function Home({searchParams}:{searchParams:Promise<{city?:s
       </div>
     </section>
 
-    <footer className="footer shell"><div><strong>PANCHANG</strong><p>Ancient wisdom, precisely timed.</p></div><div><Link href="/cities">Cities</Link><Link href="/tools">Tools</Link><Link href={`/festivals-calendar/${year}`}>Festivals</Link><span>ॐ तत् सत्</span></div></footer>
+    <footer className="footer shell"><div><strong>PANCHANG</strong><p>Ancient wisdom, precisely timed.</p></div><div><Link href="/cities">Cities</Link><Link href="/tools">Tools</Link><Link href={`/festivals-calendar/${year}`}>Festivals</Link><Link href="/photo-credits">Photo credits</Link><span>ॐ तत् सत्</span></div></footer>
   </main>;
 }
