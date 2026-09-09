@@ -12,6 +12,16 @@ import { todayInIndia } from "@/lib/dates";
 export const dynamic="force-dynamic";
 
 const featuredSlugs=["delhi","kolkata","chennai","bengaluru","hyderabad"];
+
+const cityVisuals:Record<string,string>={
+  mumbai:"https://commons.wikimedia.org/wiki/Special:Redirect/file/Gateway_of_India_in_the_evening%2C_Mumbai%2C_India.jpg?width=1400",
+  delhi:"https://commons.wikimedia.org/wiki/Special:Redirect/file/India_Gate_Sunset.jpg?width=1200",
+  kolkata:"https://commons.wikimedia.org/wiki/Special:Redirect/file/Sunset_at_Victoria_Memorial_Kolkata.jpg?width=1200",
+  chennai:"https://commons.wikimedia.org/wiki/Special:Redirect/file/Kapaleeswarar_temple.jpg?width=1000",
+  bengaluru:"https://commons.wikimedia.org/wiki/Special:Redirect/file/Vidhan_Soudha_during_sunset.jpg?width=1200",
+  hyderabad:"https://commons.wikimedia.org/wiki/Special:Redirect/file/Charminar_at_Sunset.JPG?width=1200"
+};
+const ganeshaVisual="https://commons.wikimedia.org/wiki/Special:Redirect/file/Ganesha_altar_with_flame.jpg?width=1000";
 const momentCards=[
   ["Wedding","Find auspicious timings",Heart,"wedding"],
   ["Griha Pravesh","A blessed new home",House,"griha-pravesh"],
@@ -80,9 +90,12 @@ export default async function Home({searchParams}:{searchParams:Promise<{city?:s
         </div>
         <Link className="gold-button" href={`/panchang/${city.slug}/${data.date}`}>View full Panchang <span>→</span></Link>
       </div>
-      <div className="hero-wheel">
+      <div
+        className="hero-wheel"
+        style={{backgroundImage:`linear-gradient(90deg,#090b0b 0%,rgba(9,11,11,.82) 28%,rgba(9,11,11,.24) 72%,rgba(9,11,11,.08) 100%),linear-gradient(180deg,rgba(10,11,10,.06),rgba(10,11,10,.44)),url("${cityVisuals[city.slug]??cityVisuals.mumbai}")`}}
+      >
         <DayWheel data={data}/>
-        <div className="ambient-copy">SAME SKIES.<br/>DEEPER MEANING.</div>
+        <div className="ambient-copy">SAME<br/>SKIES.<br/>DEEPER<br/>MEANING.</div>
       </div>
     </section>
 
@@ -91,7 +104,7 @@ export default async function Home({searchParams}:{searchParams:Promise<{city?:s
       <div className="day-grid">
         <article className="info-card good"><Sun/><div><span>Best time today</span><h3>{bestTime.name}</h3><strong>{bestTime.time}</strong><p>Calculated from today's local Panchang and daylight window.</p></div></article>
         <article className="info-card danger"><Clock3/><div><span>Avoid this time</span><h3>Rahu Kalam</h3><strong>{formatWindow(data.rahu)}</strong><p>Location-sensitive period calculated from local sunrise and sunset.</p></div></article>
-        <article className="info-card festival"><Sparkles/><div><span>Upcoming festival</span><h3>{festival.name}</h3><strong>{festival.date}</strong><p>{festival.short}</p></div></article>
+        <article className="info-card festival festival-visual" style={{backgroundImage:`linear-gradient(90deg,#101311 0%,rgba(16,19,17,.96) 43%,rgba(16,19,17,.32) 76%,rgba(16,19,17,.08) 100%),url("${ganeshaVisual}")`}}><Sparkles/><div><span>Upcoming festival</span><h3>{festival.name}</h3><strong>{festival.date}</strong><p>{festival.short}</p></div><em>TRADITION<br/>LIVES BRIGHTER<br/>TOGETHER</em></article>
       </div>
     </section>
 
@@ -139,7 +152,12 @@ export default async function Home({searchParams}:{searchParams:Promise<{city?:s
       <div className="explore-stack">
         <div>
           <div className="section-head"><div><h2>Explore your Panchang</h2><p>Accurate Panchang for cities across India.</p></div><Link href="/cities">Browse all cities →</Link></div>
-          <div className="city-row">{featured.map(c=><Link href={`/?city=${c.slug}`} key={c.slug}><MapPin size={16}/><strong>{c.name}</strong><small>{c.state}</small></Link>)}</div>
+          <div className="city-row">{featured.map(c=><Link
+            href={`/?city=${c.slug}`}
+            key={c.slug}
+            className={c.slug===city.slug?"active-city":""}
+            style={{backgroundImage:`linear-gradient(180deg,rgba(8,10,9,.12),rgba(8,10,9,.88)),url("${cityVisuals[c.slug]??cityVisuals.mumbai}")`}}
+          ><MapPin size={15}/><strong>{c.name}</strong><small>{c.state}</small></Link>)}</div>
         </div>
         <div>
           <div className="section-head"><div><h2>Tools</h2><p>Simple tools for deeper insights.</p></div><Link href="/tools">View all tools →</Link></div>
