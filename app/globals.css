@@ -707,8 +707,12 @@ body{
 
 /* Wheel placement over the master hero artwork */
 .concept-hero-wheel{
-  position:relative !important;
+  position:absolute !important;
   z-index:4 !important;
+  left:59.5% !important;
+  top:50% !important;
+  transform:translate(-50%,-50%) !important;
+  width:min(540px,44vw) !important;
   display:flex !important;
   align-items:center !important;
   justify-content:center !important;
@@ -908,6 +912,11 @@ body{
     padding:46px 30px 28px !important;
   }
   .concept-hero-wheel{
+    position:relative !important;
+    left:auto !important;
+    top:auto !important;
+    transform:none !important;
+    width:100% !important;
     min-height:500px !important;
   }
   .your-day-layout{
