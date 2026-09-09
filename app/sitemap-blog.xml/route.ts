@@ -1,4 +1,4 @@
 import { urlset, xml } from "@/lib/xml";
 export async function GET() {
-  return xml(urlset(["https://panchang.in/festivals-calendar/2026"]));
+  return xml(urlset(["https://panchvani.com/festivals-calendar/2026"]));
 }
