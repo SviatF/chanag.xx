@@ -28,7 +28,7 @@ const nakshatras=["Ashwini","Bharani","Krittika","Rohini","Mrigashirsha","Ardra"
 const yogas=["Vishkambha","Priti","Ayushman","Saubhagya","Shobhana","Atiganda","Sukarma","Dhriti","Shula","Ganda","Vriddhi","Dhruva","Vyaghata","Harshana","Vajra","Siddhi","Vyatipata","Variyana","Parigha","Shiva","Siddha","Sadhya","Shubha","Shukla","Brahma","Indra","Vaidhriti"];
 const tithis=["Pratipada","Dvitiya","Tritiya","Chaturthi","Panchami","Shashthi","Saptami","Ashtami","Navami","Dashami","Ekadashi","Dwadashi","Trayodashi","Chaturdashi","Purnima"];
 const karanas=["Bava","Balava","Kaulava","Taitila","Garaja","Vanija","Vishti"];
-const lords=["Sun","Moon","Mars","Mercury","Jupiter","Venus","Saturn"];
+const lords=["Sun","Moon","Mars","Mercury","Jupiter","Venus","Saturn"];\nconst rashis=["Mesha","Vrishabha","Mithuna","Karka","Simha","Kanya","Tula","Vrishchika","Dhanu","Makara","Kumbha","Meena"];
 const hinduMonths=["Pausha","Magha","Phalguna","Chaitra","Vaishakha","Jyeshtha","Ashadha","Shravana","Bhadrapada","Ashwin","Kartika","Margashirsha"];
 
 const norm=(x:number)=>((x%360)+360)%360;
@@ -116,7 +116,7 @@ export async function getPanchang(date:Date,city:City):Promise<Panchang>{
   return {
     date:date.toISOString().slice(0,10),
     weekday:new Intl.DateTimeFormat("en-IN",{weekday:"long",timeZone:"Asia/Kolkata"}).format(date),
-    tithi,paksha,nakshatra,yoga,karana,
+    tithi,paksha,nakshatra,nakshatraPada,rashi,yoga,karana,
     sunrise:time(sunrise),sunset:time(sunset),
     moonrise:time(sunrise+moonShift*((date.getUTCDate()%28))),
     moonset:time(sunset+moonShift*((date.getUTCDate()%28))),
