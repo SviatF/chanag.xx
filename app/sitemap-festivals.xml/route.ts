@@ -4,7 +4,7 @@ import { phase1PriorityCities } from "@/lib/seo-policy";
 import { urlset, xml } from "@/lib/xml";
 
 export async function GET() {
-  const base="https://panchang.in";
+  const base="https://panchvani.com";
   const priorityCities=cities.filter(city=>phase1PriorityCities.includes(city.slug as any));
   const urls:string[]=[
     base+"/festivals",
