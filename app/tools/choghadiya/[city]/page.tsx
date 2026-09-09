@@ -27,9 +27,9 @@ export default async function ChoghadiyaCityPage({params}:{params:Promise<{city:
   const good=data.dayChoghadiya.filter(x=>x.effect==="good");
 
   const ld={"@context":"https://schema.org","@graph":[
-    {"@type":"WebApplication","name":`Choghadiya Calculator — ${city.name}`,"applicationCategory":"LifestyleApplication","operatingSystem":"Web","url":`https://panchang.in/tools/choghadiya/${city.slug}`},
+    {"@type":"WebApplication","name":`Choghadiya Calculator — ${city.name}`,"applicationCategory":"LifestyleApplication","operatingSystem":"Web","url":`https://panchvani.com/tools/choghadiya/${city.slug}`},
     {"@type":"BreadcrumbList","itemListElement":[
-      {"@type":"ListItem","position":1,"name":"Tools","item":"https://panchang.in/tools"},
+      {"@type":"ListItem","position":1,"name":"Tools","item":"https://panchvani.com/tools"},
       {"@type":"ListItem","position":2,"name":"Choghadiya"},
       {"@type":"ListItem","position":3,"name":city.name}
     ]}
