@@ -1,15 +1,17 @@
 import Link from "next/link";
 import { Car, Gem, House, Leaf, Moon, Sparkles, Sun, Baby, BriefcaseBusiness, Heart, Clock3, MapPin } from "lucide-react";
+import { cookies } from "next/headers";
+import { unstable_cache } from "next/cache";
 import Header from "@/components/Header";
 import DayWheel from "@/components/DayWheel";
-import { cities } from "@/lib/cities";
+import { cities, cityBySlug } from "@/lib/cities";
 import { formatWindow, getPanchang } from "@/lib/panchang";
-import { nextFestival } from "@/lib/festivals";
+import { festivals2026, nextFestival } from "@/lib/festivals";
 import { todayInIndia } from "@/lib/dates";
 
 export const dynamic="force-dynamic";
 
-const featured=cities.slice(1,6);
+const featuredSlugs=["delhi","kolkata","chennai","bengaluru","hyderabad"];
 const momentCards=[
   ["Wedding","Find auspicious timings",Heart,"wedding"],
   ["Griha Pravesh","A blessed new home",House,"griha-pravesh"],
@@ -19,31 +21,61 @@ const momentCards=[
   ["Gold Purchase","Wealth and prosperity",Gem,"gold-purchase"],
 ] as const;
 
-export default async function Home(){
-  const city=cities[0];
+const getMonthData=unstable_cache(async(citySlug:string,year:number,month:number)=>{
+  const city=cityBySlug(citySlug);
+  const days=new Date(Date.UTC(year,month,0)).getUTCDate();
+  return Promise.all(Array.from({length:days},(_,index)=>
+    getPanchang(new Date(Date.UTC(year,month-1,index+1,6)),city)
+  ));
+},["home-month-panchang"],{revalidate:21600});
+
+export default async function Home({searchParams}:{searchParams:Promise<{city?:string}>}){
+  const q=await searchParams;
+  const store=await cookies();
+  const city=cityBySlug(q.city??store.get("panchang_city")?.value??"mumbai");
   const now=todayInIndia();
   const data=await getPanchang(now,city);
   const festival=nextFestival(now);
+  const year=now.getUTCFullYear();
+  const month=now.getUTCMonth()+1;
   const monthName=new Intl.DateTimeFormat("en-IN",{month:"long",timeZone:"Asia/Kolkata"}).format(now);
-  const daysInMonth=new Date(Date.UTC(now.getUTCFullYear(),now.getUTCMonth()+1,0)).getUTCDate();
+  const monthData=await getMonthData(city.slug,year,month);
+  const firstWeekday=new Date(Date.UTC(year,month-1,1)).getUTCDay();
+  const featured=featuredSlugs.map(cityBySlug);
+  const monthFestivals=festivals2026.filter(f=>{
+    const d=new Date(f.date+"T00:00:00Z");
+    return d.getUTCFullYear()===year&&d.getUTCMonth()+1===month;
+  });
+  const festivalByDate=new Map(monthFestivals.map(f=>[f.date,f]));
+  const bestChoghadiya=data.dayChoghadiya.find(p=>p.effect==="good");
+  const bestTime=data.abhijit
+    ? {name:"Abhijit Muhurat",time:formatWindow(data.abhijit)}
+    : bestChoghadiya
+      ? {name:`${bestChoghadiya.name} Choghadiya`,time:`${bestChoghadiya.start} — ${bestChoghadiya.end}`}
+      : {name:"See full Panchang",time:"Multiple local windows"};
+
+  const prev=new Date(Date.UTC(year,month-2,1));
+  const next=new Date(Date.UTC(year,month,1));
 
   return <main>
     <Header city={city}/>
     <section className="hero shell">
+      <div className="culture-glyph" aria-hidden="true">शुभ</div>
+      <div className="rangoli-orbit" aria-hidden="true"/>
       <div className="hero-copy">
         <p className="eyebrow">ROOTED IN TIME. CLOSER TO A BRIGHTER YOU.</p>
         <h1>Today in {city.name}</h1>
         <p className="hero-date">{data.weekday}, {new Intl.DateTimeFormat("en-IN",{day:"numeric",month:"long",year:"numeric",timeZone:"Asia/Kolkata"}).format(now)}</p>
         <div className="lunar-summary">
           <span>{data.paksha} Paksha</span><i/> <span>{data.tithi}</span>
-          <small>Nakshatra · {data.nakshatra}</small>
+          <small>Nakshatra · {data.nakshatra} until {data.nakshatraEnd}</small>
         </div>
         <div className="sunline">
           <div><Sun size={22}/><span><small>Sunrise</small>{data.sunrise}</span></div>
           <div><Sun size={22}/><span><small>Sunset</small>{data.sunset}</span></div>
         </div>
         <div className="hero-status">
-          <div className="status-card good"><Leaf/><span><small>Auspicious</small><strong>Abhijit Muhurat</strong><b>{formatWindow(data.abhijit)}</b></span></div>
+          <div className="status-card good"><Leaf/><span><small>Best time today</small><strong>{bestTime.name}</strong><b>{bestTime.time}</b></span></div>
           <div className="status-card danger"><Clock3/><span><small>Avoid</small><strong>Rahu Kalam</strong><b>{formatWindow(data.rahu)}</b></span></div>
         </div>
         <Link className="gold-button" href={`/panchang/${city.slug}/${data.date}`}>View full Panchang <span>→</span></Link>
@@ -57,33 +89,57 @@ export default async function Home(){
     <section className="section shell">
       <div className="section-head"><div><h2>Your Day</h2><p>At a glance, for a more intentional you.</p></div><Link href={`/panchang/${city.slug}/${data.date}`}>All details →</Link></div>
       <div className="day-grid">
-        <article className="info-card good"><Sun/><div><span>Best time today</span><h3>Abhijit Muhurat</h3><strong>{formatWindow(data.abhijit)}</strong><p>Excellent for important work, new beginnings and decisions.</p></div></article>
-        <article className="info-card danger"><Clock3/><div><span>Avoid this time</span><h3>Rahu Kalam</h3><strong>{formatWindow(data.rahu)}</strong><p>Not ideal for new ventures, financial transactions or travel.</p></div></article>
+        <article className="info-card good"><Sun/><div><span>Best time today</span><h3>{bestTime.name}</h3><strong>{bestTime.time}</strong><p>Calculated from today's local Panchang and daylight window.</p></div></article>
+        <article className="info-card danger"><Clock3/><div><span>Avoid this time</span><h3>Rahu Kalam</h3><strong>{formatWindow(data.rahu)}</strong><p>Location-sensitive period calculated from local sunrise and sunset.</p></div></article>
         <article className="info-card festival"><Sparkles/><div><span>Upcoming festival</span><h3>{festival.name}</h3><strong>{festival.date}</strong><p>{festival.short}</p></div></article>
       </div>
     </section>
 
-    <section className="section shell">
-      <div className="section-head"><div><h2>Plan an important moment</h2><p>Find the right Muhurat for life's special milestones.</p></div><Link href="/muhurat/wedding/2026/09">Explore all Muhurat →</Link></div>
+    <section className="section shell ritual-section">
+      <div className="section-symbol" aria-hidden="true">ॐ</div>
+      <div className="section-head"><div><h2>Plan an important moment</h2><p>Find the right Muhurat for life's special milestones.</p></div><Link href={`/muhurat/wedding/${year}/${String(month).padStart(2,"0")}`}>Explore all Muhurat →</Link></div>
       <div className="moment-grid">
-        {momentCards.map(([title,sub,Icon,slug])=><Link key={title} className="moment-card" href={`/muhurat/${slug}/2026/09`}><Icon/><h3>{title}</h3><p>{sub}</p></Link>)}
+        {momentCards.map(([title,sub,Icon,slug])=><Link key={title} className="moment-card" href={`/muhurat/${slug}/${year}/${String(month).padStart(2,"0")}`}><Icon/><h3>{title}</h3><p>{sub}</p></Link>)}
       </div>
     </section>
 
     <section className="section shell split-section">
       <div className="calendar-preview">
-        <div className="section-head"><div><h2>{monthName} in {city.name}</h2><p>Festivals, Tithis and important days at a glance.</p></div></div>
+        <div className="section-head"><div><h2>{monthName} in {city.name}</h2><p>Real Tithis, lunar markers and festivals for your city.</p></div></div>
         <div className="calendar-box">
-          <div className="calendar-title"><span>‹</span><strong>{monthName} {now.getUTCFullYear()}</strong><span>›</span></div>
+          <div className="calendar-title">
+            <Link href={`/calendar/${city.slug}/${prev.getUTCFullYear()}/${String(prev.getUTCMonth()+1).padStart(2,"0")}`} aria-label="Previous month">‹</Link>
+            <strong>{monthName} {year}</strong>
+            <Link href={`/calendar/${city.slug}/${next.getUTCFullYear()}/${String(next.getUTCMonth()+1).padStart(2,"0")}`} aria-label="Next month">›</Link>
+          </div>
           <div className="weekdays">{["Sun","Mon","Tue","Wed","Thu","Fri","Sat"].map(d=><b key={d}>{d}</b>)}</div>
-          <div className="calendar-grid">{Array.from({length:daysInMonth},(_,i)=>i+1).map(day=><Link className={day===now.getUTCDate()?"today":""} href={`/panchang/${city.slug}/${now.getUTCFullYear()}-${String(now.getUTCMonth()+1).padStart(2,"0")}-${String(day).padStart(2,"0")}`} key={day}><strong>{day}</strong><small>{["Pratipada","Dvitiya","Tritiya","Chaturthi","Panchami","Shashthi","Saptami","Ashtami"][day%8]}</small></Link>)}</div>
-          <Link className="inline-link" href={`/calendar/${city.slug}/${now.getUTCFullYear()}/${String(now.getUTCMonth()+1).padStart(2,"0")}`}>View full calendar →</Link>
+          <div className="calendar-grid">
+            {Array.from({length:firstWeekday},(_,i)=><span className="calendar-blank" key={"blank-"+i}/>)}
+            {monthData.map(day=>{
+              const isToday=day.date===data.date;
+              const festivalDay=festivalByDate.get(day.date);
+              const lunarKey=["Ekadashi","Purnima","Amavasya"].includes(day.tithi);
+              const dayNum=Number(day.date.slice(-2));
+              return <Link
+                className={[isToday?"today":"",festivalDay?"festival-day":"",lunarKey?"lunar-key":""].filter(Boolean).join(" ")}
+                href={`/panchang/${city.slug}/${day.date}`}
+                key={day.date}
+                title={festivalDay?`${festivalDay.name} · ${day.tithi}`:`${day.tithi} · ${day.nakshatra}`}
+              >
+                <strong>{dayNum}</strong>
+                <small>{day.tithi}</small>
+                <i className="calendar-marker" aria-hidden="true"/>
+              </Link>;
+            })}
+          </div>
+          <div className="calendar-legend"><span><i className="legend-lunar"/>Ekadashi / Purnima / Amavasya</span><span><i className="legend-festival"/>Festival</span></div>
+          <Link className="inline-link" href={`/calendar/${city.slug}/${year}/${String(month).padStart(2,"0")}`}>View full calendar →</Link>
         </div>
       </div>
       <div className="explore-stack">
         <div>
           <div className="section-head"><div><h2>Explore your Panchang</h2><p>Accurate Panchang for cities across India.</p></div><Link href="/cities">Browse all cities →</Link></div>
-          <div className="city-row">{featured.map(c=><Link href={`/panchang/${c.slug}`} key={c.slug}><MapPin size={16}/><strong>{c.name}</strong><small>{c.state}</small></Link>)}</div>
+          <div className="city-row">{featured.map(c=><Link href={`/?city=${c.slug}`} key={c.slug}><MapPin size={16}/><strong>{c.name}</strong><small>{c.state}</small></Link>)}</div>
         </div>
         <div>
           <div className="section-head"><div><h2>Tools</h2><p>Simple tools for deeper insights.</p></div><Link href="/tools">View all tools →</Link></div>
@@ -97,12 +153,12 @@ export default async function Home(){
         <div>
           <div className="section-head"><div><h2>Regional Panchang</h2><p>In your language, closer to your roots.</p></div><Link href="/regional">View all languages →</Link></div>
           <div className="language-grid">
-            {[["বাংলা","Bengali","bengali"],["தமிழ்","Tamil","tamil"],["മലയാളം","Malayalam","malayalam"],["ગુજરાતી","Gujarati","gujarati"],["मराठी","Marathi","marathi"]].map(([native,label,slug])=><Link href={`/regional/${slug}/mumbai`} key={slug}><strong>{native}</strong><small>{label}</small></Link>)}
+            {[["বাংলা","Bengali","bengali"],["தமிழ்","Tamil","tamil"],["മലയാളം","Malayalam","malayalam"],["ગુજરાતી","Gujarati","gujarati"],["मराठी","Marathi","marathi"]].map(([native,label,slug])=><Link href={`/regional/${slug}/${city.slug}`} key={slug}><strong>{native}</strong><small>{label}</small></Link>)}
           </div>
         </div>
       </div>
     </section>
 
-    <footer className="footer shell"><div><strong>PANCHANG</strong><p>Ancient wisdom, precisely timed.</p></div><div><Link href="/about">About</Link><Link href="/blog">Blog</Link><Link href="/tools">Tools</Link><span>ॐ तत् सत्</span></div></footer>
-  </main>
+    <footer className="footer shell"><div><strong>PANCHANG</strong><p>Ancient wisdom, precisely timed.</p></div><div><Link href="/cities">Cities</Link><Link href="/tools">Tools</Link><Link href={`/festivals-calendar/${year}`}>Festivals</Link><span>ॐ तत् सत्</span></div></footer>
+  </main>;
 }
