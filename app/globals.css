@@ -1129,3 +1129,148 @@ body{
       rgba(4,6,5,.02) 64%,
       rgba(4,6,5,.22) 100%) !important;
 }
+
+
+/* Final surgical fidelity pass — 2026-09-09 */
+@media(min-width:1181px){
+  /* Hero: slightly shorter, preserve more of the artwork, let architecture breathe */
+  .concept-master-hero{
+    min-height:552px !important;
+    grid-template-columns:.91fr 1.09fr !important;
+  }
+  .concept-master-hero-image{
+    object-position:57% center !important;
+    filter:saturate(1.01) contrast(1.035) brightness(1.045) !important;
+  }
+  .concept-master-hero-overlay{
+    background:
+      linear-gradient(90deg,
+        rgba(6,8,7,.985) 0%,
+        rgba(6,8,7,.955) 12%,
+        rgba(6,8,7,.88) 23%,
+        rgba(6,8,7,.73) 34%,
+        rgba(6,8,7,.54) 45%,
+        rgba(6,8,7,.34) 56%,
+        rgba(6,8,7,.18) 67%,
+        rgba(6,8,7,.075) 78%,
+        rgba(6,8,7,.025) 88%,
+        rgba(6,8,7,0) 100%),
+      linear-gradient(180deg,
+        rgba(4,6,5,.015) 0%,
+        rgba(4,6,5,.015) 68%,
+        rgba(4,6,5,.17) 100%) !important;
+  }
+
+  /* Wheel: ~9% smaller and clearly further left, matching approved concept */
+  .concept-hero-wheel .wheel-wrap{
+    transform:translateX(-7.5%) !important;
+  }
+  .concept-hero-wheel .wheel{
+    width:min(466px,72%) !important;
+  }
+
+  /* Left content follows the smaller hero rhythm */
+  .concept-hero-copy{
+    padding:43px 32px 36px 52px !important;
+  }
+  .concept-hero-copy h1{
+    font-size:57px !important;
+  }
+  .concept-hero-copy .hero-date{
+    font-size:26px !important;
+  }
+  .concept-hero-copy .lunar-summary{
+    margin-top:20px !important;
+  }
+  .concept-hero-copy .sunline{
+    margin-top:18px !important;
+  }
+  .concept-hero-copy .hero-status{
+    margin:19px 0 17px !important;
+  }
+  .hero-quote{
+    margin-top:16px !important;
+  }
+
+  /* Your Day: Ganesha is an editorial panel, not a narrow banner */
+  .your-day-layout{
+    grid-template-columns:minmax(0,2.72fr) minmax(350px,1.18fr) !important;
+    gap:12px !important;
+  }
+  .your-day-layout .info-card,
+  .your-day-art{
+    min-height:156px !important;
+  }
+  .your-day-art{
+    margin-right:-34px !important;
+  }
+  .your-day-photo-layer{
+    object-position:57% center !important;
+    filter:saturate(1) contrast(1.035) brightness(1.01) !important;
+  }
+  .your-day-photo-shade{
+    background:
+      linear-gradient(90deg,
+        rgba(7,9,8,.36) 0%,
+        rgba(7,9,8,.13) 28%,
+        rgba(7,9,8,.025) 56%,
+        rgba(7,9,8,0) 100%),
+      linear-gradient(180deg,transparent 0%,rgba(7,9,8,.06) 72%,rgba(7,9,8,.20) 100%) !important;
+  }
+
+  /* Plan section: denser and more editorial */
+  .ritual-section{
+    padding-top:20px !important;
+    padding-bottom:21px !important;
+  }
+  .ritual-section .section-head{
+    margin-bottom:12px !important;
+  }
+  .moment-card{
+    min-height:91px !important;
+    padding:12px 8px !important;
+  }
+  .moment-card svg{
+    width:24px !important;
+    height:24px !important;
+  }
+  .moment-card h3{
+    margin-top:6px !important;
+    margin-bottom:2px !important;
+  }
+
+  /* Bottom half: remove excess vertical air */
+  .calendar-preview,
+  .explore-stack{
+    padding:21px 25px !important;
+  }
+  .explore-stack{
+    gap:20px !important;
+  }
+  .split-section .section-head{
+    margin-bottom:13px !important;
+  }
+  .city-row a{
+    min-height:88px !important;
+  }
+  .tools-grid a{
+    min-height:53px !important;
+    padding:10px 10px !important;
+  }
+  .language-grid a{
+    min-height:55px !important;
+    padding:10px 5px !important;
+  }
+
+  /* Footer: lower and cleaner */
+  .footer{
+    min-height:106px !important;
+    padding:24px 30px 30px !important;
+  }
+  .footer>div:first-child strong{
+    font-size:21px !important;
+  }
+  .footer p{
+    margin:6px 0 0 !important;
+  }
+}
