@@ -1,25 +1,38 @@
 import { ChoghadiyaPeriod } from "@/lib/panchang";
 
-function PeriodRow({ period }:{ period: ChoghadiyaPeriod }) {
-  const offset = period.endDayOffset ? " +1" : "";
-  return <div className={"choghadiya-row " + period.effect}>
-    <span className="choghadiya-name">{period.name}</span>
-    <strong>{period.start} — {period.end}{offset}</strong>
-  </div>;
+function ToneDot({effect}:{effect:ChoghadiyaPeriod["effect"]}){
+  return <i className={"timeline-dot "+effect}/>;
+}
+
+function Timeline({title,subtitle,periods}:{title:string;subtitle:string;periods:ChoghadiyaPeriod[]}){
+  return <section className="choghadiya-timeline">
+    <div className="choghadiya-head"><span>{title}</span><small>{subtitle}</small></div>
+    <div className="timeline-track">
+      {periods.map((period,index)=><div
+        className={"timeline-segment "+period.effect}
+        key={title+"-"+index}
+        title={`${period.name} · ${period.start}–${period.end}`}
+      >
+        <ToneDot effect={period.effect}/>
+        <strong>{period.name}</strong>
+        <small>{period.start}</small>
+        {index===periods.length-1?<em>{period.end}{period.endDayOffset?" +1":""}</em>:null}
+      </div>)}
+    </div>
+  </section>;
 }
 
 export default function ChoghadiyaTable({
   day,
   night,
 }:{day:ChoghadiyaPeriod[];night:ChoghadiyaPeriod[]}) {
-  return <div className="choghadiya-grid">
-    <section>
-      <div className="choghadiya-head"><span>Day Choghadiya</span><small>Sunrise → Sunset</small></div>
-      <div className="choghadiya-list">{day.map((period,index)=><PeriodRow key={"day-"+index} period={period}/>)}</div>
-    </section>
-    <section>
-      <div className="choghadiya-head"><span>Night Choghadiya</span><small>Sunset → Next sunrise</small></div>
-      <div className="choghadiya-list">{night.map((period,index)=><PeriodRow key={"night-"+index} period={period}/>)}</div>
-    </section>
+  return <div className="choghadiya-stack">
+    <Timeline title="Day Choghadiya" subtitle="Sunrise → Sunset" periods={day}/>
+    <Timeline title="Night Choghadiya" subtitle="Sunset → Next sunrise" periods={night}/>
+    <div className="timeline-legend">
+      <span><ToneDot effect="good"/>Shubh / Labh / Amrit</span>
+      <span><ToneDot effect="neutral"/>Char</span>
+      <span><ToneDot effect="bad"/>Rog / Kaal / Udveg</span>
+    </div>
   </div>;
 }
