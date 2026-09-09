@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { CalendarDays, Car, Gem, House, Leaf, Moon, Search, Sparkles, Sun, Baby, BriefcaseBusiness, Heart, Clock3, MapPin } from "lucide-react";
+import { Car, Gem, House, Leaf, Moon, Sparkles, Sun, Baby, BriefcaseBusiness, Heart, Clock3, MapPin } from "lucide-react";
 import Header from "@/components/Header";
 import DayWheel from "@/components/DayWheel";
 import { cities } from "@/lib/cities";
@@ -23,7 +23,7 @@ export default async function Home(){
   const now=new Date();
   const data=await getPanchang(now,city);
   const festival=nextFestival(now);
-  const monthName=new Intl.DateTimeFormat("en-IN",{month:"long",timeZone:"Asia/Kolkata"}).format(now);
+  const monthName=new Intl.DateTimeFormat("en-IN",{month:"long",timeZone:"Asia/Kolkata"}).format(now);\n  const daysInMonth=new Date(Date.UTC(now.getUTCFullYear(),now.getUTCMonth()+1,0)).getUTCDate();
 
   return <main>
     <Header city={city}/>
@@ -74,7 +74,7 @@ export default async function Home(){
         <div className="calendar-box">
           <div className="calendar-title"><span>‹</span><strong>{monthName} {now.getUTCFullYear()}</strong><span>›</span></div>
           <div className="weekdays">{["Sun","Mon","Tue","Wed","Thu","Fri","Sat"].map(d=><b key={d}>{d}</b>)}</div>
-          <div className="calendar-grid">{Array.from({length:30},(_,i)=>i+1).map(day=><Link className={day===now.getUTCDate()?"today":""} href={`/panchang/${city.slug}/${now.getUTCFullYear()}-${String(now.getUTCMonth()+1).padStart(2,"0")}-${String(day).padStart(2,"0")}`} key={day}><strong>{day}</strong><small>{["Pratipada","Dvitiya","Tritiya","Chaturthi","Panchami","Shashthi","Saptami","Ashtami"][day%8]}</small></Link>)}</div>
+          <div className="calendar-grid">{Array.from({length:daysInMonth},(_,i)=>i+1).map(day=><Link className={day===now.getUTCDate()?"today":""} href={`/panchang/${city.slug}/${now.getUTCFullYear()}-${String(now.getUTCMonth()+1).padStart(2,"0")}-${String(day).padStart(2,"0")}`} key={day}><strong>{day}</strong><small>{["Pratipada","Dvitiya","Tritiya","Chaturthi","Panchami","Shashthi","Saptami","Ashtami"][day%8]}</small></Link>)}</div>
           <Link className="inline-link" href={`/calendar/${city.slug}/${now.getUTCFullYear()}/${String(now.getUTCMonth()+1).padStart(2,"0")}`}>View full calendar →</Link>
         </div>
       </div>
