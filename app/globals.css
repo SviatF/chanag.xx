@@ -27,3 +27,116 @@
 .choghadiya-row.neutral .choghadiya-name:before{background:#c2a568}
 .choghadiya-row.bad .choghadiya-name:before{background:#a65a4c}
 @media(max-width:620px){.choghadiya-grid{grid-template-columns:1fr}}
+
+
+/* Concept Fidelity Pass */
+body:before{content:"";position:fixed;inset:0;pointer-events:none;z-index:-1;background-image:linear-gradient(rgba(255,255,255,.012) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,.012) 1px,transparent 1px);background-size:48px 48px;mask-image:linear-gradient(to bottom,black,transparent 75%)}
+.site-header{border-color:#2a2924;background:rgba(8,10,9,.88)}
+.header-search{display:grid;place-items:center;color:#b6b2a8;transition:.2s}
+.header-search:hover{color:var(--gold2)}
+.location-button{appearance:none;color:var(--text);cursor:pointer;font-family:inherit}
+.location-button:hover{border-color:#76613e;background:#161711}
+.hero{min-height:660px;background:linear-gradient(135deg,rgba(255,255,255,.012),transparent 34%),radial-gradient(circle at 73% 50%,rgba(206,151,72,.08),transparent 34%)}
+.hero-copy{padding-top:74px}
+.hero h1{font-size:64px;letter-spacing:-.015em}
+.hero-date{color:#decfb4}
+.culture-glyph{position:absolute;left:41%;bottom:-80px;font:360px/1 "Instrument Serif";color:#d9b369;opacity:.022;pointer-events:none;user-select:none;z-index:0}
+.rangoli-orbit{position:absolute;right:7%;top:9%;width:520px;aspect-ratio:1;border-radius:50%;opacity:.055;pointer-events:none;background:repeating-conic-gradient(from 22.5deg,#d8b46e 0deg 1deg,transparent 1deg 22.5deg);mask:radial-gradient(transparent 0 54%,#000 55% 55.5%,transparent 56% 70%,#000 70.5% 71%,transparent 71.5%)}
+.ritual-section{position:relative;overflow:hidden}
+.section-symbol{position:absolute;right:3%;top:-52px;font:190px "Instrument Serif";color:#d4aa62;opacity:.022;pointer-events:none}
+.section-head h2{letter-spacing:-.01em}
+.info-card,.moment-card,.calendar-box,.tools-grid a,.language-grid a,.city-row a{box-shadow:inset 0 1px rgba(255,255,255,.018)}
+.moment-card{padding-top:25px;padding-bottom:24px}
+.moment-card:hover,.tools-grid a:hover,.language-grid a:hover,.city-row a:hover{border-color:#756240;background:#151711}
+
+/* Live Day Wheel */
+.wheel{width:min(520px,74%);box-shadow:0 0 0 8px #10120f,0 0 0 9px #544528,0 35px 90px rgba(0,0,0,.52),0 0 90px rgba(187,125,49,.08)}
+.wheel:before{content:"";position:absolute;inset:7%;border-radius:50%;border:1px dashed rgba(220,186,117,.15);pointer-events:none}
+.wheel:after{content:"";position:absolute;inset:24%;border-radius:50%;box-shadow:0 0 60px rgba(218,162,69,.08);pointer-events:none}
+.wheel-segment{mask:radial-gradient(transparent 0 50%,#000 50.5% 65%,transparent 65.5%);opacity:.95}
+.wheel-ring{border-color:rgba(221,190,120,.26)}
+.ring-b{border-color:rgba(221,190,120,.38)}
+.wheel-marker{--marker-angle:0deg;position:absolute;left:50%;top:50%;width:0;height:0;transform:rotate(var(--marker-angle));z-index:8}
+.wheel-marker span{position:absolute;left:-12px;top:-236px;width:24px;height:24px;border-radius:50%;display:grid;place-items:center;background:#16160f;border:1px solid #826b3f;color:#e3bb6a;box-shadow:0 4px 18px rgba(0,0,0,.35)}
+.sunset-marker span{color:#b98357;border-color:#76503b}
+.now-hand{--now-angle:0deg;position:absolute;left:50%;top:50%;width:1px;height:1px;transform:rotate(var(--now-angle));z-index:9}
+.now-hand:before{content:"";position:absolute;width:1px;height:205px;bottom:0;left:0;background:linear-gradient(transparent,#f4cf80 75%);box-shadow:0 0 10px rgba(244,207,128,.5)}
+.now-hand i{position:absolute;left:-5px;top:-210px;width:11px;height:11px;border-radius:50%;background:#f4cf80;box-shadow:0 0 0 4px rgba(244,207,128,.12),0 0 20px rgba(244,207,128,.55)}
+.wheel-center{inset:30%;background:radial-gradient(circle at 50% 35%,#1e1d14,#0b0e0c 72%);z-index:5}
+.wheel-center strong{font-size:25px}
+.wheel-center em{font-style:normal;font-size:8px;color:#777c72}
+.now-state{margin-top:5px;padding:5px 8px;border-radius:20px;font-size:8px;font-weight:500;border:1px solid #383b34;background:#111410;color:#bbb8ad}
+.now-state.good{border-color:#4c633c;color:#bcd49a}.now-state.bad{border-color:#6a3930;color:#e3a497}.now-state.neutral{border-color:#675839;color:#d9bc7e}
+.moon-phase{--illumination:50%;width:36px;height:36px;border-radius:50%;display:grid;place-items:center;background:linear-gradient(90deg,#e2c785 0 var(--illumination),#22251f var(--illumination) 100%);box-shadow:0 0 22px rgba(224,192,119,.13);overflow:hidden}
+.moon-phase svg{color:#0d0e0b;opacity:.52}
+.clock{z-index:10;background:#0c0e0c;padding:2px 5px;border-radius:8px}
+.t00{top:-24px;left:50%;transform:translateX(-50%)}
+.t06{right:-31px;left:auto;top:50%;transform:translateY(-50%)}
+.t12{bottom:-24px;top:auto;left:50%;transform:translateX(-50%)}
+.t18{left:-31px;right:auto;top:50%;transform:translateY(-50%)}
+.wheel-label.top{top:8%;left:50%;transform:translateX(-50%)}
+.wheel-label.right{right:3%;top:30%}
+.wheel-label.bottom{bottom:8%;left:50%;transform:translateX(-50%)}
+.wheel-label.left{left:3%;top:53%}
+
+/* Real month preview */
+.calendar-grid .calendar-blank{min-height:57px;border-top:1px solid #1e211e;border-right:1px solid #1e211e;background:#0b0e0c}
+.calendar-grid a{position:relative}
+.calendar-marker{position:absolute;right:7px;top:7px;width:5px;height:5px;border-radius:50%;opacity:0;background:#8b784e}
+.calendar-grid a.lunar-key .calendar-marker{opacity:1;background:#bca15f;box-shadow:0 0 8px rgba(188,161,95,.38)}
+.calendar-grid a.festival-day .calendar-marker{opacity:1;background:#d36f48;box-shadow:0 0 9px rgba(211,111,72,.48)}
+.calendar-grid a.today .calendar-marker{background:#251d12;box-shadow:none}
+.calendar-grid a.lunar-key:not(.today){background:linear-gradient(135deg,rgba(180,151,83,.06),transparent)}
+.calendar-grid a.festival-day:not(.today){background:linear-gradient(135deg,rgba(170,75,44,.10),transparent)}
+.calendar-legend{display:flex;gap:16px;flex-wrap:wrap;padding:11px 14px;border-top:1px solid var(--line);color:#85877f;font-size:8px}
+.calendar-legend span{display:flex;align-items:center;gap:6px}.calendar-legend i{width:6px;height:6px;border-radius:50%}.legend-lunar{background:#bca15f}.legend-festival{background:#d36f48}
+.calendar-title a{color:#ae9c76;width:24px;text-align:center;transition:.2s}.calendar-title a:hover{color:#f0ca7d}
+
+/* City command palette */
+.city-overlay{position:fixed;inset:0;z-index:100;display:grid;place-items:start center;padding-top:96px}
+.city-backdrop{position:absolute;inset:0;border:0;background:rgba(3,5,4,.72);backdrop-filter:blur(14px);cursor:default}
+.city-command{position:relative;width:min(620px,calc(100% - 28px));max-height:min(720px,calc(100vh - 130px));overflow:hidden;border:1px solid #3a382f;border-radius:18px;background:linear-gradient(145deg,#151713,#0b0e0c 70%);box-shadow:0 30px 100px rgba(0,0,0,.65),inset 0 1px rgba(255,255,255,.04)}
+.city-command:before{content:"शुभ";position:absolute;right:-25px;top:-75px;font:190px "Instrument Serif";color:#d5ac61;opacity:.035;pointer-events:none}
+.city-command-head{display:flex;align-items:flex-start;justify-content:space-between;padding:24px 24px 16px;position:relative}
+.city-command-head small{font-size:9px;letter-spacing:.18em;color:#b79458}.city-command-head h2{font:30px "Instrument Serif";margin:4px 0 0}.city-command-head button{border:1px solid var(--line);width:34px;height:34px;border-radius:50%;display:grid;place-items:center;background:#11130f;color:#aaa89f;cursor:pointer}
+.city-search{margin:0 20px 10px;border:1px solid #3a3b32;border-radius:11px;background:#090c0a;display:flex;align-items:center;gap:10px;padding:0 13px}
+.city-search svg{color:#a58e60}.city-search input{width:100%;border:0;outline:0;background:transparent;color:var(--text);padding:14px 0;font:13px "DM Sans",sans-serif}
+.detect-city{margin:0 20px 12px;width:calc(100% - 40px);display:flex;align-items:center;gap:9px;padding:11px 12px;border:1px solid #2d362b;border-radius:9px;background:#111711;color:#c7d1ba;font:11px "DM Sans";cursor:pointer}.detect-city:disabled{opacity:.55}
+.city-results{max-height:390px;overflow:auto;padding:0 12px 14px}
+.city-results button{width:100%;border:0;border-bottom:1px solid #20231f;background:transparent;color:var(--text);padding:12px;display:flex;align-items:center;justify-content:space-between;text-align:left;cursor:pointer;border-radius:8px}
+.city-results button:hover,.city-results button.selected{background:#171812}.city-results button span{display:grid}.city-results strong{font:16px "Instrument Serif";font-weight:400}.city-results small{font-size:9px;color:#85877f;margin-top:2px}.city-results svg{color:#d7b46f}
+.city-note{margin:0;padding:14px 20px 18px;border-top:1px solid var(--line);font-size:9px;line-height:1.5;color:#777970}
+
+/* Choghadiya time intelligence */
+.choghadiya-stack{display:grid;gap:18px;margin-top:22px}
+.choghadiya-timeline{border:1px solid var(--line);border-radius:12px;background:#0c0f0d;overflow:hidden}
+.timeline-track{display:grid;grid-template-columns:repeat(8,1fr);min-width:760px;overflow:hidden}
+.choghadiya-timeline{overflow-x:auto}
+.timeline-segment{position:relative;min-height:92px;padding:15px 9px 11px;border-right:1px solid #252820;display:flex;flex-direction:column;justify-content:flex-end;background:linear-gradient(180deg,transparent,rgba(255,255,255,.014))}
+.timeline-segment:last-child{border-right:0}.timeline-segment.good{background:linear-gradient(180deg,rgba(111,143,78,.08),rgba(111,143,78,.02))}.timeline-segment.bad{background:linear-gradient(180deg,rgba(151,71,57,.08),rgba(151,71,57,.02))}.timeline-segment.neutral{background:linear-gradient(180deg,rgba(188,154,83,.07),rgba(188,154,83,.02))}
+.timeline-segment strong{font:15px "Instrument Serif";font-weight:400}.timeline-segment small{font-size:8px;color:#8b8c84;margin-top:3px}.timeline-segment em{position:absolute;right:6px;bottom:11px;font-style:normal;font-size:7px;color:#666960}
+.timeline-dot{display:inline-block;width:6px;height:6px;border-radius:50%;margin-bottom:9px;background:#777}.timeline-dot.good{background:#8ca968;box-shadow:0 0 9px rgba(140,169,104,.3)}.timeline-dot.neutral{background:#c2a568}.timeline-dot.bad{background:#a65a4c}
+.timeline-legend{display:flex;gap:18px;flex-wrap:wrap;color:#898b82;font-size:9px}.timeline-legend span{display:flex;align-items:center;gap:6px}.timeline-legend .timeline-dot{margin:0}
+
+@media(max-width:1000px){
+  .culture-glyph{left:auto;right:-40px;font-size:280px}
+  .rangoli-orbit{right:50%;transform:translateX(50%);top:39%;width:480px}
+  .hero h1{font-size:54px}
+  .wheel{width:min(500px,74vw)}
+}
+@media(max-width:620px){
+  .hero{min-height:auto}
+  .hero h1{font-size:45px}
+  .culture-glyph{font-size:210px;bottom:160px;right:-35px}
+  .rangoli-orbit{width:330px;top:48%}
+  .location-button span{display:block;max-width:112px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:10px}
+  .location-pill{font-size:10px;padding:9px 10px}
+  .wheel{width:79vw}
+  .wheel-marker span{top:calc(-39.5vw + 7px)}
+  .wheel-label.right,.wheel-label.left{display:none}
+  .calendar-grid .calendar-blank{min-height:52px}
+  .calendar-legend{gap:8px}
+  .city-overlay{padding-top:70px}
+  .city-command{max-height:calc(100vh - 86px)}
+  .timeline-track{min-width:650px}
+}
