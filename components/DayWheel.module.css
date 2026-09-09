@@ -4,7 +4,13 @@
   align-items:center;
   justify-content:flex-start;
   position:relative;
-  padding-left:10px;
+  padding-left:0;
+}
+
+@media(min-width:1181px){
+  .root{
+    transform:translateX(-42px);
+  }
 }
 
 .svg{
@@ -21,6 +27,18 @@
   text-anchor:middle;
   dominant-baseline:middle;
   letter-spacing:.02em;
+}
+
+.nowLabel{
+  fill:#edcb7a;
+  font:600 8px "DM Sans",sans-serif;
+  text-anchor:middle;
+  dominant-baseline:middle;
+  letter-spacing:.08em;
+  paint-order:stroke;
+  stroke:rgba(4,6,5,.72);
+  stroke-width:3px;
+  stroke-linejoin:round;
 }
 
 .sectorIcon{
