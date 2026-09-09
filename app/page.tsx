@@ -15,13 +15,13 @@ const featuredSlugs=["delhi","kolkata","chennai","bengaluru","hyderabad"];
 
 const cityVisuals:Record<string,string>={
   mumbai:"https://commons.wikimedia.org/wiki/Special:Redirect/file/Gateway_of_India_in_the_evening%2C_Mumbai%2C_India.jpg?width=1400",
-  delhi:"https://commons.wikimedia.org/wiki/Special:Redirect/file/India_Gate_Sunset.jpg?width=1200",
+  delhi:"https://commons.wikimedia.org/wiki/Special:Redirect/file/Sunset_at_INDIA_GATE.jpg?width=1600",
   kolkata:"https://commons.wikimedia.org/wiki/Special:Redirect/file/Sunset_at_Victoria_Memorial_Kolkata.jpg?width=1200",
   chennai:"https://commons.wikimedia.org/wiki/Special:Redirect/file/Kapaleeswarar_temple.jpg?width=1000",
   bengaluru:"https://commons.wikimedia.org/wiki/Special:Redirect/file/Vidhan_Soudha_during_sunset.jpg?width=1200",
   hyderabad:"https://commons.wikimedia.org/wiki/Special:Redirect/file/Charminar_at_Sunset.JPG?width=1200"
 };
-const ganeshaVisual="https://commons.wikimedia.org/wiki/Special:Redirect/file/Ganesha_altar_with_flame.jpg?width=1000";
+const ganeshaVisual="https://commons.wikimedia.org/wiki/Special:Redirect/file/Ganesha_Idol.jpg?width=1200";
 const momentCards=[
   ["Wedding","Find auspicious timings",Heart,"wedding"],
   ["Griha Pravesh","A blessed new home",House,"griha-pravesh"],
@@ -177,6 +177,6 @@ export default async function Home({searchParams}:{searchParams:Promise<{city?:s
       </div>
     </section>
 
-    <footer className="footer shell"><div><strong>PANCHANG</strong><p>Ancient wisdom, precisely timed.</p></div><div><Link href="/cities">Cities</Link><Link href="/tools">Tools</Link><Link href={`/festivals-calendar/${year}`}>Festivals</Link><Link href="/photo-credits">Photo credits</Link><span>ॐ तत् सत्</span></div></footer>
+    <footer className="footer shell"><div><strong>PANCHANG</strong><p>Ancient wisdom for a brighter tomorrow.</p></div><div className="footer-links"><Link href="/about">About</Link><Link href="/tools">Help</Link><Link href="/blog">Blog</Link><Link href="/photo-credits">Credits</Link><span className="footer-social">◉</span><span className="footer-social">◎</span><span className="footer-social">𝕏</span><span className="footer-divider">||</span><span>ॐ तत् सत्</span></div></footer>
   </main>;
 }
