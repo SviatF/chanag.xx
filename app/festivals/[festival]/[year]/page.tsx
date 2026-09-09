@@ -29,8 +29,8 @@ export default async function FestivalPage({params}:{params:Promise<{festival:st
   const ld={"@context":"https://schema.org","@graph":[
     {"@type":"Event","name":`${f.name} ${year}`,"startDate":f.date,"location":{"@type":"Country","name":"India"},"description":f.short},
     {"@type":"BreadcrumbList","itemListElement":[
-      {"@type":"ListItem","position":1,"name":"Home","item":"https://panchang.in/"},
-      {"@type":"ListItem","position":2,"name":"Festivals","item":"https://panchang.in/festivals/"},
+      {"@type":"ListItem","position":1,"name":"Home","item":"https://panchvani.com/"},
+      {"@type":"ListItem","position":2,"name":"Festivals","item":"https://panchvani.com/festivals/"},
       {"@type":"ListItem","position":3,"name":`${f.name} ${year}`}
     ]}
   ]};
