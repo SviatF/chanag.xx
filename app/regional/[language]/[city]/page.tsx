@@ -2,7 +2,8 @@ import type { Metadata } from "next";
 import Header from "@/components/Header";
 import { cityBySlug } from "@/lib/cities";
 import { getPanchang, formatWindow } from "@/lib/panchang";
-import { regional } from "@/lib/regional";\nimport { todayInIndia } from "@/lib/dates";
+import { regional } from "@/lib/regional";
+import { todayInIndia } from "@/lib/dates";
 
 export const dynamic = "force-dynamic";
 
