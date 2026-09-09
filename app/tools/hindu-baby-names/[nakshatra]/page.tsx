@@ -23,7 +23,7 @@ export default async function Page({params}:{params:Promise<{nakshatra:string}>}
   const item=nakshatraBySlug(p.nakshatra);
   if(!item)notFound();
 
-  const ld={"@context":"https://schema.org","@type":"WebApplication","name":`${item.name} Nakshatra Baby Names`,"applicationCategory":"LifestyleApplication","operatingSystem":"Web","url":`https://panchang.in/tools/hindu-baby-names/${item.slug}`};
+  const ld={"@context":"https://schema.org","@type":"WebApplication","name":`${item.name} Nakshatra Baby Names`,"applicationCategory":"LifestyleApplication","operatingSystem":"Web","url":`https://panchvani.com/tools/hindu-baby-names/${item.slug}`};
 
   return <main><Header city={cities[0]}/><div className="page-shell internal-visual internal-tools">
     <div className="breadcrumbs"><Link href="/tools">Tools</Link> / Baby Names / {item.name}</div>
