@@ -4,6 +4,7 @@ import { cityBySlug } from "@/lib/cities";
 import { getPanchang, formatWindow } from "@/lib/panchang";
 import { regional } from "@/lib/regional";
 import { todayInIndia } from "@/lib/dates";
+import { isRegionalIndexable, robotsFor } from "@/lib/seo-policy";
 
 export const revalidate = 3600;
 
@@ -24,7 +25,8 @@ export async function generateMetadata({params}:{params:Promise<{language:string
   return {
     title:`${lang.label} in ${city.name}`,
     description:`${lang.label} for ${city.name} with Tithi, Nakshatra, sunrise, sunset and Rahu Kalam.`,
-    alternates:{canonical:`/regional/${p.language}/${city.slug}`,languages}
+    alternates:{canonical:`/regional/${p.language}/${city.slug}`,languages},
+    robots:robotsFor(isRegionalIndexable(p.language,city))
   };
 }
 
