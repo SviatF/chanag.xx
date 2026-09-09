@@ -34,7 +34,7 @@ export default async function PanchangPage({params}:{params:Promise<{city:string
     {"@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"Home","item":"https://panchang.in/"},{"@type":"ListItem","position":2,"name":city.name,"item":`https://panchang.in/panchang/${city.slug}/`},{"@type":"ListItem","position":3,"name":data.date}]},
     {"@type":"FAQPage","mainEntity":faq.map(x=>({"@type":"Question","name":x.q,"acceptedAnswer":{"@type":"Answer","text":x.a}}))}
   ]};
-  return <main><Header city={city}/><div className="page-shell">
+  return <main><Header city={city}/><div className="page-shell internal-visual internal-panchang">
     <div className="breadcrumbs"><Link href="/">Home</Link> / <Link href={`/panchang/${city.slug}`}>{city.name}</Link> / {data.date}</div>
     <p className="page-kicker">DAILY PANCHANG · {city.state}</p><h1 className="page-title">{city.name} Panchang<br/>{data.date}</h1>
     <p className="page-subtitle">Precise local timings for {city.name}, including sunrise and sunset dependent periods. Calculation engine: {data.engine}.</p>
