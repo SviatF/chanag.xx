@@ -34,7 +34,7 @@ export function getGscConnectionStatus(){
   return {
     configured:Object.values(required).every(Boolean),
     required,
-    siteUrl:process.env.GSC_SITE_URL??"sc-domain:panchang.in",
+    siteUrl:process.env.GSC_SITE_URL??"sc-domain:panchvani.com",
   };
 }
 
