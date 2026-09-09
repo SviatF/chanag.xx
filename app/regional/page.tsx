@@ -1,0 +1,4 @@
+import Header from "@/components/Header";import {cities} from "@/lib/cities";import Link from "next/link";
+export const metadata={title:"Regional Panchang Languages"};
+const langs=[["বাংলা","Bengali Panjika","bengali"],["தமிழ்","Tamil Panchangam","tamil"],["മലയാളം","Malayalam Panchangam","malayalam"],["ગુજરાતી","Gujarati Calendar","gujarati"],["मराठी","Marathi Panchang","marathi"]];
+export default function Regional(){return <main><Header city={cities[0]}/><div className="page-shell"><p className="page-kicker">Regional depth</p><h1 className="page-title">Panchang in your language.</h1><p className="page-subtitle">Regional terminology is treated as a first-class product layer rather than a translated interface.</p><div className="regional-list">{langs.map(([native,label,slug])=><Link href={`/regional/${slug}/mumbai`} key={slug}><strong>{native}</strong><small>{label}</small></Link>)}</div></div></main>}
