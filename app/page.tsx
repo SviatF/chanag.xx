@@ -8,8 +8,8 @@ import { cities, cityBySlug } from "@/lib/cities";
 import { formatWindow, getPanchang } from "@/lib/panchang";
 import { festivals2026, nextFestival } from "@/lib/festivals";
 import { todayInIndia } from "@/lib/dates";
-import heroPh from "@/lib/hero-ph.webp";
-import sectionYourDayPh from "@/lib/section-your-day.webp";
+import mainHero from "@/lib/main-hero.webp";
+import geneshaYourDay from "@/lib/genesha-your_day.webp";
 
 export const dynamic="force-dynamic";
 
@@ -70,10 +70,12 @@ export default async function Home({searchParams}:{searchParams:Promise<{city?:s
 
   return <main>
     <Header city={city}/>
-    <section className="hero shell">
-      <div className="culture-glyph" aria-hidden="true">शुभ</div>
-      <div className="rangoli-orbit" aria-hidden="true"/>
-      <div className="hero-copy">
+    <section className="hero shell concept-master-hero">
+      <img className="concept-master-hero-image" src={mainHero.src} alt="" aria-hidden="true"/>
+      <div className="concept-master-hero-overlay" aria-hidden="true"/>
+      <div className="concept-corner concept-corner-tl" aria-hidden="true"/>
+      <div className="concept-corner concept-corner-bl" aria-hidden="true"/>
+      <div className="hero-copy concept-hero-copy">
         <p className="eyebrow">ROOTED IN TIME. CLOSER TO A BRIGHTER YOU.</p>
         <h1>Today in {city.name}</h1>
         <p className="hero-date">{data.weekday}, {new Intl.DateTimeFormat("en-IN",{day:"numeric",month:"long",year:"numeric",timeZone:"Asia/Kolkata"}).format(now)}</p>
@@ -86,14 +88,13 @@ export default async function Home({searchParams}:{searchParams:Promise<{city?:s
           <div><Sun size={22}/><span><small>Sunset</small>{data.sunset}</span></div>
         </div>
         <div className="hero-status">
-          <div className="status-card good"><Leaf/><span><small>Best time today</small><strong>{bestTime.name}</strong><b>{bestTime.time}</b></span></div>
+          <div className="status-card good"><Leaf/><span><small>Auspicious</small><strong>{bestTime.name}</strong><b>{bestTime.time}</b></span></div>
           <div className="status-card danger"><Clock3/><span><small>Avoid</small><strong>Rahu Kalam</strong><b>{formatWindow(data.rahu)}</b></span></div>
         </div>
         <Link className="gold-button" href={`/panchang/${city.slug}/${data.date}`}>View full Panchang <span>→</span></Link>
+        <div className="hero-quote"><i/> <span>“Good timing turns ordinary moments into blessings.”</span></div>
       </div>
-      <div className="hero-wheel concept-hero-art">
-        <img className="hero-photo-layer" src={heroPh.src} alt="" aria-hidden="true"/>
-        <div className="hero-photo-shade" aria-hidden="true"/>
+      <div className="hero-wheel concept-hero-wheel">
         <DayWheel data={data}/>
         <div className="ambient-copy">SAME<br/>SKIES.<br/>DEEPER<br/>MEANING.</div>
       </div>
@@ -108,7 +109,7 @@ export default async function Home({searchParams}:{searchParams:Promise<{city?:s
           <article className="info-card festival"><Sparkles/><div><span>Upcoming festival</span><h3>{festival.name}</h3><strong>{festival.date}</strong><p>{festival.short}</p></div></article>
         </div>
         <div className="your-day-art" aria-hidden="true">
-          <img className="your-day-photo-layer" src={sectionYourDayPh.src} alt=""/>
+          <img className="your-day-photo-layer" src={geneshaYourDay.src} alt=""/>
           <div className="your-day-photo-shade"/>
           <span>TRADITION<br/>LIVES BRIGHTER<br/>TOGETHER</span>
         </div>
