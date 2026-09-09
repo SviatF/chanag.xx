@@ -270,3 +270,117 @@ body:before{content:"";position:fixed;inset:0;pointer-events:none;z-index:-1;bac
 .footer-divider{color:#5e5b53}
 @media(max-width:1000px){.account-dot{display:none}.footer-links{flex-wrap:wrap}}
 @media(max-width:620px){.nav{display:none}.footer-links{gap:12px}}
+
+
+/* Approved uploaded assets — final concept placement */
+.concept-hero-art{
+  background-image:
+    linear-gradient(90deg,rgba(7,10,8,.98) 0%,rgba(7,10,8,.76) 22%,rgba(7,10,8,.34) 52%,rgba(7,10,8,.08) 76%,rgba(7,10,8,.02) 100%),
+    linear-gradient(180deg,rgba(5,7,6,.04) 0%,rgba(5,7,6,.08) 58%,rgba(5,7,6,.35) 100%),
+    url("/hero-ph.webp") !important;
+  background-size:cover !important;
+  background-position:center center !important;
+  background-repeat:no-repeat !important;
+}
+.concept-hero-art:before{
+  background:linear-gradient(90deg,rgba(6,8,7,.88) 0%,rgba(6,8,7,.42) 39%,rgba(5,6,5,.05) 75%) !important;
+}
+.concept-hero-art:after{
+  background:radial-gradient(circle at 44% 50%,transparent 0 32%,rgba(7,8,7,.04) 52%,rgba(7,8,7,.18) 100%) !important;
+}
+.concept-hero-art .wheel-wrap{
+  transform:translateX(-8%);
+}
+.concept-hero-art .ambient-copy{
+  right:25px;
+  top:75px;
+  color:#dec28b;
+  text-shadow:0 2px 12px rgba(0,0,0,.85);
+}
+
+.your-day-section{
+  position:relative;
+  overflow:hidden;
+  padding-top:28px;
+  padding-bottom:28px;
+}
+.your-day-layout{
+  display:grid;
+  grid-template-columns:minmax(0,1fr) 300px;
+  gap:12px;
+  align-items:stretch;
+}
+.your-day-layout .day-grid{
+  grid-template-columns:repeat(3,minmax(0,1fr));
+  gap:12px;
+}
+.your-day-layout .info-card{
+  min-height:172px;
+}
+.your-day-art{
+  min-height:172px;
+  position:relative;
+  overflow:hidden;
+  border-radius:11px;
+  border:1px solid #2f302a;
+  background-image:
+    linear-gradient(90deg,rgba(8,11,9,.88) 0%,rgba(8,11,9,.35) 34%,rgba(8,11,9,.04) 68%,rgba(8,11,9,.08) 100%),
+    linear-gradient(180deg,rgba(7,9,8,.05),rgba(7,9,8,.28)),
+    url("/section-your-day.webp");
+  background-size:cover;
+  background-position:68% center;
+  background-repeat:no-repeat;
+  box-shadow:inset 0 1px rgba(255,255,255,.025);
+}
+.your-day-art:before{
+  content:"";
+  position:absolute;
+  inset:0;
+  background:linear-gradient(90deg,rgba(8,10,9,.40),transparent 42%);
+  pointer-events:none;
+}
+.your-day-art span{
+  position:absolute;
+  right:18px;
+  bottom:17px;
+  z-index:2;
+  color:#d4b16f;
+  font-size:7px;
+  line-height:1.75;
+  letter-spacing:.16em;
+  text-align:right;
+  text-shadow:0 2px 10px rgba(0,0,0,.9);
+}
+
+@media(max-width:1180px){
+  .your-day-layout{grid-template-columns:1fr 240px}
+  .your-day-layout .day-grid{grid-template-columns:repeat(3,minmax(0,1fr))}
+  .concept-hero-art .wheel-wrap{transform:translateX(-3%)}
+}
+@media(max-width:1000px){
+  .concept-hero-art{
+    background-position:72% center !important;
+  }
+  .concept-hero-art .wheel-wrap{transform:none}
+  .your-day-layout{grid-template-columns:1fr}
+  .your-day-art{min-height:260px;background-position:72% center}
+}
+@media(max-width:760px){
+  .your-day-layout .day-grid{grid-template-columns:1fr}
+  .your-day-art{min-height:220px}
+}
+@media(max-width:620px){
+  .concept-hero-art{
+    min-height:470px;
+    background-position:72% center !important;
+  }
+  .your-day-art{
+    min-height:205px;
+    background-position:70% center;
+  }
+  .your-day-art span{
+    right:12px;
+    bottom:12px;
+    font-size:6px;
+  }
+}
