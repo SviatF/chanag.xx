@@ -4,7 +4,7 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
-    "build": "next build",
+    "build": "vinext build",
     "start": "next start",
     "lint": "next lint",
     "test": "vitest run",
@@ -13,7 +13,8 @@
     "build:vinext": "vinext build",
     "start:vinext": "wrangler dev --config dist/server/wrangler.json",
     "deploy:vinext": "vinext-cloudflare deploy",
-    "cf-typegen": "wrangler types"
+    "cf-typegen": "wrangler types",
+    "build:next": "next build"
   },
   "dependencies": {
     "@types/node": "^22.10.0",
