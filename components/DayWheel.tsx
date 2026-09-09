@@ -7,41 +7,56 @@ import styles from "./DayWheel.module.css";
 const SIZE=600;
 const CX=300;
 const CY=300;
-const OUTER_R=244;
-const INNER_R=128;
-const CENTER_R=128;
-const OUTLINE_R=264;
-const TICK_OUTER=258;
 
-type Tone="night"|"rahu"|"sunset"|"day"|"abhijit"|"sunrise"|"yamaganda"|"gulika";
+const OUTER_R=244;
+const INNER_R=112;
+const CENTER_R=112;
+
+const GOLD_RING_R=266;
+const GOLD_RING_INNER_R=257;
+const TICK_OUTER_R=255;
+
+type Tone=
+  | "night"
+  | "rahu"
+  | "sunset"
+  | "day"
+  | "abhijit"
+  | "sunrise"
+  | "yamaganda"
+  | "gulika";
+
 type Sector={
   key:Tone;
   label:string;
   value?:string;
   start:number;
   end:number;
-  icon:string;
+  icon?:string;
   muted?:boolean;
 };
 
-const colors:Record<Tone,{fill:string;stroke:string;label:string}>={
-  night:{fill:"#090d0e",stroke:"#755f32",label:"#f7eddb"},
-  rahu:{fill:"#7e302d",stroke:"#d77563",label:"#ffe3d8"},
-  sunset:{fill:"#4c4023",stroke:"#ba9347",label:"#f6e4bd"},
-  day:{fill:"#171711",stroke:"#8f7137",label:"#f5e3bd"},
-  abhijit:{fill:"#333c16",stroke:"#9ba72d",label:"#eff1bd"},
-  sunrise:{fill:"#76572a",stroke:"#d6aa55",label:"#ffedc5"},
-  yamaganda:{fill:"#42291f",stroke:"#9f694c",label:"#f3dfcd"},
-  gulika:{fill:"#18140e",stroke:"#816234",label:"#efe1c9"},
+const labelColors:Record<Tone,string>={
+  night:"#f5ebd8",
+  rahu:"#ffe0d5",
+  sunset:"#f7e7c4",
+  day:"#f3dfb5",
+  abhijit:"#edf0bd",
+  sunrise:"#fff0c8",
+  yamaganda:"#efdbc8",
+  gulika:"#ead9bd",
 };
 
 function formatWindow(value:TimeWindow|null){
-  return value?`${value.start} – ${value.end}`:"Not available today";
+  return value ? `${value.start} – ${value.end}` : "Not available today";
 }
 
 function polar(radius:number,angle:number){
-  const r=(angle-90)*Math.PI/180;
-  return {x:CX+radius*Math.cos(r),y:CY+radius*Math.sin(r)};
+  const radians=(angle-90)*Math.PI/180;
+  return {
+    x:CX+radius*Math.cos(radians),
+    y:CY+radius*Math.sin(radians),
+  };
 }
 
 function sectorPath(start:number,end:number){
@@ -50,6 +65,7 @@ function sectorPath(start:number,end:number){
   const c=polar(INNER_R,end);
   const d=polar(INNER_R,start);
   const large=end-start>180?1:0;
+
   return [
     `M ${a.x} ${a.y}`,
     `A ${OUTER_R} ${OUTER_R} 0 ${large} 1 ${b.x} ${b.y}`,
@@ -62,134 +78,296 @@ function sectorPath(start:number,end:number){
 function sectors(data:Panchang):Sector[]{
   return [
     {key:"night",label:"Night",start:330,end:390,icon:"☾"},
-    {key:"rahu",label:"Rahu Kalam",value:formatWindow(data.rahu),start:30,end:72,icon:""},
+    {key:"rahu",label:"Rahu Kalam",value:formatWindow(data.rahu),start:30,end:72},
     {key:"sunset",label:"Sunset",value:data.sunset,start:72,end:112,icon:"☀"},
     {key:"day",label:"Day",start:112,end:150,icon:"☀"},
-    {key:"abhijit",label:"Abhijit Muhurat",value:formatWindow(data.abhijit),start:150,end:210,icon:"",muted:!data.abhijit},
+    {
+      key:"abhijit",
+      label:"Abhijit Muhurat",
+      value:formatWindow(data.abhijit),
+      start:150,
+      end:210,
+      muted:!data.abhijit,
+    },
     {key:"sunrise",label:"Sunrise",value:data.sunrise,start:210,end:250,icon:"☀"},
-    {key:"yamaganda",label:"Yamaganda",value:formatWindow(data.yamaganda),start:250,end:290,icon:""},
-    {key:"gulika",label:"Gulika",value:formatWindow(data.gulika),start:290,end:330,icon:""},
+    {key:"yamaganda",label:"Yamaganda",value:formatWindow(data.yamaganda),start:250,end:290},
+    {key:"gulika",label:"Gulika",value:formatWindow(data.gulika),start:290,end:330},
   ];
 }
 
 function labelPoint(start:number,end:number,key:Tone){
   const mid=(start+end)/2;
-  const customRadius:Partial<Record<Tone,number>>={
-    night:188,
-    rahu:190,
-    sunset:189,
-    day:188,
-    abhijit:188,
-    sunrise:188,
-    yamaganda:188,
-    gulika:188,
+  const radius:Partial<Record<Tone,number>>={
+    night:186,
+    rahu:187,
+    sunset:185,
+    day:183,
+    abhijit:184,
+    sunrise:185,
+    yamaganda:186,
+    gulika:186,
   };
-  return polar(customRadius[key]??188,mid);
+  return polar(radius[key]??185,mid);
+}
+
+function sectorFill(key:Tone,muted?:boolean){
+  if(muted)return "url(#grad-abhijit-muted)";
+  return `url(#grad-${key})`;
 }
 
 export default function DayWheel({data}:{data:Panchang}){
   const wheelSectors=useMemo(()=>sectors(data),[data]);
 
+  const displayDate=new Date(data.date+"T00:00:00Z").toLocaleDateString(
+    "en-IN",
+    {day:"numeric",month:"short",year:"numeric",timeZone:"Asia/Kolkata"}
+  );
+
   return <div className={styles.root}>
-    <svg viewBox={`0 0 ${SIZE} ${SIZE}`} className={styles.svg} role="img" aria-label="Panchang day wheel">
+    <svg
+      viewBox={`0 0 ${SIZE} ${SIZE}`}
+      className={styles.svg}
+      role="img"
+      aria-label="Panchang day wheel"
+    >
       <defs>
-        <radialGradient id="dial-center" cx="50%" cy="38%" r="72%">
-          <stop offset="0%" stopColor="#202018"/>
-          <stop offset="68%" stopColor="#0b0e0d"/>
-          <stop offset="100%" stopColor="#080a09"/>
+        <radialGradient id="center-core" gradientUnits="userSpaceOnUse" cx={CX} cy={CY-22} r="150">
+          <stop offset="0%" stopColor="#282619"/>
+          <stop offset="42%" stopColor="#12140f"/>
+          <stop offset="78%" stopColor="#090b0a"/>
+          <stop offset="100%" stopColor="#050706"/>
         </radialGradient>
 
-        <radialGradient id="dial-glow" cx="50%" cy="50%" r="50%">
-          <stop offset="0%" stopColor="rgba(229,181,78,0)"/>
-          <stop offset="82%" stopColor="rgba(229,181,78,.018)"/>
-          <stop offset="100%" stopColor="rgba(229,181,78,.08)"/>
+        <radialGradient id="outer-halo" gradientUnits="userSpaceOnUse" cx={CX} cy={CY} r="286">
+          <stop offset="72%" stopColor="rgba(226,177,71,0)"/>
+          <stop offset="89%" stopColor="rgba(226,177,71,.04)"/>
+          <stop offset="100%" stopColor="rgba(226,177,71,.17)"/>
         </radialGradient>
 
-        <linearGradient id="rahu-sheen" x1="0" x2="1" y1="0" y2="1">
-          <stop offset="0%" stopColor="#56221f"/>
-          <stop offset="70%" stopColor="#8a3530"/>
-          <stop offset="100%" stopColor="#9c443a"/>
+        <radialGradient id="grad-night" gradientUnits="userSpaceOnUse" cx={CX} cy={CY} r={OUTER_R}>
+          <stop offset="0%" stopColor="#1b1c15"/>
+          <stop offset="45%" stopColor="#0d110f"/>
+          <stop offset="77%" stopColor="#080c0d"/>
+          <stop offset="100%" stopColor="#030606"/>
+        </radialGradient>
+
+        <radialGradient id="grad-rahu" gradientUnits="userSpaceOnUse" cx={CX} cy={CY} r={OUTER_R}>
+          <stop offset="0%" stopColor="#b04e40"/>
+          <stop offset="38%" stopColor="#8e3933"/>
+          <stop offset="72%" stopColor="#632620"/>
+          <stop offset="100%" stopColor="#2a1110"/>
+        </radialGradient>
+
+        <radialGradient id="grad-sunset" gradientUnits="userSpaceOnUse" cx={CX} cy={CY} r={OUTER_R}>
+          <stop offset="0%" stopColor="#a77d3c"/>
+          <stop offset="40%" stopColor="#74582d"/>
+          <stop offset="76%" stopColor="#43351d"/>
+          <stop offset="100%" stopColor="#17140e"/>
+        </radialGradient>
+
+        <radialGradient id="grad-day" gradientUnits="userSpaceOnUse" cx={CX} cy={CY} r={OUTER_R}>
+          <stop offset="0%" stopColor="#6f5c2d"/>
+          <stop offset="36%" stopColor="#45391f"/>
+          <stop offset="72%" stopColor="#242017"/>
+          <stop offset="100%" stopColor="#0c0d0a"/>
+        </radialGradient>
+
+        <radialGradient id="grad-abhijit" gradientUnits="userSpaceOnUse" cx={CX} cy={CY} r={OUTER_R}>
+          <stop offset="0%" stopColor="#82913a"/>
+          <stop offset="40%" stopColor="#566126"/>
+          <stop offset="73%" stopColor="#334018"/>
+          <stop offset="100%" stopColor="#111607"/>
+        </radialGradient>
+
+        <radialGradient id="grad-abhijit-muted" gradientUnits="userSpaceOnUse" cx={CX} cy={CY} r={OUTER_R}>
+          <stop offset="0%" stopColor="#59622f"/>
+          <stop offset="42%" stopColor="#3b4422"/>
+          <stop offset="74%" stopColor="#252c17"/>
+          <stop offset="100%" stopColor="#0d1108"/>
+        </radialGradient>
+
+        <radialGradient id="grad-sunrise" gradientUnits="userSpaceOnUse" cx={CX} cy={CY} r={OUTER_R}>
+          <stop offset="0%" stopColor="#bd8b3d"/>
+          <stop offset="38%" stopColor="#8c672f"/>
+          <stop offset="74%" stopColor="#5b4020"/>
+          <stop offset="100%" stopColor="#21150d"/>
+        </radialGradient>
+
+        <radialGradient id="grad-yamaganda" gradientUnits="userSpaceOnUse" cx={CX} cy={CY} r={OUTER_R}>
+          <stop offset="0%" stopColor="#8e553f"/>
+          <stop offset="40%" stopColor="#65402f"/>
+          <stop offset="74%" stopColor="#3e2a22"/>
+          <stop offset="100%" stopColor="#160f0d"/>
+        </radialGradient>
+
+        <radialGradient id="grad-gulika" gradientUnits="userSpaceOnUse" cx={CX} cy={CY} r={OUTER_R}>
+          <stop offset="0%" stopColor="#5e4b28"/>
+          <stop offset="40%" stopColor="#3d301b"/>
+          <stop offset="74%" stopColor="#211b12"/>
+          <stop offset="100%" stopColor="#070908"/>
+        </radialGradient>
+
+        <linearGradient id="outer-gold" x1="0%" y1="0%" x2="100%" y2="100%">
+          <stop offset="0%" stopColor="#8f6420"/>
+          <stop offset="28%" stopColor="#f1cb72"/>
+          <stop offset="52%" stopColor="#b17a24"/>
+          <stop offset="76%" stopColor="#f0c369"/>
+          <stop offset="100%" stopColor="#755018"/>
         </linearGradient>
 
-        <linearGradient id="abhijit-sheen" x1="0" x2="1" y1="0" y2="1">
-          <stop offset="0%" stopColor="#1d260d"/>
-          <stop offset="65%" stopColor="#374518"/>
-          <stop offset="100%" stopColor="#4c5b1e"/>
-        </linearGradient>
+        <filter id="gold-glow" x="-60%" y="-60%" width="220%" height="220%">
+          <feGaussianBlur stdDeviation="3.4" result="blur"/>
+          <feMerge>
+            <feMergeNode in="blur"/>
+            <feMergeNode in="SourceGraphic"/>
+          </feMerge>
+        </filter>
 
-        <linearGradient id="sunrise-sheen" x1="0" x2="1" y1="0" y2="1">
-          <stop offset="0%" stopColor="#4d3519"/>
-          <stop offset="68%" stopColor="#80602e"/>
-          <stop offset="100%" stopColor="#95703a"/>
-        </linearGradient>
+        <filter id="soft-shadow" x="-50%" y="-50%" width="200%" height="200%">
+          <feDropShadow dx="0" dy="8" stdDeviation="12" floodColor="#000" floodOpacity=".34"/>
+        </filter>
       </defs>
 
-      <circle cx={CX} cy={CY} r="276" fill="url(#dial-glow)"/>
+      <circle cx={CX} cy={CY} r="282" fill="url(#outer-halo)"/>
 
-      <circle cx={CX} cy={CY} r={OUTLINE_R+6} fill="none" stroke="rgba(218,169,67,.27)" strokeWidth="1"/>
-      <circle cx={CX} cy={CY} r={OUTLINE_R} fill="none" stroke="#bd8e35" strokeWidth="2"/>
-      <circle cx={CX} cy={CY} r={OUTLINE_R-6} fill="none" stroke="rgba(230,185,83,.62)" strokeWidth="1"/>
+      {/* full premium golden outer ring */}
+      <circle
+        cx={CX} cy={CY} r={GOLD_RING_R+4}
+        fill="none"
+        stroke="rgba(205,153,51,.18)"
+        strokeWidth="10"
+        filter="url(#gold-glow)"
+      />
+      <circle
+        cx={CX} cy={CY} r={GOLD_RING_R}
+        fill="none"
+        stroke="url(#outer-gold)"
+        strokeWidth="2.8"
+      />
+      <circle
+        cx={CX} cy={CY} r={GOLD_RING_INNER_R}
+        fill="none"
+        stroke="rgba(239,196,99,.70)"
+        strokeWidth="1.1"
+      />
+      <circle
+        cx={CX} cy={CY} r={GOLD_RING_INNER_R-7}
+        fill="none"
+        stroke="rgba(190,137,45,.27)"
+        strokeWidth=".8"
+      />
 
+      {/* gold ticks sit inside the complete ring */}
       {Array.from({length:72},(_,index)=>{
         const angle=index*5;
         const major=index%6===0;
-        const outer=polar(TICK_OUTER,angle);
-        const inner=polar(TICK_OUTER-(major?10:5),angle);
+        const outer=polar(TICK_OUTER_R,angle);
+        const inner=polar(TICK_OUTER_R-(major?12:6),angle);
+
         return <line
           key={index}
-          x1={inner.x} y1={inner.y}
-          x2={outer.x} y2={outer.y}
-          stroke={major?"rgba(232,191,93,.62)":"rgba(232,191,93,.24)"}
-          strokeWidth={major?1.5:1}
+          x1={inner.x}
+          y1={inner.y}
+          x2={outer.x}
+          y2={outer.y}
+          stroke={major?"rgba(244,204,111,.82)":"rgba(224,176,79,.33)"}
+          strokeWidth={major?1.45:.8}
         />;
       })}
 
-      {wheelSectors.map(sector=>{
-        const tone=colors[sector.key];
-        const fill=
-          sector.key==="rahu"?"url(#rahu-sheen)":
-          sector.key==="abhijit"?"url(#abhijit-sheen)":
-          sector.key==="sunrise"?"url(#sunrise-sheen)":
-          sector.muted?"#1c2113":
-          tone.fill;
-
-        return <path
+      {/* deep gradient sectors */}
+      <g filter="url(#soft-shadow)">
+        {wheelSectors.map(sector=><path
           key={sector.key}
           d={sectorPath(sector.start,sector.end)}
-          fill={fill}
-          stroke={tone.stroke}
-          strokeWidth="1.25"
-        />;
-      })}
+          fill={sectorFill(sector.key,sector.muted)}
+          stroke="rgba(191,143,52,.52)"
+          strokeWidth="1.15"
+        />)}
+      </g>
 
-      <circle cx={CX} cy={CY} r={CENTER_R} fill="url(#dial-center)" stroke="#97702c" strokeWidth="1.6"/>
-      <circle cx={CX} cy={CY} r={CENTER_R-9} fill="none" stroke="rgba(225,179,75,.12)" strokeWidth="1"/>
+      {/* subtle depth lines */}
+      <circle
+        cx={CX} cy={CY} r={OUTER_R-8}
+        fill="none"
+        stroke="rgba(240,198,103,.16)"
+        strokeWidth="1"
+      />
+      <circle
+        cx={CX} cy={CY} r={INNER_R+12}
+        fill="none"
+        stroke="rgba(230,183,82,.30)"
+        strokeWidth="1"
+      />
 
+      {/* center */}
+      <circle
+        cx={CX} cy={CY} r={CENTER_R+3}
+        fill="rgba(5,7,6,.86)"
+        stroke="rgba(226,178,73,.40)"
+        strokeWidth="1"
+      />
+      <circle
+        cx={CX} cy={CY} r={CENTER_R}
+        fill="url(#center-core)"
+        stroke="#b1812f"
+        strokeWidth="1.55"
+      />
+      <circle
+        cx={CX} cy={CY} r={CENTER_R-10}
+        fill="none"
+        stroke="rgba(237,194,93,.10)"
+        strokeWidth="1"
+      />
+
+      {/* sector labels */}
       {wheelSectors.map(sector=>{
         const p=labelPoint(sector.start,sector.end,sector.key);
-        const tone=colors[sector.key];
+        const color=labelColors[sector.key];
+
         return <g key={"label-"+sector.key} transform={`translate(${p.x} ${p.y})`}>
-          {sector.icon?<text y="-17" className={styles.sectorIcon} fill={tone.label}>{sector.icon}</text>:null}
-          <text y={sector.icon?2:-5} className={styles.sectorLabel} fill={sector.muted?"rgba(245,235,218,.56)":tone.label}>{sector.label}</text>
-          {sector.value?<text y={sector.icon?20:13} className={styles.sectorValue} fill={sector.muted?"rgba(245,235,218,.42)":"rgba(247,237,219,.82)"}>{sector.value}</text>:null}
+          {sector.icon?<text y="-18" className={styles.sectorIcon} fill={color}>{sector.icon}</text>:null}
+          <text
+            y={sector.icon?2:-5}
+            className={styles.sectorLabel}
+            fill={sector.muted?"rgba(246,235,216,.60)":color}
+          >
+            {sector.label}
+          </text>
+          {sector.value?<text
+            y={sector.icon?20:13}
+            className={styles.sectorValue}
+            fill={sector.muted?"rgba(246,235,216,.43)":"rgba(248,238,219,.80)"}
+          >
+            {sector.value}
+          </text>:null}
         </g>;
       })}
 
-      <text x={CX} y={CY-55} className={styles.centerSun}>☀</text>
-      <text x={CX} y={CY-14} className={styles.centerDay}>{data.weekday}</text>
-      <text x={CX} y={CY+16} className={styles.centerDate}>{new Date(data.date+"T00:00:00Z").toLocaleDateString("en-IN",{day:"numeric",month:"short",year:"numeric",timeZone:"Asia/Kolkata"})}</text>
-      <text x={CX} y={CY+48} className={styles.centerMessage}>A mindful day</text>
-      <text x={CX} y={CY+66} className={styles.centerMessage}>creates a brighter</text>
-      <text x={CX} y={CY+84} className={styles.centerMessage}>tomorrow</text>
+      {/* center content */}
+      <text x={CX} y={CY-54} className={styles.centerSun}>☀</text>
+      <text x={CX} y={CY-13} className={styles.centerDay}>{data.weekday}</text>
+      <text x={CX} y={CY+18} className={styles.centerDate}>{displayDate}</text>
+      <text x={CX} y={CY+50} className={styles.centerMessage}>A mindful day</text>
+      <text x={CX} y={CY+68} className={styles.centerMessage}>creates a brighter</text>
+      <text x={CX} y={CY+86} className={styles.centerMessage}>tomorrow</text>
 
+      {/* cardinal clock labels */}
       {[
         ["24:00",0],
         ["18:00",90],
         ["12:00",180],
         ["06:00",270],
       ].map(([label,angle])=>{
-        const p=polar(286,Number(angle));
-        return <text key={String(label)} x={p.x} y={p.y} className={styles.cardinal}>{label}</text>;
+        const p=polar(287,Number(angle));
+        return <text
+          key={String(label)}
+          x={p.x}
+          y={p.y}
+          className={styles.cardinal}
+        >
+          {label}
+        </text>;
       })}
     </svg>
   </div>;
