@@ -4,7 +4,7 @@ import Header from "@/components/Header";
 import DayWheel from "@/components/DayWheel";
 import { cities } from "@/lib/cities";
 import { formatWindow, getPanchang } from "@/lib/panchang";
-import { nextFestival } from "@/lib/festivals";
+import { nextFestival } from "@/lib/festivals";\nimport { todayInIndia } from "@/lib/dates";
 
 export const dynamic="force-dynamic";
 
@@ -20,7 +20,7 @@ const momentCards=[
 
 export default async function Home(){
   const city=cities[0];
-  const now=new Date();
+  const now=todayInIndia();
   const data=await getPanchang(now,city);
   const festival=nextFestival(now);
   const monthName=new Intl.DateTimeFormat("en-IN",{month:"long",timeZone:"Asia/Kolkata"}).format(now);\n  const daysInMonth=new Date(Date.UTC(now.getUTCFullYear(),now.getUTCMonth()+1,0)).getUTCDate();
