@@ -18,6 +18,16 @@ function segmentStyle(window:TimeWindow|null,color:string):CSSProperties{
 function markerStyle(value:string):CSSProperties{
   return {"--marker-angle":`${angleFromTime(value)}deg`} as CSSProperties;
 }
+function midpointAngle(window:TimeWindow|null){
+  if(!window)return 0;
+  const start=angleFromTime(window.start);
+  let end=angleFromTime(window.end);
+  if(end<start)end+=360;
+  return (start+(end-start)/2)%360;
+}
+function arcLabelStyle(window:TimeWindow|null):CSSProperties{
+  return {"--arc-angle":`${midpointAngle(window)}deg`} as CSSProperties;
+}
 function indiaDateString(){
   return new Intl.DateTimeFormat("en-CA",{timeZone:"Asia/Kolkata",year:"numeric",month:"2-digit",day:"2-digit"}).format(new Date());
 }
@@ -76,10 +86,16 @@ export default function DayWheel({data}:{data:Panchang}) {
 
       {isToday&&nowMinutes!==null?<div className="now-hand" style={{"--now-angle":`${nowMinutes/1440*360}deg`} as CSSProperties}><i/></div>:null}
 
+      <div className="arc-label label-gulika" style={arcLabelStyle(data.gulika)}><span>Gulika</span><small>{formatWindow(data.gulika)}</small></div>
+      <div className="arc-label label-yama" style={arcLabelStyle(data.yamaganda)}><span>Yamaganda</span><small>{formatWindow(data.yamaganda)}</small></div>
+      <div className="arc-label label-rahu danger" style={arcLabelStyle(data.rahu)}><span>Rahu Kalam</span><small>{formatWindow(data.rahu)}</small></div>
+      {data.abhijit?<div className="arc-label label-abhijit good" style={arcLabelStyle(data.abhijit)}><span>Abhijit Muhurat</span><small>{formatWindow(data.abhijit)}</small></div>:null}
+
       <div className="wheel-label top"><Moon size={16}/><span>Night</span></div>
-      <div className="wheel-label right danger"><span>Rahu Kalam</span><small>{formatWindow(data.rahu)}</small></div>
+      <div className="wheel-label day"><Sun size={15}/><span>Day</span></div>
       <div className="wheel-label bottom good"><span>{data.abhijit?"Abhijit Muhurat":"No Abhijit today"}</span><small>{formatWindow(data.abhijit)}</small></div>
       <div className="wheel-label left"><span>Sunrise</span><small>{data.sunrise}</small></div>
+      <div className="wheel-label sunset-copy"><span>Sunset</span><small>{data.sunset}</small></div>
 
       <div className="wheel-center">
         <div className="moon-phase" style={{"--illumination":`${data.moonIllumination}%`} as CSSProperties}><Moon size={26}/></div>
