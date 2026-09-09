@@ -7,7 +7,7 @@ import {cityBySlug,cities} from "@/lib/cities";
 import {formatWindow,getPanchang} from "@/lib/panchang";
 import {todayInIndia} from "@/lib/dates";
 
-export const dynamic="force-dynamic";
+export const revalidate=3600;
 
 function parseDate(parts?:string[]){
   const raw=parts?.[0];
