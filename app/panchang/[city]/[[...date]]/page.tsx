@@ -2,6 +2,7 @@ import type {Metadata} from "next";
 import Link from "next/link";
 import Header from "@/components/Header";
 import DayWheel from "@/components/DayWheel";
+import ChoghadiyaTable from "@/components/ChoghadiyaTable";
 import {cityBySlug,cities} from "@/lib/cities";
 import {formatWindow,getPanchang} from "@/lib/panchang";
 import {todayInIndia} from "@/lib/dates";
@@ -58,6 +59,7 @@ export default async function PanchangPage({params}:{params:Promise<{city:string
       <div className="timing-chip bad"><small>Yamaganda</small><strong>{formatWindow(data.yamaganda)}</strong></div>
       <div className="timing-chip bad"><small>Gulika Kalam</small><strong>{formatWindow(data.gulika)}</strong></div>
     </div></div>
+    <div className="wide-panel"><h2 className="page-title" style={{fontSize:32}}>Choghadiya</h2><p className="page-subtitle">Eight daytime and eight nighttime periods calculated from local sunrise, sunset and the next sunrise.</p><ChoghadiyaTable day={data.dayChoghadiya} night={data.nightChoghadiya}/></div>
     <div className="pill-links"><Link href={`/panchang/${city.slug}/${prev.toISOString().slice(0,10)}`}>← Previous day</Link><Link href={`/calendar/${city.slug}/${date.getUTCFullYear()}/${month}`}>Monthly calendar</Link><Link href={`/panchang/${city.slug}/${next.toISOString().slice(0,10)}`}>Next day →</Link>{cities.filter(c=>c.state===city.state&&c.slug!==city.slug).slice(0,4).map(c=><Link href={`/panchang/${c.slug}/${data.date}`} key={c.slug}>{c.name}</Link>)}</div>
     <div className="seo-copy"><h2>How to use today’s Panchang</h2><p>The daily Panchang combines lunar factors such as Tithi and Nakshatra with location-sensitive solar timings. Rahu Kalam, Yamaganda and Gulika change with local sunrise and sunset, which is why the selected city matters. Use the timing bands above as a practical daily reference, and consult a qualified practitioner for personal rites that depend on an individual birth chart.</p></div>
     <div className="wide-panel"><h2>Frequently asked questions</h2>{faq.map(x=><div key={x.q} className="seo-copy"><strong>{x.q}</strong><p>{x.a}</p></div>)}</div>
