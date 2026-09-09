@@ -38,8 +38,8 @@ export default async function PanchangPage({params}:{params:Promise<{city:string
     <p className="page-subtitle">Precise local timings for {city.name}, including sunrise and sunset dependent periods. Calculation engine: {data.engine}.</p>
     <div className="wide-panel"><DayWheel data={data}/></div>
     <div className="data-grid">
-      <div className="data-card"><small>Tithi</small><strong>{data.tithi}</strong><small>{data.paksha} Paksha</small></div>
-      <div className="data-card"><small>Nakshatra</small><strong>{data.nakshatra}</strong></div>
+      <div className="data-card"><small>Tithi</small><strong>{data.tithi}</strong><small>{data.paksha} Paksha · until {data.tithiEnd}</small></div>
+      <div className="data-card"><small>Nakshatra</small><strong>{data.nakshatra}</strong><small>Pada {data.nakshatraPada} · until {data.nakshatraEnd}</small></div>
       <div className="data-card"><small>Yoga</small><strong>{data.yoga}</strong></div>
       <div className="data-card"><small>Karana</small><strong>{data.karana}</strong></div>
       <div className="data-card"><small>Sunrise</small><strong>{data.sunrise}</strong></div>
