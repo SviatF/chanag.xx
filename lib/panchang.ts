@@ -51,6 +51,7 @@ export type Panchang = {
   sunset: string;
   moonrise: string;
   moonset: string;
+  moonIllumination: number;
   rahu: TimeWindow;
   yamaganda: TimeWindow;
   gulika: TimeWindow;
@@ -313,6 +314,7 @@ export async function getPanchang(date: Date, city: City): Promise<Panchang> {
     sunset: formatJulianLocal(sunsetJd),
     moonrise: moonRise.retval >= 0 ? formatJulianLocal(moonRise.tret) : "—",
     moonset: moonSet.retval >= 0 ? formatJulianLocal(moonSet.tret) : "—",
+    moonIllumination: Math.round(((1 - Math.cos(atSunrise.elongation * Math.PI / 180)) / 2) * 100),
     rahu: segmentWindow(sunriseMinutes, sunsetMinutes, rahuIndex),
     yamaganda: segmentWindow(sunriseMinutes, sunsetMinutes, yamagandaIndex),
     gulika: segmentWindow(sunriseMinutes, sunsetMinutes, gulikaIndex),
