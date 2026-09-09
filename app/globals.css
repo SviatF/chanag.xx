@@ -1220,3 +1220,222 @@ body{
     padding-bottom:24px !important;
   }
 }
+
+
+/* =========================================================
+   PRIMARY NAV MEGA DROPDOWNS
+   Keeps the locked header design; adds hover/focus navigation depth.
+   ========================================================= */
+.nav{
+  align-self:stretch;
+  align-items:center;
+}
+
+.nav-item{
+  position:relative;
+  height:100%;
+  display:flex;
+  align-items:center;
+}
+
+.nav-trigger{
+  height:100%;
+  display:flex;
+  align-items:center;
+  gap:5px;
+  white-space:nowrap;
+}
+
+.nav-chevron{
+  transition:transform .18s ease,color .18s ease;
+  color:#8f8d83;
+}
+
+.nav-item:hover .nav-chevron,
+.nav-item:focus-within .nav-chevron{
+  transform:rotate(180deg);
+  color:var(--gold2);
+}
+
+.nav-item::after{
+  content:"";
+  position:absolute;
+  left:-14px;
+  right:-14px;
+  top:100%;
+  height:18px;
+  pointer-events:none;
+}
+
+.nav-item:hover::after,
+.nav-item:focus-within::after{
+  pointer-events:auto;
+}
+
+.nav-dropdown{
+  position:absolute;
+  z-index:80;
+  left:-20px;
+  top:100%;
+  min-width:560px;
+  padding-top:16px;
+  opacity:0;
+  visibility:hidden;
+  pointer-events:none;
+  transform:translateY(-7px);
+  transition:
+    opacity .16s ease,
+    transform .16s ease,
+    visibility .16s ease;
+}
+
+.nav-item:nth-last-child(-n+2) .nav-dropdown{
+  left:auto;
+  right:-20px;
+}
+
+.nav-item:hover .nav-dropdown,
+.nav-item:focus-within .nav-dropdown{
+  opacity:1;
+  visibility:visible;
+  pointer-events:auto;
+  transform:translateY(0);
+}
+
+.nav-dropdown-panel{
+  overflow:hidden;
+  border:1px solid rgba(91,83,62,.68);
+  border-radius:13px;
+  background:
+    radial-gradient(circle at 88% 0%,rgba(194,143,59,.10),transparent 31%),
+    linear-gradient(145deg,rgba(15,18,16,.985),rgba(7,9,8,.995));
+  box-shadow:
+    0 24px 70px rgba(0,0,0,.48),
+    inset 0 1px rgba(255,255,255,.025);
+  backdrop-filter:blur(22px);
+}
+
+.nav-dropdown-head{
+  min-height:54px;
+  padding:15px 18px 12px;
+  display:flex;
+  align-items:end;
+  justify-content:space-between;
+  border-bottom:1px solid rgba(78,76,65,.42);
+}
+
+.nav-dropdown-head>span{
+  font:22px "Instrument Serif";
+  color:#efe5d3;
+}
+
+.nav-dropdown-head>small{
+  color:#b28d53;
+  font-size:8px;
+  letter-spacing:.16em;
+  text-transform:uppercase;
+}
+
+.nav-dropdown-grid{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+}
+
+.nav-dropdown-grid.single{
+  grid-template-columns:1fr;
+}
+
+.nav-dropdown-section{
+  padding:15px 11px 14px;
+}
+
+.nav-dropdown-section+ .nav-dropdown-section{
+  border-left:1px solid rgba(69,70,63,.42);
+}
+
+.nav-dropdown-title{
+  display:block;
+  padding:0 8px 8px;
+  color:#9a835e;
+  font-size:8px;
+  letter-spacing:.16em;
+  text-transform:uppercase;
+}
+
+.nav-dropdown-link{
+  min-height:48px;
+  padding:9px 10px;
+  border:1px solid transparent;
+  border-radius:8px;
+  display:grid !important;
+  align-content:center;
+  gap:2px !important;
+  transition:
+    background .15s ease,
+    border-color .15s ease,
+    transform .15s ease;
+}
+
+.nav-dropdown-link>span{
+  color:#e7dfd1;
+  font-size:12px;
+}
+
+.nav-dropdown-link>small{
+  color:#7f827a;
+  font-size:8px;
+  line-height:1.35;
+}
+
+.nav-dropdown-link:hover,
+.nav-dropdown-link:focus-visible{
+  background:linear-gradient(100deg,rgba(207,159,73,.095),rgba(255,255,255,.015));
+  border-color:rgba(184,143,72,.30);
+  transform:translateX(2px);
+  outline:none;
+}
+
+.nav-dropdown-footer{
+  min-height:49px;
+  padding:12px 18px;
+  border-top:1px solid rgba(78,76,65,.42);
+  display:grid !important;
+  grid-template-columns:auto 1fr auto;
+  align-items:center;
+  column-gap:10px !important;
+  background:rgba(198,151,67,.035);
+}
+
+.nav-dropdown-footer>span{
+  color:#ddbd7e;
+  font-size:11px;
+}
+
+.nav-dropdown-footer>small{
+  color:#75786f;
+  font-size:8px;
+}
+
+.nav-dropdown-footer>b{
+  color:#d7ad62;
+  font-size:13px;
+  font-weight:400;
+}
+
+.nav-dropdown-footer:hover{
+  background:rgba(198,151,67,.075);
+}
+
+@media(max-width:1180px){
+  .nav{
+    gap:20px;
+  }
+
+  .brand{
+    margin-right:44px;
+  }
+
+  .nav-dropdown{
+    min-width:510px;
+  }
+}
