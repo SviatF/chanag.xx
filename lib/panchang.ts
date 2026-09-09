@@ -1,4 +1,19 @@
 import { City } from "./cities";
+import { createDefaultSweData } from "@typescriptify/sweph/types";
+import { sweCalc, sweClose, sweSetSidMode } from "@typescriptify/sweph/sweph";
+import { sweRiseTrans } from "@typescriptify/sweph/swecl";
+import { julDay, revJul } from "@typescriptify/sweph/swedate";
+import {
+  SE_SUN,
+  SE_MOON,
+  SEFLG_MOSEPH,
+  SEFLG_SPEED,
+  SEFLG_SIDEREAL,
+  SE_SIDM_LAHIRI,
+  SE_GREG_CAL,
+  SE_CALC_RISE,
+  SE_CALC_SET,
+} from "@typescriptify/sweph/constants";
 
 export type TimeWindow = { start: string; end: string };
 
@@ -6,8 +21,10 @@ export type Panchang = {
   date: string;
   weekday: string;
   tithi: string;
+  tithiEnd: string;
   paksha: "Shukla" | "Krishna";
   nakshatra: string;
+  nakshatraEnd: string;
   nakshatraPada: number;
   rashi: string;
   yoga: string;
@@ -24,169 +41,177 @@ export type Panchang = {
   vikramSamvat: number;
   shakaSamvat: number;
   dayLord: string;
-  engine: "Swiss Ephemeris" | "Astronomical fallback";
+  engine: "Swiss Ephemeris · Moshier";
 };
 
 const nakshatras = ["Ashwini","Bharani","Krittika","Rohini","Mrigashirsha","Ardra","Punarvasu","Pushya","Ashlesha","Magha","Purva Phalguni","Uttara Phalguni","Hasta","Chitra","Swati","Vishakha","Anuradha","Jyeshtha","Mula","Purva Ashadha","Uttara Ashadha","Shravana","Dhanishta","Shatabhisha","Purva Bhadrapada","Uttara Bhadrapada","Revati"];
 const yogas = ["Vishkambha","Priti","Ayushman","Saubhagya","Shobhana","Atiganda","Sukarma","Dhriti","Shula","Ganda","Vriddhi","Dhruva","Vyaghata","Harshana","Vajra","Siddhi","Vyatipata","Variyana","Parigha","Shiva","Siddha","Sadhya","Shubha","Shukla","Brahma","Indra","Vaidhriti"];
 const tithis = ["Pratipada","Dvitiya","Tritiya","Chaturthi","Panchami","Shashthi","Saptami","Ashtami","Navami","Dashami","Ekadashi","Dwadashi","Trayodashi","Chaturdashi","Purnima"];
-const karanas = ["Bava","Balava","Kaulava","Taitila","Garaja","Vanija","Vishti"];
+const karanaCycle = ["Bava","Balava","Kaulava","Taitila","Garaja","Vanija","Vishti"];
 const lords = ["Sun","Moon","Mars","Mercury","Jupiter","Venus","Saturn"];
 const rashis = ["Mesha","Vrishabha","Mithuna","Karka","Simha","Kanya","Tula","Vrishchika","Dhanu","Makara","Kumbha","Meena"];
-const hinduMonths = ["Pausha","Magha","Phalguna","Chaitra","Vaishakha","Jyeshtha","Ashadha","Shravana","Bhadrapada","Ashwin","Kartika","Margashirsha"];
+const lunarMonthBySunSign = ["Vaishakha","Jyeshtha","Ashadha","Shravana","Bhadrapada","Ashwin","Kartika","Margashirsha","Pausha","Magha","Phalguna","Chaitra"];
 
-const norm = (x: number) => ((x % 360) + 360) % 360;
-const rad = (d: number) => d * Math.PI / 180;
-const deg = (r: number) => r * 180 / Math.PI;
+const norm = (value: number) => ((value % 360) + 360) % 360;
 const pad = (n: number) => String(n).padStart(2, "0");
 
-const time = (minutes: number) => {
-  const m = ((Math.round(minutes) % 1440) + 1440) % 1440;
-  return `${pad(Math.floor(m / 60))}:${pad(m % 60)}`;
-};
-
-function julian(date: Date) {
-  return date.getTime() / 86400000 + 2440587.5;
+function localMinutesFromJulian(jd: number) {
+  const value = revJul(jd, SE_GREG_CAL);
+  const total = value.hour * 60 + 330;
+  return ((total % 1440) + 1440) % 1440;
 }
 
-function approximateLongitudes(date: Date) {
-  const d = julian(date) - 2451545.0;
-  const sunMean = norm(280.460 + 0.9856474 * d);
-  const g = norm(357.528 + 0.9856003 * d);
-  const sun = norm(sunMean + 1.915 * Math.sin(rad(g)) + 0.020 * Math.sin(rad(2 * g)));
-  const L0 = norm(218.316 + 13.176396 * d);
-  const Mm = norm(134.963 + 13.064993 * d);
-  const D = norm(297.850 + 12.190749 * d);
-  const moon = norm(
-    L0 +
-    6.289 * Math.sin(rad(Mm)) +
-    1.274 * Math.sin(rad(2 * D - Mm)) +
-    0.658 * Math.sin(rad(2 * D)) +
-    0.214 * Math.sin(rad(2 * Mm)) -
-    0.186 * Math.sin(rad(g))
-  );
-  return { sun, moon, engine: "Astronomical fallback" as const };
+function formatMinutes(minutes: number) {
+  const rounded = Math.round(minutes);
+  const value = ((rounded % 1440) + 1440) % 1440;
+  return `${pad(Math.floor(value / 60))}:${pad(value % 60)}`;
 }
 
-async function swissLongitudes(date: Date) {
-  try {
-    const mod: any = await import("sweph-wasm");
-    const SwissEPH = mod.default;
-    const swe = await SwissEPH.init();
-    const jd = swe.swe_julday(
-      date.getUTCFullYear(),
-      date.getUTCMonth() + 1,
-      date.getUTCDate(),
-      12,
-      1
-    );
-    const flags = 2 | 256;
-    const sunResult = swe.swe_calc_ut(jd, 0, flags);
-    const moonResult = swe.swe_calc_ut(jd, 1, flags);
-    const sun = Array.isArray(sunResult) ? sunResult[0] : (sunResult?.data?.[0] ?? sunResult?.longitude);
-    const moon = Array.isArray(moonResult) ? moonResult[0] : (moonResult?.data?.[0] ?? moonResult?.longitude);
-    if (Number.isFinite(sun) && Number.isFinite(moon)) {
-      return { sun: Number(sun), moon: Number(moon), engine: "Swiss Ephemeris" as const };
-    }
-  } catch {
-    // Production keeps a deterministic mathematical fallback if WASM initialization is unavailable.
-  }
-  return approximateLongitudes(date);
+function formatJulianLocal(jd: number | null | undefined) {
+  return typeof jd === "number" && Number.isFinite(jd) ? formatMinutes(localMinutesFromJulian(jd)) : "—";
 }
 
-function solarTimes(date: Date, city: City) {
-  const start = new Date(Date.UTC(date.getUTCFullYear(), 0, 0));
-  const day = Math.floor((date.getTime() - start.getTime()) / 86400000);
-  const gamma = 2 * Math.PI / 365 * (day - 1);
-  const eq = 229.18 * (
-    0.000075 +
-    0.001868 * Math.cos(gamma) -
-    0.032077 * Math.sin(gamma) -
-    0.014615 * Math.cos(2 * gamma) -
-    0.040849 * Math.sin(2 * gamma)
-  );
-  const decl =
-    0.006918 -
-    0.399912 * Math.cos(gamma) +
-    0.070257 * Math.sin(gamma) -
-    0.006758 * Math.cos(2 * gamma) +
-    0.000907 * Math.sin(2 * gamma) -
-    0.002697 * Math.cos(3 * gamma) +
-    0.00148 * Math.sin(3 * gamma);
-  const zen = rad(90.833);
-  const lat = rad(city.lat);
-  const ha = Math.acos((Math.cos(zen) / (Math.cos(lat) * Math.cos(decl))) - Math.tan(lat) * Math.tan(decl));
-  const haDeg = deg(ha);
-  const tz = 330;
-  const noon = 720 - 4 * city.lng - eq + tz;
-  return { sunrise: noon - 4 * haDeg, sunset: noon + 4 * haDeg };
+function karanaName(index: number) {
+  if (index === 0) return "Kimstughna";
+  if (index === 57) return "Shakuni";
+  if (index === 58) return "Chatushpada";
+  if (index === 59) return "Naga";
+  return karanaCycle[(index - 1) % karanaCycle.length];
 }
 
 function segmentWindow(sunrise: number, sunset: number, index: number): TimeWindow {
   const segment = (sunset - sunrise) / 8;
   return {
-    start: time(sunrise + segment * index),
-    end: time(sunrise + segment * (index + 1))
+    start: formatMinutes(sunrise + segment * index),
+    end: formatMinutes(sunrise + segment * (index + 1)),
+  };
+}
+
+function samvatYears(date: Date) {
+  const year = date.getUTCFullYear();
+  const afterMarch22 = date.getUTCMonth() > 2 || (date.getUTCMonth() === 2 && date.getUTCDate() >= 22);
+  return {
+    vikram: year + (afterMarch22 ? 57 : 56),
+    shaka: year - (afterMarch22 ? 78 : 79),
   };
 }
 
 export async function getPanchang(date: Date, city: City): Promise<Panchang> {
-  const { sun, moon, engine } = await swissLongitudes(date);
-  const ayanamsha = 24.2;
-  const elongation = norm(moon - sun);
-  const tithiNumber = Math.floor(elongation / 12) + 1;
+  const swed = createDefaultSweData();
+  sweSetSidMode(swed, SE_SIDM_LAHIRI, 0, 0);
+
+  const year = date.getUTCFullYear();
+  const month = date.getUTCMonth() + 1;
+  const day = date.getUTCDate();
+  const baseJd = julDay(year, month, day, 0, SE_GREG_CAL);
+  const geopos = [city.lng, city.lat, 0];
+
+  const rise = sweRiseTrans(swed, baseJd, SE_SUN, null, SEFLG_MOSEPH, SE_CALC_RISE, geopos, 1013.25, 25, null);
+  const set = sweRiseTrans(swed, baseJd, SE_SUN, null, SEFLG_MOSEPH, SE_CALC_SET, geopos, 1013.25, 25, null);
+  const moonRise = sweRiseTrans(swed, baseJd, SE_MOON, null, SEFLG_MOSEPH, SE_CALC_RISE, geopos, 1013.25, 25, null);
+  const moonSet = sweRiseTrans(swed, baseJd, SE_MOON, null, SEFLG_MOSEPH, SE_CALC_SET, geopos, 1013.25, 25, null);
+
+  const sunriseJd = rise.retval >= 0 ? rise.tret : baseJd + 0.25;
+  const sunsetJd = set.retval >= 0 ? set.tret : baseJd + 0.75;
+  const sunriseMinutes = localMinutesFromJulian(sunriseJd);
+  let sunsetMinutes = localMinutesFromJulian(sunsetJd);
+  if (sunsetMinutes <= sunriseMinutes) sunsetMinutes += 1440;
+
+  const stateAt = (jd: number) => {
+    const tropicalFlags = SEFLG_MOSEPH | SEFLG_SPEED;
+    const siderealFlags = SEFLG_MOSEPH | SEFLG_SPEED | SEFLG_SIDEREAL;
+    const sun = sweCalc(swed, jd, SE_SUN, tropicalFlags).xx[0];
+    const moon = sweCalc(swed, jd, SE_MOON, tropicalFlags).xx[0];
+    const sunSidereal = sweCalc(swed, jd, SE_SUN, siderealFlags).xx[0];
+    const moonSidereal = sweCalc(swed, jd, SE_MOON, siderealFlags).xx[0];
+    const elongation = norm(moon - sun);
+    return {
+      elongation,
+      sunSidereal: norm(sunSidereal),
+      moonSidereal: norm(moonSidereal),
+      tithiIndex: Math.floor(elongation / 12),
+      nakshatraIndex: Math.floor(norm(moonSidereal) / (360 / 27)),
+      yogaIndex: Math.floor(norm(sunSidereal + moonSidereal) / (360 / 27)),
+    };
+  };
+
+  const atSunrise = stateAt(sunriseJd);
+  const tithiNumber = atSunrise.tithiIndex + 1;
   const paksha: Panchang["paksha"] = tithiNumber <= 15 ? "Shukla" : "Krishna";
-  const tithiBase = (tithiNumber - 1) % 15;
+  const tithiBase = atSunrise.tithiIndex % 15;
   const tithi = tithiBase === 14
     ? (paksha === "Shukla" ? "Purnima" : "Amavasya")
     : tithis[tithiBase];
 
-  const moonSidereal = norm(moon - ayanamsha);
-  const sunSidereal = norm(sun - ayanamsha);
   const nakshatraSpan = 360 / 27;
-  const nakshatraIndex = Math.floor(moonSidereal / nakshatraSpan);
-  const nakshatra = nakshatras[nakshatraIndex];
-  const nakshatraPada = Math.floor((moonSidereal % nakshatraSpan) / (nakshatraSpan / 4)) + 1;
-  const rashi = rashis[Math.floor(moonSidereal / 30)];
-  const yoga = yogas[Math.floor(norm(moonSidereal + sunSidereal) / nakshatraSpan)];
-  const karana = karanas[Math.floor(elongation / 6) % karanas.length];
+  const nakshatra = nakshatras[atSunrise.nakshatraIndex];
+  const nakshatraPada = Math.floor((atSunrise.moonSidereal % nakshatraSpan) / (nakshatraSpan / 4)) + 1;
+  const rashi = rashis[Math.floor(atSunrise.moonSidereal / 30)];
+  const yoga = yogas[atSunrise.yogaIndex];
+  const karana = karanaName(Math.floor(atSunrise.elongation / 6));
 
-  const { sunrise, sunset } = solarTimes(date, city);
+  const findTransition = (selector: (jd: number) => number) => {
+    const startIndex = selector(sunriseJd);
+    let low = sunriseJd;
+    let high = sunriseJd + 2 / 24;
+    while (high < sunriseJd + 2 && selector(high) === startIndex) {
+      low = high;
+      high += 2 / 24;
+    }
+    if (high >= sunriseJd + 2) return null;
+    for (let i = 0; i < 28; i++) {
+      const mid = (low + high) / 2;
+      if (selector(mid) === startIndex) low = mid;
+      else high = mid;
+    }
+    return high;
+  };
+
+  const tithiEndJd = findTransition((jd) => stateAt(jd).tithiIndex);
+  const nakshatraEndJd = findTransition((jd) => stateAt(jd).nakshatraIndex);
+
+  const weekday = new Intl.DateTimeFormat("en-IN", { weekday: "long", timeZone: "Asia/Kolkata" }).format(date);
   const dayOfWeek = date.getUTCDay();
   const rahuIndex = [7,1,6,4,5,3,2][dayOfWeek];
   const yamagandaIndex = [4,3,2,1,0,6,5][dayOfWeek];
   const gulikaIndex = [6,5,4,3,2,1,0][dayOfWeek];
-  const muhurta = (sunset - sunrise) / 15;
+  const muhurta = (sunsetMinutes - sunriseMinutes) / 15;
   const abhijit = {
-    start: time(sunrise + muhurta * 7),
-    end: time(sunrise + muhurta * 8)
+    start: formatMinutes(sunriseMinutes + muhurta * 7),
+    end: formatMinutes(sunriseMinutes + muhurta * 8),
   };
+  const years = samvatYears(date);
+  const hinduMonth = lunarMonthBySunSign[Math.floor(atSunrise.sunSidereal / 30)];
 
-  const moonShift = 50.5;
-  return {
-    date: date.toISOString().slice(0, 10),
-    weekday: new Intl.DateTimeFormat("en-IN", { weekday: "long", timeZone: "Asia/Kolkata" }).format(date),
+  const result: Panchang = {
+    date: `${year}-${pad(month)}-${pad(day)}`,
+    weekday,
     tithi,
+    tithiEnd: formatJulianLocal(tithiEndJd),
     paksha,
     nakshatra,
+    nakshatraEnd: formatJulianLocal(nakshatraEndJd),
     nakshatraPada,
     rashi,
     yoga,
     karana,
-    sunrise: time(sunrise),
-    sunset: time(sunset),
-    moonrise: time(sunrise + moonShift * (date.getUTCDate() % 28)),
-    moonset: time(sunset + moonShift * (date.getUTCDate() % 28)),
-    rahu: segmentWindow(sunrise, sunset, rahuIndex),
-    yamaganda: segmentWindow(sunrise, sunset, yamagandaIndex),
-    gulika: segmentWindow(sunrise, sunset, gulikaIndex),
+    sunrise: formatJulianLocal(sunriseJd),
+    sunset: formatJulianLocal(sunsetJd),
+    moonrise: moonRise.retval >= 0 ? formatJulianLocal(moonRise.tret) : "—",
+    moonset: moonSet.retval >= 0 ? formatJulianLocal(moonSet.tret) : "—",
+    rahu: segmentWindow(sunriseMinutes, sunsetMinutes, rahuIndex),
+    yamaganda: segmentWindow(sunriseMinutes, sunsetMinutes, yamagandaIndex),
+    gulika: segmentWindow(sunriseMinutes, sunsetMinutes, gulikaIndex),
     abhijit,
-    hinduMonth: hinduMonths[date.getUTCMonth()],
-    vikramSamvat: date.getUTCFullYear() + 57,
-    shakaSamvat: date.getUTCFullYear() - 78,
+    hinduMonth,
+    vikramSamvat: years.vikram,
+    shakaSamvat: years.shaka,
     dayLord: lords[dayOfWeek],
-    engine
+    engine: "Swiss Ephemeris · Moshier",
   };
+
+  sweClose(swed);
+  return result;
 }
 
 export const formatWindow = (window: TimeWindow) => `${window.start} — ${window.end}`;
