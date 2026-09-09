@@ -1,0 +1,52 @@
+:root{
+  --admin-bg:#070908;
+  --admin-panel:#0d100e;
+  --admin-panel2:#111511;
+  --admin-line:#262b25;
+  --admin-text:#f2eadb;
+  --admin-muted:#858a80;
+  --admin-gold:#d4a758;
+  --admin-green:#7cab69;
+  --admin-red:#cf6655;
+}
+.admin-shell{min-height:100vh;background:#070908;color:var(--admin-text);display:grid;grid-template-columns:230px 1fr;font-family:"DM Sans",system-ui,sans-serif}
+.admin-sidebar{height:100vh;position:sticky;top:0;border-right:1px solid var(--admin-line);padding:24px 16px;display:flex;flex-direction:column;background:linear-gradient(180deg,#0a0d0b,#070908)}
+.admin-brand{display:grid;padding:8px 10px 24px;border-bottom:1px solid var(--admin-line)}
+.admin-brand small{font-size:9px;letter-spacing:.2em;color:var(--admin-gold)}
+.admin-brand strong{font:22px "Instrument Serif",serif;margin-top:4px}
+.admin-nav{display:grid;gap:5px;padding-top:20px}
+.admin-nav a{padding:11px 12px;border:1px solid transparent;border-radius:7px;font-size:12px;color:#c7c4ba}
+.admin-nav a:hover{background:#111511;border-color:#30352e;color:#f3e8d6}
+.admin-sidebar-foot{margin-top:auto;display:grid;gap:8px;border-top:1px solid var(--admin-line);padding-top:16px}
+.admin-sidebar-foot a,.admin-sidebar-foot button{background:none;border:0;color:#858a80;text-align:left;font:11px "DM Sans";padding:5px 8px;cursor:pointer}
+.admin-main{min-width:0}
+.admin-page{width:min(1450px,calc(100% - 64px));margin:0 auto;padding:42px 0 80px}
+.admin-page-head{display:flex;align-items:flex-start;justify-content:space-between;gap:24px;margin-bottom:28px}
+.admin-page-head h1{font:46px/1 "Instrument Serif";margin:5px 0 9px}
+.admin-page-head p{color:var(--admin-muted);font-size:12px;margin:0;max-width:720px;line-height:1.6}
+.admin-eyebrow{font-size:9px!important;letter-spacing:.18em!important;color:var(--admin-gold)!important}
+.admin-status{border:1px solid var(--admin-line);border-radius:30px;padding:8px 11px;font-size:9px;letter-spacing:.08em}
+.admin-status.live{border-color:#36553a;color:#9dcc8d;background:#0d1810}
+.admin-status.warn{border-color:#675329;color:#deb86b;background:#18140d}
+.admin-status.danger{border-color:#693a34;color:#e38a7c;background:#1b100f}
+.admin-kpis{display:grid;grid-template-columns:repeat(6,1fr);gap:9px;margin-bottom:20px}
+.admin-kpi{min-height:120px;border:1px solid var(--admin-line);border-radius:10px;padding:16px;background:linear-gradient(145deg,#101410,#0b0e0c);display:grid;align-content:space-between}
+.admin-kpi small{font-size:9px;color:#90948c}.admin-kpi strong{font:31px "Instrument Serif";margin:7px 0}.admin-kpi span{font-size:9px;color:#747970}
+.admin-grid-two{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-top:14px}
+.admin-panel{border:1px solid var(--admin-line);border-radius:11px;background:linear-gradient(145deg,#0e120f,#0a0d0b);padding:20px;overflow:hidden}
+.admin-panel h2{font:24px "Instrument Serif";margin:0 0 10px}.admin-panel p{color:#92968e;font-size:12px;line-height:1.65}.admin-panel code{color:#d9b66f;font-size:10px}
+.admin-panel-head{display:flex;justify-content:space-between;align-items:flex-start;gap:16px;margin-bottom:13px}
+.admin-panel-head small{font-size:8px;letter-spacing:.15em;color:#9e8252}.admin-panel-head h2{margin:3px 0}.admin-panel-head>a,.admin-panel-head>span{font-size:10px;color:#c9a65f}
+.admin-flow{display:flex;align-items:center;gap:9px;flex-wrap:wrap;margin-top:20px}.admin-flow span{font-size:8px;letter-spacing:.08em;border:1px solid #393c33;padding:8px 9px;border-radius:6px;color:#d6cbb8}.admin-flow b{color:#785f32}
+.admin-secret-list{display:flex;gap:6px;flex-wrap:wrap;margin-top:12px}.admin-secret-list code{border:1px solid #363a32;background:#090c0a;padding:7px 8px;border-radius:6px}
+.admin-table-wrap{overflow:auto;margin:0 -20px -20px}.admin-table{width:100%;border-collapse:collapse;min-width:860px}.admin-table th,.admin-table td{padding:12px 14px;border-top:1px solid #20251f;text-align:left;font-size:10px;vertical-align:middle}.admin-table th{color:#777d74;font-weight:500;background:#0a0d0b;position:sticky;top:0}.admin-table td>strong{display:block;color:#e4ddcf;font-size:11px}.admin-table td>small{display:block;color:#6f746d;font-size:8px;margin-top:3px}
+.admin-badge{display:inline-block;border:1px solid #3a3e36;border-radius:20px;padding:5px 7px;font-size:8px;color:#a9ada4}.admin-badge.active{border-color:#39603e;color:#9dcc8d}.admin-badge.activate{border-color:#4f6b42;color:#b7d48c}.admin-badge.watch{border-color:#705b2d;color:#dfb86b}.admin-badge.hold{border-color:#393d36;color:#7f847c}
+.admin-mini-list{display:grid}.admin-mini-list>div{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:3px 12px;padding:9px 0;border-top:1px solid #20251f}.admin-mini-list span{font-size:10px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.admin-mini-list b{font-size:9px;color:#d2ad65}.admin-mini-list small{grid-column:1/-1;color:#6f746d;font-size:8px}
+.admin-filters{display:grid;grid-template-columns:minmax(260px,1fr) 220px auto;gap:8px;margin-bottom:14px}.admin-filters input,.admin-filters select{background:#0c100d;color:#e8e0d2;border:1px solid #2b3029;border-radius:8px;padding:11px 12px;font:11px "DM Sans"}.admin-filters button,.admin-primary{border:0;border-radius:8px;background:linear-gradient(130deg,#d3a454,#efc97c);color:#161109;padding:11px 16px;font:600 11px "DM Sans";cursor:pointer}
+.admin-rule-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}.admin-rule-card{border:1px solid var(--admin-line);border-radius:11px;padding:19px;background:#0d110e}.admin-rule-card>small{font-size:8px;color:#a78852}.admin-rule-card h2{font:23px "Instrument Serif";margin:4px 0}.admin-rule-card p{font-size:10px;color:#858a81;line-height:1.55}.admin-rule-card>div{border-top:1px solid #242922;padding-top:11px;margin-top:11px;display:grid;gap:5px}.admin-rule-card b{font-size:9px;color:#d3b06d}.admin-rule-card span{font-size:9px;color:#969b92;line-height:1.5}
+.admin-health-list{display:grid}.admin-health-list>div{display:flex;justify-content:space-between;gap:16px;padding:10px 0;border-top:1px solid #222721}.admin-health-list span{font-size:10px}.admin-health-list small{display:block;color:#6f746d;margin-top:2px}.admin-health-list b{font-size:9px;color:#8b9088}.admin-health-list b.ok{color:#8fc780}.admin-health-list b.missing{color:#df836f}
+.admin-alert{border:1px solid #5d3b32;border-radius:8px;padding:12px;font-size:11px}.admin-alert.danger{color:#dd8a78;background:#170f0d}.admin-muted{color:#6f746d!important;font-size:10px!important}
+.admin-login{min-height:100vh;display:grid;place-items:center;background:radial-gradient(circle at 50% 0,#241a0d,transparent 30%),#070908;color:#f1eadb;font-family:"DM Sans"}
+.admin-login-card{width:min(430px,calc(100% - 32px));border:1px solid #30332c;border-radius:14px;padding:30px;background:linear-gradient(150deg,#101410,#090c0a);box-shadow:0 30px 90px rgba(0,0,0,.4)}.admin-login-card h1{font:42px "Instrument Serif";margin:6px 0}.admin-login-card>p{color:#8f948a;font-size:11px;line-height:1.6}.admin-login-card form{display:grid;gap:12px;margin-top:22px}.admin-login-card label{display:grid;gap:7px;font-size:10px;color:#aaa99f}.admin-login-card input{background:#080b09;border:1px solid #30352e;border-radius:8px;padding:12px;color:#eee5d7;outline:none}.admin-config-box{display:grid;gap:8px;border:1px solid #403a29;background:#121008;border-radius:8px;padding:15px;margin-top:18px}.admin-config-box strong{font-size:11px}.admin-config-box small{font-size:9px;color:#858980}
+@media(max-width:1100px){.admin-shell{grid-template-columns:190px 1fr}.admin-kpis{grid-template-columns:repeat(3,1fr)}.admin-rule-grid{grid-template-columns:repeat(2,1fr)}}
+@media(max-width:760px){.admin-shell{display:block}.admin-sidebar{height:auto;position:relative;border-right:0;border-bottom:1px solid var(--admin-line)}.admin-nav{grid-template-columns:repeat(3,1fr)}.admin-sidebar-foot{display:none}.admin-page{width:min(100% - 28px,1450px);padding-top:26px}.admin-grid-two{grid-template-columns:1fr}.admin-kpis{grid-template-columns:repeat(2,1fr)}.admin-rule-grid{grid-template-columns:1fr}.admin-filters{grid-template-columns:1fr}.admin-page-head h1{font-size:38px}}
