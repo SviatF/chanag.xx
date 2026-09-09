@@ -5,7 +5,7 @@ import { getPanchang, formatWindow } from "@/lib/panchang";
 import { regional } from "@/lib/regional";
 import { todayInIndia } from "@/lib/dates";
 
-export const dynamic = "force-dynamic";
+export const revalidate = 3600;
 
 const hreflang: Record<string,string> = {
   bengali:"bn-IN",
