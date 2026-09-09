@@ -7,11 +7,6 @@
   padding-left:0;
 }
 
-@media(min-width:1181px){
-  .root{
-    transform:translateX(-112px);
-  }
-}
 
 .svg{
   width:min(505px,100%);
