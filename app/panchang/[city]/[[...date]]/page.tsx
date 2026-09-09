@@ -3,14 +3,14 @@ import Link from "next/link";
 import Header from "@/components/Header";
 import DayWheel from "@/components/DayWheel";
 import {cityBySlug,cities} from "@/lib/cities";
-import {formatWindow,getPanchang} from "@/lib/panchang";
+import {formatWindow,getPanchang} from "@/lib/panchang";\nimport {todayInIndia} from "@/lib/dates";
 
 export const dynamic="force-dynamic";
 
 function parseDate(parts?:string[]){
   const raw=parts?.[0];
   if(raw&&/^\d{4}-\d{2}-\d{2}$/.test(raw)) return new Date(raw+"T06:00:00Z");
-  return new Date();
+  return todayInIndia();
 }
 
 export async function generateMetadata({params}:{params:Promise<{city:string,date?:string[]}>}):Promise<Metadata>{
