@@ -21,7 +21,6 @@ const cityVisuals:Record<string,string>={
   bengaluru:"https://commons.wikimedia.org/wiki/Special:Redirect/file/Vidhan_Soudha_during_sunset.jpg?width=1200",
   hyderabad:"https://commons.wikimedia.org/wiki/Special:Redirect/file/Charminar_at_Sunset.JPG?width=1200"
 };
-const ganeshaVisual="https://commons.wikimedia.org/wiki/Special:Redirect/file/Ganesha_Idol.jpg?width=1200";
 const momentCards=[
   ["Wedding","Find auspicious timings",Heart,"wedding"],
   ["Griha Pravesh","A blessed new home",House,"griha-pravesh"],
@@ -90,21 +89,23 @@ export default async function Home({searchParams}:{searchParams:Promise<{city?:s
         </div>
         <Link className="gold-button" href={`/panchang/${city.slug}/${data.date}`}>View full Panchang <span>→</span></Link>
       </div>
-      <div
-        className="hero-wheel"
-        style={{backgroundImage:`linear-gradient(90deg,#090b0b 0%,rgba(9,11,11,.82) 28%,rgba(9,11,11,.24) 72%,rgba(9,11,11,.08) 100%),linear-gradient(180deg,rgba(10,11,10,.06),rgba(10,11,10,.44)),url("${cityVisuals[city.slug]??cityVisuals.mumbai}")`}}
-      >
+      <div className="hero-wheel concept-hero-art">
         <DayWheel data={data}/>
         <div className="ambient-copy">SAME<br/>SKIES.<br/>DEEPER<br/>MEANING.</div>
       </div>
     </section>
 
-    <section className="section shell">
+    <section className="section shell your-day-section">
       <div className="section-head"><div><h2>Your Day</h2><p>At a glance, for a more intentional you.</p></div><Link href={`/panchang/${city.slug}/${data.date}`}>All details →</Link></div>
-      <div className="day-grid">
-        <article className="info-card good"><Sun/><div><span>Best time today</span><h3>{bestTime.name}</h3><strong>{bestTime.time}</strong><p>Calculated from today's local Panchang and daylight window.</p></div></article>
-        <article className="info-card danger"><Clock3/><div><span>Avoid this time</span><h3>Rahu Kalam</h3><strong>{formatWindow(data.rahu)}</strong><p>Location-sensitive period calculated from local sunrise and sunset.</p></div></article>
-        <article className="info-card festival festival-visual" style={{backgroundImage:`linear-gradient(90deg,#101311 0%,rgba(16,19,17,.96) 43%,rgba(16,19,17,.32) 76%,rgba(16,19,17,.08) 100%),url("${ganeshaVisual}")`}}><Sparkles/><div><span>Upcoming festival</span><h3>{festival.name}</h3><strong>{festival.date}</strong><p>{festival.short}</p></div><em>TRADITION<br/>LIVES BRIGHTER<br/>TOGETHER</em></article>
+      <div className="your-day-layout">
+        <div className="day-grid">
+          <article className="info-card good"><Sun/><div><span>Best time today</span><h3>{bestTime.name}</h3><strong>{bestTime.time}</strong><p>Calculated from today's local Panchang and daylight window.</p></div></article>
+          <article className="info-card danger"><Clock3/><div><span>Avoid this time</span><h3>Rahu Kalam</h3><strong>{formatWindow(data.rahu)}</strong><p>Location-sensitive period calculated from local sunrise and sunset.</p></div></article>
+          <article className="info-card festival"><Sparkles/><div><span>Upcoming festival</span><h3>{festival.name}</h3><strong>{festival.date}</strong><p>{festival.short}</p></div></article>
+        </div>
+        <div className="your-day-art" aria-hidden="true">
+          <span>TRADITION<br/>LIVES BRIGHTER<br/>TOGETHER</span>
+        </div>
       </div>
     </section>
 
