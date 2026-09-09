@@ -3,7 +3,8 @@ import Link from "next/link";
 import Header from "@/components/Header";
 import DayWheel from "@/components/DayWheel";
 import {cityBySlug,cities} from "@/lib/cities";
-import {formatWindow,getPanchang} from "@/lib/panchang";\nimport {todayInIndia} from "@/lib/dates";
+import {formatWindow,getPanchang} from "@/lib/panchang";
+import {todayInIndia} from "@/lib/dates";
 
 export const dynamic="force-dynamic";
 
