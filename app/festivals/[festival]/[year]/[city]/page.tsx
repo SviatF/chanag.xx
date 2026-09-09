@@ -5,6 +5,7 @@ import Header from "@/components/Header";
 import {cityBySlug} from "@/lib/cities";
 import {festivalBySlugYear,festivalPujaReference} from "@/lib/festivals";
 import {getPanchang,formatWindow} from "@/lib/panchang";
+import {isPriorityCity,robotsFor} from "@/lib/seo-policy";
 
 export const revalidate=86400;
 
@@ -17,7 +18,8 @@ export async function generateMetadata({params}:{params:Promise<{festival:string
   return {
     title:`${f.name} ${year} in ${city.name} — Local Panchang Timing`,
     description:`${f.name} ${year} in ${city.name}: local Tithi, sunrise, sunset, Rahu Kalam and Puja timing reference.`,
-    alternates:{canonical:`/festivals/${f.slug}/${year}/${city.slug}`}
+    alternates:{canonical:`/festivals/${f.slug}/${year}/${city.slug}`},
+    robots:robotsFor(isPriorityCity(city.slug))
   };
 }
 
