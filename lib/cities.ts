@@ -1,3 +1,5 @@
+import { cityCandidates } from "./city-candidates";
+
 export type City = {
   slug: string;
   name: string;
@@ -7,7 +9,7 @@ export type City = {
   language: string[];
 };
 
-export const cities: City[] = [
+export const coreCities: City[] = [
   ["mumbai","Mumbai","Maharashtra",19.076,72.8777,["en","mr"]],
   ["delhi","Delhi","NCT",28.6139,77.209,["en","hi"]],
   ["bengaluru","Bengaluru","Karnataka",12.9716,77.5946,["en","kn"]],
@@ -60,4 +62,19 @@ export const cities: City[] = [
   ["hubballi-dharwad","Hubballi-Dharwad","Karnataka",15.3647,75.124,["en","kn"]]
 ].map(([slug,name,state,lat,lng,language])=>({slug,name,state,lat,lng,language} as City));
 
-export const cityBySlug = (slug:string) => cities.find(c=>c.slug===slug) ?? cities[0];
+const coreSlugSet=new Set(coreCities.map(city=>city.slug));
+
+export const supportedCities:City[]=[
+  ...coreCities,
+  ...cityCandidates
+    .filter(city=>!coreSlugSet.has(city.slug))
+    .map(({slug,name,state,lat,lng,language})=>({slug,name,state,lat,lng,language}))
+];
+
+export const cities=coreCities;
+
+const supportedCityMap=new Map(supportedCities.map(city=>[city.slug,city]));
+
+export const cityBySlug = (slug:string) => supportedCityMap.get(slug) ?? coreCities[0];
+
+export const isCoreCity=(slug:string)=>coreSlugSet.has(slug);
