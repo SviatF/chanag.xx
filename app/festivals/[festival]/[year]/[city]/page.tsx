@@ -37,8 +37,8 @@ export default async function Page({params}:{params:Promise<{festival:string;yea
   const ld={"@context":"https://schema.org","@graph":[
     {"@type":"Event","name":`${f.name} ${year} in ${city.name}`,"startDate":f.date,"location":{"@type":"Place","name":city.name,"address":{"@type":"PostalAddress","addressRegion":city.state,"addressCountry":"IN"}},"description":f.short},
     {"@type":"BreadcrumbList","itemListElement":[
-      {"@type":"ListItem","position":1,"name":"Festivals","item":"https://panchang.in/festivals/"},
-      {"@type":"ListItem","position":2,"name":`${f.name} ${year}`,"item":`https://panchang.in/festivals/${f.slug}/${year}`},
+      {"@type":"ListItem","position":1,"name":"Festivals","item":"https://panchvani.com/festivals/"},
+      {"@type":"ListItem","position":2,"name":`${f.name} ${year}`,"item":`https://panchvani.com/festivals/${f.slug}/${year}`},
       {"@type":"ListItem","position":3,"name":city.name}
     ]}
   ]};
