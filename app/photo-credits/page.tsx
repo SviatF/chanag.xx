@@ -15,7 +15,7 @@ const credits=[
 export const metadata={title:"Photo Credits"};
 
 export default function PhotoCredits(){
-  return <main><Header city={cities[0]}/><div className="page-shell">
+  return <main><Header city={cities[0]}/><div className="page-shell internal-visual internal-editorial">
     <p className="page-kicker">ATTRIBUTION</p>
     <h1 className="page-title">Photo credits</h1>
     <p className="page-subtitle">Photography used in the visual presentation is sourced from Wikimedia Commons and remains subject to the license shown on each original file page.</p>
