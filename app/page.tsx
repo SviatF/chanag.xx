@@ -8,6 +8,8 @@ import { cities, cityBySlug } from "@/lib/cities";
 import { formatWindow, getPanchang } from "@/lib/panchang";
 import { festivals2026, nextFestival } from "@/lib/festivals";
 import { todayInIndia } from "@/lib/dates";
+import heroPh from "@/lib/hero-ph.webp";
+import sectionYourDayPh from "@/lib/section-your-day.webp";
 
 export const dynamic="force-dynamic";
 
@@ -90,6 +92,8 @@ export default async function Home({searchParams}:{searchParams:Promise<{city?:s
         <Link className="gold-button" href={`/panchang/${city.slug}/${data.date}`}>View full Panchang <span>→</span></Link>
       </div>
       <div className="hero-wheel concept-hero-art">
+        <img className="hero-photo-layer" src={heroPh.src} alt="" aria-hidden="true"/>
+        <div className="hero-photo-shade" aria-hidden="true"/>
         <DayWheel data={data}/>
         <div className="ambient-copy">SAME<br/>SKIES.<br/>DEEPER<br/>MEANING.</div>
       </div>
@@ -104,6 +108,8 @@ export default async function Home({searchParams}:{searchParams:Promise<{city?:s
           <article className="info-card festival"><Sparkles/><div><span>Upcoming festival</span><h3>{festival.name}</h3><strong>{festival.date}</strong><p>{festival.short}</p></div></article>
         </div>
         <div className="your-day-art" aria-hidden="true">
+          <img className="your-day-photo-layer" src={sectionYourDayPh.src} alt=""/>
+          <div className="your-day-photo-shade"/>
           <span>TRADITION<br/>LIVES BRIGHTER<br/>TOGETHER</span>
         </div>
       </div>
