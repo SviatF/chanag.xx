@@ -7,9 +7,9 @@ export default function SystemHealth(){
   const checks=[
     ["Admin authentication",Boolean(process.env.ADMIN_PASSWORD),"ADMIN_PASSWORD"],
     ["Admin session secret",Boolean(process.env.ADMIN_SESSION_SECRET),"ADMIN_SESSION_SECRET (recommended)"],
-    ["GSC client ID",gsc.required.GOOGLE_CLIENT_ID,"GOOGLE_CLIENT_ID"],
-    ["GSC client secret",gsc.required.GOOGLE_CLIENT_SECRET,"GOOGLE_CLIENT_SECRET"],
-    ["GSC refresh token",gsc.required.GOOGLE_REFRESH_TOKEN,"GOOGLE_REFRESH_TOKEN"],
+    ["GSC service account email",gsc.required.GOOGLE_SERVICE_ACCOUNT_EMAIL,"GOOGLE_SERVICE_ACCOUNT_EMAIL"],
+    ["GSC private key",gsc.required.GOOGLE_SERVICE_ACCOUNT_PRIVATE_KEY,"GOOGLE_SERVICE_ACCOUNT_PRIVATE_KEY"],
+    ["GSC property",gsc.required.GSC_SITE_URL,"GSC_SITE_URL"],
   ] as const;
 
   return <div className="admin-page">
