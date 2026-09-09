@@ -1274,3 +1274,104 @@ body{
     margin:6px 0 0 !important;
   }
 }
+
+
+/* =========================================================
+   HARD RESET FOR CURRENT HOME HERO
+   Kill legacy right-column overlays that caused the vertical seam.
+   ========================================================= */
+.concept-master-hero .concept-hero-wheel::before,
+.concept-master-hero .concept-hero-wheel::after,
+.concept-master-hero .hero-wheel::before,
+.concept-master-hero .hero-wheel::after{
+  content:none !important;
+  display:none !important;
+  background:none !important;
+  opacity:0 !important;
+}
+
+/* The hero must read as ONE continuous full-bleed image, not two columns. */
+.concept-master-hero{
+  min-height:520px !important;
+  background:#070908 !important;
+}
+.concept-master-hero-image{
+  object-position:59% center !important;
+  filter:saturate(1.03) contrast(1.035) brightness(1.07) !important;
+}
+.concept-master-hero-overlay{
+  background:
+    linear-gradient(90deg,
+      rgba(6,8,7,.985) 0%,
+      rgba(6,8,7,.95) 11%,
+      rgba(6,8,7,.86) 21%,
+      rgba(6,8,7,.69) 32%,
+      rgba(6,8,7,.48) 43%,
+      rgba(6,8,7,.29) 54%,
+      rgba(6,8,7,.15) 65%,
+      rgba(6,8,7,.065) 76%,
+      rgba(6,8,7,.02) 88%,
+      rgba(6,8,7,0) 100%),
+    linear-gradient(180deg,
+      rgba(4,6,5,.01) 0%,
+      rgba(4,6,5,.01) 72%,
+      rgba(4,6,5,.13) 100%) !important;
+}
+
+/* Make the composition change visibly, not subtly. */
+@media(min-width:1181px){
+  .concept-master-hero{
+    grid-template-columns:.96fr 1.04fr !important;
+  }
+  .concept-hero-copy{
+    padding:36px 30px 31px 50px !important;
+  }
+  .concept-hero-copy h1{
+    font-size:54px !important;
+  }
+  .concept-hero-copy .hero-date{
+    font-size:24px !important;
+  }
+  .concept-hero-wheel{
+    overflow:visible !important;
+  }
+  .concept-hero-wheel .wheel-wrap{
+    transform:translateX(-12%) !important;
+  }
+  .concept-hero-wheel .wheel{
+    width:min(430px,66%) !important;
+  }
+
+  /* Your Day image is a proper editorial panel, not a strip. */
+  .your-day-layout{
+    grid-template-columns:minmax(0,2.45fr) minmax(390px,1.25fr) !important;
+  }
+  .your-day-art{
+    min-height:164px !important;
+  }
+  .your-day-photo-layer{
+    object-position:54% center !important;
+  }
+
+  /* Tighten lower half more aggressively. */
+  .ritual-section{
+    padding-top:17px !important;
+    padding-bottom:18px !important;
+  }
+  .moment-card{
+    min-height:84px !important;
+  }
+  .calendar-preview,
+  .explore-stack{
+    padding-top:18px !important;
+    padding-bottom:18px !important;
+  }
+  .explore-stack{
+    gap:16px !important;
+  }
+  .footer{
+    min-height:92px !important;
+    padding-top:20px !important;
+    padding-bottom:24px !important;
+  }
+}
