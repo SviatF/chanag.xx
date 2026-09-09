@@ -45,6 +45,7 @@ export type Panchang = {
   nakshatraEnd: string;
   nakshatraPada: number;
   rashi: string;
+  solarRashi: string;
   yoga: string;
   karana: string;
   sunrise: string;
@@ -226,6 +227,7 @@ export async function getPanchang(date: Date, city: City): Promise<Panchang> {
   const nakshatra = nakshatras[atSunrise.nakshatraIndex];
   const nakshatraPada = Math.floor((atSunrise.moonSidereal % nakshatraSpan) / (nakshatraSpan / 4)) + 1;
   const rashi = rashis[Math.floor(atSunrise.moonSidereal / 30)];
+  const solarRashi = rashis[Math.floor(atSunrise.sunSidereal / 30)];
   const yoga = yogas[atSunrise.yogaIndex];
   const karana = karanaName(Math.floor(atSunrise.elongation / 6));
 
@@ -308,6 +310,7 @@ export async function getPanchang(date: Date, city: City): Promise<Panchang> {
     nakshatraEnd: formatJulianLocal(nakshatraEndJd),
     nakshatraPada,
     rashi,
+    solarRashi,
     yoga,
     karana,
     sunrise: formatJulianLocal(sunriseJd),
