@@ -5,5 +5,5 @@ export async function GET() {
   const d = new Date();
   const y = d.getUTCFullYear();
   const m = String(d.getUTCMonth() + 1).padStart(2, "0");
-  return xml(urlset(cities.filter(c=>phase1PriorityCities.includes(c.slug as any)).map((c) => "https://panchang.in/calendar/" + c.slug + "/" + y + "/" + m)));
+  return xml(urlset(cities.filter(c=>phase1PriorityCities.includes(c.slug as any)).map((c) => "https://panchvani.com/calendar/" + c.slug + "/" + y + "/" + m)));
 }
