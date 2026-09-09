@@ -384,3 +384,237 @@ body:before{content:"";position:fixed;inset:0;pointer-events:none;z-index:-1;bac
     font-size:6px;
   }
 }
+
+
+/* Bundled visual layers — authoritative final composition */
+.concept-hero-art{
+  position:relative;
+  isolation:isolate;
+  overflow:hidden;
+  background:#090b0b !important;
+  background-image:none !important;
+  filter:none !important;
+}
+.concept-hero-art:before,
+.concept-hero-art:after{
+  display:none !important;
+}
+.hero-photo-layer{
+  position:absolute;
+  inset:0;
+  z-index:0;
+  width:100%;
+  height:100%;
+  object-fit:cover;
+  object-position:72% center;
+  display:block;
+  filter:saturate(.92) contrast(1.05) brightness(.92);
+  transform:scale(1.008);
+}
+.hero-photo-shade{
+  position:absolute;
+  inset:0;
+  z-index:1;
+  pointer-events:none;
+  background:
+    linear-gradient(90deg,
+      rgba(7,10,8,.92) 0%,
+      rgba(7,10,8,.68) 18%,
+      rgba(7,10,8,.34) 43%,
+      rgba(7,10,8,.12) 68%,
+      rgba(7,10,8,.04) 100%),
+    linear-gradient(180deg,
+      rgba(5,7,6,.03) 0%,
+      rgba(5,7,6,.04) 56%,
+      rgba(5,7,6,.26) 100%);
+}
+.concept-hero-art .wheel-wrap{
+  position:relative;
+  z-index:3;
+  transform:translateX(-7%);
+}
+.concept-hero-art .ambient-copy{
+  z-index:4;
+  right:24px;
+  top:72px;
+}
+.concept-hero-art .wheel{
+  backdrop-filter:none !important;
+  background-color:rgba(8,10,8,.72) !important;
+  box-shadow:
+    0 0 0 7px rgba(11,12,9,.64),
+    0 0 0 8px rgba(150,113,50,.72),
+    0 28px 62px rgba(0,0,0,.46),
+    0 0 44px rgba(197,145,57,.06);
+}
+
+/* Your Day — three data cards + full cinematic image panel */
+.your-day-layout{
+  display:grid !important;
+  grid-template-columns:minmax(0,3fr) minmax(270px,1.08fr) !important;
+  gap:14px !important;
+  align-items:stretch !important;
+}
+.your-day-layout .day-grid{
+  display:grid !important;
+  grid-template-columns:repeat(3,minmax(0,1fr)) !important;
+  gap:12px !important;
+  min-width:0;
+}
+.your-day-layout .info-card{
+  min-height:182px;
+}
+.your-day-art{
+  position:relative !important;
+  min-height:182px !important;
+  overflow:hidden !important;
+  border:0 !important;
+  border-left:1px solid #2d2e28 !important;
+  border-radius:0 !important;
+  background:none !important;
+  margin-right:-34px;
+  box-shadow:none !important;
+  isolation:isolate;
+}
+.your-day-art:before{
+  display:none !important;
+}
+.your-day-photo-layer{
+  position:absolute;
+  inset:0;
+  z-index:0;
+  width:100%;
+  height:100%;
+  object-fit:cover;
+  object-position:68% center;
+  display:block;
+  filter:saturate(.92) contrast(1.04) brightness(.90);
+}
+.your-day-photo-shade{
+  position:absolute;
+  inset:0;
+  z-index:1;
+  pointer-events:none;
+  background:
+    linear-gradient(90deg,
+      rgba(8,10,9,.74) 0%,
+      rgba(8,10,9,.36) 28%,
+      rgba(8,10,9,.08) 58%,
+      rgba(8,10,9,.02) 100%),
+    linear-gradient(180deg,
+      rgba(8,10,9,.02) 0%,
+      rgba(8,10,9,.10) 70%,
+      rgba(8,10,9,.32) 100%);
+}
+.your-day-art span{
+  position:absolute !important;
+  right:20px !important;
+  bottom:18px !important;
+  z-index:3 !important;
+  color:#d5b573 !important;
+  font-size:7px !important;
+  line-height:1.75 !important;
+  letter-spacing:.16em !important;
+  text-align:right !important;
+  text-shadow:0 2px 12px rgba(0,0,0,.92) !important;
+}
+
+/* Keep the visual hierarchy closer to the approved concept */
+.your-day-section{
+  padding-top:30px;
+  padding-bottom:30px;
+}
+.your-day-section .section-head{
+  margin-bottom:18px;
+}
+.your-day-section .info-card{
+  padding:22px;
+}
+.your-day-section .info-card h3{
+  font-size:22px;
+}
+.your-day-section .info-card p{
+  max-width:250px;
+}
+.hero{
+  min-height:610px;
+}
+.hero-copy{
+  padding-top:72px;
+}
+.hero h1{
+  font-size:62px;
+}
+.hero-status{
+  margin-top:24px;
+  margin-bottom:22px;
+}
+
+/* Desktop refinements */
+@media(min-width:1181px){
+  .concept-hero-art .wheel{
+    width:min(500px,76%);
+  }
+}
+
+/* Responsive */
+@media(max-width:1180px){
+  .your-day-layout{
+    grid-template-columns:minmax(0,1fr) 245px !important;
+  }
+  .concept-hero-art .wheel-wrap{
+    transform:translateX(-3%);
+  }
+}
+@media(max-width:1000px){
+  .hero-photo-layer{
+    object-position:72% center;
+  }
+  .hero-photo-shade{
+    background:
+      linear-gradient(180deg,rgba(7,10,8,.70) 0%,rgba(7,10,8,.22) 30%,rgba(7,10,8,.08) 70%,rgba(7,10,8,.52) 100%);
+  }
+  .concept-hero-art .wheel-wrap{
+    transform:none;
+  }
+  .your-day-layout{
+    grid-template-columns:1fr !important;
+  }
+  .your-day-layout .day-grid{
+    grid-template-columns:repeat(3,minmax(0,1fr)) !important;
+  }
+  .your-day-art{
+    min-height:260px !important;
+    margin-right:0;
+    border-left:0 !important;
+    border:1px solid #2d2e28 !important;
+    border-radius:11px !important;
+  }
+  .your-day-photo-layer{
+    object-position:72% center;
+  }
+}
+@media(max-width:760px){
+  .your-day-layout .day-grid{
+    grid-template-columns:1fr !important;
+  }
+  .your-day-art{
+    min-height:225px !important;
+  }
+}
+@media(max-width:620px){
+  .hero-photo-layer{
+    object-position:74% center;
+  }
+  .your-day-art{
+    min-height:205px !important;
+  }
+  .your-day-photo-layer{
+    object-position:70% center;
+  }
+  .your-day-art span{
+    right:12px !important;
+    bottom:12px !important;
+    font-size:6px !important;
+  }
+}
