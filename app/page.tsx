@@ -96,7 +96,6 @@ export default async function Home({searchParams}:{searchParams:Promise<{city?:s
       </div>
       <div className="hero-wheel concept-hero-wheel">
         <DayWheel data={data}/>
-        <div className="ambient-copy">SAME<br/>SKIES.<br/>DEEPER<br/>MEANING.</div>
       </div>
     </section>
 
