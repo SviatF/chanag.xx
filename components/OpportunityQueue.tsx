@@ -12,6 +12,7 @@ import {
   type OpportunityStage
 } from "@/lib/opportunity-lifecycle";
 import {latestOutcomeCheckpoint,nextOutcomeCheckpoint} from "@/lib/outcome-intelligence";
+import {buildSeoActionPlan,type SeoActionPriority} from "@/lib/seo-action-intelligence";
 
 type Props={
   opportunities:SearchOpportunity[];
@@ -26,6 +27,7 @@ type QueueRow={key:string;opportunity:SearchOpportunity|null;record:OpportunityL
 const stageClass:Record<OpportunityStage,string>={
   DETECTED:"hold",REVIEW:"watch",APPROVED:"activate",BUILD:"activate",SHIPPED:"active",MEASURING:"watch",WON:"active",REJECTED:"hold"
 };
+const priorityClass:Record<SeoActionPriority,string>={P0:"hold",P1:"watch",P2:"activate",P3:"active"};
 
 function stageLabel(stage:OpportunityStage){return stage.replaceAll("_"," ");}
 function n(value:number){return Math.round(value).toLocaleString("en-IN");}
@@ -92,12 +94,17 @@ export default function OpportunityQueue({opportunities,records,storageConfigure
   const latestOutcomes=rows.map(row=>latestOutcomeCheckpoint(row.record)).filter(Boolean);
   const recommendedWins=latestOutcomes.filter(item=>item?.recommendation==="WON").length;
   const needsIteration=latestOutcomes.filter(item=>item?.recommendation==="ITERATE"||item?.recommendation==="REGRESSED").length;
+  const actionPlans=rows.map(row=>buildSeoActionPlan({opportunity:row.opportunity,record:row.record}));
+  const p0Actions=actionPlans.filter(plan=>plan.priority==="P0").length;
+  const p1Actions=actionPlans.filter(plan=>plan.priority==="P1").length;
 
   return <>
     {!storageConfigured?<div className="admin-alert warn"><strong>Lifecycle persistence is not connected.</strong> Add <code>SEO_OPPORTUNITY_KV_NAMESPACE_ID</code> and ensure the existing Cloudflare API token has Workers KV Storage read/write permission. Detected opportunities remain visible below, but status changes and exact outcome history are disabled until storage is connected.</div>:null}
     {error?<div className="admin-alert danger">{error}</div>:null}
 
-    <section className="admin-kpis">
+    <section className="admin-kpis admin-kpis-six">
+      <div className="admin-kpi"><small>P0 actions</small><strong>{p0Actions}</strong><span>Wrong landing / regression</span></div>
+      <div className="admin-kpi"><small>P1 actions</small><strong>{p1Actions}</strong><span>Build / strengthen / iterate</span></div>
       <div className="admin-kpi"><small>Review</small><strong>{counts.REVIEW??0}</strong><span>Needs decision</span></div>
       <div className="admin-kpi"><small>Approved / Build</small><strong>{(counts.APPROVED??0)+(counts.BUILD??0)}</strong><span>Execution pipeline</span></div>
       <div className="admin-kpi"><small>Outcome wins</small><strong>{recommendedWins}</strong><span>Latest checkpoint recommends WON</span></div>
@@ -105,13 +112,14 @@ export default function OpportunityQueue({opportunities,records,storageConfigure
     </section>
 
     <section className="admin-panel">
-      <div className="admin-panel-head"><div><small>SEO EXECUTION + OUTCOME INTELLIGENCE</small><h2>Opportunity lifecycle queue</h2></div><span>{rows.length} tracked / detected</span></div>
-      <p className="admin-muted">Detected opportunities come from live GSC demand. After SHIPPED, Panchvani stores exact equal-length pre/post Search Console windows at 14, 28 and 56 days. A WON recommendation never changes lifecycle automatically; final closure remains a human decision.</p>
-      <div className="admin-table-wrap"><table className="admin-table"><thead><tr><th>Opportunity</th><th>Demand</th><th>Lifecycle</th><th>Outcome intelligence</th><th>Owner / note</th><th>Next action</th></tr></thead><tbody>
+      <div className="admin-panel-head"><div><small>SEO EXECUTION + ACTION INTELLIGENCE</small><h2>Opportunity lifecycle queue</h2></div><span>{rows.length} tracked / detected</span></div>
+      <p className="admin-muted">Every row now converts live GSC demand or stored outcome evidence into a deterministic execution plan. Recommendations never publish, approve or close an opportunity automatically; they explain what to change, why, and what success should look like.</p>
+      <div className="admin-table-wrap"><table className="admin-table"><thead><tr><th>Opportunity</th><th>Demand</th><th>Lifecycle</th><th>Outcome intelligence</th><th>Action intelligence</th><th>Owner / note</th><th>Lifecycle action</th></tr></thead><tbody>
         {rows.map(row=>{
           const item=row.opportunity;
           const context=item?opportunityContext(item):row.record.context;
           const outcome=latestOutcomeCheckpoint(row.record);
+          const plan=buildSeoActionPlan({opportunity:item,record:row.record});
           const nextCheckpoint=nextOutcomeCheckpoint(row.record);
           const draft=draftFor(row.key,row.record);
           const next=nextOpportunityStages(row.record.stage);
@@ -126,22 +134,30 @@ export default function OpportunityQueue({opportunities,records,storageConfigure
               <small>Clicks {percentChange(outcome.clicksChangePct)} · Impr. {percentChange(outcome.impressionsChangePct)}</small>
               <small>CTR {signed(outcome.ctrDeltaPoints," pp")} · Position {outcome.positionImprovement===null?"—":signed(outcome.positionImprovement)}</small>
               <small>{outcome.reason}</small>
-              {(row.record.outcomes?.length??0)>1?<small>History: {row.record.outcomes!.map(item=>`${item.days}d ${item.score}/100 ${item.signal}`).join(" · ")}</small>:null}
+              {(row.record.outcomes?.length??0)>1?<small>History: {row.record.outcomes!.map(entry=>`${entry.days}d ${entry.score}/100 ${entry.signal}`).join(" · ")}</small>:null}
               {nextCheckpoint?<small>Next: {nextCheckpoint.days}d checkpoint {nextCheckpoint.due?"due now":`after ${nextCheckpoint.readyAt}`}</small>:<small>14/28/56d measurement cycle complete.</small>}
             </>:row.record.shippedAt&&nextCheckpoint?<>
               <span className="admin-badge watch">AWAITING {nextCheckpoint.days}D</span>
               <small>Exact post-launch window will be evaluated after {nextCheckpoint.readyAt}, including the GSC final-data lag.</small>
               <small>Launch: {row.record.shippedAt.slice(0,10)}</small>
             </>:row.record.baseline?<small>Launch baseline captured. Exact checkpoint schedule starts after SHIPPED.</small>:<small>Outcome tracking begins when this opportunity moves to SHIPPED.</small>}</td>
+            <td>
+              <span className={`admin-badge ${priorityClass[plan.priority]}`}>{plan.priority} · {plan.mode}</span>
+              <strong>{plan.headline}</strong>
+              <small>{plan.diagnosis}</small>
+              <div className="admin-mini-list">{plan.steps.slice(0,5).map((step,index)=><div key={`${step.area}-${index}`}><b>{index+1}. {step.area.replaceAll("_"," ")}</b><small>{step.action}</small><small>Evidence: {step.evidence}</small></div>)}</div>
+              <small><b>Success:</b> {plan.successCriteria.join(" · ")}</small>
+              <small><b>Guardrail:</b> {plan.guardrail}</small>
+            </td>
             <td><input value={draft.owner} onChange={event=>setDraft(row.key,row.record,"owner",event.target.value)} placeholder="Owner" disabled={!storageConfigured||busy===row.key}/><textarea value={draft.note} onChange={event=>setDraft(row.key,row.record,"note",event.target.value)} placeholder="Decision / build note" rows={2} disabled={!storageConfigured||busy===row.key}/><button type="button" className="admin-badge watch" disabled={!storageConfigured||busy===row.key} onClick={()=>save(row,row.record.stage)}>Save note</button></td>
             <td><div className="admin-mini-list">{next.map(stage=>{
               const recommendation=outcome?.recommendation;
-              const hint=stage==="SHIPPED"?"Capture launch baseline and start exact checkpoints":stage==="MEASURING"?"Keep lifecycle in post-launch measurement":stage==="WON"?(recommendation==="WON"?"Outcome Intelligence recommends this closure":"Human override: close as validated win"):stage==="BUILD"&&(recommendation==="ITERATE"||recommendation==="REGRESSED")?"Outcome Intelligence recommends another iteration":"Move lifecycle";
+              const hint=stage==="SHIPPED"?"Capture launch baseline and start exact checkpoints":stage==="MEASURING"?"Keep lifecycle in post-launch measurement":stage==="WON"?(recommendation==="WON"?"Outcome Intelligence recommends this closure":"Human override: close as validated win"):stage==="BUILD"&&(recommendation==="ITERATE"||recommendation==="REGRESSED")?"Action Intelligence recommends another controlled iteration":"Move lifecycle";
               return <button type="button" key={stage} disabled={!storageConfigured||busy===row.key} onClick={()=>save(row,stage)}><b>{stageLabel(stage)}</b><small>{hint}</small></button>;
             })}</div></td>
           </tr>;
         })}
-        {!rows.length?<tr><td colSpan={6}>No detected or persisted SEO opportunities yet.</td></tr>:null}
+        {!rows.length?<tr><td colSpan={7}>No detected or persisted SEO opportunities yet.</td></tr>:null}
       </tbody></table></div>
     </section>
   </>;
