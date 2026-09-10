@@ -103,7 +103,8 @@ function sectionsFor(family:ReturnType<typeof pageFamily>):SeoBriefSection[]{
 }
 
 function readinessFor(item:SearchOpportunity|null,record:OpportunityLifecycleRecord,plan:SeoActionPlan):SeoBuildBrief["readiness"]{
-  if(plan.mode==="MONITOR"||record.stage==="WON")return "MEASURE_ONLY";
+  if(record.stage==="WON"||plan.mode==="MONITOR")return "MEASURE_ONLY";
+  if((record.stage==="SHIPPED"||record.stage==="MEASURING")&&plan.mode!=="OUTCOME")return "MEASURE_ONLY";
   if(item?.status==="NO_CLEAR_LANDING"||!plan.targetPath)return "BLOCKED";
   if(record.stage==="APPROVED"||record.stage==="BUILD")return "READY_FOR_BUILD";
   return "READY_FOR_REVIEW";
@@ -174,7 +175,6 @@ function measurementPlanFor(item:SearchOpportunity|null,record:OpportunityLifecy
 
 export function buildSeoExecutionBrief({opportunity,record}:BriefInput):SeoBuildBrief{
   const plan=buildSeoActionPlan({opportunity,record});
-  const context=opportunity??record.context;
   const target=plan.targetPath??record.context?.recommendedPath??null;
   const template=opportunity?.template??record.context?.template??null;
   const family=pageFamily(target,template);
@@ -182,6 +182,7 @@ export function buildSeoExecutionBrief({opportunity,record}:BriefInput):SeoBuild
   const primaryQuery=opportunity?.topQuery??record.context?.topQuery??null;
   const city=opportunity?.city??record.context?.city??null;
   const intent=opportunity?.intent??opportunity?.label??record.context?.label??record.key;
+  const technicalChecks=technicalChecksFor(target,readiness);
   return {
     id:record.key,
     priority:plan.priority,
@@ -199,9 +200,9 @@ export function buildSeoExecutionBrief({opportunity,record}:BriefInput):SeoBuild
     h1Direction:h1Direction(primaryQuery,city),
     sections:sectionsFor(family),
     internalLinks:internalLinksFor(family,target,plan.currentPath),
-    technicalChecks:technicalChecksFor(target,readiness),
+    technicalChecks,
     schemaChecks:schemaChecksFor(family),
-    acceptanceCriteria:[...plan.successCriteria,...technicalChecksFor(target,readiness).slice(0,3)],
+    acceptanceCriteria:[...plan.successCriteria,...technicalChecks.slice(0,3)],
     measurementPlan:measurementPlanFor(opportunity,record,plan),
     executionSteps:plan.steps.map(step=>({area:step.area,action:step.action,evidence:step.evidence})),
     guardrail:plan.guardrail,
