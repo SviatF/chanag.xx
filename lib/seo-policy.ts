@@ -14,9 +14,12 @@ export const primaryMuhuratEvents = [
   "vehicle-purchase"
 ] as const;
 
+export const primaryVratTypes=["ekadashi","purnima","amavasya"] as const;
+
 const baselinePriorityCitySet=new Set<string>(phase1PriorityCities);
 const supportedCitySlugSet=new Set(supportedCities.map(city=>city.slug));
 const primaryMuhuratSet=new Set<string>(primaryMuhuratEvents);
+const primaryVratSet=new Set<string>(primaryVratTypes);
 
 const regionalLanguageCode:Record<string,string>={
   bengali:"bn",
@@ -47,6 +50,8 @@ function monthDistance(year:number,month:number){
   return target-current;
 }
 
+function yearDistance(year:number){return year-todayInIndia().getUTCFullYear();}
+
 export function isPriorityCity(citySlug:string){
   return baselinePriorityCitySet.has(citySlug)||configuredExtraIndexCities().includes(citySlug);
 }
@@ -73,6 +78,13 @@ export function isMonthlyIndexable(citySlug:string,year:number,month:number){
 export function isMuhuratIndexable(event:string,citySlug?:string){
   if(!primaryMuhuratSet.has(event)) return false;
   return citySlug ? isPriorityCity(citySlug) : true;
+}
+
+export function isVratIndexable(vrat:string,year:number,citySlug?:string){
+  if(!primaryVratSet.has(vrat))return false;
+  const distance=yearDistance(year);
+  if(distance < -1 || distance > 2)return false;
+  return citySlug?isPriorityCity(citySlug):true;
 }
 
 export function isRegionalIndexable(language:string,city:City){
