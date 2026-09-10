@@ -1,15 +1,19 @@
-import {isRegionalIndexable} from "@/lib/seo-policy";
-import {sitemapPriorityCities} from "@/lib/seo-sitemap";
 import {urlset,xml} from "@/lib/xml";
-
-const languages=["bengali","tamil","malayalam","gujarati","marathi"];
+import {
+  regionalCitiesForLanguage,
+  regionalIntentLinksForCity,
+  regionalLanguageSlugs,
+} from "@/lib/regional-seo";
 
 export async function GET(){
-  const urls:string[]=[];
-  for(const language of languages){
-    for(const city of sitemapPriorityCities){
-      if(isRegionalIndexable(language,city))urls.push(`https://panchvani.com/regional/${language}/${city.slug}`);
+  const base="https://panchvani.com";
+  const urls:string[]=[`${base}/regional`];
+  for(const language of regionalLanguageSlugs){
+    urls.push(`${base}/regional/${language}`);
+    for(const city of regionalCitiesForLanguage(language)){
+      urls.push(`${base}/regional/${language}/${city.slug}`);
+      for(const item of regionalIntentLinksForCity(language,city))urls.push(`${base}${item.href}`);
     }
   }
-  return xml(urlset(urls));
+  return xml(urlset([...new Set(urls)]));
 }
