@@ -1,7 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { Check, LocateFixed, MapPin, Search, X } from "lucide-react";
+import { Check, ChevronDown, LocateFixed, MapPin, Search, X } from "lucide-react";
 import { usePathname, useRouter } from "next/navigation";
 import type { City } from "@/lib/cities";
 
@@ -29,11 +29,36 @@ export default function CityCommand({city,cities}:{city:City;cities:City[]}){
   function go(next:City){
     document.cookie=`panchang_city=${next.slug}; path=/; max-age=31536000; samesite=lax`;
     const parts=pathname.split("/").filter(Boolean);
+
     if(pathname==="/") router.push("/?city="+next.slug);
-    else if(parts[0]==="panchang"){parts[1]=next.slug;router.push("/"+parts.join("/"));}
-    else if(parts[0]==="calendar"){parts[1]=next.slug;router.push("/"+parts.join("/"));}
-    else if(parts[0]==="regional"&&parts.length>=3){parts[2]=next.slug;router.push("/"+parts.join("/"));}
+    else if(parts[0]==="panchang"){
+      parts[1]=next.slug;
+      router.push("/"+parts.join("/"));
+    }
+    else if(parts[0]==="calendar"){
+      parts[1]=next.slug;
+      router.push("/"+parts.join("/"));
+    }
+    else if(parts[0]==="regional"&&parts.length>=2){
+      parts[2]=next.slug;
+      router.push("/"+parts.join("/"));
+    }
+    else if(parts[0]==="muhurat"&&parts.length>=4){
+      if(parts.length>=5)parts[4]=next.slug;
+      else parts.push(next.slug);
+      router.push("/"+parts.join("/"));
+    }
+    else if(parts[0]==="festivals"&&parts.length>=3){
+      if(parts.length>=4)parts[3]=next.slug;
+      else parts.push(next.slug);
+      router.push("/"+parts.join("/"));
+    }
+    else if(parts[0]==="tools"&&parts[1]==="choghadiya"){
+      parts[2]=next.slug;
+      router.push("/"+parts.join("/"));
+    }
     else router.push("/panchang/"+next.slug);
+
     setOpen(false);
     setQuery("");
   }
@@ -54,8 +79,13 @@ export default function CityCommand({city,cities}:{city:City;cities:City[]}){
   }
 
   return <>
-    <button className="location-pill location-button" onClick={()=>setOpen(true)} type="button">
-      <MapPin size={14}/><span>{city.name} · {city.state}</span>
+    <button className="location-pill location-button" onClick={()=>setOpen(true)} type="button" aria-label={`Choose city. Current city: ${city.name}, ${city.state}`}>
+      <MapPin className="location-pin" size={14} aria-hidden="true"/>
+      <span className="location-label">
+        <span className="location-city">{city.name}</span>
+        <span className="location-state"> · {city.state}</span>
+      </span>
+      <ChevronDown className="location-select-chevron" size={13} aria-hidden="true"/>
     </button>
     {open?<div className="city-overlay" role="dialog" aria-modal="true">
       <button className="city-backdrop" aria-label="Close city selector" onClick={()=>setOpen(false)}/>
