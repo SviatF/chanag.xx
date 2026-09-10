@@ -5,6 +5,8 @@ import {getOpportunityStoreStatus,readOpportunityLifecycleMap,writeOpportunityLi
 import {latestOutcomeCheckpoint} from "./outcome-intelligence";
 import {buildSearchOpportunities,type SearchOpportunity} from "./search-opportunities";
 import {writeSeoAutopilotState,type SeoAutopilotFlag,type SeoAutopilotRunState} from "./seo-autopilot-store";
+import {buildSeoLearningLibrary,prioritizeOpportunityWithLearning} from "./seo-learning";
+import {runIndexationIntelligence} from "./indexation-runner";
 
 export const SEO_AUTOPILOT_MIN_SCORE=55;
 export const SEO_AUTOPILOT_MIN_IMPRESSIONS=5;
@@ -13,11 +15,16 @@ export const SEO_AUTOPILOT_MAX_NEW_PER_RUN=40;
 type LifecycleMap=Record<string,OpportunityLifecycleRecord>;
 
 export function selectAutopilotCandidates(opportunities:SearchOpportunity[],records:LifecycleMap){
+  const learning=buildSeoLearningLibrary(records);
   return opportunities
     .filter(item=>item.status!=="COVERED")
     .filter(item=>item.impressions>=SEO_AUTOPILOT_MIN_IMPRESSIONS&&item.score>=SEO_AUTOPILOT_MIN_SCORE)
     .filter(item=>!records[item.key])
-    .sort((a,b)=>b.score-a.score||b.impressions-a.impressions||a.key.localeCompare(b.key))
+    .sort((a,b)=>{
+      const learnedA=prioritizeOpportunityWithLearning(a,learning).adjustedScore;
+      const learnedB=prioritizeOpportunityWithLearning(b,learning).adjustedScore;
+      return learnedB-learnedA||b.score-a.score||b.impressions-a.impressions||a.key.localeCompare(b.key);
+    })
     .slice(0,SEO_AUTOPILOT_MAX_NEW_PER_RUN);
 }
 
@@ -95,6 +102,12 @@ export async function runSeoAutopilot(asOf=new Date(),trigger:"CRON"|"MANUAL"="C
       errors.push(error instanceof Error?error.message:"Outcome checkpoint sync failed.");
       // Keep discovery persistence even if an exact checkpoint query fails.
       records=await readOpportunityLifecycleMap();
+    }
+
+    try{
+      await runIndexationIntelligence(snapshot,opportunities,records,asOf);
+    }catch(error){
+      errors.push(error instanceof Error?`Indexation intelligence: ${error.message}`:"Indexation intelligence failed.");
     }
 
     const newlyPersisted=candidates.filter(item=>Boolean(records[item.key])&&records[item.key].createdAt===now).length;
