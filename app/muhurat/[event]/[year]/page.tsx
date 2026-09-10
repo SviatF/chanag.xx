@@ -4,7 +4,7 @@ import {notFound} from "next/navigation";
 import Header from "@/components/Header";
 import {cityBySlug} from "@/lib/cities";
 import {muhuratRules} from "@/lib/muhurat";
-import {isYearlyMuhuratIndexable,robotsFor} from "@/lib/seo-policy";
+import {isYearlyMuhuratIndexable,robotsFor,yearlyIndexYears} from "@/lib/seo-policy";
 import {parseRouteYear} from "@/lib/route-validation";
 import {buildYearlyMuhuratSummary,hinduCalendarYearPath,muhuratYearPath} from "@/lib/yearly-expansion";
 
@@ -18,6 +18,7 @@ export async function generateMetadata({params}:{params:Promise<{event:string;ye
 export default async function YearlyMuhurat({params}:{params:Promise<{event:string;year:string}>}){
   const p=await params;const rule=muhuratRules[p.event];const year=parseRouteYear(p.year);if(!rule||!year)notFound();
   const city=cityBySlug("mumbai");
+  const activeYears=yearlyIndexYears();
   const summary=await buildYearlyMuhuratSummary(p.event,year,city);
   const top=summary.topRows[0];
   const ld={"@context":"https://schema.org","@type":"CollectionPage","name":`${rule.title} ${year}`,"url":`https://panchvani.com${muhuratYearPath(p.event,year)}`,"description":`Yearly planning summary based on qualified monthly Panchvani Muhurat calculations.`};
@@ -41,7 +42,7 @@ export default async function YearlyMuhurat({params}:{params:Promise<{event:stri
 
     <section className="wide-panel"><h2 className="page-title" style={{fontSize:32}}>Top planning fits of {year}</h2>{summary.topRows.length?<div className="wide-panel"><table className="table"><thead><tr><th>Rank / Date</th><th>Score</th><th>Qualification</th><th>Clean time</th></tr></thead><tbody>{summary.topRows.map((row,index)=><tr key={row.date}><td>#{index+1} · <Link href={`/panchang/${city.slug}/${row.date}`}>{row.date}</Link></td><td><strong>{row.planning.score}/100 · {row.planning.grade}</strong></td><td>{row.reasons.join(" · ")}</td><td>{row.planning.longestWindowMinutes} min longest · {row.planning.totalCleanMinutes} min total</td></tr>)}</tbody></table></div>:<p className="page-subtitle">No dates matched the current event rule profile in {year}.</p>}</section>
 
-    <div className="pill-links"><Link href={muhuratYearPath(p.event,year-1)}>← {year-1}</Link><Link href={hinduCalendarYearPath(year)}>Hindu Calendar {year}</Link><Link href={muhuratYearPath(p.event,year+1)}>{year+1} →</Link></div>
+    <div className="pill-links">{activeYears.includes(year-1)?<Link href={muhuratYearPath(p.event,year-1)}>← {year-1}</Link>:null}<Link href={hinduCalendarYearPath(year)}>Hindu Calendar {year}</Link>{activeYears.includes(year+1)?<Link href={muhuratYearPath(p.event,year+1)}>{year+1} →</Link>:null}</div>
     <div className="seo-copy"><h2>How to use the annual ranking</h2><p>The annual page is a planning overview, not a new astrological rule layer. Open a month to inspect every qualified date and then open the relevant city page for location-specific Rahu Kalam, Yamaganda, Gulika, Abhijit and Choghadiya effects on clean windows.</p></div>
     <script type="application/ld+json" dangerouslySetInnerHTML={{__html:JSON.stringify(ld)}}/>
   </div></main>;
