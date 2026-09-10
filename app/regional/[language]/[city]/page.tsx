@@ -3,12 +3,14 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import Header from "@/components/Header";
 import ChoghadiyaTable from "@/components/ChoghadiyaTable";
+import TopicalGraph from "@/components/TopicalGraph";
 import { findCityBySlug } from "@/lib/cities";
 import { getPanchang, formatWindow } from "@/lib/panchang";
 import { regional } from "@/lib/regional";
 import { todayInIndia } from "@/lib/dates";
 import { getRegionalCalendarProfile } from "@/lib/regional-calendar";
 import { isRegionalIndexable, robotsFor } from "@/lib/seo-policy";
+import {buildRegionalTopicalGraph} from "@/lib/topical-links";
 
 export const revalidate = 3600;
 
@@ -36,7 +38,9 @@ export async function generateMetadata({params}:{params:Promise<{language:string
   const lang=regionalBySlug(p.language);
   if(!city||!lang)notFound();
   const languages:Record<string,string>={"en-IN":`/panchang/${city.slug}`};
-  for(const [slug,code] of Object.entries(hreflang)) languages[code]=`/regional/${slug}/${city.slug}`;
+  for(const [slug,code] of Object.entries(hreflang)){
+    if(isRegionalIndexable(slug,city))languages[code]=`/regional/${slug}/${city.slug}`;
+  }
   return {
     title:`${lang.label} in ${city.name}`,
     description:`${lang.label} for ${city.name} with Tithi, Nakshatra, sunrise, sunset, Rahu Kalam and regional calendar data.`,
@@ -50,7 +54,8 @@ export default async function RegionalPage({params}:{params:Promise<{language:st
   const city=findCityBySlug(p.city);
   const lang=regionalBySlug(p.language);
   if(!city||!lang)notFound();
-  const data=await getPanchang(todayInIndia(),city);
+  const date=todayInIndia();
+  const data=await getPanchang(date,city);
   const t=lang.terms;
   const isBengali=p.language==="bengali";
   const profile=getRegionalCalendarProfile(p.language,data);
@@ -93,6 +98,7 @@ export default async function RegionalPage({params}:{params:Promise<{language:st
 
     <div className="seo-copy"><h2>{profile.calendarSystem}</h2><p>{profile.note}</p><p>This regional page keeps the selected city's local sunrise, sunset and inauspicious periods while applying the regional calendar naming layer instead of presenting a generic English Panchang with translated headings only.</p></div>
 
-    <div className="pill-links"><Link href={`/panchang/${city.slug}/${data.date}`}>English Daily Panchang</Link><Link href="/regional">All regional Panchang</Link></div>
+    <div className="pill-links"><Link href="/regional">All regional Panchang</Link></div>
+    <TopicalGraph title={`Explore ${city.name} across Panchvani`} groups={buildRegionalTopicalGraph(city,p.language,date)}/>
   </div></main>;
 }
