@@ -3,13 +3,14 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
-  Activity, BarChart3, Building2, CalendarDays, Database, FileText,
+  Activity, BarChart3, CalendarDays, Database, FileText,
   Gauge, MapPin, Network, Search, Settings, ShieldCheck, Sparkles
 } from "lucide-react";
 
 const primary=[
   ["Overview","/admin",Gauge],
   ["Traffic & Demand","/admin/traffic",BarChart3],
+  ["Opportunity Queue","/admin/opportunities",Database],
   ["Cities","/admin/cities",MapPin],
   ["Festivals","/admin/festivals",CalendarDays],
   ["Muhurat Rules","/admin/muhurat",Sparkles],
