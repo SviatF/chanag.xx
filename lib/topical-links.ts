@@ -138,6 +138,9 @@ export function buildMuhuratTopicalGraph(city:City,event:string,year:number,mont
   const monthSlug=pad(month);
   const peers=indexedPeerCities(city);
   const festivals=festivalsForYear(year).filter(f=>Number(f.date.slice(5,7))===month).slice(0,4);
+  const peerLinks=isMuhuratIndexable(event,city.slug)
+    ? peers.filter(peer=>isMuhuratIndexable(event,peer.slug)).map(peer=>({href:`/muhurat/${event}/${year}/${monthSlug}/${peer.slug}`,label:peer.name}))
+    : [];
   return [
     {title:"Local Panchang context",description:"Connect the planning shortlist back to its daily and monthly calculation sources.",links:[
       {href:`/panchang/${city.slug}`,label:`Today's Panchang · ${city.name}`},
@@ -146,6 +149,6 @@ export function buildMuhuratTopicalGraph(city:City,event:string,year:number,mont
     ]},
     {title:"Other primary Muhurat",description:"Adjacent planning intents for the same city and month.",links:primaryMuhuratLinks(city,year,monthSlug,event)},
     {title:"Festivals this month",description:"Relevant festival pages using the same local Panchang context.",links:festivals.map(f=>({href:`/festivals/${f.slug}/${year}/${city.slug}`,label:f.name}))},
-    {title:"Compare priority cities",description:"Equivalent event pages in other actively indexed cities.",links:peers.map(peer=>({href:`/muhurat/${event}/${year}/${monthSlug}/${peer.slug}`,label:peer.name}))}
+    {title:"Compare priority cities",description:"Equivalent event pages in other actively indexed cities.",links:peerLinks}
   ];
 }
