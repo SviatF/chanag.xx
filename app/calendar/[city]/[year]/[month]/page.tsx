@@ -1,17 +1,20 @@
 import type {Metadata} from "next";
 import Link from "next/link";
+import {notFound} from "next/navigation";
 import Header from "@/components/Header";
-import {cityBySlug} from "@/lib/cities";
+import {findCityBySlug} from "@/lib/cities";
 import {getPanchang} from "@/lib/panchang";
 import {festivalsForYear} from "@/lib/festivals";
 import {isMonthlyIndexable,robotsFor} from "@/lib/seo-policy";
+import {parseRouteMonth,parseRouteYear} from "@/lib/route-validation";
 
 export const revalidate=86400;
 
 export async function generateMetadata({params}:{params:Promise<{city:string;year:string;month:string}>}):Promise<Metadata>{
   const p=await params;
-  const city=cityBySlug(p.city);
-  const y=Number(p.year),m=Number(p.month);
+  const city=findCityBySlug(p.city);
+  const y=parseRouteYear(p.year),m=parseRouteMonth(p.month);
+  if(!city||!y||!m)notFound();
   return {
     title:`${city.name} Hindu Calendar — ${p.month}/${p.year}`,
     description:`Monthly Hindu calendar for ${city.name} with Tithi, festivals, Ekadashi, Purnima and Amavasya.`,
@@ -22,8 +25,9 @@ export async function generateMetadata({params}:{params:Promise<{city:string;yea
 
 export default async function CalendarPage({params}:{params:Promise<{city:string;year:string;month:string}>}){
   const p=await params;
-  const city=cityBySlug(p.city);
-  const y=Number(p.year),m=Number(p.month);
+  const city=findCityBySlug(p.city);
+  const y=parseRouteYear(p.year),m=parseRouteMonth(p.month);
+  if(!city||!y||!m)notFound();
   const count=new Date(Date.UTC(y,m,0)).getUTCDate();
   const first=new Date(Date.UTC(y,m-1,1)).getUTCDay();
   const entries=await Promise.all(
