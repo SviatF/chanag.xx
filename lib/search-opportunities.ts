@@ -1,6 +1,7 @@
 import {supportedCities,type City} from "./cities";
 import {allFestivals,festivalBySlugYear} from "./festivals";
 import type {GscRow,GscTrafficSnapshot} from "./gsc";
+import {detectKnowledgeQuery,knowledgePagePath,type KnowledgeTopicSlug} from "./panchang-knowledge";
 import {
   detectRegionalSearchQuery,
   isRegionalIntentIndexable,
@@ -48,6 +49,7 @@ type IntentResult={
   regionalLanguage?:RegionalLanguageSlug;
   regionalIntent?:RegionalSearchIntent;
   expandedTool?:ExpandedToolSlug;
+  knowledgeTopic?:KnowledgeTopicSlug;
   template:string;
 };
 
@@ -126,6 +128,9 @@ function classifyIntent(ctx:QueryContext):IntentResult|null{
     };
   }
 
+  const knowledge=detectKnowledgeQuery(ctx.raw);
+  if(knowledge)return {id:`knowledge:${knowledge.slug}`,label:knowledge.label,knowledgeTopic:knowledge.slug,template:"Existing evergreen Panchang knowledge guide"};
+
   const expandedTool=detectExpandedToolQuery(ctx.raw);
   if(expandedTool)return {id:`tool:${expandedTool.slug}`,label:expandedTool.name,expandedTool:expandedTool.slug,template:"Existing evergreen Panchang tool"};
 
@@ -178,6 +183,10 @@ function targetFor(intent:IntentResult,ctx:QueryContext):Target{
     };
   }
 
+  if(intent.knowledgeTopic){
+    const expected=knowledgePagePath(intent.knowledgeTopic);
+    return {path:expected,template:intent.template,exists:true,matches:path=>path===expected};
+  }
   if(intent.expandedTool){
     const expected=expandedToolPath(intent.expandedTool);
     return {path:expected,template:intent.template,exists:true,matches:path=>path===expected};
