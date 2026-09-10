@@ -33,8 +33,6 @@ export function landingMatchesRecommendation(landing:string|null,recommendedPath
 export function checkpointReadyAt(shippedAt:string,days:OpportunityCheckpointDays){
   const shipped=new Date(`${shippedAt.slice(0,10)}T00:00:00Z`);
   if(Number.isNaN(shipped.getTime()))throw new Error("Invalid shippedAt date for outcome checkpoint.");
-  // The post window includes launch day, so it ends at launch + (days - 1).
-  // GSC final data lags by two days: ready = launch + (days - 1) + 2.
   return iso(shift(shipped,days-1+GSC_FINALITY_LAG_DAYS));
 }
 
@@ -54,40 +52,26 @@ export function nextOutcomeCheckpoint(record:OpportunityLifecycleRecord,asOf=new
   return {days:next,readyAt,due:iso(asOf)>=readyAt};
 }
 
-function copyWindow(window:GscOutcomeComparison["pre"]):OpportunityOutcomeWindow{
-  return {...window};
-}
+function copyWindow(window:GscOutcomeComparison["pre"]):OpportunityOutcomeWindow{return {...window};}
 
-function scoreOutcome(
-  pre:OpportunityOutcomeWindow,
-  post:OpportunityOutcomeWindow,
-  landingAligned:boolean,
-  clicksChangePct:number|null,
-  impressionsChangePct:number|null,
-  ctrDeltaPoints:number,
-  positionImprovement:number|null
-){
+function scoreOutcome(pre:OpportunityOutcomeWindow,post:OpportunityOutcomeWindow,landingAligned:boolean,clicksChangePct:number|null,impressionsChangePct:number|null,ctrDeltaPoints:number,positionImprovement:number|null){
   if(post.impressions<5)return 20;
   let score=50;
   score+=landingAligned?15:-20;
-
   if(clicksChangePct===null)score+=post.clicks>0?15:0;
   else if(clicksChangePct>=50)score+=15;
   else if(clicksChangePct>=20)score+=10;
   else if(clicksChangePct<=-40)score-=15;
   else if(clicksChangePct<=-20)score-=9;
-
   if(impressionsChangePct===null)score+=post.impressions>=10?10:0;
   else if(impressionsChangePct>=40)score+=10;
   else if(impressionsChangePct>=15)score+=6;
   else if(impressionsChangePct<=-35)score-=10;
   else if(impressionsChangePct<=-15)score-=6;
-
   if(ctrDeltaPoints>=2)score+=10;
   else if(ctrDeltaPoints>=.5)score+=6;
   else if(ctrDeltaPoints<=-2)score-=10;
   else if(ctrDeltaPoints<=-.5)score-=5;
-
   if(positionImprovement!==null){
     if(positionImprovement>=5)score+=15;
     else if(positionImprovement>=2)score+=10;
@@ -95,7 +79,6 @@ function scoreOutcome(
     else if(positionImprovement<=-2)score-=10;
     if(post.position>0&&post.position<=10)score+=5;
   }
-
   return Math.round(clamp(score,0,100));
 }
 
@@ -116,14 +99,7 @@ function recommendationFor(days:OpportunityCheckpointDays,score:number,signal:Op
   return "KEEP_MEASURING";
 }
 
-function reasonFor(
-  days:OpportunityCheckpointDays,
-  signal:OpportunityOutcomeSignal,
-  recommendation:OpportunityOutcomeRecommendation,
-  landingAligned:boolean,
-  post:OpportunityOutcomeWindow,
-  positionImprovement:number|null
-){
+function reasonFor(days:OpportunityCheckpointDays,signal:OpportunityOutcomeSignal,recommendation:OpportunityOutcomeRecommendation,landingAligned:boolean,post:OpportunityOutcomeWindow,positionImprovement:number|null){
   if(signal==="NO_DATA")return `${days}-day window has too little GSC volume for a reliable outcome; ${recommendation==="ITERATE"?"the 56-day horizon is complete, so review intent, indexing and demand assumptions.":"keep measuring until the next checkpoint."}`;
   if(!landingAligned)return `The top post-launch landing is ${pathOnly(post.topLanding)??"unknown"}, not the recommended target. Fix query-to-page alignment before calling this a win.`;
   if(recommendation==="WON")return `The recommended landing owns the query and the ${days}-day post-launch window shows a strong combined gain${positionImprovement!==null?` with ${positionImprovement.toFixed(1)} positions of improvement`:""}. Human confirmation can close the lifecycle as WON.`;
@@ -132,12 +108,7 @@ function reasonFor(
   return `The ${days}-day checkpoint is not conclusive enough to close. Preserve the implementation and compare again at the next horizon.`;
 }
 
-export function evaluateOutcomeCheckpoint(
-  record:OpportunityLifecycleRecord,
-  comparison:GscOutcomeComparison,
-  days:OpportunityCheckpointDays,
-  evaluatedAt=new Date().toISOString()
-):OpportunityOutcomeCheckpoint{
+export function evaluateOutcomeCheckpoint(record:OpportunityLifecycleRecord,comparison:GscOutcomeComparison,days:OpportunityCheckpointDays,evaluatedAt=new Date().toISOString()):OpportunityOutcomeCheckpoint{
   if(!record.context)throw new Error("Opportunity context is required for outcome evaluation.");
   const pre=copyWindow(comparison.pre);
   const post=copyWindow(comparison.post);
@@ -152,6 +123,7 @@ export function evaluateOutcomeCheckpoint(
   return {
     days,
     evaluatedAt,
+    implementationId:record.shippedImplementationId,
     pre,
     post,
     landingAligned,
