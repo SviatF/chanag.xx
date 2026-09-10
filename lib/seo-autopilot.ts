@@ -41,71 +41,83 @@ export function buildAutopilotFlags(records:LifecycleMap):SeoAutopilotFlag[]{
     .slice(0,30);
 }
 
+function failedState(startedAt:string,trigger:"CRON"|"MANUAL",errors:string[]):SeoAutopilotRunState{
+  return {
+    status:"FAILED",trigger,startedAt,completedAt:new Date().toISOString(),gscStartDate:null,gscEndDate:null,
+    opportunitiesDetected:0,newlyPersisted:0,checkpointsSynced:0,checkpointsPending:0,flags:[],errors
+  };
+}
+
 export async function runSeoAutopilot(asOf=new Date(),trigger:"CRON"|"MANUAL"="CRON"):Promise<SeoAutopilotRunState>{
   const startedAt=asOf.toISOString();
   const storage=getOpportunityStoreStatus();
   const gsc=getGscConnectionStatus();
-  const errors:string[]=[];
+  const configurationErrors:string[]=[];
 
-  if(!storage.configured)errors.push("SEO opportunity KV storage is not configured.");
-  if(!gsc.configured)errors.push("Google Search Console service account is not configured.");
-  if(errors.length){
-    const failed:SeoAutopilotRunState={
-      status:"FAILED",trigger,startedAt,completedAt:new Date().toISOString(),gscStartDate:null,gscEndDate:null,
-      opportunitiesDetected:0,newlyPersisted:0,checkpointsSynced:0,checkpointsPending:0,flags:[],errors
-    };
+  if(!storage.configured)configurationErrors.push("SEO opportunity KV storage is not configured.");
+  if(!gsc.configured)configurationErrors.push("Google Search Console service account is not configured.");
+  if(configurationErrors.length){
+    const failed=failedState(startedAt,trigger,configurationErrors);
     if(storage.configured)await writeSeoAutopilotState(failed).catch(()=>{});
-    throw new Error(errors.join(" "));
+    throw new Error(configurationErrors.join(" "));
   }
 
-  let records=await readOpportunityLifecycleMap();
-  const snapshot=await getGscTrafficSnapshot();
-  const opportunities=buildSearchOpportunities(snapshot);
-  const actionable=opportunities.filter(item=>item.status!=="COVERED"&&item.impressions>=SEO_AUTOPILOT_MIN_IMPRESSIONS&&item.score>=SEO_AUTOPILOT_MIN_SCORE);
-  const candidates=selectAutopilotCandidates(opportunities,records);
-  const now=asOf.toISOString();
-
-  if(candidates.length){
-    // Re-read immediately before persistence to preserve manual queue changes made while GSC was loading.
-    const latest=await readOpportunityLifecycleMap();
-    let added=0;
-    for(const item of candidates){
-      if(latest[item.key])continue;
-      latest[item.key]=transitionOpportunityLifecycle(undefined,item.key,"DETECTED",now,{context:opportunityContext(item)});
-      added++;
-    }
-    if(added)await writeOpportunityLifecycleMap(latest);
-    records=latest;
-  }
-
-  let checkpointsSynced=0;
-  let checkpointsPending=0;
   try{
-    const outcome=await syncDueOpportunityOutcomes(records,asOf);
-    records=outcome.records;
-    checkpointsSynced=outcome.synced;
-    checkpointsPending=outcome.pending;
-  }catch(error){
-    errors.push(error instanceof Error?error.message:"Outcome checkpoint sync failed.");
-    // Keep discovery persistence even if a GSC checkpoint query fails.
-    records=await readOpportunityLifecycleMap();
-  }
+    const errors:string[]=[];
+    let records=await readOpportunityLifecycleMap();
+    const snapshot=await getGscTrafficSnapshot();
+    const opportunities=buildSearchOpportunities(snapshot);
+    const actionable=opportunities.filter(item=>item.status!=="COVERED"&&item.impressions>=SEO_AUTOPILOT_MIN_IMPRESSIONS&&item.score>=SEO_AUTOPILOT_MIN_SCORE);
+    const candidates=selectAutopilotCandidates(opportunities,records);
+    const now=asOf.toISOString();
 
-  const newlyPersisted=candidates.filter(item=>Boolean(records[item.key])&&records[item.key].createdAt===now).length;
-  const state:SeoAutopilotRunState={
-    status:errors.length?"PARTIAL":"SUCCESS",
-    trigger,
-    startedAt,
-    completedAt:new Date().toISOString(),
-    gscStartDate:snapshot.startDate,
-    gscEndDate:snapshot.endDate,
-    opportunitiesDetected:actionable.length,
-    newlyPersisted,
-    checkpointsSynced,
-    checkpointsPending,
-    flags:buildAutopilotFlags(records),
-    errors,
-  };
-  await writeSeoAutopilotState(state);
-  return state;
+    if(candidates.length){
+      // Re-read immediately before persistence to preserve manual queue changes made while GSC was loading.
+      const latest=await readOpportunityLifecycleMap();
+      let added=0;
+      for(const item of candidates){
+        if(latest[item.key])continue;
+        latest[item.key]=transitionOpportunityLifecycle(undefined,item.key,"DETECTED",now,{context:opportunityContext(item)});
+        added++;
+      }
+      if(added)await writeOpportunityLifecycleMap(latest);
+      records=latest;
+    }
+
+    let checkpointsSynced=0;
+    let checkpointsPending=0;
+    try{
+      const outcome=await syncDueOpportunityOutcomes(records,asOf);
+      records=outcome.records;
+      checkpointsSynced=outcome.synced;
+      checkpointsPending=outcome.pending;
+    }catch(error){
+      errors.push(error instanceof Error?error.message:"Outcome checkpoint sync failed.");
+      // Keep discovery persistence even if an exact checkpoint query fails.
+      records=await readOpportunityLifecycleMap();
+    }
+
+    const newlyPersisted=candidates.filter(item=>Boolean(records[item.key])&&records[item.key].createdAt===now).length;
+    const state:SeoAutopilotRunState={
+      status:errors.length?"PARTIAL":"SUCCESS",
+      trigger,
+      startedAt,
+      completedAt:new Date().toISOString(),
+      gscStartDate:snapshot.startDate,
+      gscEndDate:snapshot.endDate,
+      opportunitiesDetected:actionable.length,
+      newlyPersisted,
+      checkpointsSynced,
+      checkpointsPending,
+      flags:buildAutopilotFlags(records),
+      errors,
+    };
+    await writeSeoAutopilotState(state);
+    return state;
+  }catch(error){
+    const message=error instanceof Error?error.message:"Unknown SEO Autopilot runtime failure.";
+    const failed=failedState(startedAt,trigger,[message]);
+    await writeSeoAutopilotState(failed).catch(()=>{});
+    throw error;
+  }
 }
