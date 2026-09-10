@@ -74,6 +74,22 @@ describe("SEO Execution Copilot build briefs",()=>{
     expect(brief.titleDirection).toContain("choghadiya today mumbai");
   });
 
+  it("builds a knowledge-specific brief for evergreen Panchang concepts",()=>{
+    const item=opportunity({
+      key:"knowledge:tithi:india:evergreen",intent:"knowledge:tithi",label:"Tithi",topQuery:"what is tithi",city:null,
+      currentLanding:"https://panchvani.com/panchang/mumbai",recommendedPath:"/knowledge/tithi",template:"Existing evergreen Panchang knowledge guide",
+      status:"WRONG_LANDING",action:"ALIGN",score:84,reason:"The informational intent is landing on a daily page."
+    });
+    const stored={...record("APPROVED"),key:item.key,context:{label:item.label,topQuery:item.topQuery,city:item.city,recommendedPath:item.recommendedPath,template:item.template}};
+    const brief=buildSeoExecutionBrief({opportunity:item,record:stored});
+    expect(brief.readiness).toBe("READY_FOR_BUILD");
+    expect(brief.sections.some(section=>section.title==="Calculation / formula"&&section.required)).toBe(true);
+    expect(brief.sections.some(section=>section.title==="Interpretation and limits"&&section.required)).toBe(true);
+    expect(brief.sections.some(section=>section.title==="Live Panchang example"&&section.required)).toBe(true);
+    expect(brief.internalLinks.some(item=>item.includes("location-neutral"))).toBe(true);
+    expect(brief.schemaChecks.some(item=>item.includes("Article + Breadcrumb"))).toBe(true);
+  });
+
   it("keeps a new vrata cluster in review and requires a reviewed date source before indexing",()=>{
     const item=opportunity({
       key:"vrat:ekadashi:delhi:2026",intent:"vrat:ekadashi",label:"Ekadashi",topQuery:"ekadashi 2026 delhi",city:"Delhi",
