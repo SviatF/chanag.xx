@@ -149,7 +149,7 @@ export function measureOpportunity(record:OpportunityLifecycleRecord,opportunity
   if(!record.baseline)return null;
   const current=opportunityMetrics(opportunity,at);
   const clicksDelta=current.clicks-record.baseline.clicks;
-  const impressionsDelta=current.impressions-record.impressions;
+  const impressionsDelta=current.impressions-record.baseline.impressions;
   const ctrDeltaPoints=(current.ctr-record.baseline.ctr)*100;
   const positionImprovement=record.baseline.position-current.position;
   const positive=Number(clicksDelta>0)+Number(impressionsDelta>0)+Number(ctrDeltaPoints>0.2)+Number(positionImprovement>1);
