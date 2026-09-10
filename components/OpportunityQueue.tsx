@@ -13,6 +13,7 @@ import {
 } from "@/lib/opportunity-lifecycle";
 import {latestOutcomeCheckpoint,nextOutcomeCheckpoint} from "@/lib/outcome-intelligence";
 import {buildSeoActionPlan,type SeoActionPriority} from "@/lib/seo-action-intelligence";
+import {buildSeoExecutionBrief,seoExecutionBriefToMarkdown} from "@/lib/seo-build-brief";
 
 type Props={
   opportunities:SearchOpportunity[];
@@ -40,9 +41,17 @@ function outcomeClass(signal:"WINNING"|"MIXED"|"DOWN"|"NO_DATA"){
   return "watch";
 }
 
+async function copyText(text:string){
+  if(typeof navigator!=="undefined"&&navigator.clipboard?.writeText){await navigator.clipboard.writeText(text);return;}
+  const area=document.createElement("textarea");
+  area.value=text;area.style.position="fixed";area.style.opacity="0";
+  document.body.appendChild(area);area.select();document.execCommand("copy");area.remove();
+}
+
 export default function OpportunityQueue({opportunities,records,storageConfigured,storageError}:Props){
   const router=useRouter();
   const [busy,setBusy]=useState<string|null>(null);
+  const [copied,setCopied]=useState<string|null>(null);
   const [error,setError]=useState<string|null>(storageError??null);
   const [drafts,setDrafts]=useState<Record<string,Draft>>(()=>Object.fromEntries(Object.entries(records).map(([key,row])=>[key,{owner:row.owner,note:row.note}])));
 
@@ -62,6 +71,16 @@ export default function OpportunityQueue({opportunities,records,storageConfigure
   function draftFor(key:string,record:OpportunityLifecycleRecord){return drafts[key]??{owner:record.owner,note:record.note};}
   function setDraft(key:string,record:OpportunityLifecycleRecord,field:keyof Draft,value:string){
     setDrafts(current=>({...current,[key]:{...draftFor(key,record),[field]:value}}));
+  }
+
+  async function copyBrief(row:QueueRow){
+    setError(null);
+    try{
+      const brief=buildSeoExecutionBrief({opportunity:row.opportunity,record:row.record});
+      await copyText(seoExecutionBriefToMarkdown(brief));
+      setCopied(row.key);
+      window.setTimeout(()=>setCopied(current=>current===row.key?null:current),1800);
+    }catch(err){setError(err instanceof Error?err.message:"Unable to copy execution brief.");}
   }
 
   async function save(row:QueueRow,stage:OpportunityStage){
@@ -113,13 +132,14 @@ export default function OpportunityQueue({opportunities,records,storageConfigure
 
     <section className="admin-panel">
       <div className="admin-panel-head"><div><small>SEO EXECUTION + ACTION INTELLIGENCE</small><h2>Opportunity lifecycle queue</h2></div><span>{rows.length} tracked / detected</span></div>
-      <p className="admin-muted">Every row now converts live GSC demand or stored outcome evidence into a deterministic execution plan. Recommendations never publish, approve or close an opportunity automatically; they explain what to change, why, and what success should look like.</p>
-      <div className="admin-table-wrap"><table className="admin-table"><thead><tr><th>Opportunity</th><th>Demand</th><th>Lifecycle</th><th>Outcome intelligence</th><th>Action intelligence</th><th>Owner / note</th><th>Lifecycle action</th></tr></thead><tbody>
+      <p className="admin-muted">Every row converts live GSC demand or stored outcome evidence into a deterministic execution plan and a copyable developer brief. Briefs never publish, approve or close an opportunity automatically; they define what to build, what evidence supports it and how the result will be validated.</p>
+      <div className="admin-table-wrap"><table className="admin-table"><thead><tr><th>Opportunity</th><th>Demand</th><th>Lifecycle</th><th>Outcome intelligence</th><th>Action intelligence + build brief</th><th>Owner / note</th><th>Lifecycle action</th></tr></thead><tbody>
         {rows.map(row=>{
           const item=row.opportunity;
           const context=item?opportunityContext(item):row.record.context;
           const outcome=latestOutcomeCheckpoint(row.record);
           const plan=buildSeoActionPlan({opportunity:item,record:row.record});
+          const brief=buildSeoExecutionBrief({opportunity:item,record:row.record});
           const nextCheckpoint=nextOutcomeCheckpoint(row.record);
           const draft=draftFor(row.key,row.record);
           const next=nextOpportunityStages(row.record.stage);
@@ -142,10 +162,13 @@ export default function OpportunityQueue({opportunities,records,storageConfigure
               <small>Launch: {row.record.shippedAt.slice(0,10)}</small>
             </>:row.record.baseline?<small>Launch baseline captured. Exact checkpoint schedule starts after SHIPPED.</small>:<small>Outcome tracking begins when this opportunity moves to SHIPPED.</small>}</td>
             <td>
-              <span className={`admin-badge ${priorityClass[plan.priority]}`}>{plan.priority} · {plan.mode}</span>
+              <span className={`admin-badge ${priorityClass[plan.priority]}`}>{plan.priority} · {plan.mode}</span>{" "}<span className={`admin-badge ${brief.readiness==="BLOCKED"?"hold":brief.readiness==="READY_FOR_BUILD"?"active":"watch"}`}>{brief.readiness.replaceAll("_"," ")}</span>
               <strong>{plan.headline}</strong>
               <small>{plan.diagnosis}</small>
               <div className="admin-mini-list">{plan.steps.slice(0,5).map((step,index)=><div key={`${step.area}-${index}`}><b>{index+1}. {step.area.replaceAll("_"," ")}</b><small>{step.action}</small><small>Evidence: {step.evidence}</small></div>)}</div>
+              {brief.blocker?<small><b>Blocker:</b> {brief.blocker}</small>:null}
+              <small><b>Brief:</b> {brief.sections.filter(section=>section.required).length} required sections · {brief.technicalChecks.length} technical checks · {brief.acceptanceCriteria.length} acceptance criteria</small>
+              <button type="button" className="admin-badge activate" onClick={()=>copyBrief(row)}>{copied===row.key?"Copied ✓":"Copy dev brief"}</button>
               <small><b>Success:</b> {plan.successCriteria.join(" · ")}</small>
               <small><b>Guardrail:</b> {plan.guardrail}</small>
             </td>
