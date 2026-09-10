@@ -21,6 +21,7 @@ type Props={
 };
 
 type Draft={owner:string;note:string};
+type QueueRow={key:string;opportunity:SearchOpportunity|null;record:OpportunityLifecycleRecord};
 
 const stageClass:Record<OpportunityStage,string>={
   DETECTED:"hold",REVIEW:"watch",APPROVED:"activate",BUILD:"activate",SHIPPED:"active",MEASURING:"watch",WON:"active",REJECTED:"hold"
@@ -39,7 +40,7 @@ export default function OpportunityQueue({opportunities,records,storageConfigure
 
   const rows=useMemo(()=>{
     const current=new Map(opportunities.map(item=>[item.key,item]));
-    const active=opportunities
+    const active:QueueRow[]=opportunities
       .filter(item=>item.status!=="COVERED"||Boolean(records[item.key]))
       .map(item=>({key:item.key,opportunity:item,record:lifecycleForOpportunity(item.key,records[item.key])}));
     for(const [key,record] of Object.entries(records)){
@@ -55,7 +56,7 @@ export default function OpportunityQueue({opportunities,records,storageConfigure
     setDrafts(current=>({...current,[key]:{...draftFor(key,record),[field]:value}}));
   }
 
-  async function save(row:(typeof rows)[number],stage:OpportunityStage){
+  async function save(row:QueueRow,stage:OpportunityStage){
     if(!storageConfigured||busy)return;
     setBusy(row.key);setError(null);
     const draft=draftFor(row.key,row.record);
