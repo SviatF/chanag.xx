@@ -3,6 +3,7 @@ import {xml} from "@/lib/xml";
 export async function GET(){
   const base="https://panchvani.com";
   const maps=[
+    "sitemap-core.xml",
     "sitemap-panchang-daily.xml",
     "sitemap-panchang-monthly.xml",
     "sitemap-festivals.xml",
