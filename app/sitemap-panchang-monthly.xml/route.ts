@@ -1,9 +1,13 @@
-import { cities } from "@/lib/cities";
-import { urlset, xml } from "@/lib/xml";
-import { phase1PriorityCities } from "@/lib/seo-policy";
-export async function GET() {
-  const d = new Date();
-  const y = d.getUTCFullYear();
-  const m = String(d.getUTCMonth() + 1).padStart(2, "0");
-  return xml(urlset(cities.filter(c=>phase1PriorityCities.includes(c.slug as any)).map((c) => "https://panchvani.com/calendar/" + c.slug + "/" + y + "/" + m)));
+import {urlset,xml} from "@/lib/xml";
+import {isMonthlyIndexable} from "@/lib/seo-policy";
+import {rollingMonths,sitemapPriorityCities} from "@/lib/seo-sitemap";
+
+export async function GET(){
+  const urls:string[]=[];
+  for(const city of sitemapPriorityCities){
+    for(const item of rollingMonths(2,12)){
+      if(isMonthlyIndexable(city.slug,item.year,item.month))urls.push(`https://panchvani.com/calendar/${city.slug}/${item.year}/${item.slug}`);
+    }
+  }
+  return xml(urlset(urls));
 }
