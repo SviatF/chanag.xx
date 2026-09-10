@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Check, ChevronDown, LocateFixed, MapPin, Search, X } from "lucide-react";
 import { usePathname, useRouter } from "next/navigation";
 import type { City } from "@/lib/cities";
@@ -13,12 +13,31 @@ function distanceKm(aLat:number,aLng:number,bLat:number,bLng:number){
   return 2*r*Math.asin(Math.sqrt(s));
 }
 
-export default function CityCommand({city,cities}:{city:City;cities:City[]}){
+export default function CityCommand({city}:{city:City}){
   const [open,setOpen]=useState(false);
   const [query,setQuery]=useState("");
   const [locating,setLocating]=useState(false);
+  const [cities,setCities]=useState<City[]>([]);
+  const [loading,setLoading]=useState(false);
+  const [loadError,setLoadError]=useState(false);
   const router=useRouter();
   const pathname=usePathname();
+
+  useEffect(()=>{
+    if(!open||cities.length||loading)return;
+    let cancelled=false;
+    setLoading(true);
+    setLoadError(false);
+    fetch("/api/cities")
+      .then(response=>{
+        if(!response.ok)throw new Error("Unable to load cities");
+        return response.json() as Promise<City[]>;
+      })
+      .then(items=>{if(!cancelled)setCities(items);})
+      .catch(()=>{if(!cancelled)setLoadError(true);})
+      .finally(()=>{if(!cancelled)setLoading(false);});
+    return()=>{cancelled=true;};
+  },[open,cities.length,loading]);
 
   const filtered=useMemo(()=>{
     const q=query.trim().toLowerCase();
@@ -64,7 +83,7 @@ export default function CityCommand({city,cities}:{city:City;cities:City[]}){
   }
 
   function useLocation(){
-    if(!navigator.geolocation)return;
+    if(!navigator.geolocation||!cities.length)return;
     setLocating(true);
     navigator.geolocation.getCurrentPosition(
       pos=>{
@@ -94,15 +113,18 @@ export default function CityCommand({city,cities}:{city:City;cities:City[]}){
           <div><small>YOUR LOCATION</small><h2>Choose your city</h2></div>
           <button onClick={()=>setOpen(false)} aria-label="Close"><X size={18}/></button>
         </div>
-        <div className="city-search"><Search size={17}/><input autoFocus value={query} onChange={e=>setQuery(e.target.value)} placeholder="Search Mumbai, Pune, Delhi…"/></div>
-        <button className="detect-city" onClick={useLocation} disabled={locating}>
-          <LocateFixed size={17}/><span>{locating?"Finding nearest supported city…":"Use my current location"}</span>
+        <div className="city-search"><Search size={17}/><input autoFocus value={query} onChange={e=>setQuery(e.target.value)} placeholder="Search any supported Indian city…"/></div>
+        <button className="detect-city" onClick={useLocation} disabled={locating||loading||!cities.length}>
+          <LocateFixed size={17}/><span>{locating?"Finding nearest supported city…":loading?"Loading supported cities…":"Use my current location"}</span>
         </button>
         <div className="city-results">
-          {filtered.map(item=><button key={item.slug} onClick={()=>go(item)} className={item.slug===city.slug?"selected":""}>
+          {loading?<p className="city-note">Loading supported cities…</p>:null}
+          {loadError?<p className="city-note">City list could not be loaded. Close and reopen the selector to retry.</p>:null}
+          {!loading&&!loadError&&filtered.map(item=><button key={item.slug} onClick={()=>go(item)} className={item.slug===city.slug?"selected":""}>
             <span><strong>{item.name}</strong><small>{item.state}</small></span>
             {item.slug===city.slug?<Check size={16}/>:null}
           </button>)}
+          {!loading&&!loadError&&cities.length>0&&filtered.length===0?<p className="city-note">No supported city matches this search.</p>:null}
         </div>
         <p className="city-note">Panchang timings change with local sunrise and sunset, so the selected city matters.</p>
       </section>
