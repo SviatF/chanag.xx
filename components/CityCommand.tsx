@@ -24,7 +24,7 @@ export default function CityCommand({city}:{city:City}){
   const pathname=usePathname();
 
   useEffect(()=>{
-    if(!open||cities.length||loading)return;
+    if(!open||cities.length)return;
     let cancelled=false;
     setLoading(true);
     setLoadError(false);
@@ -37,7 +37,7 @@ export default function CityCommand({city}:{city:City}){
       .catch(()=>{if(!cancelled)setLoadError(true);})
       .finally(()=>{if(!cancelled)setLoading(false);});
     return()=>{cancelled=true;};
-  },[open,cities.length,loading]);
+  },[open,cities.length]);
 
   const filtered=useMemo(()=>{
     const q=query.trim().toLowerCase();
