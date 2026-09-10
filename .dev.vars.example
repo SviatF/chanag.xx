@@ -4,3 +4,8 @@
 # Optional comma-separated supported city slugs approved for indexing beyond the 20-city launch baseline.
 # Example: SEO_EXTRA_INDEX_CITIES=mysuru,kochi,dehradun
 SEO_EXTRA_INDEX_CITIES=
+
+# SEO Opportunity Lifecycle persistence.
+# Reuses CLOUDFLARE_ACCOUNT_ID + CLOUDFLARE_API_TOKEN already used by Cloudflare analytics.
+# The API token also needs Workers KV Storage read/write permission for this namespace.
+SEO_OPPORTUNITY_KV_NAMESPACE_ID=
