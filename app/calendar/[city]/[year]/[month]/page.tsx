@@ -10,6 +10,7 @@ import {isMonthlyIndexable,robotsFor} from "@/lib/seo-policy";
 import {parseRouteMonth,parseRouteYear} from "@/lib/route-validation";
 import {buildCalendarTopicalGraph} from "@/lib/topical-links";
 import {vratYearLinks} from "@/lib/vrat-topical-links";
+import {cityCalendarYearPath} from "@/lib/yearly-expansion";
 
 export const revalidate=86400;
 
@@ -50,13 +51,14 @@ export default async function CalendarPage({params}:{params:Promise<{city:string
   if(lunarLinks.length)topicalGroups.splice(1,0,{title:"Yearly lunar observances",description:"Open sunrise-based Ekadashi, Purnima and Amavasya references for this city and year.",links:lunarLinks});
 
   return <main><Header city={city}/><div className="page-shell internal-visual internal-calendar">
-    <div className="breadcrumbs"><Link href="/">Home</Link> / <Link href={`/panchang/${city.slug}`}>{city.name}</Link> / Calendar</div>
+    <div className="breadcrumbs"><Link href="/">Home</Link> / <Link href={`/panchang/${city.slug}`}>{city.name}</Link> / <Link href={cityCalendarYearPath(city,y)}>{y}</Link> / Calendar</div>
     <p className="page-kicker">MONTHLY CALENDAR</p>
     <h1 className="page-title">{monthName} {y}<br/>in {city.name}</h1>
     <p className="page-subtitle">Every day links directly to its local Panchang. Ekadashi, Purnima, Amavasya and major festivals are surfaced directly in the grid.</p>
 
     <div className="pill-links">
       <Link href={`/calendar/${city.slug}/${prev.getUTCFullYear()}/${prevMonth}`}>← Previous month</Link>
+      <Link href={cityCalendarYearPath(city,y)}>Full {y} calendar</Link>
       <Link href={`/panchang/${city.slug}`}>Today in {city.name}</Link>
       <Link href={`/calendar/${city.slug}/${next.getUTCFullYear()}/${nextMonth}`}>Next month →</Link>
     </div>
