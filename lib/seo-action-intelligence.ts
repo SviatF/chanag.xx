@@ -91,7 +91,7 @@ function discoverySteps(item:SearchOpportunity):SeoActionStep[]{
     {area:"TITLE_H1",action:`Rewrite the title/snippet proposition for “${item.topQuery}” around the exact date/city/tool value visible on the page; keep H1 aligned but avoid clickbait.`,evidence:`The correct landing ranks at ${item.position.toFixed(1)} but CTR is ${fmtPct(item.ctr)}, below the internal benchmark for that position.`},
     {area:"CONTENT",action:"Make the first visible answer match the search promise so the improved snippet is supported by on-page content.",evidence:"Snippet changes should not promise information the landing does not immediately provide."},
     {area:"STRUCTURED_DATA",action:"Validate existing eligible structured data and visible fields for consistency; fix errors only where markup genuinely represents page content.",evidence:"CTR work may benefit from clean search presentation, but unsupported markup must not be added."},
-    {area:"MEASUREMENT",action:"Measure CTR change separately from ranking change; do not call a snippet test a win if CTR rises only because average position changed materially.",evidence:`Baseline position ${item.position.toFixedFixed?.(1)??item.position.toFixed(1)} and CTR ${fmtPct(item.ctr)} must be interpreted together.`},
+    {area:"MEASUREMENT",action:"Measure CTR change separately from ranking change; do not call a snippet test a win if CTR rises only because average position changed materially.",evidence:`Baseline position ${item.position.toFixed(1)} and CTR ${fmtPct(item.ctr)} must be interpreted together.`},
   ];
 
   if(item.status==="NO_CLEAR_LANDING")return [
