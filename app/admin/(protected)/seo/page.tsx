@@ -1,16 +1,31 @@
 import Link from "next/link";
 import {coreCities,supportedCities} from "@/lib/cities";
 import {getIndexActivationSnapshot} from "@/lib/seo-policy";
+import {getGscConnectionStatus} from "@/lib/gsc";
+import {getOpportunityStoreStatus} from "@/lib/opportunity-store";
+import {readSeoIndexationState,type SeoIndexationRunState} from "@/lib/indexation-store";
+import IndexationIntelligencePanel from "@/components/IndexationIntelligencePanel";
+
+export const dynamic="force-dynamic";
 
 const sitemaps=[
   "sitemap-core.xml","sitemap-panchang-daily.xml","sitemap-panchang-monthly.xml","sitemap-festivals.xml",
   "sitemap-muhurat.xml","sitemap-regional.xml","sitemap-tools.xml"
 ];
 
-export default function SeoControl(){
+export default async function SeoControl(){
   const activation=getIndexActivationSnapshot();
+  const gsc=getGscConnectionStatus();
+  const storage=getOpportunityStoreStatus();
+  let indexation:SeoIndexationRunState|null=null;
+  let indexationError:string|null=null;
+  if(storage.configured){
+    try{indexation=await readSeoIndexationState();}
+    catch(error){indexationError=error instanceof Error?error.message:"Unable to load indexation intelligence.";}
+  }
+
   return <div className="admin-page">
-    <header className="admin-page-head"><div><p className="admin-eyebrow">SEO & INDEXING</p><h1>Search control</h1><p>Index policy, sitemap coverage and programmatic SEO guardrails.</p></div></header>
+    <header className="admin-page-head"><div><p className="admin-eyebrow">SEO & INDEXING</p><h1>Search control</h1><p>Index policy, sitemap coverage, Google index inspection and programmatic SEO guardrails.</p></div></header>
     <section className="admin-kpis">
       <div className="admin-kpi"><small>Supported cities</small><strong>{supportedCities.length}</strong><span>Runtime coverage</span></div>
       <div className="admin-kpi"><small>Core cities</small><strong>{coreCities.length}</strong><span>Curated navigation</span></div>
@@ -25,5 +40,6 @@ export default function SeoControl(){
       <div className="admin-panel-head"><div><small>RUNTIME ACTIVATION</small><h2>Additional indexed cities</h2></div><span>{activation.extra.length} extra</span></div>
       <p>{activation.extra.length?activation.extra.join(" · "):"No additional cities activated yet. Keep the launch baseline stable until GSC produces reliable demand signals."}</p>
     </section>
+    <IndexationIntelligencePanel state={indexation} enabled={gsc.configured&&storage.configured} error={indexationError}/>
   </div>;
 }
