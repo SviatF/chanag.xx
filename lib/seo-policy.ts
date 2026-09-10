@@ -52,6 +52,11 @@ function monthDistance(year:number,month:number){
 
 function yearDistance(year:number){return year-todayInIndia().getUTCFullYear();}
 
+export function yearlyIndexYears(){
+  const current=todayInIndia().getUTCFullYear();
+  return [current-1,current,current+1,current+2];
+}
+
 export function isPriorityCity(citySlug:string){
   return baselinePriorityCitySet.has(citySlug)||configuredExtraIndexCities().includes(citySlug);
 }
@@ -75,9 +80,19 @@ export function isMonthlyIndexable(citySlug:string,year:number,month:number){
   return distance>=-3&&distance<=12;
 }
 
+export function isYearlyCalendarIndexable(year:number,citySlug?:string){
+  if(!yearlyIndexYears().includes(year))return false;
+  return citySlug?isPriorityCity(citySlug):true;
+}
+
 export function isMuhuratIndexable(event:string,citySlug?:string){
   if(!primaryMuhuratSet.has(event)) return false;
   return citySlug ? isPriorityCity(citySlug) : true;
+}
+
+export function isYearlyMuhuratIndexable(event:string,year:number,citySlug?:string){
+  if(!isMuhuratIndexable(event,citySlug))return false;
+  return yearlyIndexYears().includes(year);
 }
 
 export function isVratIndexable(vrat:string,year:number,citySlug?:string){
