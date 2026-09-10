@@ -4,6 +4,8 @@ import {notFound} from "next/navigation";
 import Header from "@/components/Header";
 import {cities} from "@/lib/cities";
 import {festivalBySlugYear} from "@/lib/festivals";
+import {festivalPageIsIndexable,festivalYearSiblings} from "@/lib/festival-expansion";
+import {robotsFor} from "@/lib/seo-policy";
 import {parseRouteYear} from "@/lib/route-validation";
 
 export const revalidate=86400;
@@ -16,7 +18,8 @@ export async function generateMetadata({params}:{params:Promise<{festival:string
   return {
     title:`${f.name} ${year} — Date, Meaning & Panchang`,
     description:`${f.name} ${year}: ${f.date}. ${f.short} Open a city page for local Panchang and Puja timing reference.`,
-    alternates:{canonical:`/festivals/${f.slug}/${year}`}
+    alternates:{canonical:`/festivals/${f.slug}/${year}`},
+    robots:robotsFor(festivalPageIsIndexable(f.slug,year))
   };
 }
 
@@ -27,6 +30,7 @@ export default async function FestivalPage({params}:{params:Promise<{festival:st
   if(!year||!f)notFound();
 
   const month=String(Number(f.date.slice(5,7))).padStart(2,"0");
+  const siblingYears=festivalYearSiblings(f.slug,year);
   const ld={"@context":"https://schema.org","@graph":[
     {"@type":"Event","name":`${f.name} ${year}`,"startDate":f.date,"location":{"@type":"Country","name":"India"},"description":f.short},
     {"@type":"BreadcrumbList","itemListElement":[
@@ -45,6 +49,7 @@ export default async function FestivalPage({params}:{params:Promise<{festival:st
     <div className="data-grid">
       <div className="data-card"><small>Date</small><strong>{f.date}</strong></div>
       <div className="data-card"><small>Regional names</small><strong>{f.regionalNames.join(" · ")}</strong></div>
+      <div className="data-card"><small>Dataset state</small><strong>Curated date present</strong><small>Only years with a validated ISO date record can enter the festival sitemap.</small></div>
       <div className="data-card"><small>Timing model</small><strong>Local Panchang</strong><small>Open a city page for sunrise/sunset-sensitive reference timing.</small></div>
     </div>
 
@@ -61,12 +66,13 @@ export default async function FestivalPage({params}:{params:Promise<{festival:st
 
     <section className="wide-panel">
       <h2 className="page-title" style={{fontSize:32}}>Local Panchang by city</h2>
-      <p className="page-subtitle">Choose a city to see Tithi, sunrise/sunset, Rahu Kalam and the local Puja timing reference.</p>
+      <p className="page-subtitle">Choose a priority city to see Tithi, sunrise/sunset, Rahu Kalam and the local Puja timing reference.</p>
       <div className="pill-links">{cities.slice(0,12).map(city=><Link href={`/festivals/${f.slug}/${year}/${city.slug}`} key={city.slug}>{city.name}</Link>)}</div>
     </section>
 
     <div className="pill-links">
       <Link href={`/festivals-calendar/${year}`}>All {year} festivals</Link>
+      {siblingYears.map(item=><Link href={`/festivals/${item.slug}/${item.year}`} key={item.year}>{item.name} {item.year}</Link>)}
       {f.relatedMuhurat?<Link href={`/muhurat/${f.relatedMuhurat}/${year}/${month}`}>Related {f.relatedMuhurat.replaceAll("-"," ")} Muhurat →</Link>:null}
     </div>
 
