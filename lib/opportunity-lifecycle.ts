@@ -12,6 +12,14 @@ export type OpportunityMetricSnapshot={
   opportunityScore:number;
 };
 
+export type OpportunityContextSnapshot={
+  label:string;
+  topQuery:string;
+  city:string|null;
+  recommendedPath:string;
+  template:string;
+};
+
 export type OpportunityLifecycleEvent={
   from:OpportunityStage;
   to:OpportunityStage;
@@ -32,6 +40,7 @@ export type OpportunityLifecycleRecord={
   measuringAt?:string;
   closedAt?:string;
   baseline?:OpportunityMetricSnapshot;
+  context?:OpportunityContextSnapshot;
   history:OpportunityLifecycleEvent[];
 };
 
@@ -77,12 +86,22 @@ export function opportunityMetrics(opportunity:SearchOpportunity,at=new Date().t
   };
 }
 
+export function opportunityContext(opportunity:SearchOpportunity):OpportunityContextSnapshot{
+  return {
+    label:opportunity.label,
+    topQuery:opportunity.topQuery,
+    city:opportunity.city,
+    recommendedPath:opportunity.recommendedPath,
+    template:opportunity.template
+  };
+}
+
 export function transitionOpportunityLifecycle(
   stored:OpportunityLifecycleRecord|undefined,
   key:string,
   nextStage:OpportunityStage,
   now:string,
-  options:{owner?:string;note?:string;metrics?:OpportunityMetricSnapshot}={}
+  options:{owner?:string;note?:string;metrics?:OpportunityMetricSnapshot;context?:OpportunityContextSnapshot}={}
 ):OpportunityLifecycleRecord{
   const current=lifecycleForOpportunity(key,stored,now);
   if(!canTransitionOpportunity(current.stage,nextStage)){
@@ -95,6 +114,7 @@ export function transitionOpportunityLifecycle(
     stage:nextStage,
     owner:options.owner??current.owner,
     note:options.note??current.note,
+    context:options.context??current.context,
     updatedAt:now,
     history:changed?[...current.history,{from:current.stage,to:nextStage,at:now,note:options.note||undefined}]:current.history
   };
@@ -129,7 +149,7 @@ export function measureOpportunity(record:OpportunityLifecycleRecord,opportunity
   if(!record.baseline)return null;
   const current=opportunityMetrics(opportunity,at);
   const clicksDelta=current.clicks-record.baseline.clicks;
-  const impressionsDelta=current.impressions-record.baseline.impressions;
+  const impressionsDelta=current.impressions-record.impressions;
   const ctrDeltaPoints=(current.ctr-record.baseline.ctr)*100;
   const positionImprovement=record.baseline.position-current.position;
   const positive=Number(clicksDelta>0)+Number(impressionsDelta>0)+Number(ctrDeltaPoints>0.2)+Number(positionImprovement>1);
