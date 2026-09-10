@@ -11,7 +11,8 @@ export async function GET(){
     "sitemap-vrat.xml",
     "sitemap-muhurat.xml",
     "sitemap-regional.xml",
-    "sitemap-tools.xml"
+    "sitemap-tools.xml",
+    "sitemap-knowledge.xml"
   ];
   return xml(`<?xml version="1.0" encoding="UTF-8"?><sitemapindex xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">${maps.map(m=>`<sitemap><loc>${base}/${m}</loc></sitemap>`).join("")}</sitemapindex>`);
 }
