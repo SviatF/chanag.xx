@@ -13,6 +13,7 @@ import {
   type RegionalLanguageSlug,
   type RegionalSearchIntent,
 } from "./regional-seo";
+import {detectExpandedToolQuery,expandedToolPath,type ExpandedToolSlug} from "./tool-expansion";
 
 export type SearchOpportunityStatus="NEW_CLUSTER"|"WRONG_LANDING"|"STRIKING_DISTANCE"|"LOW_CTR"|"NO_CLEAR_LANDING"|"COVERED";
 export type SearchOpportunityAction="BUILD"|"ALIGN"|"STRENGTHEN"|"IMPROVE_SNIPPET"|"REVIEW"|"MONITOR";
@@ -44,6 +45,7 @@ type IntentResult={
   festivalSlug?:string;
   regionalLanguage?:RegionalLanguageSlug;
   regionalIntent?:RegionalSearchIntent;
+  expandedTool?:ExpandedToolSlug;
   template:string;
 };
 
@@ -121,6 +123,9 @@ function classifyIntent(ctx:QueryContext):IntentResult|null{
     };
   }
 
+  const expandedTool=detectExpandedToolQuery(ctx.raw);
+  if(expandedTool)return {id:`tool:${expandedTool.slug}`,label:expandedTool.name,expandedTool:expandedTool.slug,template:"Existing evergreen Panchang tool"};
+
   if(/ (ekadashi|एकादशी) /.test(q))return {id:"vrat:ekadashi",label:"Ekadashi",template:"Existing Vrat yearly hub + city pages"};
   if(/ (purnima|पूर्णिमा) /.test(q))return {id:"vrat:purnima",label:"Purnima",template:"Existing Vrat yearly hub + city pages"};
   if(/ (amavasya|अमावस्या) /.test(q))return {id:"vrat:amavasya",label:"Amavasya",template:"Existing Vrat yearly hub + city pages"};
@@ -168,6 +173,10 @@ function targetFor(intent:IntentResult,ctx:QueryContext):Target{
     };
   }
 
+  if(intent.expandedTool){
+    const expected=expandedToolPath(intent.expandedTool);
+    return {path:expected,template:intent.template,exists:true,matches:path=>path===expected};
+  }
   if(intent.id==="daily:panchang"){
     const expected=citySlug?`/panchang/${citySlug}`:"/";
     return {path:expected,template:intent.template,exists:true,matches:path=>citySlug?startsWithPath(path,expected):path==="/"};
