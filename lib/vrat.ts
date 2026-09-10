@@ -55,7 +55,8 @@ export function findVratBySlug(value:string):VratDefinition|undefined{
 }
 
 const tithiNames=["Pratipada","Dvitiya","Tritiya","Chaturthi","Panchami","Shashthi","Saptami","Ashtami","Navami","Dashami","Ekadashi","Dwadashi","Trayodashi","Chaturdashi","Purnima"] as const;
-const cache=new Map<string,VratOccurrence[]>();
+type VratCalendarMap=Record<VratSlug,VratOccurrence[]>;
+const cache=new Map<string,VratCalendarMap>();
 const norm=(value:number)=>((value%360)+360)%360;
 const pad=(value:number)=>String(value).padStart(2,"0");
 
@@ -65,7 +66,7 @@ function nextDayIso(dateIso:string){const d=new Date(dateIso+"T00:00:00Z");d.set
 function localPartsFromJulian(jd:number){
   const value=revJul(jd,SE_GREG_CAL);
   let totalMinutes=Math.round(value.hour*60+330);
-  let dayOffset=Math.floor(totalMinutes/1440);
+  const dayOffset=Math.floor(totalMinutes/1440);
   totalMinutes=((totalMinutes%1440)+1440)%1440;
   const localDate=new Date(Date.UTC(value.year,value.month-1,value.day));
   localDate.setUTCDate(localDate.getUTCDate()+dayOffset);
@@ -87,12 +88,20 @@ function tithiNameForIndex(index:number):"Ekadashi"|"Purnima"|"Amavasya"{
   return tithiNames[base] as "Ekadashi";
 }
 
-export function calculateVratCalendar(vrat:VratSlug,year:number,city:City):VratOccurrence[]{
-  const cacheKey=`${city.slug}:${year}:${vrat}`;
-  const cached=cache.get(cacheKey);if(cached)return cached.map(item=>({...item}));
+function finalize(rows:Omit<VratOccurrence,"repeatedAtSunrise"|"sequence">[]):VratOccurrence[]{
+  return rows.map((item,index)=>({
+    ...item,
+    repeatedAtSunrise:index>0&&nextDayIso(rows[index-1].date)===item.date&&rows[index-1].tithi===item.tithi&&rows[index-1].paksha===item.paksha,
+    sequence:index+1
+  }));
+}
+
+function calculateAllVratCalendars(year:number,city:City):VratCalendarMap{
+  const cacheKey=`${city.slug}:${year}`;
+  const cached=cache.get(cacheKey);if(cached)return cached;
 
   const swed=createDefaultSweData();
-  const results:Omit<VratOccurrence,"repeatedAtSunrise"|"sequence">[]=[];
+  const raw:Record<VratSlug,Omit<VratOccurrence,"repeatedAtSunrise"|"sequence">[]>={ekadashi:[],purnima:[],amavasya:[]};
   const start=new Date(Date.UTC(year,0,1));
   const end=new Date(Date.UTC(year+1,0,1));
 
@@ -122,11 +131,12 @@ export function calculateVratCalendar(vrat:VratSlug,year:number,city:City):VratO
       const rise=sweRiseTrans(swed,baseJd,SE_SUN,null,SEFLG_MOSEPH,SE_CALC_RISE,[city.lng,city.lat,0],1013.25,25,null);
       const sunriseJd=rise.retval>=0?rise.tret:baseJd+0.25;
       const index=tithiIndexAt(sunriseJd);
-      if(targetForIndex(index)!==vrat)continue;
+      const target=targetForIndex(index);
+      if(!target)continue;
       const transition=transitionAfter(sunriseJd);
       const sunrise=localPartsFromJulian(sunriseJd);
       const endParts=transition?localPartsFromJulian(transition):{date:sunrise.date,time:"—"};
-      results.push({
+      raw[target].push({
         date:sunrise.date,
         weekday:new Intl.DateTimeFormat("en-IN",{weekday:"long",timeZone:"Asia/Kolkata"}).format(new Date(sunrise.date+"T06:00:00Z")),
         paksha:pakshaForIndex(index),
@@ -138,18 +148,22 @@ export function calculateVratCalendar(vrat:VratSlug,year:number,city:City):VratO
     }
   }finally{sweClose(swed);}
 
-  const rows:VratOccurrence[]=results.map((item,index)=>({
-    ...item,
-    repeatedAtSunrise:index>0&&results[index-1].date!==item.date&&nextDayIso(results[index-1].date)===item.date&&results[index-1].tithi===item.tithi&&results[index-1].paksha===item.paksha,
-    sequence:index+1
-  }));
-  cache.set(cacheKey,rows);
-  return rows.map(item=>({...item}));
+  const calendars:VratCalendarMap={
+    ekadashi:finalize(raw.ekadashi),
+    purnima:finalize(raw.purnima),
+    amavasya:finalize(raw.amavasya)
+  };
+  cache.set(cacheKey,calendars);
+  return calendars;
+}
+
+export function calculateVratCalendar(vrat:VratSlug,year:number,city:City):VratOccurrence[]{
+  return calculateAllVratCalendars(year,city)[vrat].map(item=>({...item}));
 }
 
 export function vratCalendarSummary(rows:VratOccurrence[]){
   const repeated=rows.filter(item=>item.repeatedAtSunrise).length;
   const shukla=rows.filter(item=>item.paksha==="Shukla").length;
   const krishna=rows.filter(item=>item.paksha==="Krishna").length;
-  return {count:rows.length,repeated,shukla,krishna,first:rows[0]?.date??null,last:rows.at(-1)?.date??null};
+  return {count:rows.length,repeated,shukla,krishna,first:rows[0]?.date??null,last:rows.length?rows[rows.length-1].date:null};
 }
