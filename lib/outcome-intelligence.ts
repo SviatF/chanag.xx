@@ -33,7 +33,9 @@ export function landingMatchesRecommendation(landing:string|null,recommendedPath
 export function checkpointReadyAt(shippedAt:string,days:OpportunityCheckpointDays){
   const shipped=new Date(`${shippedAt.slice(0,10)}T00:00:00Z`);
   if(Number.isNaN(shipped.getTime()))throw new Error("Invalid shippedAt date for outcome checkpoint.");
-  return iso(shift(shipped,days+GSC_FINALITY_LAG_DAYS));
+  // The post window includes launch day, so it ends at launch + (days - 1).
+  // GSC final data lags by two days: ready = launch + (days - 1) + 2.
+  return iso(shift(shipped,days-1+GSC_FINALITY_LAG_DAYS));
 }
 
 export function dueOutcomeCheckpoints(record:OpportunityLifecycleRecord,asOf=new Date()):OpportunityCheckpointDays[]{
