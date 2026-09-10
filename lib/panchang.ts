@@ -195,12 +195,10 @@ export async function getPanchang(date: Date, city: City): Promise<Panchang> {
 
     // `sweRiseTrans` searches forward from the supplied UT instant. Starting at
     // 00:00 UTC skipped same-date sunrises before 05:30 IST in eastern India.
-    // Every local-day event search now starts at 00:00 IST for the target civil date.
+    // Solar-day searches now begin at 00:00 IST for the requested civil date.
     const rise = sweRiseTrans(swed, baseJd, SE_SUN, null, SEFLG_MOSEPH, SE_CALC_RISE, geopos, 1013.25, 25, null);
     const set = sweRiseTrans(swed, baseJd, SE_SUN, null, SEFLG_MOSEPH, SE_CALC_SET, geopos, 1013.25, 25, null);
     const nextRise = sweRiseTrans(swed, baseJd + 1, SE_SUN, null, SEFLG_MOSEPH, SE_CALC_RISE, geopos, 1013.25, 25, null);
-    const moonRise = sweRiseTrans(swed, baseJd, SE_MOON, null, SEFLG_MOSEPH, SE_CALC_RISE, geopos, 1013.25, 25, null);
-    const moonSet = sweRiseTrans(swed, baseJd, SE_MOON, null, SEFLG_MOSEPH, SE_CALC_SET, geopos, 1013.25, 25, null);
 
     // The current public reference fixtures are aligned with the common upper-limb,
     // refraction-aware sunrise convention used by DrikPanchang by default. We keep
@@ -208,6 +206,13 @@ export async function getPanchang(date: Date, city: City): Promise<Panchang> {
     const sunriseJd = rise.retval >= 0 ? rise.tret : baseJd + 0.25;
     const sunsetJd = set.retval >= 0 ? set.tret : baseJd + 0.75;
     const nextSunriseJd = nextRise.retval >= 0 ? nextRise.tret : baseJd + 1.25;
+
+    // A Panchang day runs from local sunrise to the next sunrise. Searching lunar
+    // rise/set from sunrise prevents a pre-sunrise civil event from being assigned
+    // to the wrong Panchang day and preserves next-day moonrise dates explicitly.
+    const moonRise = sweRiseTrans(swed, sunriseJd, SE_MOON, null, SEFLG_MOSEPH, SE_CALC_RISE, geopos, 1013.25, 25, null);
+    const moonSet = sweRiseTrans(swed, sunriseJd, SE_MOON, null, SEFLG_MOSEPH, SE_CALC_SET, geopos, 1013.25, 25, null);
+
     const sunriseMinutes = localMinutesFromJulian(sunriseJd);
     let sunsetMinutes = localMinutesFromJulian(sunsetJd);
     if (sunsetMinutes <= sunriseMinutes) sunsetMinutes += 1440;
