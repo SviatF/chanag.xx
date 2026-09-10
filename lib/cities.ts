@@ -75,6 +75,10 @@ export const cities=coreCities;
 
 const supportedCityMap=new Map(supportedCities.map(city=>[city.slug,city]));
 
-export const cityBySlug = (slug:string) => supportedCityMap.get(slug) ?? coreCities[0];
+export const findCityBySlug=(slug:string)=>supportedCityMap.get(slug);
+
+// Use only where a Mumbai default is intentional (for example controlled internal/default selections).
+// Public dynamic route params must use findCityBySlug() and return notFound() when missing.
+export const cityBySlug=(slug:string)=>findCityBySlug(slug)??coreCities[0];
 
 export const isCoreCity=(slug:string)=>coreSlugSet.has(slug);
