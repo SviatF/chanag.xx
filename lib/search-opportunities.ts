@@ -91,10 +91,10 @@ function classifyIntent(ctx:QueryContext):IntentResult|null{
   const festival=festivalMatchers.find(item=>q.includes(item.needle));
   if(festival)return {id:`festival:${festival.slug}`,label:"Festival",festivalSlug:festival.slug,template:"Festival overview / local festival page"};
 
-  if(/ (ekadashi|एकादशी) /.test(q))return {id:"vrat:ekadashi",label:"Ekadashi",template:"Vrata yearly hub + city pages"};
-  if(/ (purnima|पूर्णिमा) /.test(q))return {id:"vrat:purnima",label:"Purnima",template:"Purnima yearly hub + city pages"};
-  if(/ (amavasya|amavasya|अमावस्या) /.test(q))return {id:"vrat:amavasya",label:"Amavasya",template:"Amavasya yearly hub + city pages"};
-  if(/ (choghadiya|chogadia|choghadiya|चौघड़िया|चौघडिया) /.test(q))return {id:"tool:choghadiya",label:"Choghadiya",template:"City Choghadiya tool"};
+  if(/ (ekadashi|एकादशी) /.test(q))return {id:"vrat:ekadashi",label:"Ekadashi",template:"Existing Vrat yearly hub + city pages"};
+  if(/ (purnima|पूर्णिमा) /.test(q))return {id:"vrat:purnima",label:"Purnima",template:"Existing Vrat yearly hub + city pages"};
+  if(/ (amavasya|अमावस्या) /.test(q))return {id:"vrat:amavasya",label:"Amavasya",template:"Existing Vrat yearly hub + city pages"};
+  if(/ (choghadiya|chogadia|चौघड़िया|चौघडिया) /.test(q))return {id:"tool:choghadiya",label:"Choghadiya",template:"City Choghadiya tool"};
   if(/ (rahu kalam|rahu kaal|rahukaal|राहु काल|राहुकाल) /.test(q))return {id:"tool:rahu",label:"Rahu Kalam",template:"Daily Panchang / Rahu calculator"};
   if(/ (griha pravesh|graha pravesh|house warming|गृह प्रवेश) /.test(q))return {id:"muhurat:griha-pravesh",label:"Griha Pravesh Muhurat",event:"griha-pravesh",template:"Muhurat month / yearly hub"};
   if(/ (wedding muhurat|marriage muhurat|vivah muhurat|shaadi muhurat|विवाह मुहूर्त|शादी मुहूर्त) /.test(q))return {id:"muhurat:wedding",label:"Wedding Muhurat",event:"wedding",template:"Muhurat month / yearly hub"};
@@ -155,7 +155,7 @@ function targetFor(intent:IntentResult,ctx:QueryContext):Target{
   if(intent.id.startsWith("vrat:")){
     const slug=intent.id.split(":")[1];
     const expected=citySlug?`/vrat/${slug}/${ctx.year}/${citySlug}`:`/vrat/${slug}/${ctx.year}`;
-    return {path:expected,template:intent.template,exists:false,matches:path=>startsWithPath(path,expected)};
+    return {path:expected,template:"Existing Vrat yearly hub + city pages",exists:true,matches:path=>startsWithPath(path,expected)};
   }
 
   return {path:"/",template:"Manual review",exists:true,matches:path=>path==="/"};
