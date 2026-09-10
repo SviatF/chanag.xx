@@ -2,11 +2,13 @@ import type {Metadata} from "next";
 import Link from "next/link";
 import {notFound} from "next/navigation";
 import Header from "@/components/Header";
+import TopicalGraph from "@/components/TopicalGraph";
 import {findCityBySlug} from "@/lib/cities";
 import {getPanchang} from "@/lib/panchang";
 import {festivalsForYear} from "@/lib/festivals";
 import {isMonthlyIndexable,robotsFor} from "@/lib/seo-policy";
 import {parseRouteMonth,parseRouteYear} from "@/lib/route-validation";
+import {buildCalendarTopicalGraph} from "@/lib/topical-links";
 
 export const revalidate=86400;
 
@@ -41,6 +43,7 @@ export default async function CalendarPage({params}:{params:Promise<{city:string
   const next=new Date(Date.UTC(y,m,1));
   const prevMonth=String(prev.getUTCMonth()+1).padStart(2,"0");
   const nextMonth=String(next.getUTCMonth()+1).padStart(2,"0");
+  const keyDates=entries.filter(entry=>["Ekadashi","Purnima","Amavasya"].includes(entry.tithi)).map(entry=>({date:entry.date,tithi:entry.tithi}));
 
   return <main><Header city={city}/><div className="page-shell internal-visual internal-calendar">
     <div className="breadcrumbs"><Link href="/">Home</Link> / <Link href={`/panchang/${city.slug}`}>{city.name}</Link> / Calendar</div>
@@ -79,5 +82,7 @@ export default async function CalendarPage({params}:{params:Promise<{city:string
         ? <div className="city-directory">{monthFestivals.map(festival=><Link href={`/festivals/${festival.slug}/${y}/${city.slug}`} key={festival.slug}><small>{festival.date}</small><strong>{festival.name}</strong><span>{festival.short}</span></Link>)}</div>
         : <p className="page-subtitle">No major festivals from the current curated festival database fall in this month.</p>}
     </section>
+
+    <TopicalGraph title={`Explore ${monthName} in ${city.name}`} groups={buildCalendarTopicalGraph(city,y,m,keyDates)}/>
   </div></main>;
 }
