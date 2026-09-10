@@ -1,6 +1,6 @@
 import { cityCandidates } from "./city-candidates";
 import { coreCities, supportedCities } from "./cities";
-import { phase1PriorityCities } from "./seo-policy";
+import { isPriorityCity } from "./seo-policy";
 import type { GscTrafficSnapshot } from "./gsc";
 
 export type DemandRecommendation="ACTIVE"|"ACTIVATE"|"WATCH"|"HOLD";
@@ -24,7 +24,6 @@ export type CityDemand={
 
 const populationMap=new Map(cityCandidates.map(city=>[city.slug,city.population]));
 const coreSet=new Set(coreCities.map(city=>city.slug));
-const prioritySet=new Set<string>(phase1PriorityCities);
 const supportedSlugSet=new Set(supportedCities.map(city=>city.slug));
 
 function normalize(value:string){
@@ -110,7 +109,7 @@ export function buildCityDemand(snapshot:GscTrafficSnapshot):CityDemand[]{
     const clickScore=Math.min(30,Math.log10(clicks+1)*15);
     const queryScore=Math.min(15,a.matchedQueries.size*1.5);
     const score=Math.round(Math.min(100,trafficScore+clickScore+queryScore+populationBonus));
-    const priority=prioritySet.has(city.slug);
+    const priority=isPriorityCity(city.slug);
     const recommendation:DemandRecommendation=
       priority?"ACTIVE":
       score>=55||impressions>=1000?"ACTIVATE":
