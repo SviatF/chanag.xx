@@ -13,7 +13,9 @@ import {
   type RegionalLanguageSlug,
   type RegionalSearchIntent,
 } from "./regional-seo";
+import {isYearlyCalendarIndexable,isYearlyMuhuratIndexable} from "./seo-policy";
 import {detectExpandedToolQuery,expandedToolPath,type ExpandedToolSlug} from "./tool-expansion";
+import {cityCalendarYearPath,hinduCalendarYearPath,muhuratYearPath} from "./yearly-expansion";
 
 export type SearchOpportunityStatus="NEW_CLUSTER"|"WRONG_LANDING"|"STRIKING_DISTANCE"|"LOW_CTR"|"NO_CLEAR_LANDING"|"COVERED";
 export type SearchOpportunityAction="BUILD"|"ALIGN"|"STRENGTHEN"|"IMPROVE_SNIPPET"|"REVIEW"|"MONITOR";
@@ -65,6 +67,7 @@ type Target={
   exists:boolean;
   activationOnly?:boolean;
   activationKey?:string;
+  activationReason?:string;
   matches:(path:string)=>boolean;
 };
 
@@ -137,6 +140,7 @@ function classifyIntent(ctx:QueryContext):IntentResult|null{
   if(/ (moon sign|moon rashi|chandra rashi|चंद्र राशि) /.test(q))return {id:"tool:moon-sign",label:"Moon Sign",template:"Moon Sign calculator"};
   if(/ (nakshatra finder|birth nakshatra|janma nakshatra|जन्म नक्षत्र) /.test(q))return {id:"tool:nakshatra",label:"Nakshatra Finder",template:"Nakshatra finder"};
   if(/ (baby names|baby name|hindu baby names|हिंदू बेबी नाम|बच्चे का नाम) /.test(q))return {id:"content:baby-names",label:"Hindu Baby Names",template:"Baby names hub"};
+  if(ctx.explicitYear&&!ctx.explicitMonth&&/ (hindu calendar|hindu panchang|panchang|panchangam|panjika|हिंदू कैलेंडर|पंचांग) /.test(q))return {id:"yearly:hindu-calendar",label:"Yearly Hindu Calendar",template:"Existing yearly Hindu Calendar hub"};
   if(/ (panchang|panchangam|panjika|पंचांग) /.test(q))return {id:"daily:panchang",label:"Daily Panchang",template:"Daily city Panchang"};
   return null;
 }
@@ -169,6 +173,7 @@ function targetFor(intent:IntentResult,ctx:QueryContext):Target{
       exists:true,
       activationOnly:!indexable,
       activationKey:`${language}:${city.slug}:${regionalIntent}`,
+      activationReason:`The regional intent route already exists but is intentionally noindex until demand review. Approve ${language}:${city.slug}:${regionalIntent} through SEO_EXTRA_REGIONAL_INTENTS only if GSC evidence justifies activation.`,
       matches:path=>startsWithPath(path,expected)
     };
   }
@@ -176,6 +181,11 @@ function targetFor(intent:IntentResult,ctx:QueryContext):Target{
   if(intent.expandedTool){
     const expected=expandedToolPath(intent.expandedTool);
     return {path:expected,template:intent.template,exists:true,matches:path=>path===expected};
+  }
+  if(intent.id==="yearly:hindu-calendar"){
+    const expected=city?cityCalendarYearPath(city,ctx.year):hinduCalendarYearPath(ctx.year);
+    const indexable=isYearlyCalendarIndexable(ctx.year,citySlug);
+    return {path:expected,template:intent.template,exists:true,activationOnly:!indexable,activationKey:`year:${ctx.year}`,activationReason:`The yearly calendar route already exists, but ${ctx.year} is outside the current rolling yearly index window. Review future-year activation instead of building another URL.`,matches:path=>path===expected};
   }
   if(intent.id==="daily:panchang"){
     const expected=citySlug?`/panchang/${citySlug}`:"/";
@@ -204,10 +214,12 @@ function targetFor(intent:IntentResult,ctx:QueryContext):Target{
   if(intent.event){
     if(month){
       const expected=citySlug?`/muhurat/${intent.event}/${ctx.year}/${month}/${citySlug}`:`/muhurat/${intent.event}/${ctx.year}/${month}`;
-      return {path:expected,template:"Existing monthly Muhurat template",exists:true,matches:path=>startsWithPath(path,expected)};
+      const indexable=isYearlyMuhuratIndexable(intent.event,ctx.year,citySlug);
+      return {path:expected,template:"Existing monthly Muhurat template",exists:true,activationOnly:!indexable,activationKey:`year:${ctx.year}`,activationReason:`The Muhurat route exists, but ${ctx.year} is outside the controlled yearly index window. Review the year policy before exposing this page to search.`,matches:path=>path===expected};
     }
-    const expected=citySlug?`/muhurat/${intent.event}/${ctx.year}/${citySlug}`:`/muhurat/${intent.event}/${ctx.year}`;
-    return {path:expected,template:"NEW yearly Muhurat hub",exists:false,matches:path=>startsWithPath(path,expected)};
+    const expected=muhuratYearPath(intent.event,ctx.year);
+    const indexable=isYearlyMuhuratIndexable(intent.event,ctx.year);
+    return {path:expected,template:"Existing yearly Muhurat hub",exists:true,activationOnly:!indexable,activationKey:`year:${ctx.year}`,activationReason:`The yearly Muhurat hub already exists, but ${ctx.year} is outside the current rolling index window. Review future-year activation instead of creating a city-specific annual duplicate.`,matches:path=>path===expected};
   }
   if(intent.festivalSlug){
     const existing=festivalBySlugYear(intent.festivalSlug,ctx.year);
@@ -286,7 +298,7 @@ function scoreOpportunity(impressions:number,queryCount:number,position:number,c
 }
 
 function reasonFor(status:SearchOpportunityStatus,target:Target,current:string|null,position:number,ctr:number){
-  if(target.activationOnly)return `The regional intent route already exists but is intentionally noindex until demand review. Approve ${target.activationKey??"this language:city:intent combination"} through SEO_EXTRA_REGIONAL_INTENTS only if GSC evidence justifies activation.`;
+  if(target.activationOnly)return target.activationReason??`The target route already exists but is intentionally noindex until demand review. Review ${target.activationKey??"the activation policy"} before exposing it to search.`;
   if(status==="NEW_CLUSTER")return `Demand exists for a page family Panchvani does not currently expose. Recommended template: ${target.template}.`;
   if(status==="WRONG_LANDING")return `Google is sending this intent to ${current?pathOnly(current):"another page"} instead of the expected landing page.`;
   if(status==="STRIKING_DISTANCE")return `The correct landing page is ranking around position ${position.toFixed(1)} and is within realistic striking distance of page-one visibility.`;
@@ -319,7 +331,7 @@ export function buildSearchOpportunities(snapshot:GscTrafficSnapshot):SearchOppo
     if(!intent)continue;
     const target=targetFor(intent,ctx);
     const city=ctx.city?.slug??null;
-    const timeKey=intent.event&&!ctx.explicitMonth?`${ctx.year}:annual`:intent.event?`${ctx.year}:${ctx.month}`:intent.festivalSlug?`${ctx.year}`:intent.id.startsWith("vrat:")?`${ctx.year}`:"evergreen";
+    const timeKey=intent.event&&!ctx.explicitMonth?`${ctx.year}:annual`:intent.event?`${ctx.year}:${ctx.month}`:intent.festivalSlug?`${ctx.year}`:intent.id.startsWith("vrat:")||intent.id==="yearly:hindu-calendar"?`${ctx.year}`:"evergreen";
     const key=`${intent.id}:${city??"india"}:${timeKey}`;
     const current=landingMap.get(normalize(query));
     const existing=aggregates.get(key)??{
