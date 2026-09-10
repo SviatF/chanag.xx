@@ -23,6 +23,20 @@ export type OpportunityContextSnapshot={
   template:string;
 };
 
+export type OpportunityImplementationEvidence={
+  id:string;
+  hypothesis:string;
+  commitSha:string|null;
+  prUrl:string|null;
+  changedFiles:string[];
+  deployedUrl:string|null;
+  versionLabel:string|null;
+  note:string;
+  createdAt:string;
+  updatedAt:string;
+  shippedAt?:string;
+};
+
 export type OpportunityOutcomeWindow={
   startDate:string;
   endDate:string;
@@ -36,6 +50,7 @@ export type OpportunityOutcomeWindow={
 export type OpportunityOutcomeCheckpoint={
   days:OpportunityCheckpointDays;
   evaluatedAt:string;
+  implementationId?:string;
   pre:OpportunityOutcomeWindow;
   post:OpportunityOutcomeWindow;
   landingAligned:boolean;
@@ -70,6 +85,9 @@ export type OpportunityLifecycleRecord={
   closedAt?:string;
   baseline?:OpportunityMetricSnapshot;
   context?:OpportunityContextSnapshot;
+  implementations?:OpportunityImplementationEvidence[];
+  activeImplementationId?:string;
+  shippedImplementationId?:string;
   outcomes?:OpportunityOutcomeCheckpoint[];
   history:OpportunityLifecycleEvent[];
 };
@@ -154,6 +172,14 @@ export function transitionOpportunityLifecycle(
   if(nextStage==="SHIPPED"){
     next.shippedAt=now;
     if(options.metrics)next.baseline=options.metrics;
+    const activeId=current.activeImplementationId;
+    const active=current.implementations?.find(item=>item.id===activeId);
+    if(activeId&&active){
+      next.shippedImplementationId=activeId;
+      next.implementations=(current.implementations??[]).map(item=>item.id===activeId?{...item,shippedAt:item.shippedAt??now,updatedAt:now}:item);
+    }else{
+      delete next.shippedImplementationId;
+    }
   }
   if(nextStage==="MEASURING"){
     next.measuringAt=now;
