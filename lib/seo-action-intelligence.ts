@@ -34,6 +34,7 @@ function pathOnly(raw:string|null|undefined){
 
 function fmtPct(value:number){return `${(value*100).toFixed(2)}%`;}
 function fmtSigned(value:number,suffix=""){return `${value>0?"+":""}${value.toFixed(1)}${suffix}`;}
+function isRegionalActivation(item:SearchOpportunity){return item.status==="NEW_CLUSTER"&&item.action==="REVIEW"&&item.template.includes("regional intent route");}
 
 function priorityFor(status:SearchOpportunityStatus|undefined,outcome:OpportunityOutcomeCheckpoint|null):SeoActionPriority{
   if(outcome?.recommendation==="REGRESSED")return "P0";
@@ -52,6 +53,14 @@ function discoverySteps(item:SearchOpportunity):SeoActionStep[]{
   const target=item.recommendedPath;
   const current=pathOnly(item.currentLanding);
   const demand=baseEvidence(item);
+
+  if(isRegionalActivation(item))return [
+    {area:"INDEXING",action:`Review ${target} as an existing regional route. Confirm its language/city combination is relevant, then add only the exact approved language:city:intent key to SEO_EXTRA_REGIONAL_INTENTS.`,evidence:`The page already exists but is intentionally noindex. ${item.reason} ${demand}`},
+    {area:"LANDING",action:`Verify ${target} returns 200, is self-canonical, contains unique city-local timing data and is not a thin translation of the English page.`,evidence:"Regional scale is gated on useful localized context, not route existence alone."},
+    {area:"TITLE_H1",action:`Confirm the title/H1 lead with the regional intent used by “${item.topQuery}” and the actual city while keeping the wording natural.`,evidence:"GSC has already produced demand for this language-specific timing intent."},
+    {area:"INTERNAL_LINKS",action:"After approval, expose the route from its language hub and regional city hub; do not add sitewide exact-match links before activation.",evidence:"The regional sitemap/topical graph intentionally surface only approved intent combinations."},
+    {area:"MEASUREMENT",action:"After activation and deployment, register the implementation and measure query×page ownership plus 14/28/56-day outcome checkpoints.",evidence:"Activation is treated as a measurable SEO implementation rather than an automatic indexing switch."},
+  ];
 
   if(item.status==="NEW_CLUSTER")return [
     {area:"LANDING",action:`Build the approved ${item.template} at ${target}; make this URL the single canonical owner of “${item.topQuery}” intent.`,evidence:`GSC demand exists but Panchvani has no matching exposed page family. ${demand}`},
@@ -82,7 +91,7 @@ function discoverySteps(item:SearchOpportunity):SeoActionStep[]{
     {area:"TITLE_H1",action:`Rewrite the title/snippet proposition for “${item.topQuery}” around the exact date/city/tool value visible on the page; keep H1 aligned but avoid clickbait.`,evidence:`The correct landing ranks at ${item.position.toFixed(1)} but CTR is ${fmtPct(item.ctr)}, below the internal benchmark for that position.`},
     {area:"CONTENT",action:"Make the first visible answer match the search promise so the improved snippet is supported by on-page content.",evidence:"Snippet changes should not promise information the landing does not immediately provide."},
     {area:"STRUCTURED_DATA",action:"Validate existing eligible structured data and visible fields for consistency; fix errors only where markup genuinely represents page content.",evidence:"CTR work may benefit from clean search presentation, but unsupported markup must not be added."},
-    {area:"MEASUREMENT",action:"Measure CTR change separately from ranking change; do not call a snippet test a win if CTR rises only because average position changed materially.",evidence:`Baseline position ${item.position.toFixed(1)} and CTR ${fmtPct(item.ctr)} must be interpreted together.`},
+    {area:"MEASUREMENT",action:"Measure CTR change separately from ranking change; do not call a snippet test a win if CTR rises only because average position changed materially.",evidence:`Baseline position ${item.position.toFixedFixed?.(1)??item.position.toFixed(1)} and CTR ${fmtPct(item.ctr)} must be interpreted together.`},
   ];
 
   if(item.status==="NO_CLEAR_LANDING")return [
@@ -156,8 +165,9 @@ export function buildSeoActionPlan({opportunity,record}:BuildInput):SeoActionPla
   }
 
   if(opportunity){
+    const activation=isRegionalActivation(opportunity);
     const headline:Record<SearchOpportunityStatus,string>={
-      NEW_CLUSTER:"Build the missing intent owner",
+      NEW_CLUSTER:activation?"Review the existing regional route for index activation":"Build the missing intent owner",
       WRONG_LANDING:"Fix query-to-page ownership",
       STRIKING_DISTANCE:"Push the existing page toward page one",
       LOW_CTR:"Improve search-result appeal without changing intent",
@@ -176,9 +186,11 @@ export function buildSeoActionPlan({opportunity,record}:BuildInput):SeoActionPla
         ?["CTR improves at a comparable average position.","The recommended landing remains the query owner."]
         :opportunity.status==="WRONG_LANDING"
           ?["GSC query×page data moves the top query to the recommended landing.","The competing landing stops dominating the same exact intent."]
-          :opportunity.status==="NEW_CLUSTER"
-            ?["The approved page is crawlable, indexable and internally linked after quality review.","GSC begins associating the target URL with the detected query cluster."]
-            :["The recommended landing remains aligned.","Clicks/position improve at the next comparable GSC measurement window."],
+          :activation
+            ?["The reviewed regional route becomes indexable and appears in the regional sitemap only after explicit approval.","GSC begins associating the approved regional child URL with the detected language-specific query cluster."]
+            :opportunity.status==="NEW_CLUSTER"
+              ?["The approved page is crawlable, indexable and internally linked after quality review.","GSC begins associating the target URL with the detected query cluster."]
+              :["The recommended landing remains aligned.","Clicks/position improve at the next comparable GSC measurement window."],
       guardrail:"Treat this as an evidence-backed recommendation, not an automatic publish instruction. Approval, implementation and index activation remain human-controlled.",
     };
   }
