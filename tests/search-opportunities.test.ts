@@ -24,7 +24,7 @@ function snapshot(queries:GscRow[],queryPages:GscRow[]):GscTrafficSnapshot{
 }
 
 describe("Search Demand Expansion Engine",()=>{
-  it("flags unsupported high-intent vrata demand as a new cluster",()=>{
+  it("routes Ekadashi demand to the implemented Vrat cluster and flags the old Panchang landing",()=>{
     const q="ekadashi 2026 delhi";
     const result=buildSearchOpportunities(snapshot(
       [row(q,1400,22,11.8)],
@@ -32,10 +32,22 @@ describe("Search Demand Expansion Engine",()=>{
     ));
     const opportunity=result[0];
     expect(opportunity.intent).toBe("vrat:ekadashi");
-    expect(opportunity.status).toBe("NEW_CLUSTER");
-    expect(opportunity.action).toBe("BUILD");
+    expect(opportunity.status).toBe("WRONG_LANDING");
+    expect(opportunity.action).toBe("ALIGN");
     expect(opportunity.recommendedPath).toBe("/vrat/ekadashi/2026/delhi");
-    expect(opportunity.score).toBeGreaterThanOrEqual(70);
+    expect(opportunity.template).toContain("Existing Vrat");
+  });
+
+  it("treats a correctly ranking Vrat page as striking distance instead of a missing cluster",()=>{
+    const q="purnima 2026 mumbai";
+    const page="https://panchvani.com/vrat/purnima/2026/mumbai";
+    const result=buildSearchOpportunities(snapshot(
+      [row(q,760,18,13.1)],
+      [queryPage(q,page,760,18,13.1)]
+    ));
+    expect(result[0].status).toBe("STRIKING_DISTANCE");
+    expect(result[0].action).toBe("STRENGTHEN");
+    expect(result[0].recommendedPath).toBe("/vrat/purnima/2026/mumbai");
   });
 
   it("detects when Google ranks the wrong page for an existing Choghadiya intent",()=>{
