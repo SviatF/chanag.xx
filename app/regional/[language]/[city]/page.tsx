@@ -1,8 +1,9 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { notFound } from "next/navigation";
 import Header from "@/components/Header";
 import ChoghadiyaTable from "@/components/ChoghadiyaTable";
-import { cityBySlug } from "@/lib/cities";
+import { findCityBySlug } from "@/lib/cities";
 import { getPanchang, formatWindow } from "@/lib/panchang";
 import { regional } from "@/lib/regional";
 import { todayInIndia } from "@/lib/dates";
@@ -19,6 +20,9 @@ const hreflang: Record<string,string> = {
   marathi:"mr-IN",
 };
 
+type RegionalKey=keyof typeof regional;
+const regionalBySlug=(slug:string)=>regional[slug as RegionalKey];
+
 const bengaliTithi:Record<string,string>={
   Pratipada:"প্রতিপদ",Dvitiya:"দ্বিতীয়া",Tritiya:"তৃতীয়া",Chaturthi:"চতুর্থী",Panchami:"পঞ্চমী",
   Shashthi:"ষষ্ঠী",Saptami:"সপ্তমী",Ashtami:"অষ্টমী",Navami:"নবমী",Dashami:"দশমী",
@@ -28,8 +32,9 @@ const bengaliTithi:Record<string,string>={
 
 export async function generateMetadata({params}:{params:Promise<{language:string;city:string}>}):Promise<Metadata>{
   const p=await params;
-  const city=cityBySlug(p.city);
-  const lang=(regional as any)[p.language]??regional.bengali;
+  const city=findCityBySlug(p.city);
+  const lang=regionalBySlug(p.language);
+  if(!city||!lang)notFound();
   const languages:Record<string,string>={"en-IN":`/panchang/${city.slug}`};
   for(const [slug,code] of Object.entries(hreflang)) languages[code]=`/regional/${slug}/${city.slug}`;
   return {
@@ -42,8 +47,9 @@ export async function generateMetadata({params}:{params:Promise<{language:string
 
 export default async function RegionalPage({params}:{params:Promise<{language:string;city:string}>}){
   const p=await params;
-  const city=cityBySlug(p.city);
-  const lang=(regional as any)[p.language]??regional.bengali;
+  const city=findCityBySlug(p.city);
+  const lang=regionalBySlug(p.language);
+  if(!city||!lang)notFound();
   const data=await getPanchang(todayInIndia(),city);
   const t=lang.terms;
   const isBengali=p.language==="bengali";
