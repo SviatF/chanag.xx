@@ -86,7 +86,7 @@ describe("SEO Action Intelligence",()=>{
     const item=opportunity({key:"vrat:ekadashi:delhi:2026",intent:"vrat:ekadashi",label:"Ekadashi",topQuery:"ekadashi 2026 delhi",city:"Delhi",currentLanding:null,recommendedPath:"/vrat/ekadashi/2026/delhi",template:"Vrata yearly hub + city pages",status:"NEW_CLUSTER",action:"BUILD",score:91,reason:"Missing page family."});
     const plan=buildSeoActionPlan({opportunity:item,record:record()});
     expect(plan.priority).toBe("P1");
-    expect(plan.steps.some(step=>step.area==="INDEXING"&&step.action.includes("quality"))).toBe(true);
+    expect(plan.steps.some(step=>step.area==="INDEXING"&&step.action.includes("out of indexable expansion")&&step.action.includes("pass review"))).toBe(true);
     expect(plan.guardrail).toContain("not an automatic publish instruction");
   });
 
