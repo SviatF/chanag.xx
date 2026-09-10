@@ -220,7 +220,7 @@ export default function Header({city}:{city:City}) {
 
     <div className="header-actions">
       <Link className="header-search" href="/cities" aria-label="Search cities"><Search size={18}/></Link>
-      <CityCommand city={city} cities={cities}/>
+      <CityCommand city={city}/>
       <span className="account-dot" aria-hidden="true"><UserRound size={15}/></span>
     </div>
   </header>;
