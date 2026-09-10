@@ -4,11 +4,12 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
   Activity, BarChart3, CalendarDays, Database, FileText,
-  Gauge, MapPin, Network, Search, Settings, ShieldCheck, Sparkles
+  Gauge, MapPin, Network, Search, Settings, ShieldCheck, Sparkles, TrendingUp
 } from "lucide-react";
 
 const primary=[
   ["Overview","/admin",Gauge],
+  ["SEO Command Center","/admin/growth",TrendingUp],
   ["Traffic & Demand","/admin/traffic",BarChart3],
   ["Opportunity Queue","/admin/opportunities",Database],
   ["Cities","/admin/cities",MapPin],
