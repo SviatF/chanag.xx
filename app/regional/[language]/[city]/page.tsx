@@ -5,7 +5,7 @@ import Header from "@/components/Header";
 import ChoghadiyaTable from "@/components/ChoghadiyaTable";
 import TopicalGraph from "@/components/TopicalGraph";
 import { findCityBySlug } from "@/lib/cities";
-import { getPanchang, formatWindow } from "@/lib/panchang";
+import { formatPanchangTime, getPanchang, formatWindow } from "@/lib/panchang";
 import { regional } from "@/lib/regional";
 import { todayInIndia } from "@/lib/dates";
 import { getRegionalCalendarProfile } from "@/lib/regional-calendar";
@@ -49,9 +49,13 @@ export default async function RegionalPage({params}:{params:Promise<{language:st
   const isBengali=p.language==="bengali";
   const profile=getRegionalCalendarProfile(p.language,data);
   const displayTithi=isBengali?(bengaliTithi[data.tithi]??data.tithi):data.tithi;
+  const tithiEnd=formatPanchangTime(data.tithiEnd,data.tithiEndDate,data.date);
+  const nakshatraEnd=formatPanchangTime(data.nakshatraEnd,data.nakshatraEndDate,data.date);
+  const moonrise=formatPanchangTime(data.moonrise,data.moonriseDate,data.date);
+  const moonset=formatPanchangTime(data.moonset,data.moonsetDate,data.date);
   const intentLinks=regionalIntentLinksForCity(p.language,city);
   const graph=buildRegionalTopicalGraph(city,p.language,date);
-  if(intentLinks.length)graph.splice(1,0,{title:"Regional timing searches",description:"Demand-approved timing pages using the same city-local Panchang calculation.",links:intentLinks.map(item=>({href:item.href,label:item.label}))});
+  if(intentLinks.length)graph.splice(1,0,{title:"Regional timing searches",description:"Open the local timing pages available for this language and city.",links:intentLinks.map(item=>({href:item.href,label:item.label}))});
 
   return <main><Header city={city}/><div className="page-shell internal-visual internal-regional">
     <div className="breadcrumbs"><Link href="/regional">Regional</Link> / <Link href={`/regional/${p.language}`}>{lang.label}</Link> / {city.name}</div>
@@ -62,14 +66,14 @@ export default async function RegionalPage({params}:{params:Promise<{language:st
     </p>
 
     <div className="data-grid">
-      <div className="data-card"><small>{t.tithi}</small><strong>{displayTithi}</strong><small>{data.paksha} Paksha · until {data.tithiEnd}</small></div>
-      <div className="data-card"><small>{t.nakshatra}</small><strong>{profile.nakshatra}</strong><small>Pada {data.nakshatraPada} · until {data.nakshatraEnd}</small></div>
+      <div className="data-card"><small>{t.tithi}</small><strong>{displayTithi}</strong><small>{data.paksha} Paksha · until {tithiEnd}</small></div>
+      <div className="data-card"><small>{t.nakshatra}</small><strong>{profile.nakshatra}</strong><small>Pada {data.nakshatraPada} · until {nakshatraEnd}</small></div>
       <div className="data-card"><small>{t.yoga}</small><strong>{data.yoga}</strong></div>
       <div className="data-card"><small>{t.karana}</small><strong>{data.karana}</strong></div>
       <div className="data-card"><small>{t.sunrise}</small><strong>{data.sunrise}</strong></div>
       <div className="data-card"><small>{t.sunset}</small><strong>{data.sunset}</strong></div>
-      <div className="data-card"><small>{t.moonrise}</small><strong>{data.moonrise}</strong></div>
-      <div className="data-card"><small>{t.moonset}</small><strong>{data.moonset}</strong></div>
+      <div className="data-card"><small>{t.moonrise}</small><strong>{moonrise}</strong></div>
+      <div className="data-card"><small>{t.moonset}</small><strong>{moonset}</strong></div>
       <div className="data-card"><small>{t.month}</small><strong>{profile.monthNative??profile.month}</strong><small>{profile.monthNative?profile.month:profile.calendarSystem}{profile.yearLabel?` · ${profile.yearLabel}`:""}</small></div>
       {profile.solarSign?<div className="data-card"><small>Solar Rashi</small><strong>{profile.solarSign}</strong></div>:null}
       <div className="data-card"><small>Vikram Samvat</small><strong>{data.vikramSamvat}</strong></div>
@@ -88,7 +92,7 @@ export default async function RegionalPage({params}:{params:Promise<{language:st
       <ChoghadiyaTable day={data.dayChoghadiya} night={data.nightChoghadiya}/>
     </div>
 
-    <div className="seo-copy"><h2>{profile.calendarSystem}</h2><p>{profile.note}</p><p>This regional page keeps the selected city's local sunrise, sunset and inauspicious periods while applying the regional calendar naming layer instead of presenting a generic English Panchang with translated headings only.</p></div>
+    <div className="seo-copy"><h2>{profile.calendarSystem}</h2><p>{profile.note}</p><p>The regional calendar layer is combined with the same city-local astronomical calculation used across Panchvani. Times that continue after midnight retain the following civil date instead of being shown as an ambiguous clock time.</p></div>
 
     <div className="pill-links"><Link href={`/regional/${p.language}`}>All {lang.label} cities</Link><Link href="/regional">All regional Panchang</Link></div>
     <TopicalGraph title={`Explore ${city.name} across Panchvani`} groups={graph}/>
