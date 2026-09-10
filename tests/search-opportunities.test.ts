@@ -50,6 +50,20 @@ describe("Search Demand Expansion Engine",()=>{
     expect(result[0].recommendedPath).toBe("/vrat/purnima/2026/mumbai");
   });
 
+  it("keeps future festival demand as a gated dataset expansion when the year is absent",()=>{
+    const q="diwali 2028 delhi";
+    const result=buildSearchOpportunities(snapshot(
+      [row(q,920,14,15.2)],
+      [queryPage(q,"https://panchvani.com/festivals/diwali/2027/delhi",920,14,15.2)]
+    ));
+    const opportunity=result[0];
+    expect(opportunity.intent).toBe("festival:diwali");
+    expect(opportunity.status).toBe("NEW_CLUSTER");
+    expect(opportunity.action).toBe("BUILD");
+    expect(opportunity.recommendedPath).toBe("/festivals/diwali/2028/delhi");
+    expect(opportunity.template).toBe("Extend festival year dataset");
+  });
+
   it("detects when Google ranks the wrong page for an existing Choghadiya intent",()=>{
     const q="choghadiya today mumbai";
     const result=buildSearchOpportunities(snapshot(
