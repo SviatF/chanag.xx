@@ -12,6 +12,7 @@ import {getDailyGuidance} from "@/lib/day-guidance";
 import {nextFestival} from "@/lib/festivals";
 import {resolveDailyRouteDate} from "@/lib/route-validation";
 import {buildDailyTopicalGraph} from "@/lib/topical-links";
+import {vratLinkForTithi} from "@/lib/vrat-topical-links";
 
 export const revalidate=3600;
 
@@ -32,6 +33,9 @@ export default async function PanchangPage({params}:{params:Promise<{city:string
   const data=await getPanchang(date,city);
   const guidance=getDailyGuidance(data,city);
   const festival=nextFestival(date);
+  const topicalGroups=buildDailyTopicalGraph(city,date,festival);
+  const vratLink=vratLinkForTithi(city,date,data.tithi);
+  if(vratLink)topicalGroups.splice(1,0,{title:"Lunar observance",description:"This Tithi is part of a yearly sunrise-based lunar reference cluster.",links:[vratLink]});
   const faq=[
     {q:`What is Rahu Kalam today in ${city.name}?`,a:`Rahu Kalam in ${city.name} is ${formatWindow(data.rahu)} for ${data.date}.`},
     {q:`What is today's Tithi in ${city.name}?`,a:`Today's Tithi is ${data.tithi}, during ${data.paksha} Paksha.`},
@@ -79,7 +83,7 @@ export default async function PanchangPage({params}:{params:Promise<{city:string
       </div>
     </div>
     <div className="wide-panel"><h2 className="page-title" style={{fontSize:32}}>Choghadiya</h2><p className="page-subtitle">Eight daytime and eight nighttime periods calculated from local sunrise, sunset and the next sunrise.</p><ChoghadiyaTable day={data.dayChoghadiya} night={data.nightChoghadiya}/></div>
-    <TopicalGraph title={`Explore ${city.name} Panchang`} groups={buildDailyTopicalGraph(city,date,festival)}/>
+    <TopicalGraph title={`Explore ${city.name} Panchang`} groups={topicalGroups}/>
     <div className="seo-copy"><h2>How to use today’s Panchang</h2><p>The daily Panchang combines lunar factors such as Tithi and Nakshatra with location-sensitive solar timings. Rahu Kalam, Yamaganda and Gulika change with local sunrise and sunset, which is why the selected city matters. Use the timing bands above as a practical daily reference, and consult a qualified practitioner for personal rites that depend on an individual birth chart.</p></div>
     <div className="wide-panel"><h2>Frequently asked questions</h2>{faq.map(x=><div key={x.q} className="seo-copy"><strong>{x.q}</strong><p>{x.a}</p></div>)}</div>
     <script type="application/ld+json" dangerouslySetInnerHTML={{__html:JSON.stringify(ld)}}/>
