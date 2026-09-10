@@ -1,7 +1,5 @@
 import Link from "next/link";
-
-export type TopicalGraphLink={href:string;label:string;note?:string};
-export type TopicalGraphGroup={title:string;description?:string;links:TopicalGraphLink[]};
+import type {TopicalGraphGroup} from "@/lib/topical-types";
 
 export default function TopicalGraph({title="Explore related Panchvani",groups}:{title?:string;groups:TopicalGraphGroup[]}){
   const visible=groups.filter(group=>group.links.length);
