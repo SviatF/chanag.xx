@@ -2,6 +2,7 @@ import type {City} from "./cities";
 import {supportedCities} from "./cities";
 import type {Festival} from "./festivals";
 import {festivalsForYear} from "./festivals";
+import {knowledgeGraphLinks} from "./panchang-knowledge";
 import {activeIndexCitySlugs,isMuhuratIndexable,isRegionalIndexable,primaryMuhuratEvents} from "./seo-policy";
 import type {TopicalGraphGroup,TopicalGraphLink} from "./topical-types";
 
@@ -64,6 +65,7 @@ export function buildDailyTopicalGraph(city:City,date:Date,festival:Festival|nul
       {href:`/tools/choghadiya/${city.slug}`,label:`Today's Choghadiya in ${city.name}`},
       ...regional
     ]},
+    {title:"Understand today's values",description:"Evergreen calculation guides for the Panchang factors shown above.",links:knowledgeGraphLinks()},
     {title:"Plan important moments",description:"Event pages use the same city-local Panchang engine.",links:primaryMuhuratLinks(city,year,month)},
     {title:"Next festival",description:"Continue from the daily Panchang into the upcoming validated festival context.",links:festival?[{href:`/festivals/${festival.slug}/${festival.year}/${city.slug}`,label:`${festival.name} ${festival.year} in ${city.name}`}]:[]},
     {title:`More ${city.state} and priority cities`,description:"Comparable local Panchang pages on the same date.",links:peers.map(peer=>({href:`/panchang/${peer.slug}/${iso(date)}`,label:peer.name,note:`${iso(date)} Panchang in ${peer.name}`}))}
@@ -77,6 +79,7 @@ export function buildCalendarTopicalGraph(city:City,year:number,month:number,key
   const regional=regionalLinksForCity(city);
   return [
     {title:"Key lunar dates",description:"Jump from the monthly view into high-intent daily Panchang pages.",links:keyDates.slice(0,4).map(item=>({href:`/panchang/${city.slug}/${item.date}`,label:`${item.tithi} · ${item.date}`}))},
+    {title:"Calendar concepts",description:"Understand the lunar-day, fortnight and month layers behind this calendar.",links:knowledgeGraphLinks(["panchang","tithi","paksha","hindu-months"])},
     {title:"Muhurat this month",description:"Ranked city-specific planning dates for primary events.",links:primaryMuhuratLinks(city,year,monthSlug)},
     {title:"Festivals this month",description:"Open local festival Panchang and Puja timing pages.",links:festivals.map(f=>({href:`/festivals/${f.slug}/${year}/${city.slug}`,label:f.name}))},
     {title:"Local timing & regional",description:"Keep the same city context across utility and regional pages.",links:[{href:`/tools/choghadiya/${city.slug}`,label:`Choghadiya in ${city.name}`},...regional]},
