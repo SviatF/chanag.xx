@@ -204,21 +204,43 @@
     flex:0 0 auto;
   }
 
+  /* Mobile city selector is a readable text control, not an icon-only dot. */
   .location-pill{
-    width:38px;
+    width:auto !important;
     height:38px;
-    max-width:38px;
-    padding:0 !important;
-    display:grid !important;
-    place-items:center;
-    flex:0 0 38px;
+    max-width:min(165px,48vw) !important;
+    padding:0 11px !important;
+    display:flex !important;
+    align-items:center;
+    justify-content:center;
+    gap:6px;
+    flex:0 1 auto;
   }
 
-  .location-pill span{
+  .location-pill .location-pin{
     display:none !important;
   }
 
-  .location-pill svg{
+  .location-pill .location-label{
+    display:block !important;
+    min-width:0;
+    max-width:100%;
+    overflow:hidden;
+    white-space:nowrap;
+    text-overflow:ellipsis;
+  }
+
+  .location-pill .location-city{
+    display:inline !important;
+  }
+
+  .location-pill .location-state{
+    display:none !important;
+  }
+
+  .location-pill .location-select-chevron{
+    display:block !important;
+    flex:0 0 auto;
     margin:0 !important;
   }
 
@@ -252,6 +274,28 @@
   .language-grid{
     width:100% !important;
   }
+
+  /* Data tables keep dates and timing windows intact on narrow screens. */
+  .page-shell .wide-panel:has(> .table){
+    overflow-x:auto !important;
+    overflow-y:hidden !important;
+    -webkit-overflow-scrolling:touch;
+    overscroll-behavior-inline:contain;
+    scrollbar-width:thin;
+  }
+
+  .page-shell .wide-panel:has(> .table) > .table{
+    width:100%;
+    min-width:720px;
+    table-layout:auto;
+  }
+
+  .page-shell .table th,
+  .page-shell .table td{
+    white-space:nowrap !important;
+    word-break:normal !important;
+    overflow-wrap:normal !important;
+  }
 }
 
 @media(max-width:420px){
@@ -262,6 +306,10 @@
 
   .header-search{
     display:none !important;
+  }
+
+  .location-pill{
+    max-width:min(150px,48vw) !important;
   }
 
   .concept-hero-wheel{
