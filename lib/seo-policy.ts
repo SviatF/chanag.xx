@@ -1,4 +1,4 @@
-import type { City } from "./cities";
+import {supportedCities,type City} from "./cities";
 import {todayInIndia} from "./dates";
 
 export const phase1PriorityCities = [
@@ -14,8 +14,9 @@ export const primaryMuhuratEvents = [
   "vehicle-purchase"
 ] as const;
 
-const priorityCitySet = new Set<string>(phase1PriorityCities);
-const primaryMuhuratSet = new Set<string>(primaryMuhuratEvents);
+const baselinePriorityCitySet=new Set<string>(phase1PriorityCities);
+const supportedCitySlugSet=new Set(supportedCities.map(city=>city.slug));
+const primaryMuhuratSet=new Set<string>(primaryMuhuratEvents);
 
 const regionalLanguageCode:Record<string,string>={
   bengali:"bn",
@@ -25,6 +26,20 @@ const regionalLanguageCode:Record<string,string>={
   marathi:"mr",
 };
 
+function configuredExtraIndexCities(){
+  const raw=process.env.SEO_EXTRA_INDEX_CITIES??"";
+  return [...new Set(raw.split(",").map(slug=>slug.trim().toLowerCase()).filter(slug=>slug&&supportedCitySlugSet.has(slug)&&!baselinePriorityCitySet.has(slug)))];
+}
+
+export function activeIndexCitySlugs(){
+  return [...phase1PriorityCities,...configuredExtraIndexCities()];
+}
+
+export function getIndexActivationSnapshot(){
+  const extra=configuredExtraIndexCities();
+  return {baseline:[...phase1PriorityCities],extra,active:[...phase1PriorityCities,...extra]};
+}
+
 function monthDistance(year:number,month:number){
   const now=todayInIndia();
   const current=now.getUTCFullYear()*12+now.getUTCMonth();
@@ -33,7 +48,7 @@ function monthDistance(year:number,month:number){
 }
 
 export function isPriorityCity(citySlug:string){
-  return priorityCitySet.has(citySlug);
+  return baselinePriorityCitySet.has(citySlug)||configuredExtraIndexCities().includes(citySlug);
 }
 
 export function isDailyIndexable(citySlug:string,dateIso:string){
