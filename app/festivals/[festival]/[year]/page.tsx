@@ -4,14 +4,15 @@ import {notFound} from "next/navigation";
 import Header from "@/components/Header";
 import {cities} from "@/lib/cities";
 import {festivalBySlugYear} from "@/lib/festivals";
+import {parseRouteYear} from "@/lib/route-validation";
 
 export const revalidate=86400;
 
 export async function generateMetadata({params}:{params:Promise<{festival:string;year:string}>}):Promise<Metadata>{
   const p=await params;
-  const year=Number(p.year);
-  const f=festivalBySlugYear(p.festival,year);
-  if(!f)return {title:"Festival not found",robots:{index:false,follow:true}};
+  const year=parseRouteYear(p.year);
+  const f=year?festivalBySlugYear(p.festival,year):undefined;
+  if(!year||!f)notFound();
   return {
     title:`${f.name} ${year} — Date, Meaning & Panchang`,
     description:`${f.name} ${year}: ${f.date}. ${f.short} Open a city page for local Panchang and Puja timing reference.`,
@@ -21,9 +22,9 @@ export async function generateMetadata({params}:{params:Promise<{festival:string
 
 export default async function FestivalPage({params}:{params:Promise<{festival:string;year:string}>}){
   const p=await params;
-  const year=Number(p.year);
-  const f=festivalBySlugYear(p.festival,year);
-  if(!f)notFound();
+  const year=parseRouteYear(p.year);
+  const f=year?festivalBySlugYear(p.festival,year):undefined;
+  if(!year||!f)notFound();
 
   const month=String(Number(f.date.slice(5,7))).padStart(2,"0");
   const ld={"@context":"https://schema.org","@graph":[
