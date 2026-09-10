@@ -1,10 +1,9 @@
-import { cityCandidates } from "@/lib/city-candidates";
-import { coreCities, supportedCities } from "@/lib/cities";
-import { phase1PriorityCities } from "@/lib/seo-policy";
+import {cityCandidates} from "@/lib/city-candidates";
+import {coreCities,supportedCities} from "@/lib/cities";
+import {getIndexActivationSnapshot,isPriorityCity} from "@/lib/seo-policy";
 
 export const dynamic="force-dynamic";
 
-const prioritySet=new Set<string>(phase1PriorityCities);
 const coreSet=new Set(coreCities.map(city=>city.slug));
 const populationMap=new Map(cityCandidates.map(city=>[city.slug,city.population]));
 
@@ -12,19 +11,20 @@ export default async function CitiesManager({searchParams}:{searchParams:Promise
   const query=await searchParams;
   const q=(query.q??"").trim().toLowerCase();
   const status=query.status??"all";
+  const activation=getIndexActivationSnapshot();
 
   const rows=supportedCities
     .map(city=>({
       ...city,
       population:populationMap.get(city.slug)??0,
-      priority:prioritySet.has(city.slug),
+      priority:isPriorityCity(city.slug),
       core:coreSet.has(city.slug),
     }))
     .filter(row=>!q||(row.name+" "+row.state+" "+row.slug).toLowerCase().includes(q))
     .filter(row=>status==="all"||(status==="priority"&&row.priority)||(status==="core"&&row.core&&!row.priority)||(status==="candidate"&&!row.core));
 
   return <div className="admin-page">
-    <header className="admin-page-head"><div><p className="admin-eyebrow">CITIES MANAGER</p><h1>Coverage & indexability</h1><p>{supportedCities.length} supported runtime cities · {phase1PriorityCities.length} currently priority-indexed.</p></div></header>
+    <header className="admin-page-head"><div><p className="admin-eyebrow">CITIES MANAGER</p><h1>Coverage & indexability</h1><p>{supportedCities.length} supported runtime cities · {activation.active.length} currently indexable ({activation.baseline.length} baseline + {activation.extra.length} activated).</p></div></header>
 
     <form className="admin-filters" method="get">
       <input name="q" defaultValue={query.q??""} placeholder="Search city, state or slug…"/>
