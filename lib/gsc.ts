@@ -50,6 +50,22 @@ export type GscOutcomeRequest={
   days:14|28|56;
 };
 
+export type GscIndexInspection={
+  inspectedUrl:string;
+  verdict:string;
+  coverageState:string;
+  robotsTxtState:string;
+  indexingState:string;
+  lastCrawlTime:string|null;
+  pageFetchState:string;
+  googleCanonical:string|null;
+  userCanonical:string|null;
+  crawledAs:string|null;
+  sitemaps:string[];
+  referringUrls:string[];
+  inspectedAt:string;
+};
+
 const GOOGLE_TOKEN_URL="https://oauth2.googleapis.com/token";
 const GSC_SCOPE="https://www.googleapis.com/auth/webmasters.readonly";
 
@@ -302,4 +318,70 @@ export async function getGscTrafficSnapshot():Promise<GscTrafficSnapshot>{
     queryPages:queryPagesRaw.rows??[],
     daily:(dailyRaw.rows??[]).sort((a,b)=>(a.keys?.[0]??"").localeCompare(b.keys?.[0]??"")),
   };
+}
+
+type RawIndexStatus={
+  verdict?:string;
+  coverageState?:string;
+  robotsTxtState?:string;
+  indexingState?:string;
+  lastCrawlTime?:string;
+  pageFetchState?:string;
+  googleCanonical?:string;
+  userCanonical?:string;
+  crawledAs?:string;
+  sitemap?:string[];
+  referringUrls?:string[];
+};
+
+type RawInspectionResponse={inspectionResult?:{indexStatusResult?:RawIndexStatus}};
+
+async function inspectIndexUrl(token:string,siteUrl:string,inspectionUrl:string):Promise<GscIndexInspection>{
+  const response=await fetch("https://searchconsole.googleapis.com/v1/urlInspection/index:inspect",{
+    method:"POST",
+    headers:{authorization:`Bearer ${token}`,"content-type":"application/json"},
+    body:JSON.stringify({inspectionUrl,siteUrl,languageCode:"en-US"}),
+    cache:"no-store"
+  });
+  if(!response.ok){
+    const text=await response.text();
+    throw new Error(`Search Console URL Inspection failed for ${inspectionUrl} (${response.status}): ${text.slice(0,220)}`);
+  }
+  const json=await response.json() as RawInspectionResponse;
+  const row=json.inspectionResult?.indexStatusResult??{};
+  return {
+    inspectedUrl,
+    verdict:row.verdict??"VERDICT_UNSPECIFIED",
+    coverageState:row.coverageState??"Unknown",
+    robotsTxtState:row.robotsTxtState??"ROBOTS_TXT_STATE_UNSPECIFIED",
+    indexingState:row.indexingState??"INDEXING_STATE_UNSPECIFIED",
+    lastCrawlTime:row.lastCrawlTime??null,
+    pageFetchState:row.pageFetchState??"PAGE_FETCH_STATE_UNSPECIFIED",
+    googleCanonical:row.googleCanonical??null,
+    userCanonical:row.userCanonical??null,
+    crawledAs:row.crawledAs??null,
+    sitemaps:row.sitemap??[],
+    referringUrls:row.referringUrls??[],
+    inspectedAt:new Date().toISOString()
+  };
+}
+
+export async function getGscUrlInspections(urls:string[],concurrency=4):Promise<{rows:GscIndexInspection[];errors:string[]}>{
+  const unique=[...new Set(urls.map(url=>url.trim()).filter(Boolean))];
+  if(!unique.length)return {rows:[],errors:[]};
+  const status=getGscConnectionStatus();
+  if(!status.configured)throw new Error("Google Search Console service account is not configured.");
+  const token=await accessToken();
+  const rows:GscIndexInspection[]=[];
+  const errors:string[]=[];
+  const width=Math.max(1,Math.min(8,Math.floor(concurrency)));
+  for(let index=0;index<unique.length;index+=width){
+    const chunk=unique.slice(index,index+width);
+    const results=await Promise.allSettled(chunk.map(url=>inspectIndexUrl(token,status.siteUrl,url)));
+    results.forEach((result,offset)=>{
+      if(result.status==="fulfilled")rows.push(result.value);
+      else errors.push(result.reason instanceof Error?result.reason.message:`URL Inspection failed for ${chunk[offset]}`);
+    });
+  }
+  return {rows,errors};
 }
