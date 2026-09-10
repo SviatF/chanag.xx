@@ -1,4 +1,5 @@
 import OpportunityQueue from "@/components/OpportunityQueue";
+import SeoLearningPanel from "@/components/SeoLearningPanel";
 import {getGscConnectionStatus,getGscTrafficSnapshot} from "@/lib/gsc";
 import {buildSearchOpportunities} from "@/lib/search-opportunities";
 import {getOpportunityStoreStatus,readOpportunityLifecycleMap} from "@/lib/opportunity-store";
@@ -83,6 +84,7 @@ export default async function OpportunityExecutionPage(){
       </>:<p className="admin-muted">No background run state is stored yet. After the next deployed Cron invocation, this panel will show detection, checkpoint and outcome statistics.</p>}
     </section>
 
+    <SeoLearningPanel records={records}/>
     <OpportunityQueue opportunities={opportunities} records={records} storageConfigured={storage.configured} storageError={storageError}/>
   </div>;
 }
