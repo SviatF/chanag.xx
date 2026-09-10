@@ -89,28 +89,54 @@ body{margin:0}
 .admin-nav a.active svg{color:var(--admin-gold2)}
 .admin-sidebar-art{
   margin-top:auto;
-  min-height:150px;
+  min-height:190px;
   border-bottom:1px solid #1e231e;
   display:grid;
   align-items:end;
   justify-items:center;
   position:relative;
   overflow:hidden;
+  isolation:isolate;
+}
+.admin-sidebar-art img{
+  position:absolute;
+  inset:0;
+  width:100%;
+  height:100%;
+  object-fit:cover;
+  object-position:center;
+  opacity:.44;
+  filter:saturate(.58) sepia(.28) brightness(.48) contrast(1.14);
+  transform:scale(1.03);
+  z-index:0;
 }
 .admin-sidebar-art:before{
   content:"";
-  width:140px;height:110px;
-  position:absolute;bottom:-24px;
+  position:absolute;
+  inset:0;
+  z-index:1;
   background:
-    radial-gradient(ellipse at center bottom,rgba(206,157,69,.22),transparent 55%),
-    linear-gradient(155deg,transparent 42%,rgba(205,157,70,.10) 43%,transparent 45%),
-    linear-gradient(205deg,transparent 42%,rgba(205,157,70,.10) 43%,transparent 45%);
+    linear-gradient(180deg,#060806 0%,rgba(6,8,6,.28) 34%,rgba(6,8,6,.44) 68%,#060806 100%),
+    radial-gradient(circle at 50% 74%,rgba(218,166,72,.24),transparent 40%);
+}
+.admin-sidebar-art:after{
+  content:"";
+  position:absolute;
+  left:10%;
+  right:10%;
+  bottom:18px;
+  height:1px;
+  background:linear-gradient(90deg,transparent,#765b2c,transparent);
+  z-index:2;
 }
 .admin-temple-mark{
-  font:40px "Instrument Serif",serif;
-  color:#765b27;
-  opacity:.55;
-  margin-bottom:36px;
+  position:relative;
+  z-index:3;
+  font:36px "Instrument Serif",serif;
+  color:#cf9f4c;
+  text-shadow:0 0 24px rgba(218,168,75,.35);
+  opacity:.78;
+  margin-bottom:32px;
 }
 .admin-sidebar-foot{display:grid;gap:7px;padding-top:13px}
 .admin-network-card{
@@ -364,4 +390,56 @@ body{margin:0}
   .admin-filters{grid-template-columns:1fr}
   .admin-head-meta{display:none}
   .admin-page-head h1{font-size:38px}
+}
+
+
+/* Panchvani cinematic admin imagery */
+.admin-overview{
+  position:relative;
+  isolation:isolate;
+}
+.admin-overview:before{
+  content:"";
+  position:absolute;
+  z-index:0;
+  top:-26px;
+  right:-19px;
+  width:min(760px,58%);
+  height:210px;
+  pointer-events:none;
+  background:
+    linear-gradient(90deg,#050706 0%,rgba(5,7,6,.66) 30%,rgba(5,7,6,.12) 72%,#050706 100%),
+    linear-gradient(180deg,rgba(5,7,6,.12),#050706 96%),
+    url("/admin/overview-ambient.webp") center 44% / cover no-repeat;
+  opacity:.32;
+  filter:saturate(.62) sepia(.18) contrast(1.08);
+  -webkit-mask-image:linear-gradient(to bottom,black 0%,black 68%,transparent 100%);
+  mask-image:linear-gradient(to bottom,black 0%,black 68%,transparent 100%);
+}
+.admin-overview>*{
+  position:relative;
+  z-index:1;
+}
+.admin-india-map:before{
+  content:"";
+  position:absolute;
+  inset:0;
+  z-index:0;
+  pointer-events:none;
+  background:
+    linear-gradient(180deg,rgba(7,10,8,.72),rgba(7,10,8,.88)),
+    url("/admin/map-ambient.webp") center / cover no-repeat;
+  opacity:.34;
+  filter:saturate(.42) sepia(.22) brightness(.62);
+}
+.admin-india-map svg,
+.admin-india-map .admin-map-dot,
+.admin-india-map .admin-map-empty{
+  z-index:1;
+}
+.admin-india-map svg{
+  position:relative;
+}
+@media(max-width:760px){
+  .admin-overview:before{width:100%;right:0;opacity:.18}
 }

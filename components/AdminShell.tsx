@@ -25,6 +25,7 @@ export default function AdminShell({children}:{children:ReactNode}){
       <AdminNav/>
 
       <div className="admin-sidebar-art" aria-hidden="true">
+        <img src="/admin/heritage.webp" alt="" />
         <div className="admin-temple-mark">ॐ</div>
       </div>
 
