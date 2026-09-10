@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import "./admin.css";
+import "./admin-neon.css";
 
 export const metadata:Metadata={
   title:{default:"Panchvani Control Plane",template:"%s · Panchvani Admin"},
