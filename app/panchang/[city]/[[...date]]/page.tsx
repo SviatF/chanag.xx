@@ -9,7 +9,7 @@ import {findCityBySlug} from "@/lib/cities";
 import {formatWindow,getPanchang} from "@/lib/panchang";
 import {isDailyIndexable,robotsFor} from "@/lib/seo-policy";
 import {getDailyGuidance} from "@/lib/day-guidance";
-import {nextFestival} from "@/lib/festivals";
+import {nextValidatedFestival} from "@/lib/festival-expansion";
 import {resolveDailyRouteDate} from "@/lib/route-validation";
 import {buildDailyTopicalGraph} from "@/lib/topical-links";
 import {vratLinkForTithi} from "@/lib/vrat-topical-links";
@@ -32,7 +32,7 @@ export default async function PanchangPage({params}:{params:Promise<{city:string
   if(!city||!date)notFound();
   const data=await getPanchang(date,city);
   const guidance=getDailyGuidance(data,city);
-  const festival=nextFestival(date);
+  const festival=nextValidatedFestival(date);
   const topicalGroups=buildDailyTopicalGraph(city,date,festival);
   const vratLink=vratLinkForTithi(city,date,data.tithi);
   if(vratLink)topicalGroups.splice(1,0,{title:"Lunar observance",description:"This Tithi is part of a yearly sunrise-based lunar reference cluster.",links:[vratLink]});
