@@ -36,6 +36,7 @@ export default async function VratCityPage({params}:{params:Promise<{vrat:string
 
   const rows=calculateVratCalendar(vrat.slug,year,city);
   const summary=vratCalendarSummary(rows);
+  const firstMonth=rows[0]?.date.slice(5,7)??"01";
   const ld={"@context":"https://schema.org","@graph":[
     {"@type":"WebPage","name":`${vrat.name} ${year} in ${city.name}`,"description":vrat.short,"url":`https://panchvani.com/vrat/${vrat.slug}/${year}/${city.slug}`},
     {"@type":"BreadcrumbList","itemListElement":[
@@ -43,7 +44,7 @@ export default async function VratCityPage({params}:{params:Promise<{vrat:string
       {"@type":"ListItem","position":2,"name":`${vrat.name} ${year}`,"item":`https://panchvani.com/vrat/${vrat.slug}/${year}`},
       {"@type":"ListItem","position":3,"name":city.name}
     ]},
-    {"@type":"ItemList","name":`${vrat.name} ${year} in ${city.name}","numberOfItems":rows.length,"itemListElement":rows.map((row,index)=>({"@type":"ListItem","position":index+1,"name":`${row.paksha} ${row.tithi} — ${row.date}`,"url":`https://panchvani.com/panchang/${city.slug}/${row.date}`}))}
+    {"@type":"ItemList","name":`${vrat.name} ${year} in ${city.name}`,"numberOfItems":rows.length,"itemListElement":rows.map((row,index)=>({"@type":"ListItem","position":index+1,"name":`${row.paksha} ${row.tithi} — ${row.date}`,"url":`https://panchvani.com/panchang/${city.slug}/${row.date}`}))}
   ]};
 
   return <main><Header city={city}/><div className="page-shell internal-visual internal-calendar">
@@ -72,7 +73,7 @@ export default async function VratCityPage({params}:{params:Promise<{vrat:string
 
     <div className="seo-copy"><h2>Why {city.name} can differ from another city</h2><p>{vrat.methodology}</p><p>A Tithi is an angular relationship between the Moon and Sun, while this list assigns it to a civil date using local sunrise. If the Tithi changes between the sunrise times of two cities, their yearly lists can differ by a day.</p><p>{vrat.ritualCaution}</p></div>
 
-    <div className="pill-links"><Link href={`/vrat/${vrat.slug}/${year}`}>India reference</Link><Link href={`/calendar/${city.slug}/${year}/${String(new Date().getUTCMonth()+1).padStart(2,"0")}`}>{city.name} monthly calendar</Link></div>
+    <div className="pill-links"><Link href={`/vrat/${vrat.slug}/${year}`}>India reference</Link><Link href={`/calendar/${city.slug}/${year}/${firstMonth}`}>{city.name} monthly calendar</Link></div>
     <TopicalGraph title={`Explore ${vrat.name} in ${city.name}`} groups={buildVratTopicalGraph(city,vrat.slug,year,rows,"city")}/>
     <script type="application/ld+json" dangerouslySetInnerHTML={{__html:JSON.stringify(ld)}}/>
   </div></main>;
