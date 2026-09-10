@@ -2,19 +2,20 @@ import type {Metadata} from "next";
 import Link from "next/link";
 import {notFound} from "next/navigation";
 import Header from "@/components/Header";
-import {cityBySlug} from "@/lib/cities";
+import {findCityBySlug} from "@/lib/cities";
 import {festivalBySlugYear,festivalPujaReference} from "@/lib/festivals";
 import {getPanchang,formatWindow} from "@/lib/panchang";
 import {isPriorityCity,robotsFor} from "@/lib/seo-policy";
+import {parseRouteYear} from "@/lib/route-validation";
 
 export const revalidate=86400;
 
 export async function generateMetadata({params}:{params:Promise<{festival:string;year:string;city:string}>}):Promise<Metadata>{
   const p=await params;
-  const city=cityBySlug(p.city);
-  const year=Number(p.year);
-  const f=festivalBySlugYear(p.festival,year);
-  if(!f)return {title:"Festival not found",robots:{index:false,follow:true}};
+  const city=findCityBySlug(p.city);
+  const year=parseRouteYear(p.year);
+  const f=year?festivalBySlugYear(p.festival,year):undefined;
+  if(!city||!year||!f)notFound();
   return {
     title:`${f.name} ${year} in ${city.name} — Local Panchang Timing`,
     description:`${f.name} ${year} in ${city.name}: local Tithi, sunrise, sunset, Rahu Kalam and Puja timing reference.`,
@@ -25,10 +26,10 @@ export async function generateMetadata({params}:{params:Promise<{festival:string
 
 export default async function Page({params}:{params:Promise<{festival:string;year:string;city:string}>}){
   const p=await params;
-  const city=cityBySlug(p.city);
-  const year=Number(p.year);
-  const f=festivalBySlugYear(p.festival,year);
-  if(!f)notFound();
+  const city=findCityBySlug(p.city);
+  const year=parseRouteYear(p.year);
+  const f=year?festivalBySlugYear(p.festival,year):undefined;
+  if(!city||!year||!f)notFound();
 
   const data=await getPanchang(new Date(f.date+"T06:00:00Z"),city);
   const puja=festivalPujaReference(data,f);
