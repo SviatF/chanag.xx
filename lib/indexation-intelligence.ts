@@ -2,7 +2,7 @@ import type {GscIndexInspection,GscTrafficSnapshot} from "./gsc";
 import type {OpportunityLifecycleRecord} from "./opportunity-lifecycle";
 import type {SearchOpportunity} from "./search-opportunities";
 
-export const INDEXATION_INSPECTION_LIMIT=30;
+export const INDEXATION_INSPECTION_LIMIT=12;
 const SITE_ORIGIN="https://panchvani.com";
 
 export type IndexInspectionSource="SHIPPED"|"OPPORTUNITY"|"TRAFFIC";
