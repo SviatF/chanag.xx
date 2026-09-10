@@ -1,5 +1,6 @@
 import type {Metadata} from "next";
 import Header from "@/components/Header";
+import TopicalGraph from "@/components/TopicalGraph";
 import Link from "next/link";
 import {notFound} from "next/navigation";
 import {findCityBySlug} from "@/lib/cities";
@@ -7,6 +8,7 @@ import {getMonthlyMuhurat,muhuratRules} from "@/lib/muhurat";
 import {buildMuhuratSeoSummary} from "@/lib/muhurat-seo";
 import {isMuhuratIndexable,robotsFor} from "@/lib/seo-policy";
 import {parseRouteMonth,parseRouteYear} from "@/lib/route-validation";
+import {buildMuhuratTopicalGraph} from "@/lib/topical-links";
 
 export const revalidate=86400;
 
@@ -88,7 +90,8 @@ export default async function Page({params}:{params:Promise<{event:string;year:s
       <p>The continuity target is event-specific, so a longer ceremony is not scored like a short purchase activity. The ranking remains a general Panchang planning aid rather than a personalized Kundli prescription.</p>
     </div>
 
-    <div className="pill-links"><Link href={`/panchang/${city.slug}`}>Today's Panchang in {city.name}</Link><Link href={`/calendar/${city.slug}/${year}/${p.month}`}>Monthly calendar</Link><Link href={`/muhurat/${p.event}/${year}/${p.month}`}>India baseline</Link></div>
+    <div className="pill-links"><Link href={`/muhurat/${p.event}/${year}/${p.month}`}>India baseline</Link></div>
+    <TopicalGraph title={`Explore ${rule.title} around ${city.name}`} groups={buildMuhuratTopicalGraph(city,p.event,year,month)}/>
     <script type="application/ld+json" dangerouslySetInnerHTML={{__html:JSON.stringify(ld)}}/>
   </div></main>;
 }
