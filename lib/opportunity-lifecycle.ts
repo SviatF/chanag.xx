@@ -1,4 +1,4 @@
-import type {SearchOpportunity} from "./search-opportunities";
+import type {SearchOpportunity,SearchOpportunityAction,SearchOpportunityStatus} from "./search-opportunities";
 
 export const opportunityStages=["DETECTED","REVIEW","APPROVED","BUILD","SHIPPED","MEASURING","WON","REJECTED"] as const;
 export type OpportunityStage=typeof opportunityStages[number];
@@ -21,6 +21,9 @@ export type OpportunityContextSnapshot={
   city:string|null;
   recommendedPath:string;
   template:string;
+  intent?:string;
+  status?:SearchOpportunityStatus;
+  action?:SearchOpportunityAction;
 };
 
 export type OpportunityImplementationEvidence={
@@ -140,7 +143,10 @@ export function opportunityContext(opportunity:SearchOpportunity):OpportunityCon
     topQuery:opportunity.topQuery,
     city:opportunity.city,
     recommendedPath:opportunity.recommendedPath,
-    template:opportunity.template
+    template:opportunity.template,
+    intent:opportunity.intent,
+    status:opportunity.status,
+    action:opportunity.action
   };
 }
 
