@@ -18,6 +18,8 @@ export type ReferenceFixture = {
     yamaganda: [string, string];
     gulika: [string, string];
     abhijit: [string, string] | null;
+    moonrise?: string;
+    moonriseDate?: string;
   };
 };
 
@@ -86,6 +88,30 @@ export const referenceFixtures: ReferenceFixture[] = [
       yamaganda: ["07:41", "09:13"],
       gulika: ["10:45", "12:17"],
       abhijit: null,
+    },
+  },
+  {
+    city: "guwahati",
+    date: "2026-09-09",
+    source: "https://www.drikpanchang.com/muhurat/choghadiya.html?geoname-id=1271476",
+    expected: {
+      sunrise: "05:06",
+      sunset: "17:34",
+      tithi: "Trayodashi",
+      tithiEnd: "12:30",
+      nakshatra: "Ashlesha",
+      nakshatraEnd: "15:14",
+      yoga: "Shiva",
+      karana: "Vanija",
+      hinduMonth: "Shravana",
+      vikramSamvat: 2083,
+      shakaSamvat: 1948,
+      rahu: ["11:20", "12:54"],
+      yamaganda: ["06:40", "08:13"],
+      gulika: ["09:47", "11:20"],
+      abhijit: null,
+      moonrise: "04:05",
+      moonriseDate: "2026-09-10",
     },
   },
 ];
