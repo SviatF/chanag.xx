@@ -7,13 +7,18 @@ import {
   type OpportunityMetricSnapshot,
   type OpportunityStage
 } from "@/lib/opportunity-lifecycle";
+import type {SearchOpportunityAction,SearchOpportunityStatus} from "@/lib/search-opportunities";
 import {getOpportunityStoreStatus,readOpportunityLifecycleMap,writeOpportunityLifecycleMap} from "@/lib/opportunity-store";
 
 export const dynamic="force-dynamic";
 
+const opportunityStatuses=["NEW_CLUSTER","WRONG_LANDING","STRIKING_DISTANCE","LOW_CTR","NO_CLEAR_LANDING","COVERED"] as const satisfies readonly SearchOpportunityStatus[];
+const opportunityActions=["BUILD","ALIGN","STRENGTHEN","IMPROVE_SNIPPET","REVIEW","MONITOR"] as const satisfies readonly SearchOpportunityAction[];
+
 function unauthorized(){return NextResponse.json({error:"Unauthorized"},{status:401});}
 function isStage(value:unknown):value is OpportunityStage{return typeof value==="string"&&opportunityStages.includes(value as OpportunityStage);}
 function cleanText(value:unknown,max:number){return typeof value==="string"?value.trim().slice(0,max):undefined;}
+function oneOf<T extends string>(value:unknown,allowed:readonly T[]){return typeof value==="string"&&allowed.includes(value as T)?value as T:undefined;}
 
 function metrics(value:unknown):OpportunityMetricSnapshot|undefined{
   if(!value||typeof value!=="object")return undefined;
@@ -35,7 +40,13 @@ function context(value:unknown):OpportunityContextSnapshot|undefined{
   const raw=value as Record<string,unknown>;
   const label=cleanText(raw.label,160),topQuery=cleanText(raw.topQuery,300),recommendedPath=cleanText(raw.recommendedPath,500),template=cleanText(raw.template,200);
   if(!label||!topQuery||!recommendedPath||!template)return undefined;
-  return {label,topQuery,recommendedPath,template,city:cleanText(raw.city,160)??null};
+  return {
+    label,topQuery,recommendedPath,template,
+    city:cleanText(raw.city,160)??null,
+    intent:cleanText(raw.intent,200),
+    status:oneOf(raw.status,opportunityStatuses),
+    action:oneOf(raw.action,opportunityActions)
+  };
 }
 
 export async function GET(){
