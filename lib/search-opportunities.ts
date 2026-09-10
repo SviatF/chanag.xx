@@ -1,6 +1,18 @@
 import {supportedCities,type City} from "./cities";
 import {allFestivals,festivalBySlugYear} from "./festivals";
 import type {GscRow,GscTrafficSnapshot} from "./gsc";
+import {
+  detectRegionalSearchQuery,
+  isRegionalIntentIndexable,
+  regionalCityHubPath,
+  regionalIntentPath,
+  regionalIntentSeo,
+  regionalLanguageHubPath,
+  regionalLanguageSeo,
+  type RegionalIntentSlug,
+  type RegionalLanguageSlug,
+  type RegionalSearchIntent,
+} from "./regional-seo";
 
 export type SearchOpportunityStatus="NEW_CLUSTER"|"WRONG_LANDING"|"STRIKING_DISTANCE"|"LOW_CTR"|"NO_CLEAR_LANDING"|"COVERED";
 export type SearchOpportunityAction="BUILD"|"ALIGN"|"STRENGTHEN"|"IMPROVE_SNIPPET"|"REVIEW"|"MONITOR";
@@ -30,6 +42,8 @@ type IntentResult={
   label:string;
   event?:"wedding"|"griha-pravesh"|"vehicle-purchase";
   festivalSlug?:string;
+  regionalLanguage?:RegionalLanguageSlug;
+  regionalIntent?:RegionalSearchIntent;
   template:string;
 };
 
@@ -47,6 +61,8 @@ type Target={
   path:string;
   template:string;
   exists:boolean;
+  activationOnly?:boolean;
+  activationKey?:string;
   matches:(path:string)=>boolean;
 };
 
@@ -91,6 +107,20 @@ function classifyIntent(ctx:QueryContext):IntentResult|null{
   const festival=festivalMatchers.find(item=>q.includes(item.needle));
   if(festival)return {id:`festival:${festival.slug}`,label:"Festival",festivalSlug:festival.slug,template:"Festival overview / local festival page"};
 
+  const regionalQuery=detectRegionalSearchQuery(ctx.raw);
+  if(regionalQuery){
+    const language=regionalQuery.language;
+    const intent=regionalQuery.intent;
+    const intentLabel=intent==="panchang"?regionalLanguageSeo[language].label:regionalIntentSeo[intent].label;
+    return {
+      id:`regional:${language}:${intent}`,
+      label:intent==="panchang"?regionalLanguageSeo[language].label:`${regionalLanguageSeo[language].label} ${intentLabel}`,
+      regionalLanguage:language,
+      regionalIntent:intent,
+      template:intent==="panchang"?"Existing regional city Panchang":"Existing regional intent route · demand-gated index activation"
+    };
+  }
+
   if(/ (ekadashi|एकादशी) /.test(q))return {id:"vrat:ekadashi",label:"Ekadashi",template:"Existing Vrat yearly hub + city pages"};
   if(/ (purnima|पूर्णिमा) /.test(q))return {id:"vrat:purnima",label:"Purnima",template:"Existing Vrat yearly hub + city pages"};
   if(/ (amavasya|अमावस्या) /.test(q))return {id:"vrat:amavasya",label:"Amavasya",template:"Existing Vrat yearly hub + city pages"};
@@ -114,6 +144,29 @@ function targetFor(intent:IntentResult,ctx:QueryContext):Target{
   const city=ctx.city;
   const citySlug=city?.slug;
   const month=ctx.month?String(ctx.month).padStart(2,"0"):null;
+
+  if(intent.regionalLanguage&&intent.regionalIntent){
+    const language=intent.regionalLanguage;
+    const regionalIntent=intent.regionalIntent;
+    if(regionalIntent==="panchang"){
+      const expected=city?regionalCityHubPath(language,city):regionalLanguageHubPath(language);
+      return {path:expected,template:intent.template,exists:true,matches:path=>startsWithPath(path,expected)};
+    }
+    if(!city){
+      const expected=regionalLanguageHubPath(language);
+      return {path:expected,template:"Regional language hub with timing discovery",exists:true,matches:path=>startsWithPath(path,expected)};
+    }
+    const expected=regionalIntentPath(language,city,regionalIntent as RegionalIntentSlug);
+    const indexable=isRegionalIntentIndexable(language,city,regionalIntent);
+    return {
+      path:expected,
+      template:intent.template,
+      exists:true,
+      activationOnly:!indexable,
+      activationKey:`${language}:${city.slug}:${regionalIntent}`,
+      matches:path=>startsWithPath(path,expected)
+    };
+  }
 
   if(intent.id==="daily:panchang"){
     const expected=citySlug?`/panchang/${citySlug}`:"/";
@@ -195,6 +248,7 @@ function ctrBenchmark(position:number){
 }
 
 function classifyStatus(target:Target,currentLanding:string|null,position:number,ctr:number):SearchOpportunityStatus{
+  if(target.activationOnly)return "NEW_CLUSTER";
   if(!target.exists)return "NEW_CLUSTER";
   if(!currentLanding)return "NO_CLEAR_LANDING";
   if(!target.matches(pathOnly(currentLanding)))return "WRONG_LANDING";
@@ -223,6 +277,7 @@ function scoreOpportunity(impressions:number,queryCount:number,position:number,c
 }
 
 function reasonFor(status:SearchOpportunityStatus,target:Target,current:string|null,position:number,ctr:number){
+  if(target.activationOnly)return `The regional intent route already exists but is intentionally noindex until demand review. Approve ${target.activationKey??"this language:city:intent combination"} through SEO_EXTRA_REGIONAL_INTENTS only if GSC evidence justifies activation.`;
   if(status==="NEW_CLUSTER")return `Demand exists for a page family Panchvani does not currently expose. Recommended template: ${target.template}.`;
   if(status==="WRONG_LANDING")return `Google is sending this intent to ${current?pathOnly(current):"another page"} instead of the expected landing page.`;
   if(status==="STRIKING_DISTANCE")return `The correct landing page is ranking around position ${position.toFixed(1)} and is within realistic striking distance of page-one visibility.`;
@@ -293,7 +348,7 @@ export function buildSearchOpportunities(snapshot:GscTrafficSnapshot):SearchOppo
       recommendedPath:item.target.path,
       template:item.target.template,
       status,
-      action:actionFor(status),
+      action:item.target.activationOnly?"REVIEW":actionFor(status),
       score:scoreOpportunity(item.impressions,item.queries.size,position,ctr,status),
       reason:reasonFor(status,item.target,item.topCurrentLanding,position,ctr),
     } satisfies SearchOpportunity;
