@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import GoogleTagManager from "@/components/GoogleTagManager";
 import "./globals.css";
 import "./internal-pages.css";
+import "./public-responsive-fix.css";
 
 const SITE_URL="https://panchvani.com";
 
