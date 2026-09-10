@@ -23,6 +23,7 @@ export type GscTrafficSnapshot={
   previous:GscSummary;
   pages:GscRow[];
   queries:GscRow[];
+  queryPages:GscRow[];
   daily:GscRow[];
 };
 
@@ -114,7 +115,7 @@ async function accessToken(){
 
   const assertion=await createServiceAccountJwt();
   const body=new URLSearchParams({
-    grant_type:"urn:ietf:params:oauth:grant-type:jwt-bearer",
+    grant_type:"urn:ietf:params:oauth2:grant-type:jwt-bearer",
     assertion,
   });
 
@@ -197,11 +198,12 @@ export async function getGscTrafficSnapshot():Promise<GscTrafficSnapshot>{
 
   const token=await accessToken();
 
-  const [currentRaw,previousRaw,pagesRaw,queriesRaw,dailyRaw]=await Promise.all([
+  const [currentRaw,previousRaw,pagesRaw,queriesRaw,queryPagesRaw,dailyRaw]=await Promise.all([
     query(token,status.siteUrl,{startDate,endDate,rowLimit:1}),
     query(token,status.siteUrl,{startDate:previousStartDate,endDate:previousEndDate,rowLimit:1}),
     query(token,status.siteUrl,{startDate,endDate,dimensions:["page"],rowLimit:5000}),
     query(token,status.siteUrl,{startDate,endDate,dimensions:["query"],rowLimit:10000}),
+    query(token,status.siteUrl,{startDate,endDate,dimensions:["query","page"],rowLimit:25000}),
     query(token,status.siteUrl,{startDate,endDate,dimensions:["date"],rowLimit:1000}),
   ]);
 
@@ -212,6 +214,7 @@ export async function getGscTrafficSnapshot():Promise<GscTrafficSnapshot>{
     previous:summary(previousRaw.rows),
     pages:pagesRaw.rows??[],
     queries:queriesRaw.rows??[],
+    queryPages:queryPagesRaw.rows??[],
     daily:(dailyRaw.rows??[]).sort((a,b)=>(a.keys?.[0]??"").localeCompare(b.keys?.[0]??"")),
   };
 }
