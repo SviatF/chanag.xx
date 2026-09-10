@@ -1,8 +1,9 @@
 import type {Metadata} from "next";
 import Link from "next/link";
+import {notFound} from "next/navigation";
 import Header from "@/components/Header";
 import ChoghadiyaTable from "@/components/ChoghadiyaTable";
-import {cityBySlug,cities} from "@/lib/cities";
+import {findCityBySlug,cities} from "@/lib/cities";
 import {getPanchang} from "@/lib/panchang";
 import {todayInIndia} from "@/lib/dates";
 import {isPriorityCity,robotsFor} from "@/lib/seo-policy";
@@ -11,7 +12,8 @@ export const revalidate=3600;
 
 export async function generateMetadata({params}:{params:Promise<{city:string}>}):Promise<Metadata>{
   const p=await params;
-  const city=cityBySlug(p.city);
+  const city=findCityBySlug(p.city);
+  if(!city)notFound();
   return {
     title:`Today's Choghadiya in ${city.name} — Day & Night Timings`,
     description:`Today Choghadiya for ${city.name}: 8 daytime and 8 nighttime periods calculated from local sunrise, sunset and next sunrise.`,
@@ -22,7 +24,8 @@ export async function generateMetadata({params}:{params:Promise<{city:string}>})
 
 export default async function ChoghadiyaCityPage({params}:{params:Promise<{city:string}>}){
   const p=await params;
-  const city=cityBySlug(p.city);
+  const city=findCityBySlug(p.city);
+  if(!city)notFound();
   const data=await getPanchang(todayInIndia(),city);
   const good=data.dayChoghadiya.filter(x=>x.effect==="good");
 
