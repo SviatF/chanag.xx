@@ -4,6 +4,7 @@ import {notFound} from "next/navigation";
 import Header from "@/components/Header";
 import {cityBySlug} from "@/lib/cities";
 import {getMonthlyMuhurat,muhuratRules} from "@/lib/muhurat";
+import {buildMuhuratSeoSummary} from "@/lib/muhurat-seo";
 import {isMuhuratIndexable,robotsFor} from "@/lib/seo-policy";
 import {parseRouteMonth,parseRouteYear} from "@/lib/route-validation";
 
@@ -25,6 +26,7 @@ export default async function MuhuratPage({params}:{params:Promise<{event:string
   const city=cityBySlug("mumbai");
   const {rows}=await getMonthlyMuhurat(p.event,year,month,city);
   const top=rows[0];
+  const seo=buildMuhuratSeoSummary(p.event,year,month,city,rows,"baseline");
   const ld={"@context":"https://schema.org","@graph":rows.map(r=>({"@type":"Event","name":`${rule.title} — ${r.date}`,"startDate":r.date,"location":{"@type":"Place","name":city.name},"description":`${r.reasons.join(" + ")}. Panchvani Planning Score ${r.planning.score}/100 (${r.planning.grade}). ${rule.note}`}))};
 
   return <main><Header city={city}/><div className="page-shell internal-visual internal-muhurat">
@@ -33,6 +35,23 @@ export default async function MuhuratPage({params}:{params:Promise<{event:string
     <p className="page-subtitle">{rule.note} The table uses Mumbai as the baseline location; open a city page for exact local windows. The Planning Score compares already-qualified dates by practical clean-time availability and is not a personalized astrological suitability score.</p>
 
     <div className="pill-links">{["mumbai","delhi","kolkata","chennai","bengaluru"].map(slug=><Link href={`/muhurat/${p.event}/${year}/${p.month}/${slug}`} key={slug}>{cityBySlug(slug).name}</Link>)}</div>
+
+    <section className="wide-panel">
+      <div className="seo-copy">
+        <small>MONTHLY CALCULATION SUMMARY · {seo.monthLabel.toUpperCase()}</small>
+        <h2>{seo.headline}</h2>
+        <p>{seo.overview}</p>
+        <p>{seo.rankingInsight}</p>
+        <p>{seo.timingInsight}</p>
+        <p>{seo.alternatives}</p>
+      </div>
+      <div className="data-grid">
+        <div className="data-card"><small>Qualified dates</small><strong>{seo.qualifyingCount}</strong><small>Tithi + Nakshatra matches</small></div>
+        <div className="data-card"><small>Average Planning Score</small><strong>{seo.averageScore}/100</strong><small>Across qualified dates</small></div>
+        <div className="data-card"><small>Excellent dates</small><strong>{seo.excellentCount}</strong><small>Planning Score 85+</small></div>
+        <div className="data-card"><small>Strong dates</small><strong>{seo.strongCount}</strong><small>Planning Score 70–84</small></div>
+      </div>
+    </section>
 
     {top?<section className="wide-panel">
       <div className="seo-copy">
