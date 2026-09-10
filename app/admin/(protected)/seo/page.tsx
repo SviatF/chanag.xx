@@ -5,6 +5,7 @@ import {getGscConnectionStatus} from "@/lib/gsc";
 import {getOpportunityStoreStatus} from "@/lib/opportunity-store";
 import {readSeoIndexationState,type SeoIndexationRunState} from "@/lib/indexation-store";
 import {festivalCoverageSnapshot,festivalIndexYears} from "@/lib/festival-expansion";
+import {knowledgeTopics,knowledgeTopicSlugs} from "@/lib/panchang-knowledge";
 import {regionalIntentActivationSnapshot,regionalLanguageSlugs} from "@/lib/regional-seo";
 import {expandedTools,expandedToolSlugs} from "@/lib/tool-expansion";
 import IndexationIntelligencePanel from "@/components/IndexationIntelligencePanel";
@@ -13,7 +14,7 @@ export const dynamic="force-dynamic";
 
 const sitemaps=[
   "sitemap-core.xml","sitemap-panchang-daily.xml","sitemap-panchang-monthly.xml","sitemap-yearly.xml","sitemap-festivals.xml","sitemap-vrat.xml",
-  "sitemap-muhurat.xml","sitemap-regional.xml","sitemap-tools.xml"
+  "sitemap-muhurat.xml","sitemap-regional.xml","sitemap-tools.xml","sitemap-knowledge.xml"
 ];
 
 export default async function SeoControl(){
@@ -39,6 +40,7 @@ export default async function SeoControl(){
       <div className="admin-kpi"><small>Indexable cities</small><strong>{activation.active.length}</strong><span>{activation.baseline.length} baseline + {activation.extra.length} activated</span></div>
       <div className="admin-kpi"><small>Yearly search window</small><strong>{years.length}</strong><span>{years[0]}–{years[years.length-1]}</span></div>
       <div className="admin-kpi"><small>Regional intents</small><strong>{regionalActivation.active.length}</strong><span>{regionalActivation.baseline.length} baseline + {regionalActivation.extra.length} demand-approved</span></div>
+      <div className="admin-kpi"><small>Knowledge owners</small><strong>{knowledgeTopicSlugs.length}</strong><span>Evergreen informational intent</span></div>
       <div className="admin-kpi"><small>Evergreen tools</small><strong>{expandedToolSlugs.length}</strong><span>Dedicated search-intent owners</span></div>
     </section>
     <section className="admin-grid-two">
@@ -54,6 +56,12 @@ export default async function SeoControl(){
         <div className="admin-source-row"><span><strong>Primary yearly Muhurat</strong> · {primaryMuhuratEvents.length} event families × rolling years</span><b>{primaryMuhuratEvents.length*years.length}</b></div>
       </div>
       <div className="admin-flow"><span>YEAR QUERY</span><b>→</b><span>YEAR OWNER</span><b>→</b><span>MONTH DRILLDOWN</span><b>→</b><span>OUTCOME</span></div>
+    </section>
+    <section className="admin-panel">
+      <div className="admin-panel-head"><div><small>TOPICAL AUTHORITY</small><h2>Panchang knowledge owners</h2></div><a href="/sitemap-knowledge.xml" target="_blank">Open knowledge sitemap →</a></div>
+      <p>Informational queries are separated from live date-and-city intent. Stable “what is / meaning / calculation” queries route to canonical evergreen guides, while today/date queries stay owned by Daily Panchang.</p>
+      <div className="admin-source-list">{knowledgeTopicSlugs.map(slug=><div className="admin-source-row" key={slug}><span><strong>{knowledgeTopics[slug].label}</strong> · /knowledge/{slug}</span><b>INDEXABLE</b></div>)}</div>
+      <div className="admin-flow"><span>INFO QUERY</span><b>→</b><span>KNOWLEDGE OWNER</span><b>→</b><span>LIVE PANCHANG</span><b>→</b><span>GSC OUTCOME</span></div>
     </section>
     <section className="admin-panel">
       <div className="admin-panel-head"><div><small>TOOLS EXPANSION</small><h2>Evergreen search magnets</h2></div><Link href="/tools">Open tools →</Link></div>
