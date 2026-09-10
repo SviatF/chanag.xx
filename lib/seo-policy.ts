@@ -1,4 +1,5 @@
-import { City } from "./cities";
+import type { City } from "./cities";
+import {todayInIndia} from "./dates";
 
 export const phase1PriorityCities = [
   "mumbai","delhi","bengaluru","hyderabad","ahmedabad",
@@ -25,7 +26,7 @@ const regionalLanguageCode:Record<string,string>={
 };
 
 function monthDistance(year:number,month:number){
-  const now=new Date();
+  const now=todayInIndia();
   const current=now.getUTCFullYear()*12+now.getUTCMonth();
   const target=year*12+(month-1);
   return target-current;
@@ -39,7 +40,7 @@ export function isDailyIndexable(citySlug:string,dateIso:string){
   if(!isPriorityCity(citySlug)) return false;
   if(!/^\d{4}-\d{2}-\d{2}$/.test(dateIso)) return false;
 
-  const now=new Date();
+  const now=todayInIndia();
   const target=new Date(dateIso+"T00:00:00Z");
   const deltaDays=Math.abs((target.getTime()-Date.UTC(now.getUTCFullYear(),now.getUTCMonth(),now.getUTCDate()))/86400000);
 
