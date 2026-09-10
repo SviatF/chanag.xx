@@ -14,7 +14,8 @@ export const muhuratRules:Record<string,Rule>={
 };
 
 export async function getMonthlyMuhurat(event:string,year:number,month:number,city:City){
-  const rule=muhuratRules[event]??muhuratRules.wedding;
+  const rule=muhuratRules[event];
+  if(!rule)throw new Error(`Unsupported Muhurat event: ${event}`);
   const days=new Date(Date.UTC(year,month,0)).getUTCDate();
   const rows:{date:string;data:Panchang}[]=[];
   for(let d=1;d<=days;d++){
