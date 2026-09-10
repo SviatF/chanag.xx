@@ -27,6 +27,29 @@ export type GscTrafficSnapshot={
   daily:GscRow[];
 };
 
+export type GscOutcomeWindow={
+  startDate:string;
+  endDate:string;
+  clicks:number;
+  impressions:number;
+  ctr:number;
+  position:number;
+  topLanding:string|null;
+};
+
+export type GscOutcomeComparison={
+  query:string;
+  pre:GscOutcomeWindow;
+  post:GscOutcomeWindow;
+};
+
+export type GscOutcomeRequest={
+  key:string;
+  query:string;
+  shippedAt:string;
+  days:14|28|56;
+};
+
 const GOOGLE_TOKEN_URL="https://oauth2.googleapis.com/token";
 const GSC_SCOPE="https://www.googleapis.com/auth/webmasters.readonly";
 
@@ -136,6 +159,8 @@ async function accessToken(){
   return json.access_token;
 }
 
+type SearchAnalyticsFilter={dimension:"query"|"page";operator:"equals"|"contains";expression:string};
+
 async function query(
   token:string,
   siteUrl:string,
@@ -144,8 +169,10 @@ async function query(
     endDate:string;
     dimensions?:string[];
     rowLimit?:number;
+    filters?:SearchAnalyticsFilter[];
   }
 ){
+  const {filters,...rest}=payload;
   const response=await fetch(
     `https://searchconsole.googleapis.com/webmasters/v3/sites/${encodeURIComponent(siteUrl)}/searchAnalytics/query`,
     {
@@ -155,7 +182,8 @@ async function query(
         "content-type":"application/json",
       },
       body:JSON.stringify({
-        ...payload,
+        ...rest,
+        ...(filters?.length?{dimensionFilterGroups:[{groupType:"and",filters}]}:{}),
         dataState:"final",
         aggregationType:"auto",
       }),
@@ -179,6 +207,63 @@ function summary(rows:GscRow[]|undefined):GscSummary{
     ctr:row.ctr??0,
     position:row.position??0,
   }:{clicks:0,impressions:0,ctr:0,position:0};
+}
+
+function aggregateOutcomeWindow(startDate:string,endDate:string,rows:GscRow[]|undefined):GscOutcomeWindow{
+  const items=rows??[];
+  const clicks=items.reduce((sum,row)=>sum+(row.clicks??0),0);
+  const impressions=items.reduce((sum,row)=>sum+(row.impressions??0),0);
+  const weightedPosition=items.reduce((sum,row)=>sum+(row.position??0)*(row.impressions??0),0);
+  const top=items.slice().sort((a,b)=>(b.impressions??0)-(a.impressions??0)||(b.clicks??0)-(a.clicks??0))[0];
+  return {
+    startDate,
+    endDate,
+    clicks,
+    impressions,
+    ctr:impressions?clicks/impressions:0,
+    position:impressions?weightedPosition/impressions:0,
+    topLanding:top?.keys?.[1]??null,
+  };
+}
+
+export function gscCheckpointWindow(shippedAt:string,days:14|28|56){
+  const shipped=new Date(`${shippedAt.slice(0,10)}T00:00:00Z`);
+  if(Number.isNaN(shipped.getTime()))throw new Error("Invalid shippedAt date for GSC checkpoint.");
+  const preEnd=shift(shipped,-1);
+  const preStart=shift(shipped,-days);
+  const postStart=new Date(shipped);
+  const postEnd=shift(shipped,days-1);
+  return {preStart:iso(preStart),preEnd:iso(preEnd),postStart:iso(postStart),postEnd:iso(postEnd)};
+}
+
+export function isGscCheckpointReady(shippedAt:string,days:14|28|56,asOf=new Date()){
+  const {postEnd}=gscCheckpointWindow(shippedAt,days);
+  const finalAvailableEnd=iso(shift(asOf,-2));
+  return finalAvailableEnd>=postEnd;
+}
+
+export async function getGscOutcomeComparisons(requests:GscOutcomeRequest[]):Promise<Record<string,GscOutcomeComparison>>{
+  if(!requests.length)return {};
+  const status=getGscConnectionStatus();
+  if(!status.configured)throw new Error("Google Search Console service account is not configured.");
+  const token=await accessToken();
+  const output:Record<string,GscOutcomeComparison>={};
+
+  await Promise.all(requests.map(async request=>{
+    const window=gscCheckpointWindow(request.shippedAt,request.days);
+    const filters:SearchAnalyticsFilter[]=[{dimension:"query",operator:"equals",expression:request.query}];
+    const [preRaw,postRaw]=await Promise.all([
+      query(token,status.siteUrl,{startDate:window.preStart,endDate:window.preEnd,dimensions:["query","page"],rowLimit:5000,filters}),
+      query(token,status.siteUrl,{startDate:window.postStart,endDate:window.postEnd,dimensions:["query","page"],rowLimit:5000,filters}),
+    ]);
+    output[`${request.key}:${request.days}`]={
+      query:request.query,
+      pre:aggregateOutcomeWindow(window.preStart,window.preEnd,preRaw.rows),
+      post:aggregateOutcomeWindow(window.postStart,window.postEnd,postRaw.rows),
+    };
+  }));
+
+  return output;
 }
 
 export async function getGscTrafficSnapshot():Promise<GscTrafficSnapshot>{
