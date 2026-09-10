@@ -3,7 +3,7 @@ import {supportedCities} from "./cities";
 import type {Festival} from "./festivals";
 import {festivalsForYear} from "./festivals";
 import {activeIndexCitySlugs,isMuhuratIndexable,isRegionalIndexable,primaryMuhuratEvents} from "./seo-policy";
-import type {TopicalGraphGroup,TopicalGraphLink} from "@/components/TopicalGraph";
+import type {TopicalGraphGroup,TopicalGraphLink} from "./topical-types";
 
 const eventLabels:Record<string,string>={
   wedding:"Wedding Muhurat",
