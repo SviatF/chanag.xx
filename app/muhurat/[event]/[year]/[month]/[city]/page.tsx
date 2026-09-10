@@ -4,6 +4,7 @@ import Link from "next/link";
 import {notFound} from "next/navigation";
 import {findCityBySlug} from "@/lib/cities";
 import {getMonthlyMuhurat,muhuratRules} from "@/lib/muhurat";
+import {buildMuhuratSeoSummary} from "@/lib/muhurat-seo";
 import {isMuhuratIndexable,robotsFor} from "@/lib/seo-policy";
 import {parseRouteMonth,parseRouteYear} from "@/lib/route-validation";
 
@@ -26,6 +27,7 @@ export default async function Page({params}:{params:Promise<{event:string;year:s
   if(!city||!rule||!year||!month)notFound();
   const {rows}=await getMonthlyMuhurat(p.event,year,month,city);
   const top=rows[0];
+  const seo=buildMuhuratSeoSummary(p.event,year,month,city,rows,"city");
 
   const ld={"@context":"https://schema.org","@graph":rows.map(r=>({
     "@type":"Event",
@@ -39,6 +41,23 @@ export default async function Page({params}:{params:Promise<{event:string;year:s
     <p className="page-kicker">CITY-SPECIFIC MUHURAT · {city.state}</p>
     <h1 className="page-title">{rule.title}<br/>{city.name}</h1>
     <p className="page-subtitle">{rule.note} All windows below are calculated from {city.name}'s local Panchang timings. The Planning Score ranks already-qualified dates by practical clean-time availability, not by personalized horoscope compatibility.</p>
+
+    <section className="wide-panel">
+      <div className="seo-copy">
+        <small>LOCAL MONTHLY SUMMARY · {seo.monthLabel.toUpperCase()} · {city.name.toUpperCase()}</small>
+        <h2>{seo.headline}</h2>
+        <p>{seo.overview}</p>
+        <p>{seo.rankingInsight}</p>
+        <p>{seo.timingInsight}</p>
+        <p>{seo.alternatives}</p>
+      </div>
+      <div className="data-grid">
+        <div className="data-card"><small>Qualified dates</small><strong>{seo.qualifyingCount}</strong><small>Local shortlist for {city.name}</small></div>
+        <div className="data-card"><small>Average Planning Score</small><strong>{seo.averageScore}/100</strong><small>Across qualified dates</small></div>
+        <div className="data-card"><small>Excellent dates</small><strong>{seo.excellentCount}</strong><small>Planning Score 85+</small></div>
+        <div className="data-card"><small>Strong dates</small><strong>{seo.strongCount}</strong><small>Planning Score 70–84</small></div>
+      </div>
+    </section>
 
     {top?<section className="wide-panel">
       <div className="seo-copy">
