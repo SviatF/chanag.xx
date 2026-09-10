@@ -184,6 +184,6 @@ export default async function Home({searchParams}:{searchParams:Promise<{city?:s
       </div>
     </section>
 
-    <footer className="footer shell"><div><strong>PANCHVANI</strong><p>Ancient wisdom for a brighter tomorrow.</p></div><div className="footer-links"><Link href="/about">About</Link><Link href="/tools">Help</Link><Link href="/blog">Blog</Link><Link href="/photo-credits">Credits</Link><span className="footer-social">◉</span><span className="footer-social">◎</span><span className="footer-social">𝕏</span><span className="footer-divider">||</span><span>ॐ तत् सत्</span></div></footer>
+    <footer className="footer shell"><div><strong>PANCHVANI</strong><p>Ancient wisdom for a brighter tomorrow.</p></div><div className="footer-links"><Link href="/about">About</Link><Link href="/methodology">Methodology</Link><Link href="/corrections">Corrections</Link><Link href="/photo-credits">Credits</Link><span className="footer-social">◉</span><span className="footer-social">◎</span><span className="footer-social">𝕏</span><span className="footer-divider">||</span><span>ॐ तत् सत्</span></div></footer>
   </main>;
 }
