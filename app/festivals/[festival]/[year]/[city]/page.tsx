@@ -2,11 +2,13 @@ import type {Metadata} from "next";
 import Link from "next/link";
 import {notFound} from "next/navigation";
 import Header from "@/components/Header";
+import TopicalGraph from "@/components/TopicalGraph";
 import {findCityBySlug} from "@/lib/cities";
 import {festivalBySlugYear,festivalPujaReference} from "@/lib/festivals";
 import {getPanchang,formatWindow} from "@/lib/panchang";
 import {isPriorityCity,robotsFor} from "@/lib/seo-policy";
 import {parseRouteYear} from "@/lib/route-validation";
+import {buildFestivalTopicalGraph} from "@/lib/topical-links";
 
 export const revalidate=86400;
 
@@ -33,7 +35,6 @@ export default async function Page({params}:{params:Promise<{festival:string;yea
 
   const data=await getPanchang(new Date(f.date+"T06:00:00Z"),city);
   const puja=festivalPujaReference(data,f);
-  const month=f.date.slice(5,7);
 
   const ld={"@context":"https://schema.org","@graph":[
     {"@type":"Event","name":`${f.name} ${year} in ${city.name}`,"startDate":f.date,"location":{"@type":"Place","name":city.name,"address":{"@type":"PostalAddress","addressRegion":city.state,"addressCountry":"IN"}},"description":f.short},
@@ -63,11 +64,8 @@ export default async function Page({params}:{params:Promise<{festival:string;yea
 
     <div className="seo-copy"><h2>How to use this local timing</h2><p>{f.meaning}</p><p>The local Puja reference above is derived from the festival's broad timing category and {city.name}'s solar Panchang. For a sampradaya-specific vrata, sankalpa or priest-led ceremony, use the precise ritual rule followed by that tradition.</p></div>
 
-    <div className="pill-links">
-      <Link href={`/panchang/${city.slug}/${f.date}`}>Full Panchang for {f.date}</Link>
-      <Link href={`/festivals/${f.slug}/${year}`}>Festival overview</Link>
-      {f.relatedMuhurat?<Link href={`/muhurat/${f.relatedMuhurat}/${year}/${month}/${city.slug}`}>Related Muhurat →</Link>:null}
-    </div>
+    <div className="pill-links"><Link href={`/festivals/${f.slug}/${year}`}>Festival overview</Link></div>
+    <TopicalGraph title={`Explore ${f.name} in ${city.name}`} groups={buildFestivalTopicalGraph(city,f)}/>
 
     <script type="application/ld+json" dangerouslySetInnerHTML={{__html:JSON.stringify(ld)}}/>
   </div></main>;
