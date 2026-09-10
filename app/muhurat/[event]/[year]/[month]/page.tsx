@@ -2,11 +2,13 @@ import type {Metadata} from "next";
 import Link from "next/link";
 import {notFound} from "next/navigation";
 import Header from "@/components/Header";
+import TopicalGraph from "@/components/TopicalGraph";
 import {cityBySlug} from "@/lib/cities";
 import {getMonthlyMuhurat,muhuratRules} from "@/lib/muhurat";
 import {buildMuhuratSeoSummary} from "@/lib/muhurat-seo";
 import {isMuhuratIndexable,robotsFor} from "@/lib/seo-policy";
 import {parseRouteMonth,parseRouteYear} from "@/lib/route-validation";
+import {buildMuhuratTopicalGraph} from "@/lib/topical-links";
 
 export const revalidate=86400;
 
@@ -33,8 +35,6 @@ export default async function MuhuratPage({params}:{params:Promise<{event:string
     <p className="page-kicker">AUSPICIOUS PLANNING · INDIA BASELINE</p>
     <h1 className="page-title">{rule.title}<br/>{p.month}/{year}</h1>
     <p className="page-subtitle">{rule.note} The table uses Mumbai as the baseline location; open a city page for exact local windows. The Planning Score compares already-qualified dates by practical clean-time availability and is not a personalized astrological suitability score.</p>
-
-    <div className="pill-links">{["mumbai","delhi","kolkata","chennai","bengaluru"].map(slug=><Link href={`/muhurat/${p.event}/${year}/${p.month}/${slug}`} key={slug}>{cityBySlug(slug).name}</Link>)}</div>
 
     <section className="wide-panel">
       <div className="seo-copy">
@@ -82,6 +82,7 @@ export default async function MuhuratPage({params}:{params:Promise<{event:string
       <p>This ranking is a Panchvani planning aid, not a claim that one date is universally more religiously auspicious than another. Personal horoscope compatibility, Tara Bala, Lagna and sampradaya-specific ritual constraints remain outside this general shortlist.</p>
     </div>
 
+    <TopicalGraph title={`Explore ${rule.title} from the Mumbai baseline`} groups={buildMuhuratTopicalGraph(city,p.event,year,month)}/>
     <script type="application/ld+json" dangerouslySetInnerHTML={{__html:JSON.stringify(ld)}}/>
   </div></main>;
 }
