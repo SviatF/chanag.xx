@@ -101,6 +101,43 @@ describe("Search Demand Expansion Engine",()=>{
     expect(result[0].action).toBe("IMPROVE_SNIPPET");
   });
 
+  it("routes informational Tithi demand to the canonical knowledge owner",()=>{
+    const q="what is tithi";
+    const result=buildSearchOpportunities(snapshot(
+      [row(q,980,18,9.2)],
+      [queryPage(q,"https://panchvani.com/panchang/mumbai/2026-09-08",980,18,9.2)]
+    ));
+    expect(result[0].intent).toBe("knowledge:tithi");
+    expect(result[0].recommendedPath).toBe("/knowledge/tithi");
+    expect(result[0].template).toContain("knowledge guide");
+    expect(result[0].status).toBe("WRONG_LANDING");
+    expect(result[0].action).toBe("ALIGN");
+  });
+
+  it("treats the correct Panchang knowledge owner as striking distance",()=>{
+    const q="what is panchang";
+    const page="https://panchvani.com/knowledge/panchang";
+    const result=buildSearchOpportunities(snapshot(
+      [row(q,640,12,12.1)],
+      [queryPage(q,page,640,12,12.1)]
+    ));
+    expect(result[0].intent).toBe("knowledge:panchang");
+    expect(result[0].recommendedPath).toBe("/knowledge/panchang");
+    expect(result[0].status).toBe("STRIKING_DISTANCE");
+    expect(result[0].action).toBe("STRENGTHEN");
+  });
+
+  it("keeps calculator intent on the tool instead of the knowledge guide",()=>{
+    const q="nakshatra finder";
+    const page="https://panchvani.com/tools/nakshatra-finder";
+    const result=buildSearchOpportunities(snapshot(
+      [row(q,520,40,4.2)],
+      [queryPage(q,page,520,40,4.2)]
+    ));
+    expect(result[0].intent).toBe("tool:nakshatra");
+    expect(result[0].recommendedPath).toBe("/tools/nakshatra-finder");
+  });
+
   it("keeps a well-matched, well-performing daily Panchang query covered",()=>{
     const q="panchang today mumbai";
     const page="https://panchvani.com/panchang/mumbai/2026-09-08";
