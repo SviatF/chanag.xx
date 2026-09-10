@@ -6,7 +6,7 @@ import {findCityBySlug} from "@/lib/cities";
 import {festivalDateIsValidated} from "@/lib/festival-expansion";
 import {festivalsForYear} from "@/lib/festivals";
 import {getPanchang} from "@/lib/panchang";
-import {isVratIndexable,isYearlyCalendarIndexable,isYearlyMuhuratIndexable,primaryMuhuratEvents,primaryVratTypes,robotsFor} from "@/lib/seo-policy";
+import {isVratIndexable,isYearlyCalendarIndexable,isYearlyMuhuratIndexable,primaryMuhuratEvents,primaryVratTypes,robotsFor,yearlyIndexYears} from "@/lib/seo-policy";
 import {parseRouteYear} from "@/lib/route-validation";
 import {cityCalendarYearPath,hinduCalendarYearPath,muhuratYearPath,yearlyMonths} from "@/lib/yearly-expansion";
 import {sitemapPriorityCities} from "@/lib/seo-sitemap";
@@ -20,6 +20,8 @@ export async function generateMetadata({params}:{params:Promise<{city:string;yea
 
 export default async function CityYearCalendar({params}:{params:Promise<{city:string;year:string}>}){
   const p=await params;const city=findCityBySlug(p.city);const year=parseRouteYear(p.year);if(!city||!year)notFound();
+  const activeYears=yearlyIndexYears();
+  const indexable=isYearlyCalendarIndexable(year,city.slug);
   const snapshots=await Promise.all(yearlyMonths.map(item=>getPanchang(new Date(Date.UTC(year,item.month-1,1,6)),city)));
   const festivals=festivalsForYear(year).filter(item=>festivalDateIsValidated(item.slug,year));
   const peers=sitemapPriorityCities.filter(item=>item.slug!==city.slug).slice(0,6);
@@ -39,8 +41,8 @@ export default async function CityYearCalendar({params}:{params:Promise<{city:st
 
     <section className="wide-panel"><h2 className="page-title" style={{fontSize:32}}>Festivals in {year}</h2>{festivals.length?<div className="city-directory">{festivals.map(item=><Link href={`/festivals/${item.slug}/${year}/${city.slug}`} key={item.slug}><small>{item.date}</small><strong>{item.name}</strong><span>Open local Panchang context</span></Link>)}</div>:<p className="page-subtitle">No validated festival records are currently stored for {year}; Panchvani does not synthesize missing festival dates.</p>}</section>
 
-    <section className="wide-panel"><h2 className="page-title" style={{fontSize:32}}>Compare yearly calendars</h2><div className="pill-links">{peers.map(item=><Link href={cityCalendarYearPath(item,year)} key={item.slug}>{item.name}</Link>)}</div></section>
-    <div className="pill-links"><Link href={cityCalendarYearPath(city,year-1)}>← {year-1}</Link><Link href={hinduCalendarYearPath(year)}>India {year}</Link><Link href={cityCalendarYearPath(city,year+1)}>{year+1} →</Link></div>
+    {indexable?<section className="wide-panel"><h2 className="page-title" style={{fontSize:32}}>Compare yearly calendars</h2><div className="pill-links">{peers.map(item=><Link href={cityCalendarYearPath(item,year)} key={item.slug}>{item.name}</Link>)}</div></section>:null}
+    <div className="pill-links">{activeYears.includes(year-1)?<Link href={cityCalendarYearPath(city,year-1)}>← {year-1}</Link>:null}<Link href={hinduCalendarYearPath(year)}>India {year}</Link>{activeYears.includes(year+1)?<Link href={cityCalendarYearPath(city,year+1)}>{year+1} →</Link>:null}</div>
     <script type="application/ld+json" dangerouslySetInnerHTML={{__html:JSON.stringify(ld)}}/>
   </div></main>;
 }
