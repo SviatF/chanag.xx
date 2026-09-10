@@ -2,6 +2,9 @@ import type {SearchOpportunity} from "./search-opportunities";
 
 export const opportunityStages=["DETECTED","REVIEW","APPROVED","BUILD","SHIPPED","MEASURING","WON","REJECTED"] as const;
 export type OpportunityStage=typeof opportunityStages[number];
+export type OpportunityCheckpointDays=14|28|56;
+export type OpportunityOutcomeRecommendation="WON"|"KEEP_MEASURING"|"ITERATE"|"REGRESSED";
+export type OpportunityOutcomeSignal="WINNING"|"MIXED"|"DOWN"|"NO_DATA";
 
 export type OpportunityMetricSnapshot={
   capturedAt:string;
@@ -18,6 +21,32 @@ export type OpportunityContextSnapshot={
   city:string|null;
   recommendedPath:string;
   template:string;
+};
+
+export type OpportunityOutcomeWindow={
+  startDate:string;
+  endDate:string;
+  clicks:number;
+  impressions:number;
+  ctr:number;
+  position:number;
+  topLanding:string|null;
+};
+
+export type OpportunityOutcomeCheckpoint={
+  days:OpportunityCheckpointDays;
+  evaluatedAt:string;
+  pre:OpportunityOutcomeWindow;
+  post:OpportunityOutcomeWindow;
+  landingAligned:boolean;
+  clicksChangePct:number|null;
+  impressionsChangePct:number|null;
+  ctrDeltaPoints:number;
+  positionImprovement:number|null;
+  score:number;
+  signal:OpportunityOutcomeSignal;
+  recommendation:OpportunityOutcomeRecommendation;
+  reason:string;
 };
 
 export type OpportunityLifecycleEvent={
@@ -41,6 +70,7 @@ export type OpportunityLifecycleRecord={
   closedAt?:string;
   baseline?:OpportunityMetricSnapshot;
   context?:OpportunityContextSnapshot;
+  outcomes?:OpportunityOutcomeCheckpoint[];
   history:OpportunityLifecycleEvent[];
 };
 
