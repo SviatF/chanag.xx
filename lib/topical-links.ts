@@ -47,7 +47,7 @@ export function primaryMuhuratLinks(city:City,year:number,month:string,currentEv
     .map(event=>({href:`/muhurat/${event}/${year}/${month}/${city.slug}`,label:eventLabels[event]??event.replaceAll("-"," "),note:`${eventLabels[event]??event} for ${city.name}`}));
 }
 
-export function buildDailyTopicalGraph(city:City,date:Date,festival:Festival):TopicalGraphGroup[]{
+export function buildDailyTopicalGraph(city:City,date:Date,festival:Festival|null):TopicalGraphGroup[]{
   const prev=new Date(date);prev.setUTCDate(prev.getUTCDate()-1);
   const next=new Date(date);next.setUTCDate(next.getUTCDate()+1);
   const {year,month}=monthPathParts(date);
@@ -65,9 +65,7 @@ export function buildDailyTopicalGraph(city:City,date:Date,festival:Festival):To
       ...regional
     ]},
     {title:"Plan important moments",description:"Event pages use the same city-local Panchang engine.",links:primaryMuhuratLinks(city,year,month)},
-    {title:"Next festival",description:"Continue from the daily Panchang into the upcoming festival context.",links:[
-      {href:`/festivals/${festival.slug}/${festival.year}/${city.slug}`,label:`${festival.name} ${festival.year} in ${city.name}`}
-    ]},
+    {title:"Next festival",description:"Continue from the daily Panchang into the upcoming validated festival context.",links:festival?[{href:`/festivals/${festival.slug}/${festival.year}/${city.slug}`,label:`${festival.name} ${festival.year} in ${city.name}`}]:[]},
     {title:`More ${city.state} and priority cities`,description:"Comparable local Panchang pages on the same date.",links:peers.map(peer=>({href:`/panchang/${peer.slug}/${iso(date)}`,label:peer.name,note:`${iso(date)} Panchang in ${peer.name}`}))}
   ];
 }
