@@ -11,16 +11,9 @@ import { todayInIndia } from "@/lib/dates";
 import { getRegionalCalendarProfile } from "@/lib/regional-calendar";
 import { isRegionalIndexable, robotsFor } from "@/lib/seo-policy";
 import {buildRegionalTopicalGraph} from "@/lib/topical-links";
+import {isRegionalLanguageSlug,regionalAlternates,regionalIntentLinksForCity} from "@/lib/regional-seo";
 
 export const revalidate = 3600;
-
-const hreflang: Record<string,string> = {
-  bengali:"bn-IN",
-  tamil:"ta-IN",
-  malayalam:"ml-IN",
-  gujarati:"gu-IN",
-  marathi:"mr-IN",
-};
 
 type RegionalKey=keyof typeof regional;
 const regionalBySlug=(slug:string)=>regional[slug as RegionalKey];
@@ -36,15 +29,11 @@ export async function generateMetadata({params}:{params:Promise<{language:string
   const p=await params;
   const city=findCityBySlug(p.city);
   const lang=regionalBySlug(p.language);
-  if(!city||!lang)notFound();
-  const languages:Record<string,string>={"en-IN":`/panchang/${city.slug}`};
-  for(const [slug,code] of Object.entries(hreflang)){
-    if(isRegionalIndexable(slug,city))languages[code]=`/regional/${slug}/${city.slug}`;
-  }
+  if(!city||!lang||!isRegionalLanguageSlug(p.language))notFound();
   return {
     title:`${lang.label} in ${city.name}`,
     description:`${lang.label} for ${city.name} with Tithi, Nakshatra, sunrise, sunset, Rahu Kalam and regional calendar data.`,
-    alternates:{canonical:`/regional/${p.language}/${city.slug}`,languages},
+    alternates:{canonical:`/regional/${p.language}/${city.slug}`,languages:regionalAlternates(city)},
     robots:robotsFor(isRegionalIndexable(p.language,city))
   };
 }
@@ -53,16 +42,19 @@ export default async function RegionalPage({params}:{params:Promise<{language:st
   const p=await params;
   const city=findCityBySlug(p.city);
   const lang=regionalBySlug(p.language);
-  if(!city||!lang)notFound();
+  if(!city||!lang||!isRegionalLanguageSlug(p.language))notFound();
   const date=todayInIndia();
   const data=await getPanchang(date,city);
   const t=lang.terms;
   const isBengali=p.language==="bengali";
   const profile=getRegionalCalendarProfile(p.language,data);
   const displayTithi=isBengali?(bengaliTithi[data.tithi]??data.tithi):data.tithi;
+  const intentLinks=regionalIntentLinksForCity(p.language,city);
+  const graph=buildRegionalTopicalGraph(city,p.language,date);
+  if(intentLinks.length)graph.splice(1,0,{title:"Regional timing searches",description:"Demand-approved timing pages using the same city-local Panchang calculation.",links:intentLinks.map(item=>({href:item.href,label:item.label}))});
 
   return <main><Header city={city}/><div className="page-shell internal-visual internal-regional">
-    <div className="breadcrumbs"><Link href="/regional">Regional</Link> / {lang.label} / {city.name}</div>
+    <div className="breadcrumbs"><Link href="/regional">Regional</Link> / <Link href={`/regional/${p.language}`}>{lang.label}</Link> / {city.name}</div>
     <p className="page-kicker">{lang.label} · {city.state}</p>
     <h1 className="page-title">{t.today}<br/>{city.name}</h1>
     <p className="page-subtitle">
@@ -98,7 +90,7 @@ export default async function RegionalPage({params}:{params:Promise<{language:st
 
     <div className="seo-copy"><h2>{profile.calendarSystem}</h2><p>{profile.note}</p><p>This regional page keeps the selected city's local sunrise, sunset and inauspicious periods while applying the regional calendar naming layer instead of presenting a generic English Panchang with translated headings only.</p></div>
 
-    <div className="pill-links"><Link href="/regional">All regional Panchang</Link></div>
-    <TopicalGraph title={`Explore ${city.name} across Panchvani`} groups={buildRegionalTopicalGraph(city,p.language,date)}/>
+    <div className="pill-links"><Link href={`/regional/${p.language}`}>All {lang.label} cities</Link><Link href="/regional">All regional Panchang</Link></div>
+    <TopicalGraph title={`Explore ${city.name} across Panchvani`} groups={graph}/>
   </div></main>;
 }
