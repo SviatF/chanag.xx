@@ -1,31 +1,33 @@
 import type {Metadata} from "next";
 import Link from "next/link";
+import {notFound} from "next/navigation";
 import Header from "@/components/Header";
 import DayWheel from "@/components/DayWheel";
 import ChoghadiyaTable from "@/components/ChoghadiyaTable";
-import {cityBySlug,cities} from "@/lib/cities";
+import {findCityBySlug,cities} from "@/lib/cities";
 import {formatWindow,getPanchang} from "@/lib/panchang";
-import {todayInIndia} from "@/lib/dates";
 import {isDailyIndexable,robotsFor} from "@/lib/seo-policy";
 import {getDailyGuidance} from "@/lib/day-guidance";
 import {nextFestival} from "@/lib/festivals";
+import {resolveDailyRouteDate} from "@/lib/route-validation";
 
 export const revalidate=3600;
 
-function parseDate(parts?:string[]){
-  const raw=parts?.[0];
-  if(raw&&/^\d{4}-\d{2}-\d{2}$/.test(raw)) return new Date(raw+"T06:00:00Z");
-  return todayInIndia();
-}
-
 export async function generateMetadata({params}:{params:Promise<{city:string,date?:string[]}>}):Promise<Metadata>{
-  const p=await params;const city=cityBySlug(p.city);const date=parseDate(p.date);
+  const p=await params;
+  const city=findCityBySlug(p.city);
+  const date=resolveDailyRouteDate(p.date);
+  if(!city||!date)notFound();
   const ds=date.toISOString().slice(0,10);
   return {title:`Today Panchang in ${city.name} — ${ds}`,description:`Panchang for ${city.name}: Tithi, Nakshatra, sunrise, sunset, Rahu Kalam, Yamaganda, Gulika and Abhijit Muhurat for ${ds}.`,alternates:{canonical:`/panchang/${city.slug}/${ds}`},robots:robotsFor(isDailyIndexable(city.slug,ds))};
 }
 
 export default async function PanchangPage({params}:{params:Promise<{city:string,date?:string[]}>}){
-  const p=await params;const city=cityBySlug(p.city);const date=parseDate(p.date);const data=await getPanchang(date,city);const guidance=getDailyGuidance(data,city);const festival=nextFestival(date);
+  const p=await params;
+  const city=findCityBySlug(p.city);
+  const date=resolveDailyRouteDate(p.date);
+  if(!city||!date)notFound();
+  const data=await getPanchang(date,city);const guidance=getDailyGuidance(data,city);const festival=nextFestival(date);
   const prev=new Date(date);prev.setUTCDate(prev.getUTCDate()-1);const next=new Date(date);next.setUTCDate(next.getUTCDate()+1);
   const month=String(date.getUTCMonth()+1).padStart(2,"0");
   const faq=[
