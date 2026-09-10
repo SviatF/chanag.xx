@@ -73,7 +73,7 @@ export const knowledgeTopics:Record<KnowledgeTopicSlug,KnowledgeTopic>={
       {title:"How Nakshatra is calculated",paragraphs:["The Moon's sidereal longitude is normalized around 360 degrees and divided into 27 equal sectors. The active sector provides the Nakshatra name. Panchvani then divides that sector into four equal parts to derive Pada 1–4.","Unlike a static date table, the Nakshatra can change during the day. Panchvani therefore reports the value at local sunrise together with a calculated transition time."]},
       {title:"The 27 Nakshatras",paragraphs:["The sequence used by Panchvani is Ashwini, Bharani, Krittika, Rohini, Mrigashirsha, Ardra, Punarvasu, Pushya, Ashlesha, Magha, Purva Phalguni, Uttara Phalguni, Hasta, Chitra, Swati, Vishakha, Anuradha, Jyeshtha, Mula, Purva Ashadha, Uttara Ashadha, Shravana, Dhanishta, Shatabhisha, Purva Bhadrapada, Uttara Bhadrapada and Revati."]},
       {title:"Daily Nakshatra versus birth Nakshatra",paragraphs:["The Nakshatra on a daily Panchang page is a day-and-location calendar value evaluated around local sunrise. A birth Nakshatra should be calculated for the exact birth instant and place. Panchvani's date-only birth tools are therefore presented as estimates when exact birth time is unavailable."]},
-      {title:"How Nakshatra is used",paragraphs:["Nakshatra appears in daily Panchang, naming traditions, festival interpretation and many Muhurat systems. Panchvani uses selected Nakshatra lists as one explicit eligibility layer in its general Muhurat shortlists, while leaving personalized compatibility outside the generic route." ]}
+      {title:"How Nakshatra is used",paragraphs:["Nakshatra appears in daily Panchang, naming traditions, festival interpretation and many Muhurat systems. Panchvani uses selected Nakshatra lists as one explicit eligibility layer in its general Muhurat shortlists, while leaving personalized compatibility outside the generic route."]}
     ],
     faq:[
       {q:"How many Nakshatras are there?",a:"Panchvani uses the standard 27-Nakshatra division of the sidereal zodiac."},
@@ -92,7 +92,7 @@ export const knowledgeTopics:Record<KnowledgeTopicSlug,KnowledgeTopic>={
       {title:"How Panchang Yoga is calculated",paragraphs:["Panchvani adds the Lahiri sidereal longitude of the Sun to the Lahiri sidereal longitude of the Moon, normalizes the result to a single 360-degree circle and divides it into 27 equal sectors. The sector active at local sunrise supplies the daily Yoga name."]},
       {title:"The 27 Yoga names",paragraphs:["The engine sequence is Vishkambha, Priti, Ayushman, Saubhagya, Shobhana, Atiganda, Sukarma, Dhriti, Shula, Ganda, Vriddhi, Dhruva, Vyaghata, Harshana, Vajra, Siddhi, Vyatipata, Variyana, Parigha, Shiva, Siddha, Sadhya, Shubha, Shukla, Brahma, Indra and Vaidhriti."]},
       {title:"What the daily Yoga value does and does not mean",paragraphs:["Yoga is one limb of Panchang and can be interpreted differently across traditions. Panchvani exposes the calculated name as transparent calendar data. It does not convert the Yoga into a universal personal fortune score."]},
-      {title:"Relation to the other limbs",paragraphs:["Tithi is based on Moon-Sun separation, Nakshatra on lunar sidereal longitude, Yoga on the combined sidereal Sun-Moon longitude and Karana on half-Tithi segments. Seeing the formulas separately helps explain why those values can change on different schedules." ]}
+      {title:"Relation to the other limbs",paragraphs:["Tithi is based on Moon-Sun separation, Nakshatra on lunar sidereal longitude, Yoga on the combined sidereal Sun-Moon longitude and Karana on half-Tithi segments. Seeing the formulas separately helps explain why those values can change on different schedules."]}
     ],
     faq:[
       {q:"Is Panchang Yoga the same as yoga exercise?",a:"No. Nitya Yoga is a calendrical factor derived from the Sun and Moon longitudes."},
@@ -111,7 +111,7 @@ export const knowledgeTopics:Record<KnowledgeTopicSlug,KnowledgeTopic>={
       {title:"How Karana relates to Tithi",paragraphs:["Tithi and Karana use the same Moon-Sun elongation, but at different resolution. Tithi divides the circle into 30 segments of 12 degrees. Karana divides it into 60 segments of 6 degrees. This means the Karana can change roughly twice as often as the Tithi, although exact clock duration varies with lunar motion."]},
       {title:"Repeating and fixed Karanas",paragraphs:["Most of the cycle repeats Bava, Balava, Kaulava, Taitila, Garaja, Vanija and Vishti. Four Karanas occupy fixed positions in the cycle: Kimstughna at the opening segment and Shakuni, Chatushpada and Naga near the end."]},
       {title:"How Panchvani displays Karana",paragraphs:["The daily page shows the Karana active at local sunrise. The current public UI does not claim a universal good/bad rating for each Karana because interpretive rules vary and should not be collapsed into a single unsupported score."]},
-      {title:"Why Karana is useful",paragraphs:["Karana is one of the five classical Panchang limbs. It supplies a finer-grained lunar-day context than Tithi alone and is useful when comparing traditional calendar references or understanding how a Panchang is assembled." ]}
+      {title:"Why Karana is useful",paragraphs:["Karana is one of the five classical Panchang limbs. It supplies a finer-grained lunar-day context than Tithi alone and is useful when comparing traditional calendar references or understanding how a Panchang is assembled."]}
     ],
     faq:[
       {q:"Is Karana half of a Tithi?",a:"Yes. A Tithi spans 12 degrees of Moon-Sun elongation, while a Karana segment spans 6 degrees."},
@@ -130,7 +130,7 @@ export const knowledgeTopics:Record<KnowledgeTopicSlug,KnowledgeTopic>={
       {title:"Shukla Paksha",paragraphs:["Shukla Paksha follows the new-moon boundary and represents the waxing half of the lunar cycle. The illuminated fraction of the Moon generally increases as the sequence moves from Pratipada toward Purnima."]},
       {title:"Krishna Paksha",paragraphs:["Krishna Paksha follows the full-moon boundary and represents the waning half. The sequence progresses through the same numbered Tithi names toward Amavasya."]},
       {title:"Paksha and Tithi are inseparable",paragraphs:["Names such as Ekadashi or Chaturdashi occur in both halves of the month, so the Paksha distinguishes which occurrence is meant. A full description such as Shukla Ekadashi or Krishna Ekadashi is therefore more precise than the Tithi name alone."]},
-      {title:"How Panchvani uses Paksha",paragraphs:["The daily Panchang displays Paksha next to Tithi. Vrat, festival and month interpretation can use the waxing/waning context, while the core engine derives it from the Tithi segment active at local sunrise." ]}
+      {title:"How Panchvani uses Paksha",paragraphs:["The daily Panchang displays Paksha next to Tithi. Vrat, festival and month interpretation can use the waxing/waning context, while the core engine derives it from the Tithi segment active at local sunrise."]}
     ],
     faq:[
       {q:"What is the difference between Shukla and Krishna Paksha?",a:"Shukla Paksha is the waxing half of the lunar month toward Purnima; Krishna Paksha is the waning half toward Amavasya."},
@@ -149,7 +149,7 @@ export const knowledgeTopics:Record<KnowledgeTopicSlug,KnowledgeTopic>={
       {title:"The 12 month names",paragraphs:["A common sequence is Chaitra, Vaishakha, Jyeshtha, Ashadha, Shravana, Bhadrapada, Ashwin, Kartika, Margashirsha, Pausha, Magha and Phalguna. Transliteration and regional spellings vary, but those labels form the core sequence used by Panchvani's Amanta layer."]},
       {title:"What Amanta means",paragraphs:["In an Amanta calendar the lunar month ends at the new-moon boundary. Panchvani searches backward for the previous new moon, evaluates the sidereal solar sign around that transition and maps it to the corresponding month label."]},
       {title:"Why another calendar may show a different month",paragraphs:["Some traditions use Purnimanta month boundaries or regional solar/lunisolar systems. A different month label does not automatically mean one source is wrong; the first question is which calendar convention the source follows. Panchvani documents the Amanta convention so the result is auditable."]},
-      {title:"Months, Paksha and festivals",paragraphs:["Each lunar month contains Shukla and Krishna Paksha, and many festival rules are described using a month + Paksha + Tithi combination. That is why month naming conventions matter when comparing observance dates across regional traditions." ]}
+      {title:"Months, Paksha and festivals",paragraphs:["Each lunar month contains Shukla and Krishna Paksha, and many festival rules are described using a month + Paksha + Tithi combination. That is why month naming conventions matter when comparing observance dates across regional traditions."]}
     ],
     faq:[
       {q:"What are the 12 Hindu months?",a:"The common lunar sequence is Chaitra, Vaishakha, Jyeshtha, Ashadha, Shravana, Bhadrapada, Ashwin, Kartika, Margashirsha, Pausha, Magha and Phalguna."},
@@ -163,7 +163,7 @@ export function knowledgeTopicBySlug(slug:string){return knowledgeTopics[slug as
 export function knowledgePagePath(slug:KnowledgeTopicSlug){return `/knowledge/${slug}`;}
 export function knowledgeGraphLinks(slugs:KnowledgeTopicSlug[]=knowledgeTopicSlugs):TopicalGraphLink[]{return slugs.map(slug=>({href:knowledgePagePath(slug),label:knowledgeTopics[slug].label,note:knowledgeTopics[slug].description}));}
 
-function normalizeQuery(value:string){return ` ${value.toLowerCase().normalize("NFKD").replace(/[\u0300-\u036f]/g,"").replace(/[^\p{L}\p{N}]+/gu," ").trim()} `;}
+function normalizeQuery(value:string){return ` ${value.toLowerCase().normalize("NFKD").replace(/[\u0300-\u036f]/g,"").replace(/[^\p{L}\p{M}\p{N}]+/gu," ").trim()} `;}
 const liveIntent=/\b(today|tomorrow|yesterday|aaj|kal|tonight|now|20\d{2})\b| आज | कल /u;
 const knowledgeCue=/\b(what is|meaning|means|explained|explain|definition|how is|how does|how to calculate|calculation|difference|vs|list|names)\b| क्या है | मतलब | अर्थ /u;
 
