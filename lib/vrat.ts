@@ -2,8 +2,8 @@ import type {City} from "./cities";
 import {createDefaultSweData} from "@typescriptify/sweph/dist/types.js";
 import {sweCalc,sweClose} from "@typescriptify/sweph/dist/sweph.js";
 import {sweRiseTrans} from "@typescriptify/sweph/dist/swecl.js";
-import {julDay,revJul} from "@typescriptify/sweph/dist/swedate.js";
-import {SE_SUN,SE_MOON,SEFLG_MOSEPH,SE_GREG_CAL,SE_CALC_RISE} from "@typescriptify/sweph/dist/constants.js";
+import {SE_SUN,SE_MOON,SEFLG_MOSEPH,SE_CALC_RISE} from "@typescriptify/sweph/dist/constants.js";
+import {addIsoDays,indiaCivilDayStartJulian,indiaLocalPartsFromJulian} from "./india-time";
 
 export const vratSlugs=["ekadashi","purnima","amavasya"] as const;
 export type VratSlug=typeof vratSlugs[number];
@@ -58,20 +58,8 @@ const tithiNames=["Pratipada","Dvitiya","Tritiya","Chaturthi","Panchami","Shasht
 type VratCalendarMap=Record<VratSlug,VratOccurrence[]>;
 const cache=new Map<string,VratCalendarMap>();
 const norm=(value:number)=>((value%360)+360)%360;
-const pad=(value:number)=>String(value).padStart(2,"0");
 
-function utcDateIso(date:Date){return date.toISOString().slice(0,10);}
-function nextDayIso(dateIso:string){const d=new Date(dateIso+"T00:00:00Z");d.setUTCDate(d.getUTCDate()+1);return utcDateIso(d);}
-
-function localPartsFromJulian(jd:number){
-  const value=revJul(jd,SE_GREG_CAL);
-  let totalMinutes=Math.round(value.hour*60+330);
-  const dayOffset=Math.floor(totalMinutes/1440);
-  totalMinutes=((totalMinutes%1440)+1440)%1440;
-  const localDate=new Date(Date.UTC(value.year,value.month-1,value.day));
-  localDate.setUTCDate(localDate.getUTCDate()+dayOffset);
-  return {date:utcDateIso(localDate),time:`${pad(Math.floor(totalMinutes/60))}:${pad(totalMinutes%60)}`};
-}
+function nextDayIso(dateIso:string){return addIsoDays(dateIso,1);}
 
 function targetForIndex(index:number):VratSlug|null{
   if(index===10||index===25)return "ekadashi";
@@ -102,8 +90,8 @@ function calculateAllVratCalendars(year:number,city:City):VratCalendarMap{
 
   const swed=createDefaultSweData();
   const raw:Record<VratSlug,Omit<VratOccurrence,"repeatedAtSunrise"|"sequence">[]>={ekadashi:[],purnima:[],amavasya:[]};
-  const start=new Date(Date.UTC(year,0,1));
-  const end=new Date(Date.UTC(year+1,0,1));
+  const start=new Date(Date.UTC(year,0,1,12));
+  const end=new Date(Date.UTC(year+1,0,1,12));
 
   const tithiIndexAt=(jd:number)=>{
     const sun=sweCalc(swed,jd,SE_SUN,SEFLG_MOSEPH).xx[0];
@@ -116,8 +104,8 @@ function calculateAllVratCalendars(year:number,city:City):VratCalendarMap{
     let low=sunriseJd;
     let high=sunriseJd+2/24;
     while(high<sunriseJd+2&&tithiIndexAt(high)===startIndex){low=high;high+=2/24;}
-    if(high>=sunriseJd+2)return null;
-    for(let i=0;i<28;i++){
+    if(tithiIndexAt(high)===startIndex)return null;
+    for(let i=0;i<30;i++){
       const mid=(low+high)/2;
       if(tithiIndexAt(mid)===startIndex)low=mid;else high=mid;
     }
@@ -127,18 +115,24 @@ function calculateAllVratCalendars(year:number,city:City):VratCalendarMap{
   try{
     for(let cursor=new Date(start);cursor<end;cursor.setUTCDate(cursor.getUTCDate()+1)){
       const y=cursor.getUTCFullYear(),m=cursor.getUTCMonth()+1,d=cursor.getUTCDate();
-      const baseJd=julDay(y,m,d,0,SE_GREG_CAL);
+      const baseJd=indiaCivilDayStartJulian(y,m,d);
       const rise=sweRiseTrans(swed,baseJd,SE_SUN,null,SEFLG_MOSEPH,SE_CALC_RISE,[city.lng,city.lat,0],1013.25,25,null);
       const sunriseJd=rise.retval>=0?rise.tret:baseJd+0.25;
+      const sunrise=indiaLocalPartsFromJulian(sunriseJd);
+
+      // Guard the civil-date invariant: each loop iteration represents exactly one
+      // India-local date, including eastern cities whose sunrise is before 05:30 IST.
+      const expectedDate=`${String(y).padStart(4,"0")}-${String(m).padStart(2,"0")}-${String(d).padStart(2,"0")}`;
+      if(sunrise.date!==expectedDate)throw new Error(`Vrat sunrise date mismatch for ${city.slug}: expected ${expectedDate}, got ${sunrise.date}`);
+
       const index=tithiIndexAt(sunriseJd);
       const target=targetForIndex(index);
       if(!target)continue;
       const transition=transitionAfter(sunriseJd);
-      const sunrise=localPartsFromJulian(sunriseJd);
-      const endParts=transition?localPartsFromJulian(transition):{date:sunrise.date,time:"—"};
+      const endParts=transition?indiaLocalPartsFromJulian(transition):{date:sunrise.date,time:"—",minutes:0};
       raw[target].push({
         date:sunrise.date,
-        weekday:new Intl.DateTimeFormat("en-IN",{weekday:"long",timeZone:"Asia/Kolkata"}).format(new Date(sunrise.date+"T06:00:00Z")),
+        weekday:new Intl.DateTimeFormat("en-IN",{weekday:"long",timeZone:"UTC"}).format(new Date(`${sunrise.date}T12:00:00Z`)),
         paksha:pakshaForIndex(index),
         tithi:tithiNameForIndex(index),
         sunrise:sunrise.time,
