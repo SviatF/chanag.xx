@@ -1,7 +1,7 @@
 import type {City} from "./cities";
 import {supportedCities} from "./cities";
 import {activeIndexCitySlugs,isVratIndexable,primaryVratTypes} from "./seo-policy";
-import type {TopicalGraphGroup} from "./topical-types";
+import type {TopicalGraphGroup,TopicalGraphLink} from "./topical-types";
 import {vratDefinitions,type VratOccurrence,type VratSlug} from "./vrat";
 
 function activeCities(){
@@ -12,6 +12,19 @@ function activeCities(){
 function peerCities(city:City,limit=4){
   const peers=activeCities().filter(item=>item.slug!==city.slug);
   return [...peers.filter(item=>item.state===city.state),...peers.filter(item=>item.state!==city.state)].slice(0,limit);
+}
+
+export function vratYearLinks(city:City,year:number,current?:VratSlug):TopicalGraphLink[]{
+  return primaryVratTypes
+    .filter(slug=>slug!==current&&isVratIndexable(slug,year,city.slug))
+    .map(slug=>({href:`/vrat/${slug}/${year}/${city.slug}`,label:`${vratDefinitions[slug].name} ${year}`}));
+}
+
+export function vratLinkForTithi(city:City,date:Date,tithi:string):TopicalGraphLink|null{
+  const slug:VratSlug|null=tithi==="Ekadashi"?"ekadashi":tithi==="Purnima"?"purnima":tithi==="Amavasya"?"amavasya":null;
+  const year=date.getUTCFullYear();
+  if(!slug||!isVratIndexable(slug,year,city.slug))return null;
+  return {href:`/vrat/${slug}/${year}/${city.slug}`,label:`${vratDefinitions[slug].name} ${year} in ${city.name}`,note:"Yearly sunrise-based lunar reference"};
 }
 
 export function buildVratTopicalGraph(
@@ -26,10 +39,9 @@ export function buildVratTopicalGraph(
     return {href:`/calendar/${city.slug}/${y}/${m}`,label:`${city.name} calendar · ${m}/${y}`};
   });
   const dateLinks=rows.slice(0,6).map(item=>({href:`/panchang/${city.slug}/${item.date}`,label:`${item.date} · ${item.paksha} ${item.tithi}`}));
-  const siblingLinks=primaryVratTypes.filter(slug=>slug!==vrat&&isVratIndexable(slug,year,scope==="city"?city.slug:undefined)).map(slug=>({
-    href:scope==="city"?`/vrat/${slug}/${year}/${city.slug}`:`/vrat/${slug}/${year}`,
-    label:`${vratDefinitions[slug].name} ${year}`
-  }));
+  const siblingLinks=scope==="city"
+    ? vratYearLinks(city,year,vrat)
+    : primaryVratTypes.filter(slug=>slug!==vrat&&isVratIndexable(slug,year)).map(slug=>({href:`/vrat/${slug}/${year}`,label:`${vratDefinitions[slug].name} ${year}`}));
   const comparisonLinks=scope==="city"
     ? peerCities(city).filter(peer=>isVratIndexable(vrat,year,peer.slug)).map(peer=>({href:`/vrat/${vrat}/${year}/${peer.slug}`,label:peer.name}))
     : activeCities().filter(peer=>isVratIndexable(vrat,year,peer.slug)).slice(0,8).map(peer=>({href:`/vrat/${vrat}/${year}/${peer.slug}`,label:peer.name}));
