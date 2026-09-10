@@ -69,12 +69,17 @@ function indiaNow(){
 }
 
 function indiaDateKey(){
-  return new Intl.DateTimeFormat("en-CA",{
+  const parts=new Intl.DateTimeFormat("en-US",{
     timeZone:"Asia/Kolkata",
     year:"numeric",
     month:"2-digit",
     day:"2-digit",
-  }).format(new Date());
+  }).formatToParts(new Date());
+
+  const year=parts.find(part=>part.type==="year")?.value??"";
+  const month=parts.find(part=>part.type==="month")?.value??"";
+  const day=parts.find(part=>part.type==="day")?.value??"";
+  return `${year}-${month}-${day}`;
 }
 
 function liveAngle(minutes:number){
@@ -286,6 +291,10 @@ export default function DayWheel({data,placement="content"}:{data:Panchang;place
           <stop offset="52%" stopColor="#e7bd63"/>
           <stop offset="100%" stopColor="#f4d98c"/>
         </linearGradient>
+
+        <marker id="hand-arrow" viewBox="0 0 10 10" refX="8.2" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+          <path d="M 0 0 L 10 5 L 0 10 z" fill="#f1ce78"/>
+        </marker>
       </defs>
 
       <circle cx={CX} cy={CY} r="282" fill="url(#outer-halo)"/>
@@ -368,9 +377,10 @@ export default function DayWheel({data,placement="content"}:{data:Panchang;place
           x2={handTip.x}
           y2={handTip.y}
           stroke="url(#hand-gold)"
-          strokeWidth="2"
+          strokeWidth="2.2"
           strokeLinecap="round"
-          opacity=".88"
+          markerEnd="url(#hand-arrow)"
+          opacity=".96"
         />
         <circle
           cx={handGlow.x}
