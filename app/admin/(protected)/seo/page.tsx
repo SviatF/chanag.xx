@@ -3,7 +3,7 @@ import {coreCities,supportedCities} from "@/lib/cities";
 import {getIndexActivationSnapshot} from "@/lib/seo-policy";
 
 const sitemaps=[
-  "sitemap-panchang-daily.xml","sitemap-panchang-monthly.xml","sitemap-festivals.xml",
+  "sitemap-core.xml","sitemap-panchang-daily.xml","sitemap-panchang-monthly.xml","sitemap-festivals.xml",
   "sitemap-muhurat.xml","sitemap-regional.xml","sitemap-tools.xml"
 ];
 
