@@ -9,7 +9,7 @@ import IndexationIntelligencePanel from "@/components/IndexationIntelligencePane
 export const dynamic="force-dynamic";
 
 const sitemaps=[
-  "sitemap-core.xml","sitemap-panchang-daily.xml","sitemap-panchang-monthly.xml","sitemap-festivals.xml",
+  "sitemap-core.xml","sitemap-panchang-daily.xml","sitemap-panchang-monthly.xml","sitemap-festivals.xml","sitemap-vrat.xml",
   "sitemap-muhurat.xml","sitemap-regional.xml","sitemap-tools.xml"
 ];
 
