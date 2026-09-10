@@ -7,6 +7,7 @@ export async function GET(){
     "sitemap-panchang-daily.xml",
     "sitemap-panchang-monthly.xml",
     "sitemap-festivals.xml",
+    "sitemap-vrat.xml",
     "sitemap-muhurat.xml",
     "sitemap-regional.xml",
     "sitemap-tools.xml"
