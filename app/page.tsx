@@ -5,7 +5,7 @@ import { unstable_cache } from "next/cache";
 import Header from "@/components/Header";
 import DayWheel from "@/components/DayWheel";
 import { cities, cityBySlug } from "@/lib/cities";
-import { formatWindow, getPanchang } from "@/lib/panchang";
+import { formatPanchangTime, formatWindow, getPanchang } from "@/lib/panchang";
 import { festivalsForYear, nextFestival } from "@/lib/festivals";
 import { todayInIndia } from "@/lib/dates";
 import mainHero from "@/lib/main-hero.webp";
@@ -46,6 +46,7 @@ export default async function Home({searchParams}:{searchParams:Promise<{city?:s
   const city=cityBySlug(q.city??store.get("panchang_city")?.value??"mumbai");
   const now=todayInIndia();
   const data=await getPanchang(now,city);
+  const nakshatraEnd=formatPanchangTime(data.nakshatraEnd,data.nakshatraEndDate,data.date);
   const festival=nextFestival(now);
   const year=now.getUTCFullYear();
   const month=now.getUTCMonth()+1;
@@ -81,14 +82,14 @@ export default async function Home({searchParams}:{searchParams:Promise<{city?:s
         <p className="hero-date">{data.weekday}, {new Intl.DateTimeFormat("en-IN",{day:"numeric",month:"long",year:"numeric",timeZone:"Asia/Kolkata"}).format(now)}</p>
         <div className="lunar-summary">
           <span>{data.paksha} Paksha</span><i/> <span>{data.tithi}</span>
-          <small>Nakshatra · {data.nakshatra} until {data.nakshatraEnd}</small>
+          <small>Nakshatra · {data.nakshatra} until {nakshatraEnd}</small>
         </div>
         <div className="sunline">
           <div><Sun size={22}/><span><small>Sunrise</small>{data.sunrise}</span></div>
           <div><Sun size={22}/><span><small>Sunset</small>{data.sunset}</span></div>
         </div>
         <div className="hero-status">
-          <div className="status-card good"><Leaf/><span><small>Auspicious</small><strong>{bestTime.name}</strong><b>{bestTime.time}</b></span></div>
+          <div className="status-card good"><Leaf/><span><small>Highlighted auspicious period</small><strong>{bestTime.name}</strong><b>{bestTime.time}</b></span></div>
           <div className="status-card danger"><Clock3/><span><small>Avoid</small><strong>Rahu Kalam</strong><b>{formatWindow(data.rahu)}</b></span></div>
         </div>
         <Link className="gold-button" href={`/panchang/${city.slug}/${data.date}`}>View full Panchang <span>→</span></Link>
@@ -103,7 +104,7 @@ export default async function Home({searchParams}:{searchParams:Promise<{city?:s
       <div className="section-head"><div><h2>Your Day</h2><p>At a glance, for a more intentional you.</p></div><Link href={`/panchang/${city.slug}/${data.date}`}>All details →</Link></div>
       <div className="your-day-layout">
         <div className="day-grid">
-          <article className="info-card good"><Sun/><div><span>Best time today</span><h3>{bestTime.name}</h3><strong>{bestTime.time}</strong><p>Calculated from today's local Panchang and daylight window.</p></div></article>
+          <article className="info-card good"><Sun/><div><span>Highlighted time today</span><h3>{bestTime.name}</h3><strong>{bestTime.time}</strong><p>Calculated from today's local Panchang and daylight window.</p></div></article>
           <article className="info-card danger"><Clock3/><div><span>Avoid this time</span><h3>Rahu Kalam</h3><strong>{formatWindow(data.rahu)}</strong><p>Location-sensitive period calculated from local sunrise and sunset.</p></div></article>
           <article className="info-card festival"><Sparkles/><div><span>Upcoming festival</span><h3>{festival.name}</h3><strong>{festival.date}</strong><p>{festival.short}</p></div></article>
         </div>
@@ -158,7 +159,7 @@ export default async function Home({searchParams}:{searchParams:Promise<{city?:s
       </div>
       <div className="explore-stack">
         <div>
-          <div className="section-head"><div><h2>Explore your Panchang</h2><p>Accurate Panchang for cities across India.</p></div><Link href="/cities">Browse all cities →</Link></div>
+          <div className="section-head"><div><h2>Explore your Panchang</h2><p>Location-specific Panchang for cities across India.</p></div><Link href="/cities">Browse all cities →</Link></div>
           <div className="city-row">{featured.map(c=><Link
             href={`/?city=${c.slug}`}
             key={c.slug}
