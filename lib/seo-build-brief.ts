@@ -2,268 +2,42 @@ import type {OpportunityLifecycleRecord} from "./opportunity-lifecycle";
 import type {SearchOpportunity} from "./search-opportunities";
 import {buildSeoActionPlan,type SeoActionPlan,type SeoActionPriority} from "./seo-action-intelligence";
 
-export type SeoBriefSection={
-  title:string;
-  purpose:string;
-  required:boolean;
-};
-
+export type SeoBriefSection={title:string;purpose:string;required:boolean;};
 export type SeoBuildBrief={
-  id:string;
-  priority:SeoActionPriority;
-  mode:SeoActionPlan["mode"];
-  readiness:"READY_FOR_REVIEW"|"READY_FOR_BUILD"|"MEASURE_ONLY"|"BLOCKED";
-  blocker:string|null;
-  objective:string;
-  intent:string;
-  primaryQuery:string|null;
-  city:string|null;
-  template:string|null;
-  targetPath:string|null;
-  currentPath:string|null;
-  titleDirection:string;
-  h1Direction:string;
-  sections:SeoBriefSection[];
-  internalLinks:string[];
-  technicalChecks:string[];
-  schemaChecks:string[];
-  acceptanceCriteria:string[];
-  measurementPlan:string[];
-  executionSteps:{area:string;action:string;evidence:string}[];
-  guardrail:string;
+  id:string;priority:SeoActionPriority;mode:SeoActionPlan["mode"];readiness:"READY_FOR_REVIEW"|"READY_FOR_BUILD"|"MEASURE_ONLY"|"BLOCKED";blocker:string|null;objective:string;intent:string;primaryQuery:string|null;city:string|null;template:string|null;targetPath:string|null;currentPath:string|null;titleDirection:string;h1Direction:string;sections:SeoBriefSection[];internalLinks:string[];technicalChecks:string[];schemaChecks:string[];acceptanceCriteria:string[];measurementPlan:string[];executionSteps:{area:string;action:string;evidence:string}[];guardrail:string;
 };
-
 type BriefInput={opportunity:SearchOpportunity|null;record:OpportunityLifecycleRecord};
 
 function pageFamily(path:string|null,template:string|null){
-  if(path?.startsWith("/panchang/"))return "PANCHANG" as const;
-  if(path?.startsWith("/calendar/"))return "CALENDAR" as const;
-  if(path?.startsWith("/muhurat/"))return "MUHURAT" as const;
-  if(path?.startsWith("/festivals/"))return "FESTIVAL" as const;
-  if(path?.startsWith("/vrat/"))return "VRAT" as const;
-  if(path?.startsWith("/tools/choghadiya"))return "CHOGHADIYA" as const;
-  if(path?.startsWith("/tools/"))return "TOOL" as const;
-  if(template?.toLowerCase().includes("muhurat"))return "MUHURAT" as const;
-  if(template?.toLowerCase().includes("festival"))return "FESTIVAL" as const;
-  return "GENERIC" as const;
+  if(path?.startsWith("/panchang/"))return "PANCHANG" as const;if(path?.startsWith("/calendar/"))return "CALENDAR" as const;if(path?.startsWith("/muhurat/"))return "MUHURAT" as const;if(path?.startsWith("/festivals/"))return "FESTIVAL" as const;if(path?.startsWith("/vrat/"))return "VRAT" as const;if(path?.startsWith("/tools/choghadiya"))return "CHOGHADIYA" as const;if(path?.startsWith("/tools/"))return "TOOL" as const;if(template?.toLowerCase().includes("muhurat"))return "MUHURAT" as const;if(template?.toLowerCase().includes("festival"))return "FESTIVAL" as const;return "GENERIC" as const;
 }
 
 function sectionsFor(family:ReturnType<typeof pageFamily>):SeoBriefSection[]{
-  const common:SeoBriefSection[]=[
-    {title:"Intent answer",purpose:"Answer the primary search intent immediately with page-specific data rather than generic prose.",required:true},
-    {title:"Related navigation",purpose:"Expose contextual links to the closest Panchvani topical pages without creating competing intent owners.",required:true},
-    {title:"Method / source context",purpose:"Explain where calculated or curated data comes from when that context materially affects interpretation.",required:false},
-  ];
-  if(family==="PANCHANG")return [
-    {title:"Date + location summary",purpose:"State the canonical local date and city context used for the calculation.",required:true},
-    {title:"Core Panchang values",purpose:"Render Tithi, Nakshatra, Yoga and Karana from the Panchang engine.",required:true},
-    {title:"Sunrise / sunset",purpose:"Show the local astronomical day boundary used by time-based calculations.",required:true},
-    {title:"Daily timing windows",purpose:"Show relevant Rahu/Yamaganda/Gulika/Abhijit or other already-supported daily timing data.",required:true},
-    ...common,
-  ];
-  if(family==="CALENDAR")return [
-    {title:"Month overview",purpose:"Summarize the selected city/month and expose important calculated lunar dates.",required:true},
-    {title:"Calendar grid / date list",purpose:"Provide useful daily entry points rather than a thin month shell.",required:true},
-    {title:"Key month events",purpose:"Surface existing festival or Muhurat relations only where data is available.",required:true},
-    ...common,
-  ];
-  if(family==="MUHURAT")return [
-    {title:"Monthly qualification summary",purpose:"Summarize qualifying dates from the Muhurat engine for this event/location.",required:true},
-    {title:"Ranked dates",purpose:"Show Planning Score and the strongest qualified options without bypassing Tithi/Nakshatra eligibility.",required:true},
-    {title:"Local clean windows",purpose:"Show recommended clean windows after existing exclusions are applied.",required:true},
-    {title:"Why this ranking",purpose:"Expose the deterministic score factors and practical continuity signal.",required:true},
-    ...common,
-  ];
-  if(family==="CHOGHADIYA")return [
-    {title:"Local date + city",purpose:"Establish the city/date context used for sunrise and sunset boundaries.",required:true},
-    {title:"Day Choghadiya",purpose:"Render the calculated daytime segments and existing effect labels.",required:true},
-    {title:"Night Choghadiya",purpose:"Render the calculated nighttime segments and existing effect labels.",required:true},
-    {title:"Related daily Panchang",purpose:"Link back to the same city/date Panchang as the broader daily context.",required:true},
-    ...common,
-  ];
-  if(family==="FESTIVAL")return [
-    {title:"Festival date summary",purpose:"Render only dates and names present in the maintained festival dataset.",required:true},
-    {title:"Local Panchang context",purpose:"Connect the event to the relevant calculated city/date context when supported.",required:true},
-    {title:"Related festival navigation",purpose:"Link to the year hub and adjacent relevant festival pages without fabricating relationships.",required:true},
-    ...common,
-  ];
-  if(family==="VRAT")return [
-    {title:"Yearly date set",purpose:"Render the approved vrata dates from a reviewed data source or engine; do not infer dates from SEO demand alone.",required:true},
-    {title:"Next / upcoming occurrence",purpose:"Surface the next relevant date only after the dataset is implemented and validated.",required:true},
-    {title:"Local Panchang context",purpose:"Link each supported date to calculated Panchang context where appropriate.",required:true},
-    ...common,
-  ];
-  if(family==="TOOL")return [
-    {title:"Tool input / context",purpose:"Make the required location/date/time inputs explicit and preserve the existing calculation assumptions.",required:true},
-    {title:"Primary result",purpose:"Return the calculated answer prominently before supporting explanation.",required:true},
-    {title:"Interpretation",purpose:"Explain what the calculated value means without overstating precision or tradition-specific authority.",required:true},
-    ...common,
-  ];
+  const common:SeoBriefSection[]=[{title:"Intent answer",purpose:"Answer the primary search intent immediately with page-specific data rather than generic prose.",required:true},{title:"Related navigation",purpose:"Expose contextual links to the closest Panchvani topical pages without creating competing intent owners.",required:true},{title:"Method / source context",purpose:"Explain where calculated or curated data comes from when that context materially affects interpretation.",required:false}];
+  if(family==="PANCHANG")return [{title:"Date + location summary",purpose:"State the canonical local date and city context used for the calculation.",required:true},{title:"Core Panchang values",purpose:"Render Tithi, Nakshatra, Yoga and Karana from the Panchang engine.",required:true},{title:"Sunrise / sunset",purpose:"Show the local astronomical day boundary used by time-based calculations.",required:true},{title:"Daily timing windows",purpose:"Show relevant Rahu/Yamaganda/Gulika/Abhijit or other already-supported daily timing data.",required:true},...common];
+  if(family==="CALENDAR")return [{title:"Month overview",purpose:"Summarize the selected city/month and expose important calculated lunar dates.",required:true},{title:"Calendar grid / date list",purpose:"Provide useful daily entry points rather than a thin month shell.",required:true},{title:"Key month events",purpose:"Surface existing festival or Muhurat relations only where data is available.",required:true},...common];
+  if(family==="MUHURAT")return [{title:"Monthly qualification summary",purpose:"Summarize qualifying dates from the Muhurat engine for this event/location.",required:true},{title:"Ranked dates",purpose:"Show Planning Score and the strongest qualified options without bypassing Tithi/Nakshatra eligibility.",required:true},{title:"Local clean windows",purpose:"Show recommended clean windows after existing exclusions are applied.",required:true},{title:"Why this ranking",purpose:"Expose the deterministic score factors and practical continuity signal.",required:true},...common];
+  if(family==="CHOGHADIYA")return [{title:"Local date + city",purpose:"Establish the city/date context used for sunrise and sunset boundaries.",required:true},{title:"Day Choghadiya",purpose:"Render the calculated daytime segments and existing effect labels.",required:true},{title:"Night Choghadiya",purpose:"Render the calculated nighttime segments and existing effect labels.",required:true},{title:"Related daily Panchang",purpose:"Link back to the same city/date Panchang as the broader daily context.",required:true},...common];
+  if(family==="FESTIVAL")return [{title:"Festival date summary",purpose:"Render only dates and names present in the maintained festival dataset.",required:true},{title:"Local Panchang context",purpose:"Connect the event to the relevant calculated city/date context when supported.",required:true},{title:"Related festival navigation",purpose:"Link to the year hub and adjacent relevant festival pages without fabricating relationships.",required:true},...common];
+  if(family==="VRAT")return [{title:"Yearly date set",purpose:"Render the approved vrata dates from a reviewed data source or engine; do not infer dates from SEO demand alone.",required:true},{title:"Next / upcoming occurrence",purpose:"Surface the next relevant date only after the dataset is implemented and validated.",required:true},{title:"Local Panchang context",purpose:"Link each supported date to calculated Panchang context where appropriate.",required:true},...common];
+  if(family==="TOOL")return [{title:"Tool input / context",purpose:"Make the required location/date/time inputs explicit and preserve the existing calculation assumptions.",required:true},{title:"Primary result",purpose:"Return the calculated answer prominently before supporting explanation.",required:true},{title:"Interpretation",purpose:"Explain what the calculated value means without overstating precision or tradition-specific authority.",required:true},...common];
   return common;
 }
 
-function readinessFor(item:SearchOpportunity|null,record:OpportunityLifecycleRecord,plan:SeoActionPlan):SeoBuildBrief["readiness"]{
-  if(record.stage==="WON"||plan.mode==="MONITOR")return "MEASURE_ONLY";
-  if((record.stage==="SHIPPED"||record.stage==="MEASURING")&&plan.mode!=="OUTCOME")return "MEASURE_ONLY";
-  if(item?.status==="NO_CLEAR_LANDING"||!plan.targetPath)return "BLOCKED";
-  if(record.stage==="APPROVED"||record.stage==="BUILD")return "READY_FOR_BUILD";
-  return "READY_FOR_REVIEW";
-}
-
-function blockerFor(item:SearchOpportunity|null,plan:SeoActionPlan,readiness:SeoBuildBrief["readiness"]){
-  if(readiness!=="BLOCKED")return null;
-  if(item?.status==="NO_CLEAR_LANDING")return "Resolve query-to-page ownership and indexing/canonical ambiguity before implementation.";
-  if(!plan.targetPath)return "No deterministic target URL is available from the current opportunity context.";
-  return "The opportunity needs human review before implementation.";
-}
-
-function titleDirection(query:string|null,city:string|null,target:string|null){
-  if(!query)return "Preserve the current title unless fresh GSC evidence identifies a specific intent gap.";
-  const location=city?` Include ${city} only when location is part of the page's actual data context.`:"";
-  return `Lead with the natural-language intent behind “${query}”, then add the date/year or tool qualifier represented by ${target??"the target page"}.${location} Keep the title unique and avoid mechanical keyword repetition.`;
-}
-
-function h1Direction(query:string|null,city:string|null){
-  if(!query)return "Keep one descriptive H1 that matches the visible page purpose.";
-  return `Use one human-readable H1 that directly answers the “${query}” intent${city?` for ${city}`:""}; do not copy the raw query verbatim when natural wording is clearer.`;
-}
-
-function internalLinksFor(family:ReturnType<typeof pageFamily>,target:string|null,current:string|null){
-  const links=[
-    target?`Inbound: add contextual links from the closest existing topical hubs to ${target}.`:"Inbound: identify the canonical target before adding intent-rich links.",
-    "Outbound: link to the nearest complementary Panchvani page family, not another page targeting the same exact intent.",
-    "Anchor policy: use descriptive, varied anchors that reflect destination purpose; avoid sitewide exact-match repetition.",
-  ];
-  if(current&&target&&current!==target)links.push(`Cannibalization check: review intent-rich links pointing to ${current} and move only the links that semantically belong to ${target}.`);
-  if(family==="MUHURAT")links.push("Muhurat: connect to same-city Monthly Calendar, Daily Panchang for ranked dates, primary Muhurat siblings and the national baseline where relevant.");
-  if(family==="PANCHANG")links.push("Daily Panchang: connect to same-city Calendar, Choghadiya, relevant primary Muhurat, festival and regional pages under the existing topical graph policy.");
-  if(family==="VRAT"||family==="FESTIVAL")links.push("Event pages: connect to the year hub and relevant date/city Panchang pages only when the event dataset supports the relationship.");
-  return links;
-}
-
-function technicalChecksFor(target:string|null,readiness:SeoBuildBrief["readiness"]){
-  const checks=[
-    `${target??"Target URL"} returns the intended content with HTTP 200; invalid route parameters still 404.`,
-    "Canonical points to the intended indexable owner and does not conflict with route-level robots policy.",
-    "No duplicate page is created for an intent already owned by an existing canonical URL.",
-    "All dynamic city/date/year parameters pass existing strict route validation.",
-    "Page remains usable and semantically complete with JavaScript/server rendering under the current Next/vinext deployment path.",
-  ];
-  if(readiness==="READY_FOR_REVIEW")checks.push("Do not add the route to indexable expansion/sitemaps until human approval and content-quality review are complete.");
-  return checks;
-}
-
-function schemaChecksFor(family:ReturnType<typeof pageFamily>){
-  const checks=["Structured data must describe visible page content and pass validation; do not add schema only to chase a rich result."];
-  if(family==="MUHURAT")checks.push("Preserve the currently valid Muhurat/Event JSON-LD pattern only where its properties match rendered data.");
-  else if(family==="FESTIVAL")checks.push("Use the existing festival/event structured-data pattern only for dataset-backed event facts.");
-  else checks.push("Reuse an existing valid Panchvani schema pattern for this page family when one exists; otherwise ship without speculative markup.");
-  return checks;
-}
-
-function measurementPlanFor(item:SearchOpportunity|null,record:OpportunityLifecycleRecord,plan:SeoActionPlan){
-  const query=item?.topQuery??record.context?.topQuery??null;
-  const target=plan.targetPath??record.context?.recommendedPath??null;
-  return [
-    "At SHIPPED, capture the existing lifecycle baseline for impressions, clicks, CTR, position and opportunity score.",
-    query&&target?`Track GSC query×page ownership for “${query}” and confirm ${target} becomes or remains the intended landing.`:"Track the designated query-to-page relationship once fresh GSC evidence is available.",
-    "Use equal-length pre/post GSC windows at the existing 14/28/56-day checkpoints with the final-data lag.",
-    "Evaluate CTR together with average position; do not attribute a CTR change to snippet work when ranking position materially changed.",
-    "Close as WON only after Outcome Intelligence recommends it and a human confirms the implementation should be preserved.",
-  ];
-}
+function readinessFor(item:SearchOpportunity|null,record:OpportunityLifecycleRecord,plan:SeoActionPlan):SeoBuildBrief["readiness"]{if(record.stage==="WON"||plan.mode==="MONITOR")return "MEASURE_ONLY";if((record.stage==="SHIPPED"||record.stage==="MEASURING")&&plan.mode!=="OUTCOME")return "MEASURE_ONLY";if(item?.status==="NO_CLEAR_LANDING"||!plan.targetPath)return "BLOCKED";if(record.stage==="APPROVED"||record.stage==="BUILD")return "READY_FOR_BUILD";return "READY_FOR_REVIEW";}
+function blockerFor(item:SearchOpportunity|null,plan:SeoActionPlan,readiness:SeoBuildBrief["readiness"]){if(readiness!=="BLOCKED")return null;if(item?.status==="NO_CLEAR_LANDING")return "Resolve query-to-page ownership and indexing/canonical ambiguity before implementation.";if(!plan.targetPath)return "No deterministic target URL is available from the current opportunity context.";return "The opportunity needs human review before implementation.";}
+function titleDirection(query:string|null,city:string|null,target:string|null){if(!query)return "Preserve the current title unless fresh GSC evidence identifies a specific intent gap.";const location=city?` Include ${city} only when location is part of the page's actual data context.`:"";return `Lead with the natural-language intent behind “${query}”, then add the date/year or tool qualifier represented by ${target??"the target page"}.${location} Keep the title unique and avoid mechanical keyword repetition.`;}
+function h1Direction(query:string|null,city:string|null){if(!query)return "Keep one descriptive H1 that matches the visible page purpose.";return `Use one human-readable H1 that directly answers the “${query}” intent${city?` for ${city}`:""}; do not copy the raw query verbatim when natural wording is clearer.`;}
+function internalLinksFor(family:ReturnType<typeof pageFamily>,target:string|null,current:string|null){const links=[target?`Inbound: add contextual links from the closest existing topical hubs to ${target}.`:"Inbound: identify the canonical target before adding intent-rich links.","Outbound: link to the nearest complementary Panchvani page family, not another page targeting the same exact intent.","Anchor policy: use descriptive, varied anchors that reflect destination purpose; avoid sitewide exact-match repetition."];if(current&&target&&current!==target)links.push(`Cannibalization check: review intent-rich links pointing to ${current} and move only the links that semantically belong to ${target}.`);if(family==="MUHURAT")links.push("Muhurat: connect to same-city Monthly Calendar, Daily Panchang for ranked dates, primary Muhurat siblings and the national baseline where relevant.");if(family==="PANCHANG")links.push("Daily Panchang: connect to same-city Calendar, Choghadiya, relevant primary Muhurat, festival and regional pages under the existing topical graph policy.");if(family==="VRAT"||family==="FESTIVAL")links.push("Event pages: connect to the year hub and relevant date/city Panchang pages only when the event dataset supports the relationship.");return links;}
+function technicalChecksFor(target:string|null,readiness:SeoBuildBrief["readiness"]){const checks=[`${target??"Target URL"} returns the intended content with HTTP 200; invalid route parameters still 404.`,`Canonical points to the intended indexable owner and does not conflict with route-level robots policy.`,`No duplicate page is created for an intent already owned by an existing canonical URL.`,`All dynamic city/date/year parameters pass existing strict route validation.`,`Page remains usable and semantically complete with JavaScript/server rendering under the current Next/vinext deployment path.`];if(readiness==="READY_FOR_REVIEW")checks.push("Do not add the route to indexable expansion/sitemaps until human approval and content-quality review are complete.");if(readiness==="READY_FOR_BUILD")checks.push("Before SHIPPED, register the implementation hypothesis, commit SHA or PR, changed files, deployed HTTPS URL and optional release/version label so the launch can be attributed exactly.");return checks;}
+function schemaChecksFor(family:ReturnType<typeof pageFamily>){const checks=["Structured data must describe visible page content and pass validation; do not add schema only to chase a rich result."];if(family==="MUHURAT")checks.push("Preserve the currently valid Muhurat/Event JSON-LD pattern only where its properties match rendered data.");else if(family==="FESTIVAL")checks.push("Use the existing festival/event structured-data pattern only for dataset-backed event facts.");else checks.push("Reuse an existing valid Panchvani schema pattern for this page family when one exists; otherwise ship without speculative markup.");return checks;}
+function measurementPlanFor(item:SearchOpportunity|null,record:OpportunityLifecycleRecord,plan:SeoActionPlan){const query=item?.topQuery??record.context?.topQuery??null;const target=plan.targetPath??record.context?.recommendedPath??null;return ["At SHIPPED, freeze the active implementation evidence and capture the existing lifecycle baseline for impressions, clicks, CTR, position and opportunity score.",query&&target?`Track GSC query×page ownership for “${query}” and confirm ${target} becomes or remains the intended landing.`:"Track the designated query-to-page relationship once fresh GSC evidence is available.","Persist the shipped implementation ID on each 14/28/56-day Outcome Intelligence checkpoint so the measured result remains tied to the exact change set.","Use equal-length pre/post GSC windows at the existing 14/28/56-day checkpoints with the final-data lag.","Evaluate CTR together with average position; do not attribute a CTR change to snippet work when ranking position materially changed.","Close as WON only after Outcome Intelligence recommends it and a human confirms the implementation should be preserved."];}
 
 export function buildSeoExecutionBrief({opportunity,record}:BriefInput):SeoBuildBrief{
-  const plan=buildSeoActionPlan({opportunity,record});
-  const target=plan.targetPath??record.context?.recommendedPath??null;
-  const template=opportunity?.template??record.context?.template??null;
-  const family=pageFamily(target,template);
-  const readiness=readinessFor(opportunity,record,plan);
-  const primaryQuery=opportunity?.topQuery??record.context?.topQuery??null;
-  const city=opportunity?.city??record.context?.city??null;
-  const intent=opportunity?.intent??opportunity?.label??record.context?.label??record.key;
-  const technicalChecks=technicalChecksFor(target,readiness);
-  return {
-    id:record.key,
-    priority:plan.priority,
-    mode:plan.mode,
-    readiness,
-    blocker:blockerFor(opportunity,plan,readiness),
-    objective:plan.headline,
-    intent,
-    primaryQuery,
-    city,
-    template,
-    targetPath:target,
-    currentPath:plan.currentPath,
-    titleDirection:titleDirection(primaryQuery,city,target),
-    h1Direction:h1Direction(primaryQuery,city),
-    sections:sectionsFor(family),
-    internalLinks:internalLinksFor(family,target,plan.currentPath),
-    technicalChecks,
-    schemaChecks:schemaChecksFor(family),
-    acceptanceCriteria:[...plan.successCriteria,...technicalChecks.slice(0,3)],
-    measurementPlan:measurementPlanFor(opportunity,record,plan),
-    executionSteps:plan.steps.map(step=>({area:step.area,action:step.action,evidence:step.evidence})),
-    guardrail:plan.guardrail,
-  };
+  const plan=buildSeoActionPlan({opportunity,record});const target=plan.targetPath??record.context?.recommendedPath??null;const template=opportunity?.template??record.context?.template??null;const family=pageFamily(target,template);const readiness=readinessFor(opportunity,record,plan);const primaryQuery=opportunity?.topQuery??record.context?.topQuery??null;const city=opportunity?.city??record.context?.city??null;const intent=opportunity?.intent??opportunity?.label??record.context?.label??record.key;const technicalChecks=technicalChecksFor(target,readiness);
+  return {id:record.key,priority:plan.priority,mode:plan.mode,readiness,blocker:blockerFor(opportunity,plan,readiness),objective:plan.headline,intent,primaryQuery,city,template,targetPath:target,currentPath:plan.currentPath,titleDirection:titleDirection(primaryQuery,city,target),h1Direction:h1Direction(primaryQuery,city),sections:sectionsFor(family),internalLinks:internalLinksFor(family,target,plan.currentPath),technicalChecks,schemaChecks:schemaChecksFor(family),acceptanceCriteria:[...plan.successCriteria,...technicalChecks.slice(0,3)],measurementPlan:measurementPlanFor(opportunity,record,plan),executionSteps:plan.steps.map(step=>({area:step.area,action:step.action,evidence:step.evidence})),guardrail:plan.guardrail};
 }
 
 export function seoExecutionBriefToMarkdown(brief:SeoBuildBrief){
-  const lines=[
-    `# Panchvani SEO Execution Brief — ${brief.id}`,
-    "",
-    `- Priority: ${brief.priority}`,
-    `- Mode: ${brief.mode}`,
-    `- Readiness: ${brief.readiness}`,
-    `- Objective: ${brief.objective}`,
-    `- Intent: ${brief.intent}`,
-    `- Primary query: ${brief.primaryQuery??"n/a"}`,
-    `- City: ${brief.city??"n/a"}`,
-    `- Template: ${brief.template??"n/a"}`,
-    `- Target URL: ${brief.targetPath??"unresolved"}`,
-    `- Current landing: ${brief.currentPath??"n/a"}`,
-  ];
-  if(brief.blocker)lines.push(`- Blocker: ${brief.blocker}`);
-  lines.push(
-    "",
-    "## Metadata direction",
-    "",
-    `**Title:** ${brief.titleDirection}`,
-    "",
-    `**H1:** ${brief.h1Direction}`,
-    "",
-    "## Required page structure",
-    "",
-    ...brief.sections.map(section=>`- [${section.required?"x":" "}] **${section.title}:** ${section.purpose}`),
-    "",
-    "## Execution plan",
-    "",
-    ...brief.executionSteps.map((step,index)=>`${index+1}. **${step.area}:** ${step.action}\n   - Evidence: ${step.evidence}`),
-    "",
-    "## Internal links",
-    "",
-    ...brief.internalLinks.map(item=>`- ${item}`),
-    "",
-    "## Technical / indexing checks",
-    "",
-    ...brief.technicalChecks.map(item=>`- [ ] ${item}`),
-    "",
-    "## Structured data",
-    "",
-    ...brief.schemaChecks.map(item=>`- [ ] ${item}`),
-    "",
-    "## Acceptance criteria",
-    "",
-    ...brief.acceptanceCriteria.map(item=>`- [ ] ${item}`),
-    "",
-    "## Measurement plan",
-    "",
-    ...brief.measurementPlan.map(item=>`- ${item}`),
-    "",
-    "## Guardrail",
-    "",
-    brief.guardrail,
-  );
-  return lines.join("\n");
+  const lines=[`# Panchvani SEO Execution Brief — ${brief.id}`,"",`- Priority: ${brief.priority}`,`- Mode: ${brief.mode}`,`- Readiness: ${brief.readiness}`,`- Objective: ${brief.objective}`,`- Intent: ${brief.intent}`,`- Primary query: ${brief.primaryQuery??"n/a"}`,`- City: ${brief.city??"n/a"}`,`- Template: ${brief.template??"n/a"}`,`- Target URL: ${brief.targetPath??"unresolved"}`,`- Current landing: ${brief.currentPath??"n/a"}`];if(brief.blocker)lines.push(`- Blocker: ${brief.blocker}`);lines.push("","## Metadata direction","",`**Title:** ${brief.titleDirection}`,"",`**H1:** ${brief.h1Direction}`,"","## Required page structure","",...brief.sections.map(section=>`- [${section.required?"x":" "}] **${section.title}:** ${section.purpose}`),"","## Execution plan","",...brief.executionSteps.map((step,index)=>`${index+1}. **${step.area}:** ${step.action}\n   - Evidence: ${step.evidence}`),"","## Internal links","",...brief.internalLinks.map(item=>`- ${item}`),"","## Technical / indexing checks","",...brief.technicalChecks.map(item=>`- [ ] ${item}`),"","## Structured data","",...brief.schemaChecks.map(item=>`- [ ] ${item}`),"","## Acceptance criteria","",...brief.acceptanceCriteria.map(item=>`- [ ] ${item}`),"","## Measurement plan","",...brief.measurementPlan.map(item=>`- ${item}`),"","## Guardrail","",brief.guardrail);return lines.join("\n");
 }
