@@ -3,10 +3,12 @@ import Link from "next/link";
 import {notFound} from "next/navigation";
 import Header from "@/components/Header";
 import ChoghadiyaTable from "@/components/ChoghadiyaTable";
-import {findCityBySlug,cities} from "@/lib/cities";
+import TopicalGraph from "@/components/TopicalGraph";
+import {findCityBySlug} from "@/lib/cities";
 import {getPanchang} from "@/lib/panchang";
 import {todayInIndia} from "@/lib/dates";
 import {isPriorityCity,robotsFor} from "@/lib/seo-policy";
+import {buildChoghadiyaTopicalGraph} from "@/lib/topical-links";
 
 export const revalidate=3600;
 
@@ -26,7 +28,8 @@ export default async function ChoghadiyaCityPage({params}:{params:Promise<{city:
   const p=await params;
   const city=findCityBySlug(p.city);
   if(!city)notFound();
-  const data=await getPanchang(todayInIndia(),city);
+  const date=todayInIndia();
+  const data=await getPanchang(date,city);
   const good=data.dayChoghadiya.filter(x=>x.effect==="good");
 
   const ld={"@context":"https://schema.org","@graph":[
@@ -56,10 +59,7 @@ export default async function ChoghadiyaCityPage({params}:{params:Promise<{city:
       <ChoghadiyaTable day={data.dayChoghadiya} night={data.nightChoghadiya}/>
     </div>
 
-    <div className="pill-links">
-      <Link href={`/panchang/${city.slug}/${data.date}`}>Full Panchang</Link>
-      {cities.filter(c=>c.slug!==city.slug).slice(0,8).map(c=><Link href={`/tools/choghadiya/${c.slug}`} key={c.slug}>{c.name}</Link>)}
-    </div>
+    <TopicalGraph title={`Explore timing in ${city.name}`} groups={buildChoghadiyaTopicalGraph(city,date)}/>
 
     <div className="seo-copy"><h2>How Choghadiya is calculated</h2><p>The daylight interval from sunrise to sunset is divided into eight equal periods. The night interval from sunset to the next sunrise is also divided into eight periods. The sequence depends on the weekday, so local solar timing and the selected city both matter.</p></div>
 
