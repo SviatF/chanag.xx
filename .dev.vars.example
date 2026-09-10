@@ -5,6 +5,13 @@
 # Example: SEO_EXTRA_INDEX_CITIES=mysuru,kochi,dehradun
 SEO_EXTRA_INDEX_CITIES=
 
+# Optional comma-separated regional intent clusters approved after GSC demand review.
+# Format: language:city:intent
+# Supported intents: rahu-kalam, choghadiya
+# The city must already be indexable and relevant to the selected regional language.
+# Example: SEO_EXTRA_REGIONAL_INTENTS=tamil:coimbatore:rahu-kalam,malayalam:kochi:rahu-kalam
+SEO_EXTRA_REGIONAL_INTENTS=
+
 # SEO Opportunity Lifecycle persistence.
 # Reuses CLOUDFLARE_ACCOUNT_ID + CLOUDFLARE_API_TOKEN already used by Cloudflare analytics.
 # The API token also needs Workers KV Storage read/write permission for this namespace.
