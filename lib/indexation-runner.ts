@@ -3,6 +3,7 @@ import type {OpportunityLifecycleRecord} from "./opportunity-lifecycle";
 import type {SearchOpportunity} from "./search-opportunities";
 import {analyzeIndexInspections,selectIndexInspectionCandidates,summarizeIndexation} from "./indexation-intelligence";
 import {writeSeoIndexationState,type SeoIndexationRunState} from "./indexation-store";
+import {mergeUrlIndexationInventory,readUrlIndexationInventory,writeUrlIndexationInventory} from "./indexation-inventory-store";
 
 export async function runIndexationIntelligence(
   snapshot:GscTrafficSnapshot,
@@ -26,7 +27,13 @@ export async function runIndexationIntelligence(
       findings,
       errors:inspection.errors
     };
-    await writeSeoIndexationState(state);
+    await Promise.all([
+      writeSeoIndexationState(state),
+      (async()=>{
+        const inventory=await readUrlIndexationInventory();
+        await writeUrlIndexationInventory(mergeUrlIndexationInventory(inventory,inspection.rows,inspection.errors));
+      })(),
+    ]);
     return state;
   }catch(error){
     const message=error instanceof Error?error.message:"Unknown URL Inspection failure.";
