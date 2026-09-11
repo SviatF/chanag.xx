@@ -6,6 +6,10 @@ import {getCloudflareConnectionStatus,getCloudflareSnapshot,type CloudflareSnaps
 import {getLiveSitemapSnapshot,type LiveSitemapSnapshot} from "@/lib/sitemap-live";
 import {getOpportunityStoreStatus} from "@/lib/opportunity-store";
 import {readSeoIndexationState,type SeoIndexationRunState} from "@/lib/indexation-store";
+import {supportedCities} from "@/lib/cities";
+import {buildCityDemand} from "@/lib/demand-monitor";
+import {isPriorityCity} from "@/lib/seo-policy";
+import GeoDemandMap,{type GeoDemandCity} from "@/components/GeoDemandMap";
 
 export const dynamic="force-dynamic";
 
@@ -72,6 +76,28 @@ export default async function AdminOverview(){
   const topOrganicPages=(gsc?.pages??[]).slice().sort((a,b)=>b.clicks-a.clicks||b.impressions-a.impressions).slice(0,8);
   const topQueries=(gsc?.queries??[]).slice().sort((a,b)=>b.clicks-a.clicks||b.impressions-a.impressions).slice(0,8);
 
+  const demand=gsc?buildCityDemand(gsc):[];
+  const demandBySlug=new Map(demand.map(row=>[row.slug,row]));
+  const geoCities:GeoDemandCity[]=supportedCities.map(city=>{
+    const row=demandBySlug.get(city.slug);
+    const indexable=row?.priority??isPriorityCity(city.slug);
+    return {
+      slug:city.slug,
+      name:city.name,
+      state:city.state,
+      lat:city.lat,
+      lng:city.lng,
+      impressions:row?.pageImpressions??0,
+      clicks:row?.pageClicks??0,
+      queryImpressions:row?.queryImpressions??0,
+      matchedQueries:row?.matchedQueries??0,
+      position:row?.averagePosition??0,
+      score:row?.score??0,
+      recommendation:row?.recommendation??(indexable?"ACTIVE":"HOLD"),
+      indexable,
+    };
+  });
+
   return <div className="admin-page admin-overview">
     <header className="admin-page-head admin-overview-head">
       <div>
@@ -100,6 +126,8 @@ export default async function AdminOverview(){
       <article className="admin-kpi"><small>Pageviews · 28d</small><strong>{ga4?compact(ga4.current.screenPageViews):"—"}</strong><span>{ga4?deltaLabel(ga4.current.screenPageViews,ga4.previous.screenPageViews):"GA4 unavailable"}</span></article>
       <article className="admin-kpi"><small>Edge visits · 28d</small><strong>{cloudflare?compact(cloudflare.current.visits):"—"}</strong><span>{cloudflare?deltaLabel(cloudflare.current.visits,cloudflare.previous.visits):"Cloudflare unavailable"}</span></article>
     </section>
+
+    <GeoDemandMap cities={geoCities}/>
 
     <section className="admin-grid-two">
       <article className="admin-panel">
