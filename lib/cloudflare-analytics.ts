@@ -45,6 +45,7 @@ type GraphResponse={
 
 function isoTime(date:Date){return date.toISOString()}
 function shift(date:Date,days:number){const d=new Date(date);d.setUTCDate(d.getUTCDate()+days);return d}
+function analyticsToken(){return process.env.CLOUDFLARE_ANALYTICS_API_TOKEN??process.env.CLOUDFLARE_API_TOKEN??"";}
 
 function sumGroups(groups:Group[]|undefined):CloudflareSummary{
   return (groups??[]).reduce((acc,row)=>({
@@ -68,20 +69,19 @@ function mapGroups(groups:Group[]|undefined,kind:"hour"|"country"|"path"|"status
 }
 
 export function getCloudflareConnectionStatus(){
+  const token=analyticsToken();
   return {
-    configured:Boolean(
-      process.env.CLOUDFLARE_API_TOKEN&&
-      process.env.CLOUDFLARE_ZONE_ID
-    ),
+    configured:Boolean(token&&process.env.CLOUDFLARE_ZONE_ID),
     accountId:process.env.CLOUDFLARE_ACCOUNT_ID??"",
     zoneId:process.env.CLOUDFLARE_ZONE_ID??"",
+    tokenMode:process.env.CLOUDFLARE_ANALYTICS_API_TOKEN?"dedicated":"shared",
   };
 }
 
 export async function getCloudflareSnapshot():Promise<CloudflareSnapshot>{
   const status=getCloudflareConnectionStatus();
-  const token=process.env.CLOUDFLARE_API_TOKEN;
-  if(!status.configured||!token)throw new Error("Cloudflare Analytics is not configured.");
+  const token=analyticsToken();
+  if(!status.configured||!token)throw new Error("Cloudflare Analytics is not configured. Set CLOUDFLARE_ANALYTICS_API_TOKEN (preferred) or CLOUDFLARE_API_TOKEN plus CLOUDFLARE_ZONE_ID.");
 
   const end=new Date();
   const start=shift(end,-28);
@@ -95,89 +95,43 @@ export async function getCloudflareSnapshot():Promise<CloudflareSnapshot>{
           limit: 1000
           orderBy: [datetimeHour_ASC]
           filter: {datetime_geq: $start, datetime_lt: $end, requestSource: "eyeball"}
-        ) {
-          count
-          sum { visits edgeResponseBytes }
-          dimensions { datetimeHour }
-        }
+        ) { count sum { visits edgeResponseBytes } dimensions { datetimeHour } }
         previous: httpRequestsAdaptiveGroups(
           limit: 1000
           orderBy: [datetimeHour_ASC]
           filter: {datetime_geq: $previousStart, datetime_lt: $previousEnd, requestSource: "eyeball"}
-        ) {
-          count
-          sum { visits edgeResponseBytes }
-          dimensions { datetimeHour }
-        }
+        ) { count sum { visits edgeResponseBytes } dimensions { datetimeHour } }
         countries: httpRequestsAdaptiveGroups(
           limit: 20
           orderBy: [count_DESC]
           filter: {datetime_geq: $start, datetime_lt: $end, requestSource: "eyeball"}
-        ) {
-          count
-          sum { visits edgeResponseBytes }
-          dimensions { clientCountryName }
-        }
+        ) { count sum { visits edgeResponseBytes } dimensions { clientCountryName } }
         paths: httpRequestsAdaptiveGroups(
           limit: 20
           orderBy: [count_DESC]
           filter: {datetime_geq: $start, datetime_lt: $end, requestSource: "eyeball"}
-        ) {
-          count
-          sum { visits edgeResponseBytes }
-          dimensions { clientRequestPath }
-        }
+        ) { count sum { visits edgeResponseBytes } dimensions { clientRequestPath } }
         statusCodes: httpRequestsAdaptiveGroups(
           limit: 30
           orderBy: [count_DESC]
           filter: {datetime_geq: $start, datetime_lt: $end, requestSource: "eyeball"}
-        ) {
-          count
-          sum { visits edgeResponseBytes }
-          dimensions { edgeResponseStatus }
-        }
+        ) { count sum { visits edgeResponseBytes } dimensions { edgeResponseStatus } }
       }
     }
   }`;
 
   const response=await fetch("https://api.cloudflare.com/client/v4/graphql",{
     method:"POST",
-    headers:{
-      authorization:`Bearer ${token}`,
-      "content-type":"application/json",
-    },
-    body:JSON.stringify({
-      query,
-      variables:{
-        zoneTag:status.zoneId,
-        start:isoTime(start),
-        end:isoTime(end),
-        previousStart:isoTime(previousStart),
-        previousEnd:isoTime(previousEnd),
-      },
-    }),
+    headers:{authorization:`Bearer ${token}`,"content-type":"application/json"},
+    body:JSON.stringify({query,variables:{zoneTag:status.zoneId,start:isoTime(start),end:isoTime(end),previousStart:isoTime(previousStart),previousEnd:isoTime(previousEnd)}}),
     cache:"no-store",
   });
 
-  if(!response.ok){
-    const text=await response.text();
-    throw new Error(`Cloudflare GraphQL failed (${response.status}): ${text.slice(0,260)}`);
-  }
-
+  if(!response.ok){const text=await response.text();throw new Error(`Cloudflare GraphQL failed (${response.status}): ${text.slice(0,260)}`);}
   const json=await response.json() as GraphResponse;
-  if(json.errors?.length){
-    throw new Error(`Cloudflare GraphQL: ${json.errors.map(error=>error.message).filter(Boolean).join(" · ").slice(0,300)}`);
-  }
+  if(json.errors?.length){throw new Error(`Cloudflare GraphQL: ${json.errors.map(error=>error.message).filter(Boolean).join(" · ").slice(0,300)}`);}
   const zone=json.data?.viewer?.zones?.[0];
   if(!zone)throw new Error("Cloudflare GraphQL returned no zone. Check Zone ID and token scope.");
 
-  return {
-    zoneId:status.zoneId,
-    current:sumGroups(zone.current),
-    previous:sumGroups(zone.previous),
-    hourly:mapGroups(zone.current,"hour"),
-    countries:mapGroups(zone.countries,"country"),
-    paths:mapGroups(zone.paths,"path"),
-    statusCodes:mapGroups(zone.statusCodes,"status"),
-  };
+  return {zoneId:status.zoneId,current:sumGroups(zone.current),previous:sumGroups(zone.previous),hourly:mapGroups(zone.current,"hour"),countries:mapGroups(zone.countries,"country"),paths:mapGroups(zone.paths,"path"),statusCodes:mapGroups(zone.statusCodes,"status")};
 }
