@@ -17,9 +17,10 @@ export async function generateMetadata({params}:{params:Promise<{festival:string
   const year=parseRouteYear(p.year);
   const f=year?festivalBySlugYear(p.festival,year):undefined;
   if(!year||!f)notFound();
+  const semantics=getFestivalSemantics(f);
   return {
     title:`${f.name} ${year} — Date, Meaning & Panchang Rule Context`,
-    description:`${f.name} ${year}: ${f.date}. ${f.short} See the observance rule context and open a city page for local Panchang values.`,
+    description:`${f.name} ${year}: ${f.date}. ${semantics.displayShort} See the observance rule context and open a city page for local Panchang values.`,
     alternates:{canonical:`/festivals/${f.slug}/${year}`},
     robots:robotsFor(festivalPageIsIndexable(f.slug,year))
   };
@@ -36,7 +37,7 @@ export default async function FestivalPage({params}:{params:Promise<{festival:st
   const month=String(Number(f.date.slice(5,7))).padStart(2,"0");
   const siblingYears=festivalYearSiblings(f.slug,year);
   const ld={"@context":"https://schema.org","@graph":[
-    {"@type":"WebPage","name":`${f.name} ${year}`,"url":`https://panchvani.com/festivals/${f.slug}/${year}`,"description":f.short,"about":{"@type":"Thing","name":f.name}},
+    {"@type":"WebPage","name":`${f.name} ${year}`,"url":`https://panchvani.com/festivals/${f.slug}/${year}`,"description":semantics.displayShort,"about":{"@type":"Thing","name":f.name}},
     {"@type":"BreadcrumbList","itemListElement":[
       {"@type":"ListItem","position":1,"name":"Home","item":"https://panchvani.com/"},
       {"@type":"ListItem","position":2,"name":"Festivals","item":"https://panchvani.com/festivals/"},
@@ -48,7 +49,7 @@ export default async function FestivalPage({params}:{params:Promise<{festival:st
     <div className="breadcrumbs"><Link href="/">Home</Link> / <Link href="/festivals">Festivals</Link> / {f.name}</div>
     <p className="page-kicker">HINDU FESTIVAL · {year}</p>
     <h1 className="page-title">{f.name}<br/>{year}</h1>
-    <p className="page-subtitle">{f.short}</p>
+    <p className="page-subtitle">{semantics.displayShort}</p>
 
     <div className="data-grid">
       <div className="data-card"><small>Date</small><strong>{f.date}</strong></div>
