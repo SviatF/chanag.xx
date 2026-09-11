@@ -29,6 +29,27 @@ jobs:
         with:
           node-version: 24
 
+      - name: Verify Stage 5 owner pages are live
+        run: |
+          node --input-type=module <<'NODE'
+          const urls=[
+            "https://panchvani.com/muhurat",
+            "https://panchvani.com/tools/choghadiya",
+            "https://panchvani.com/tools/hindu-baby-names"
+          ];
+          for(const url of urls){
+            const response=await fetch(url,{redirect:"manual",headers:{"user-agent":"Panchvani-PreGSC-Audit/1.0"}});
+            if(response.status!==200)throw new Error(`${url} returned HTTP ${response.status}`);
+            const html=await response.text();
+            const canonicalTag=[...html.matchAll(/<link\b[^>]*>/gi)].find(match=>/rel=["'][^"']*canonical/i.test(match[0]));
+            const href=canonicalTag?.[0].match(/href=["']([^"']+)/i)?.[1];
+            if(!href)throw new Error(`${url} has no canonical link`);
+            const normalized=new URL(href,url).toString().replace(/\/$/,"");
+            if(normalized!==url)throw new Error(`${url} canonical is ${normalized}`);
+            console.log(`OK ${url}`);
+          }
+          NODE
+
       - name: Run full live sitemap and indexation audit
         env:
           AUDIT_BASE_URL: https://panchvani.com
