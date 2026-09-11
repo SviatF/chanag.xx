@@ -123,9 +123,17 @@ export function regionalIntentLinksForCity(language:string,city:City){
     .map(intent=>({intent,href:regionalIntentPath(language,city,intent),label:regionalIntentSeo[intent].nativeLabels[language]??regionalIntentSeo[intent].label}));
 }
 
-export function regionalAlternates(city:City,intent?:RegionalIntentSlug){
-  const english=intent==="choghadiya"?`/tools/choghadiya/${city.slug}`:`/panchang/${city.slug}`;
-  const languages:Record<string,string>={"en-IN":english,"x-default":english};
+export function regionalAlternates(city:City,intent?:RegionalIntentSlug,date?:string){
+  const languages:Record<string,string>={};
+  if(intent==="choghadiya"){
+    const english=`/tools/choghadiya/${city.slug}`;
+    languages["en-IN"]=english;
+    languages["x-default"]=english;
+  }else if(!intent&&date){
+    const english=`/panchang/${city.slug}/${date}`;
+    languages["en-IN"]=english;
+    languages["x-default"]=english;
+  }
   for(const language of regionalLanguageSlugs){
     if(intent){
       if(isRegionalIntentIndexable(language,city,intent))languages[regionalLanguageSeo[language].hreflang]=regionalIntentPath(language,city,intent);
