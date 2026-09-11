@@ -9,8 +9,10 @@ export async function GET(){
   const base="https://panchvani.com";
   const urls:string[]=[`${base}/regional`];
   for(const language of regionalLanguageSlugs){
+    const cities=regionalCitiesForLanguage(language);
+    if(!cities.length)continue;
     urls.push(`${base}/regional/${language}`);
-    for(const city of regionalCitiesForLanguage(language)){
+    for(const city of cities){
       urls.push(`${base}/regional/${language}/${city.slug}`);
       for(const item of regionalIntentLinksForCity(language,city))urls.push(`${base}${item.href}`);
     }
