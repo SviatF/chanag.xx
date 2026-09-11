@@ -5,7 +5,7 @@ import {todayInIndia} from "@/lib/dates";
 import {parseIsoRouteDate} from "@/lib/route-validation";
 
 export const dynamic="force-dynamic";
-export const metadata={title:"Rahu Kalam Calculator",description:"Calculate Rahu Kalam for any supported Indian city and date."};
+export const metadata={title:"Rahu Kalam Calculator",description:"Calculate Rahu Kalam for any supported Indian city and date.",alternates:{canonical:"/tools/rahu-kalam-calculator"}};
 
 export default async function Page({searchParams}:{searchParams:Promise<{city?:string;date?:string}>}){
   const q=await searchParams;
