@@ -1,7 +1,7 @@
 import Link from "next/link";
 import type {TopicalGraphGroup} from "@/lib/topical-types";
 
-export default function TopicalGraph({title="Explore related Panchvani",groups}:{title?:string;groups:TopicalGraphGroup[]}){
+export default function TopicalGraph({title="Explore related Panchvani",groupEyebrow="RELATED",groups}:{title?:string;groupEyebrow?:string;groups:TopicalGraphGroup[]}){
   const visible=groups.filter(group=>group.links.length);
   if(!visible.length)return null;
 
@@ -9,7 +9,7 @@ export default function TopicalGraph({title="Explore related Panchvani",groups}:
     <h2 className="page-title" style={{fontSize:32}}>{title}</h2>
     <div className="data-grid">
       {visible.map(group=><section className="data-card" key={group.title}>
-        <small>RELATED</small>
+        <small>{groupEyebrow}</small>
         <strong>{group.title}</strong>
         {group.description?<small>{group.description}</small>:null}
         <div className="pill-links">
