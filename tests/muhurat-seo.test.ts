@@ -4,7 +4,7 @@ import {getMonthlyMuhurat} from "../lib/muhurat";
 import {buildMuhuratSeoSummary} from "../lib/muhurat-seo";
 
 describe("Muhurat deterministic SEO content engine",()=>{
-  it("derives summary facts from the ranked rows and stays deterministic",async()=>{
+  it("derives summary facts from the screened rows and stays deterministic",async()=>{
     const city=findCityBySlug("mumbai")!;
     const {rows}=await getMonthlyMuhurat("wedding",2026,9,city);
     const first=buildMuhuratSeoSummary("wedding",2026,9,city,rows,"baseline");
@@ -17,6 +17,7 @@ describe("Muhurat deterministic SEO content engine",()=>{
     expect(first.topDate).toBe(rows[0]?.date??null);
     expect(first.headline).toContain("Mumbai baseline");
     expect(first.overview).toContain(`${rows.length} wedding muhurat candidate`);
+    expect(first.overview).toContain("not a complete Panchang Shuddhi");
 
     if(rows[0]){
       expect(first.rankingInsight).toContain(rows[0].date.slice(0,4));
@@ -36,14 +37,15 @@ describe("Muhurat deterministic SEO content engine",()=>{
     expect(summary.monthLabel).toBe("October 2026");
   });
 
-  it("does not invent dates when a month has no qualified rows",()=>{
+  it("does not invent dates when a month has no screened candidates",()=>{
     const city=findCityBySlug("chennai")!;
     const summary=buildMuhuratSeoSummary("griha-pravesh",2026,11,city,[],"city");
 
     expect(summary.qualifyingCount).toBe(0);
     expect(summary.topDate).toBeNull();
     expect(summary.topWindow).toBeNull();
-    expect(summary.headline).toContain("No griha pravesh muhurat dates matched");
+    expect(summary.headline).toContain("No griha pravesh muhurat candidates matched");
+    expect(summary.headline).toContain("Tithi + Nakshatra screening profile");
     expect(summary.overview).toContain("No date matched both filters");
     expect(summary.alternatives).toContain("adjacent month");
   });
