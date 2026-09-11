@@ -57,7 +57,7 @@ export default async function Page({params}:{params:Promise<{festival:string;yea
   const moonrise=formatPanchangTime(data.moonrise,data.moonriseDate,data.date);
 
   const ld={"@context":"https://schema.org","@graph":[
-    {"@type":"WebPage","name":`${f.name} ${year} in ${city.name}`,"url":`https://panchvani.com/festivals/${f.slug}/${year}/${city.slug}`,"description":f.short,"about":{"@type":"Thing","name":f.name}},
+    {"@type":"WebPage","name":`${f.name} ${year} in ${city.name}`,"url":`https://panchvani.com/festivals/${f.slug}/${year}/${city.slug}`,"description":semantics.displayShort,"about":{"@type":"Thing","name":f.name}},
     {"@type":"BreadcrumbList","itemListElement":[
       {"@type":"ListItem","position":1,"name":"Festivals","item":"https://panchvani.com/festivals/"},
       {"@type":"ListItem","position":2,"name":`${f.name} ${year}`,"item":`https://panchvani.com/festivals/${f.slug}/${year}`},
@@ -69,7 +69,7 @@ export default async function Page({params}:{params:Promise<{festival:string;yea
     <div className="breadcrumbs"><Link href="/festivals">Festivals</Link> / <Link href={`/festivals/${f.slug}/${year}`}>{f.name} {year}</Link> / {city.name}</div>
     <p className="page-kicker">LOCAL FESTIVAL PANCHANG · {city.state}</p>
     <h1 className="page-title">{f.name}<br/>{city.name}</h1>
-    <p className="page-subtitle">{f.date} · Local Panchang calculated from {city.name} coordinates. Festival-specific rules are separated from general astronomical context.</p>
+    <p className="page-subtitle">{f.date} · {semantics.displayShort}</p>
 
     <div className="data-grid">
       <div className="data-card"><small>Date</small><strong>{f.date}</strong></div>
