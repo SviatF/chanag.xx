@@ -9,6 +9,7 @@ import { formatPanchangTime, getPanchang, formatWindow } from "@/lib/panchang";
 import { regional } from "@/lib/regional";
 import { todayInIndia } from "@/lib/dates";
 import { getRegionalCalendarProfile } from "@/lib/regional-calendar";
+import {getLunarMonthConventions,getRegionalCalendarConventions} from "@/lib/calendar-conventions";
 import { isRegionalIndexable, robotsFor } from "@/lib/seo-policy";
 import {buildRegionalTopicalGraph} from "@/lib/topical-links";
 import {isRegionalLanguageSlug,regionalAlternates,regionalIntentLinksForCity} from "@/lib/regional-seo";
@@ -45,9 +46,11 @@ export default async function RegionalPage({params}:{params:Promise<{language:st
   if(!city||!lang||!isRegionalLanguageSlug(p.language))notFound();
   const date=todayInIndia();
   const data=await getPanchang(date,city);
+  const lunarConventions=getLunarMonthConventions(date,city,data);
+  const regionalConventions=getRegionalCalendarConventions(date,city,data);
   const t=lang.terms;
   const isBengali=p.language==="bengali";
-  const profile=getRegionalCalendarProfile(p.language,data);
+  const profile=getRegionalCalendarProfile(p.language,data,lunarConventions,regionalConventions);
   const displayTithi=isBengali?(bengaliTithi[data.tithi]??data.tithi):data.tithi;
   const tithiEnd=formatPanchangTime(data.tithiEnd,data.tithiEndDate,data.date);
   const nakshatraEnd=formatPanchangTime(data.nakshatraEnd,data.nakshatraEndDate,data.date);
@@ -76,9 +79,11 @@ export default async function RegionalPage({params}:{params:Promise<{language:st
       <div className="data-card"><small>{t.moonset}</small><strong>{moonset}</strong></div>
       <div className="data-card"><small>{t.month}</small><strong>{profile.monthNative??profile.month}</strong><small>{profile.monthNative?profile.month:profile.calendarSystem}{profile.yearLabel?` · ${profile.yearLabel}`:""}</small></div>
       {profile.solarSign?<div className="data-card"><small>Solar Rashi</small><strong>{profile.solarSign}</strong></div>:null}
-      <div className="data-card"><small>Vikram Samvat</small><strong>{data.vikramSamvat}</strong></div>
+      {p.language==="gujarati"?<div className="data-card"><small>Gujarati Samvat</small><strong>{regionalConventions.gujaratiSamvat}</strong><small>Year begins {regionalConventions.gujaratiSamvatYearStart}</small></div>:<div className="data-card"><small>Vikram Samvat</small><strong>{data.vikramSamvat}</strong></div>}
       <div className="data-card"><small>Shaka Samvat</small><strong>{data.shakaSamvat}</strong></div>
     </div>
+
+    {regionalConventions.solarIngress?<div className="wide-panel"><h2>Solar transition on this civil date</h2><p className="page-subtitle">{regionalConventions.solarIngress.from} → {regionalConventions.solarIngress.to} at {regionalConventions.solarIngress.time} IST. The regional month above follows the calendar-specific civil-day rule, not a generic sunrise-only label.</p></div>:null}
 
     <div className="wide-panel"><div className="timing-row">
       <div className="timing-chip bad"><small>{t.rahu}</small><strong>{formatWindow(data.rahu)}</strong></div>
