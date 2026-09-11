@@ -1,0 +1,48 @@
+name: Pre-GSC Live Audit
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: "17 4 * * 1"
+  push:
+    branches: [main]
+    paths:
+      - ".github/workflows/pre-gsc.yml"
+      - "scripts/pre-gsc-audit.mjs"
+      - "app/robots.ts"
+      - "app/sitemap.xml/**"
+      - "app/sitemap-*.xml/**"
+
+permissions:
+  contents: read
+
+jobs:
+  live-indexation-audit:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 24
+
+      - name: Run full live sitemap and indexation audit
+        env:
+          AUDIT_BASE_URL: https://panchvani.com
+          AUDIT_CONCURRENCY: "6"
+          AUDIT_TIMEOUT_MS: "15000"
+        run: node scripts/pre-gsc-audit.mjs
+
+      - name: Upload pre-GSC audit report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: pre-gsc-audit
+          path: |
+            artifacts/pre-gsc-audit.json
+            artifacts/pre-gsc-audit.md
+          if-no-files-found: warn
+          retention-days: 14
