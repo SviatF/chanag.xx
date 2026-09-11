@@ -1,4 +1,5 @@
 import type { Panchang } from "./panchang";
+import type {LunarMonthConventions,RegionalCalendarConventions} from "./calendar-conventions";
 import { getBengaliPanjikaProfile } from "./bengali-panjika";
 
 export type RegionalCalendarProfile={
@@ -67,9 +68,16 @@ const marathiMonth:Record<string,string>={
   Margashirsha:"Margashirsha",Pausha:"Pausha",Magha:"Magha",Phalguna:"Phalguna"
 };
 
-export function getRegionalCalendarProfile(language:string,data:Panchang):RegionalCalendarProfile{
+const adhikaSuffix=(value:string,adhika:boolean)=>adhika?`${value} (Adhika)`:value;
+
+export function getRegionalCalendarProfile(
+  language:string,
+  data:Panchang,
+  lunar:LunarMonthConventions,
+  regional:RegionalCalendarConventions
+):RegionalCalendarProfile{
   if(language==="bengali"){
-    const profile=getBengaliPanjikaProfile(data);
+    const profile=getBengaliPanjikaProfile(data,regional.bengaliSolarRashi);
     return {
       calendarSystem:profile.calendarLabel,
       month:profile.month.en,
@@ -77,53 +85,56 @@ export function getRegionalCalendarProfile(language:string,data:Panchang):Region
       yearLabel:profile.yearLabel,
       nakshatra:data.nakshatra,
       solarSign:profile.solarSign,
-      note:"Bengali month is derived from the sidereal solar sign rather than reusing the North-Indian lunar month label."
+      note:"Bengali civil month is assigned from the sidereal solar transition using the Bengal day-boundary convention; a Sankranti after local midnight belongs to the following civil month day rather than being inferred from sunrise alone."
     };
   }
 
   if(language==="tamil"){
-    const index=Math.max(0,solarSigns.indexOf(data.solarRashi));
+    const index=Math.max(0,solarSigns.indexOf(regional.tamilSolarRashi));
     return {
       calendarSystem:"Tamil Solar Calendar",
       month:tamilMonths[index],
       nakshatra:tamilNakshatra[data.nakshatra]??data.nakshatra,
-      solarSign:data.solarRashi,
-      note:"Tamil month follows the sidereal solar-sign cycle; Nakshatra uses the conventional Tamil star name."
+      solarSign:regional.tamilSolarRashi,
+      note:"Tamil civil month follows the sidereal Sankranti rule: a solar ingress between sunrise and sunset starts the new month on that same civil day; an ingress after sunset starts it on the following day."
     };
   }
 
   if(language==="malayalam"){
     return {
       calendarSystem:"Malayalam Solar Calendar",
-      month:malayalamMonthBySign[data.solarRashi]??data.hinduMonth,
+      month:malayalamMonthBySign[regional.malayalamSolarRashi]??lunar.amantaMonth,
       nakshatra:malayalamNakshatra[data.nakshatra]??data.nakshatra,
-      solarSign:data.solarRashi,
-      note:"Malayalam month follows the solar-sign calendar used for Kollavarsham month naming; Nakshatra uses the Malayalam star-name tradition."
+      solarSign:regional.malayalamSolarRashi,
+      note:"Malayalam civil month uses the Kerala Sankranti day rule: an ingress within the first three-fifths of the local daylight interval is assigned to the same day; a later ingress starts the new month on the following day."
     };
   }
 
   if(language==="gujarati"){
+    const month=gujaratiMonth[lunar.amantaMonth]??lunar.amantaMonth;
     return {
-      calendarSystem:"Gujarati Panchang",
-      month:gujaratiMonth[data.hinduMonth]??data.hinduMonth,
+      calendarSystem:"Gujarati Panchang · Amanta",
+      month:adhikaSuffix(month,lunar.amantaIsAdhika),
+      yearLabel:`Gujarati Samvat ${regional.gujaratiSamvat}`,
       nakshatra:data.nakshatra,
-      note:"Gujarati month naming is applied to the calculated lunar Panchang month instead of displaying the generic Sanskrit label unchanged."
+      note:"Gujarati Panchang uses the Amanta lunar month convention. Gujarati Samvat changes at Kartika Shukla Pratipada after the Diwali Amavasya, so its year boundary is different from the Chaitradi Vikram Samvat shown on the generic Panchang."
     };
   }
 
   if(language==="marathi"){
+    const month=marathiMonth[lunar.amantaMonth]??lunar.amantaMonth;
     return {
-      calendarSystem:"Marathi Panchang",
-      month:marathiMonth[data.hinduMonth]??data.hinduMonth,
+      calendarSystem:"Marathi Panchang · Amanta",
+      month:adhikaSuffix(month,lunar.amantaIsAdhika),
       nakshatra:data.nakshatra,
-      note:"Marathi month naming is applied to the calculated lunar Panchang month while retaining the local astronomical timings for the selected city."
+      note:"Marathi Panchang uses the Amanta lunar month convention. Adhika Maas is identified when no sidereal solar ingress occurs between the two new moons that bound the lunar month."
     };
   }
 
   return {
     calendarSystem:"Regional Panchang",
-    month:data.hinduMonth,
+    month:lunar.amantaLabel,
     nakshatra:data.nakshatra,
-    note:"Regional terminology is layered over the same location-sensitive astronomical calculation."
+    note:"Regional terminology is layered over the same location-sensitive astronomical calculation with the calendar convention stated explicitly."
   };
 }
