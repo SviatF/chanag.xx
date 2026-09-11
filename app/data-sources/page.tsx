@@ -2,7 +2,8 @@ import TrustPage from "@/components/TrustPage";
 
 export const metadata={
   title:"Panchvani Data Sources",
-  description:"The astronomical, geographic and curated data layers used by Panchvani."
+  description:"The astronomical, geographic and curated data layers used by Panchvani.",
+  alternates:{canonical:"/data-sources"}
 };
 
 export default function Page(){
