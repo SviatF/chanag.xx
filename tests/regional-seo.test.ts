@@ -57,17 +57,35 @@ describe("Regional SEO Scale Engine",()=>{
     expect(regionalIntentActivationSnapshot().extra).toEqual([]);
   });
 
-  it("emits hreflang only for approved equivalents",()=>{
+  it("uses the dated canonical English Panchang for today's regional city cluster",()=>{
+    const city=findCityBySlug("chennai")!;
+    const alternates=regionalAlternates(city,undefined,"2026-09-11");
+    expect(alternates["en-IN"]).toBe("/panchang/chennai/2026-09-11");
+    expect(alternates["x-default"]).toBe("/panchang/chennai/2026-09-11");
+    expect(alternates["ta-IN"]).toBe("/regional/tamil/chennai");
+  });
+
+  it("does not invent an English equivalent for regional Rahu Kalam intents",()=>{
     const city=findCityBySlug("coimbatore")!;
     process.env.SEO_EXTRA_INDEX_CITIES="coimbatore";
     delete process.env.SEO_EXTRA_REGIONAL_INTENTS;
     const before=regionalAlternates(city,"rahu-kalam");
-    expect(before["en-IN"]).toBe(`/panchang/${city.slug}`);
+    expect(before["en-IN"]).toBeUndefined();
+    expect(before["x-default"]).toBeUndefined();
     expect(before["ta-IN"]).toBeUndefined();
 
     process.env.SEO_EXTRA_REGIONAL_INTENTS="tamil:coimbatore:rahu-kalam";
     const after=regionalAlternates(city,"rahu-kalam");
     expect(after["ta-IN"]).toBe("/regional/tamil/coimbatore/rahu-kalam");
-    expect(after["x-default"]).toBe(`/panchang/${city.slug}`);
+    expect(after["en-IN"]).toBeUndefined();
+    expect(after["x-default"]).toBeUndefined();
+  });
+
+  it("uses the self-canonical English Choghadiya tool as the Choghadiya equivalent",()=>{
+    const city=findCityBySlug("ahmedabad")!;
+    const alternates=regionalAlternates(city,"choghadiya");
+    expect(alternates["en-IN"]).toBe("/tools/choghadiya/ahmedabad");
+    expect(alternates["x-default"]).toBe("/tools/choghadiya/ahmedabad");
+    expect(alternates["gu-IN"]).toBe("/regional/gujarati/ahmedabad/choghadiya");
   });
 });
