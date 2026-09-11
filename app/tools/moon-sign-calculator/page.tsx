@@ -5,7 +5,7 @@ import {parseIsoRouteDate} from "@/lib/route-validation";
 import {resolveToolCity} from "@/lib/tool-expansion";
 
 export const dynamic="force-dynamic";
-export const metadata={title:"Moon Sign Calculator",description:"Estimate Chandra Rashi from birth date and city. Exact natal Moon Sign requires birth time."};
+export const metadata={title:"Moon Sign Calculator",description:"Estimate Chandra Rashi from birth date and city. Exact natal Moon Sign requires birth time.",alternates:{canonical:"/tools/moon-sign-calculator"}};
 
 export default async function Page({searchParams}:{searchParams:Promise<{city?:string;date?:string}>}){
   const q=await searchParams;
