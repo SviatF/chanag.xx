@@ -218,7 +218,7 @@ function targetFor(intent:IntentResult,ctx:QueryContext):Target{
   }
   if(intent.id==="content:baby-names"){
     const expected="/tools/hindu-baby-names";
-    return {path:expected,template:intent.template,exists:false,matches:path=>startsWithPath(path,expected)};
+    return {path:expected,template:intent.template,exists:true,matches:path=>startsWithPath(path,expected)};
   }
   if(intent.event){
     if(month){
