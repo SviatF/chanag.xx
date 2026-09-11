@@ -2,7 +2,8 @@ import TrustPage from "@/components/TrustPage";
 
 export const metadata={
   title:"Panchang Calculation Methodology",
-  description:"How Panchvani calculates Tithi, Nakshatra, sunrise, Hindu months, regional calendar boundaries and other location-sensitive Panchang values."
+  description:"How Panchvani calculates Tithi, Nakshatra, sunrise, Hindu months, regional calendar boundaries and other location-sensitive Panchang values.",
+  alternates:{canonical:"/methodology"}
 };
 
 export default function Page(){
