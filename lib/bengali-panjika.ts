@@ -17,19 +17,21 @@ const bengaliMonths=[
   {en:"Choitro",native:"চৈত্র"},
 ];
 
-export function getBengaliPanjikaProfile(data:Panchang){
-  const index=Math.max(0,solarSigns.indexOf(data.solarRashi));
+export function getBengaliPanjikaProfile(data:Panchang,solarRashiOverride?:string){
+  const solarRashi=solarRashiOverride??data.solarRashi;
+  const index=Math.max(0,solarSigns.indexOf(solarRashi));
   const month=bengaliMonths[index];
   const gregorianYear=Number(data.date.slice(0,4));
 
-  // Traditional Bengali solar year starts with Mesha/Boishakh.
-  // Makara–Meena fall in Jan–Apr of the following Gregorian year.
+  // Panchvani's India-facing Bengali civil month follows the traditional solar
+  // boundary rule: the month changes according to the civil day assigned to the
+  // Sankranti, not simply the Rashi active at sunrise.
   const year=gregorianYear-(index>=9?594:593);
 
   return {
     year,
     month,
-    solarSign:data.solarRashi,
+    solarSign:solarRashi,
     calendarLabel:"Bengali Solar Panjika",
     yearLabel:`${year} বঙ্গাব্দ`,
   };
