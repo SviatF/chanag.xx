@@ -122,7 +122,7 @@ export default async function RegionalPage({params}:{params:Promise<{language:st
     <div className="seo-copy"><h2>{copy.calendarExplanationTitle}</h2><p>{copy.methodologyText}</p><p>{copy.afterMidnightNote}</p></div>
 
     <div className="pill-links"><Link href={`/regional/${language}`}>{copy.allCities}</Link><Link href="/regional">{copy.allLanguages}</Link></div>
-    <TopicalGraph title={`${copy.regionalContext} · ${cityName}`} groups={topical}/>
+    <TopicalGraph title={`${copy.regionalContext} · ${cityName}`} groupEyebrow={copy.nativeLanguage} groups={topical}/>
     <script type="application/ld+json" dangerouslySetInnerHTML={{__html:JSON.stringify(ld)}}/>
   </div></main>;
 }
