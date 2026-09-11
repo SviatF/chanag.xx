@@ -105,7 +105,7 @@ async function accessToken(){
   const status=getGscConnectionStatus();
   if(!status.configured)throw new Error("Google Search Console service account is not configured.");
   const assertion=await createServiceAccountJwt();
-  const body=new URLSearchParams({grant_type:"urn:ietf:params:oauth2:grant-type:jwt-bearer",assertion});
+  const body=new URLSearchParams({grant_type:"urn:ietf:params:oauth:grant-type:jwt-bearer",assertion});
   const response=await fetch(GOOGLE_TOKEN_URL,{method:"POST",headers:{"content-type":"application/x-www-form-urlencoded"},body,cache:"no-store"});
   if(!response.ok){const text=await response.text();throw new Error(`Google service-account auth failed (${response.status}): ${text.slice(0,240)}`);}
   const json=await response.json() as {access_token?:string};
