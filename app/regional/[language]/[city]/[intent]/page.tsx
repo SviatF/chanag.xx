@@ -120,7 +120,7 @@ export default async function RegionalIntentPage({params}:{params:Promise<{langu
       <div className="seo-copy"><h2>{copy.calendarExplanationTitle}</h2><p>{copy.methodologyText}</p></div>
     </>}
 
-    <TopicalGraph title={`${copy.regionalContext} · ${cityName}`} groups={topical}/>
+    <TopicalGraph title={`${copy.regionalContext} · ${cityName}`} groupEyebrow={copy.nativeLanguage} groups={topical}/>
     <script type="application/ld+json" dangerouslySetInnerHTML={{__html:JSON.stringify(ld)}}/>
   </div></main>;
 }
