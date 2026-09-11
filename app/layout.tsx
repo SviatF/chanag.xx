@@ -49,7 +49,7 @@ const siteSchema={
 };
 
 export default function RootLayout({children}:{children:React.ReactNode}) {
-  return <html lang="en">
+  return <html lang="en-IN">
     <body>
       <GoogleTagManager/>
       {children}
