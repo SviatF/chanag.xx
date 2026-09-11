@@ -28,7 +28,7 @@ export async function POST(request:Request){
     let requested=DEFAULT_BATCH;
     try{
       const body=await request.json() as {batchSize?:number};
-      if(Number.isFinite(body.batchSize))requested=Math.floor(body.batchSize!);
+      if(typeof body.batchSize==="number"&&Number.isFinite(body.batchSize))requested=Math.floor(body.batchSize);
     }catch{}
     const batchSize=Math.max(1,Math.min(MAX_BATCH,requested));
 
@@ -37,23 +37,15 @@ export async function POST(request:Request){
     const staleKnown=sitemap.allUrls.filter(url=>current.records[url]&&stale(current.records[url]?.inspectedAt));
     const candidates=[...unknown,...staleKnown].slice(0,batchSize);
 
-    if(!candidates.length){
-      return NextResponse.json({done:true,inspected:0,total:sitemap.totalUrls,known:Object.keys(current.records).length,state:current});
-    }
+    if(!candidates.length)return NextResponse.json({done:true,inspected:0,total:sitemap.totalUrls,known:Object.keys(current.records).length,state:current});
 
     const inspection=await getGscUrlInspections(candidates,4);
     const next=mergeUrlIndexationInventory(current,inspection.rows,inspection.errors);
     await writeUrlIndexationInventory(next);
+    const sitemapSet=new Set(sitemap.allUrls);
+    const knownInSitemap=Object.keys(next.records).filter(url=>sitemapSet.has(url)).length;
 
-    return NextResponse.json({
-      done:false,
-      requested:candidates.length,
-      inspected:inspection.rows.length,
-      errors:inspection.errors,
-      total:sitemap.totalUrls,
-      known:Object.keys(next.records).length,
-      remaining:Math.max(0,sitemap.totalUrls-Object.keys(next.records).filter(url=>sitemap.allUrls.includes(url)).length),
-    });
+    return NextResponse.json({done:false,requested:candidates.length,inspected:inspection.rows.length,errors:inspection.errors,total:sitemap.totalUrls,known:knownInSitemap,remaining:Math.max(0,sitemap.totalUrls-knownInSitemap)});
   }catch(error){
     return NextResponse.json({error:error instanceof Error?error.message:"Unable to refresh URL indexation inventory."},{status:502});
   }
