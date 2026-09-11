@@ -4,6 +4,7 @@ export type FestivalSemantics={
   aliases:string[];
   relatedObservances:string[];
   lunarConventionNote:string|null;
+  displayShort:string;
 };
 
 const relatedBySlug:Record<string,string[]>={
@@ -21,6 +22,14 @@ const conventionNoteBySlug:Record<string,string>={
   "diwali":"Diwali Amavasya belongs to Ashwin in Amanta reckoning and Kartika in Purnimanta reckoning. The observance date is not changed by this naming difference.",
 };
 
+const shortOverrideBySlug:Record<string,string>={
+  "maha-shivaratri":"Krishna Paksha Chaturdashi night observance dedicated to Shiva; the lunar-month name differs by Amanta/Purnimanta convention.",
+  "janmashtami":"Krishna Paksha Ashtami observance celebrating Krishna's birth, with Nishita and tradition-specific Rohini rules.",
+  "karwa-chauth":"Krishna Paksha Chaturthi fast observed from sunrise until local moonrise; the lunar-month name differs by convention.",
+  "dhanteras":"Krishna Trayodashi observance before Diwali, associated with Dhanvantari, prosperity and auspicious purchases.",
+  "diwali":"Amavasya festival of lights with Lakshmi Puja commonly centered on local Pradosh Kaal; exact Muhurat needs additional rule checks.",
+};
+
 export function getFestivalSemantics(festival:Festival):FestivalSemantics{
   const related=relatedBySlug[festival.slug]??[];
   const relatedSet=new Set(related);
@@ -28,5 +37,6 @@ export function getFestivalSemantics(festival:Festival):FestivalSemantics{
     aliases:festival.regionalNames.filter(name=>!relatedSet.has(name)),
     relatedObservances:related,
     lunarConventionNote:conventionNoteBySlug[festival.slug]??null,
+    displayShort:shortOverrideBySlug[festival.slug]??festival.short,
   };
 }
