@@ -5,6 +5,8 @@ import Header from "@/components/Header";
 import TopicalGraph from "@/components/TopicalGraph";
 import {findCityBySlug} from "@/lib/cities";
 import {festivalBySlugYear,festivalPujaReference} from "@/lib/festivals";
+import {getFestivalSemantics} from "@/lib/festival-conventions";
+import {getLunarMonthConventions} from "@/lib/calendar-conventions";
 import {festivalPageIsIndexable,festivalYearSiblings} from "@/lib/festival-expansion";
 import {formatPanchangTime,getPanchang,formatWindow} from "@/lib/panchang";
 import {isPriorityCity,robotsFor} from "@/lib/seo-policy";
@@ -28,7 +30,7 @@ export async function generateMetadata({params}:{params:Promise<{festival:string
   if(!city||!year||!f)notFound();
   return {
     title:`${f.name} ${year} in ${city.name} — Local Panchang Timing`,
-    description:`${f.name} ${year} in ${city.name}: local Tithi, sunrise, sunset, Rahu Kalam and Panchang timing reference.`,
+    description:`${f.name} ${year} in ${city.name}: local Tithi, lunar-month conventions, sunrise, sunset, Rahu Kalam and Panchang timing context.`,
     alternates:{canonical:`/festivals/${f.slug}/${year}/${city.slug}`},
     robots:robotsFor(festivalPageIsIndexable(f.slug,year)&&isPriorityCity(city.slug))
   };
@@ -41,7 +43,10 @@ export default async function Page({params}:{params:Promise<{festival:string;yea
   const f=year?festivalBySlugYear(p.festival,year):undefined;
   if(!city||!year||!f)notFound();
 
-  const data=await getPanchang(new Date(f.date+"T06:00:00Z"),city);
+  const date=new Date(f.date+"T06:00:00Z");
+  const data=await getPanchang(date,city);
+  const lunar=getLunarMonthConventions(date,city,data);
+  const semantics=getFestivalSemantics(f);
   const referenceWindow=festivalPujaReference(data,f);
   const vrat=vratSlugForTithi(data.tithi);
   const siblingYears=festivalYearSiblings(f.slug,year);
@@ -50,7 +55,7 @@ export default async function Page({params}:{params:Promise<{festival:string;yea
   const moonrise=formatPanchangTime(data.moonrise,data.moonriseDate,data.date);
 
   const ld={"@context":"https://schema.org","@graph":[
-    {"@type":"Event","name":`${f.name} ${year} in ${city.name}`,"startDate":f.date,"location":{"@type":"Place","name":city.name,"address":{"@type":"PostalAddress","addressRegion":city.state,"addressCountry":"IN"}},"description":f.short},
+    {"@type":"WebPage","name":`${f.name} ${year} in ${city.name}`,"url":`https://panchvani.com/festivals/${f.slug}/${year}/${city.slug}`,"description":f.short,"about":{"@type":"Thing","name":f.name}},
     {"@type":"BreadcrumbList","itemListElement":[
       {"@type":"ListItem","position":1,"name":"Festivals","item":"https://panchvani.com/festivals/"},
       {"@type":"ListItem","position":2,"name":`${f.name} ${year}`,"item":`https://panchvani.com/festivals/${f.slug}/${year}`},
@@ -67,15 +72,18 @@ export default async function Page({params}:{params:Promise<{festival:string;yea
     <div className="data-grid">
       <div className="data-card"><small>Date</small><strong>{f.date}</strong></div>
       <div className="data-card"><small>Tithi</small><strong>{data.tithi}</strong><small>{data.paksha} Paksha · until {tithiEnd}</small></div>
+      <div className="data-card"><small>Amanta month</small><strong>{lunar.amantaLabel}</strong></div>
+      <div className="data-card"><small>Purnimanta month</small><strong>{lunar.purnimantaLabel}</strong></div>
       <div className="data-card"><small>Nakshatra</small><strong>{data.nakshatra}</strong><small>until {nakshatraEnd}</small></div>
       <div className="data-card"><small>Sunrise / Sunset</small><strong>{data.sunrise} / {data.sunset}</strong></div>
       <div className="data-card"><small>Local timing reference</small><strong>{formatWindow(referenceWindow)}</strong><small>Broad solar/Panchang reference, not a festival-specific ritual Muhurat.</small></div>
       <div className="data-card"><small>Rahu Kalam</small><strong>{formatWindow(data.rahu)}</strong></div>
       <div className="data-card"><small>Moonrise</small><strong>{moonrise}</strong></div>
-      <div className="data-card"><small>Regional names</small><strong>{f.regionalNames.join(" · ")}</strong></div>
+      {semantics.aliases.length?<div className="data-card"><small>Also known as</small><strong>{semantics.aliases.join(" · ")}</strong></div>:null}
+      {semantics.relatedObservances.length?<div className="data-card"><small>Related regional observances</small><strong>{semantics.relatedObservances.join(" · ")}</strong></div>:null}
     </div>
 
-    <div className="seo-copy"><h2>How to use this local timing</h2><p>{f.meaning}</p><p>The timing reference above is a broad local solar/Panchang window derived from the festival category. It is intentionally not presented as the exact ritual Muhurat. Festivals can require specific Tithi, Pradosh, Nishita, Bhadra, Madhyahna, moonrise or other tradition-specific rules; use the precise convention followed by your tradition for ritual observance.</p></div>
+    <div className="seo-copy"><h2>How to read this festival Panchang</h2><p>{f.meaning}</p>{semantics.lunarConventionNote?<p><strong>Calendar convention:</strong> {semantics.lunarConventionNote}</p>:null}<p>The timing reference above is a broad local solar/Panchang window derived from the festival category. It is intentionally not presented as the exact ritual Muhurat. Festivals can require specific Tithi, Pradosh, Nishita, Bhadra, Madhyahna, moonrise or other tradition-specific rules; use the precise convention followed by your tradition for ritual observance.</p></div>
 
     <div className="pill-links">
       <Link href={`/festivals/${f.slug}/${year}`}>Festival overview</Link>
