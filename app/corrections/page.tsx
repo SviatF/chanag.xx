@@ -2,7 +2,8 @@ import TrustPage from "@/components/TrustPage";
 
 export const metadata={
   title:"Panchvani Corrections Policy",
-  description:"How Panchvani investigates and corrects calculation, calendar and editorial discrepancies."
+  description:"How Panchvani investigates and corrects calculation, calendar and editorial discrepancies.",
+  alternates:{canonical:"/corrections"}
 };
 
 export default function Page(){
