@@ -5,7 +5,7 @@ import {parseIsoRouteDate} from "@/lib/route-validation";
 import {resolveToolCity} from "@/lib/tool-expansion";
 
 export const dynamic="force-dynamic";
-export const metadata={title:"Nakshatra Finder",description:"Estimate birth Nakshatra and Pada from birth date and city. Exact natal Nakshatra requires birth time."};
+export const metadata={title:"Nakshatra Finder",description:"Estimate birth Nakshatra and Pada from birth date and city. Exact natal Nakshatra requires birth time.",alternates:{canonical:"/tools/nakshatra-finder"}};
 
 export default async function Page({searchParams}:{searchParams:Promise<{city?:string;date?:string}>}){
   const q=await searchParams;
