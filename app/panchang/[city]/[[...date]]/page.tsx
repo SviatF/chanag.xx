@@ -12,6 +12,7 @@ import {isDailyIndexable,robotsFor} from "@/lib/seo-policy";
 import {getDailyGuidance} from "@/lib/day-guidance";
 import {nextValidatedFestival} from "@/lib/festival-expansion";
 import {resolveDailyRouteDate} from "@/lib/route-validation";
+import {regionalAlternates} from "@/lib/regional-seo";
 import {buildDailyTopicalGraph} from "@/lib/topical-links";
 import {vratLinkForTithi} from "@/lib/vrat-topical-links";
 
@@ -23,7 +24,7 @@ export async function generateMetadata({params}:{params:Promise<{city:string,dat
   const date=resolveDailyRouteDate(p.date);
   if(!city||!date)notFound();
   const ds=date.toISOString().slice(0,10);
-  return {title:`Today Panchang in ${city.name} — ${ds}`,description:`Panchang for ${city.name}: Tithi, Nakshatra, sunrise, sunset, Rahu Kalam, Yamaganda, Gulika and Abhijit Muhurat for ${ds}.`,alternates:{canonical:`/panchang/${city.slug}/${ds}`},robots:robotsFor(isDailyIndexable(city.slug,ds))};
+  return {title:`Today Panchang in ${city.name} — ${ds}`,description:`Panchang for ${city.name}: Tithi, Nakshatra, sunrise, sunset, Rahu Kalam, Yamaganda, Gulika and Abhijit Muhurat for ${ds}.`,alternates:{canonical:`/panchang/${city.slug}/${ds}`,languages:regionalAlternates(city,undefined,ds)},robots:robotsFor(isDailyIndexable(city.slug,ds))};
 }
 
 export default async function PanchangPage({params}:{params:Promise<{city:string,date?:string[]}>}){
@@ -49,11 +50,11 @@ export default async function PanchangPage({params}:{params:Promise<{city:string
     {q:`Why can Hindu month names differ?`,a:`Panchvani shows both Amanta and Purnimanta lunar month labels because these two month conventions are followed in different parts of India.`}
   ];
   const ld={ "@context":"https://schema.org","@graph":[
-    {"@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"Home","item":"https://panchvani.com/"},{"@type":"ListItem","position":2,"name":city.name,"item":`https://panchvani.com/panchang/${city.slug}/`},{"@type":"ListItem","position":3,"name":data.date}]},
+    {"@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"Home","item":"https://panchvani.com/"},{"@type":"ListItem","position":2,"name":city.name,"item":`https://panchvani.com/panchang/${city.slug}/${data.date}`},{"@type":"ListItem","position":3,"name":data.date}]},
     {"@type":"FAQPage","mainEntity":faq.map(x=>({"@type":"Question","name":x.q,"acceptedAnswer":{"@type":"Answer","text":x.a}}))}
   ]};
   return <main><Header city={city}/><div className="page-shell internal-visual internal-panchang">
-    <div className="breadcrumbs"><Link href="/">Home</Link> / <Link href={`/panchang/${city.slug}`}>{city.name}</Link> / {data.date}</div>
+    <div className="breadcrumbs"><Link href="/">Home</Link> / {city.name} / {data.date}</div>
     <p className="page-kicker">DAILY PANCHANG · {city.state}</p><h1 className="page-title">{city.name} Panchang<br/>{data.date}</h1>
     <p className="page-subtitle">Location-specific Panchang for {city.name}, including sunrise- and sunset-dependent periods. Calculation engine: {data.engine}.</p>
     <div className="wide-panel"><DayWheel data={data}/></div>
