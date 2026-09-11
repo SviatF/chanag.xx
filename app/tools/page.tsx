@@ -5,7 +5,8 @@ import {expandedToolPath,expandedTools,expandedToolSlugs} from "@/lib/tool-expan
 
 export const metadata={
   title:"Hindu Calendar Tools — Tithi, Nakshatra, Moon Phase, Rahu Kalam & Choghadiya",
-  description:"Free Panchang and Hindu calendar tools for Tithi, Nakshatra, Moon phase, Hindu month, Rahu Kalam, Choghadiya and date lookup."
+  description:"Free Panchang and Hindu calendar tools for Tithi, Nakshatra, Moon phase, Hindu month, Rahu Kalam, Choghadiya and date lookup.",
+  alternates:{canonical:"/tools"}
 };
 
 const existingTools=[
