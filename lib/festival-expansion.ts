@@ -44,7 +44,8 @@ export function validateFestivalYear(year:number):FestivalYearCoverage{
   const missing=festivalCatalogSlugs.filter(slug=>!seen.has(slug));
   const expected=festivalCatalogSlugs.length;
   const present=rows.length;
-  return {year,expected,present,coveragePct:expected?Math.round((present/expected)*100):0,missing,issues,valid:present>0&&issues.length===0};
+  const valid=present>0&&issues.length===0&&missing.length===0;
+  return {year,expected,present,coveragePct:expected?Math.round((present/expected)*100):0,missing,issues,valid};
 }
 
 export function festivalCoverageSnapshot(){
@@ -72,5 +73,5 @@ export function festivalYearSiblings(slug:string,year:number){
 
 export function nextValidatedFestival(date:Date):Festival|null{
   const iso=date.toISOString().slice(0,10);
-  return allFestivals.find(item=>item.date>=iso&&festivalDateIsValidated(item.slug,item.year))??null;
+  return allFestivals.find(item=>item.date>=iso&&festivalPageIsIndexable(item.slug,item.year))??null;
 }
