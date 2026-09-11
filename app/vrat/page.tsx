@@ -6,7 +6,8 @@ import {vratDefinitions,vratSlugs} from "@/lib/vrat";
 
 export const metadata={
   title:"Ekadashi, Purnima & Amavasya Calendar — Lunar Tithi Dates",
-  description:"Yearly Ekadashi, Purnima and Amavasya lunar Tithi calendars with city-specific sunrise observations and links to the full Panchang."
+  description:"Yearly Ekadashi, Purnima and Amavasya lunar Tithi calendars with city-specific sunrise observations and links to the full Panchang.",
+  alternates:{canonical:"/vrat"}
 };
 
 export default function VratDirectory(){
