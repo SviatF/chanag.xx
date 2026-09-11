@@ -7,7 +7,7 @@ import {
 
 export async function GET(){
   const base="https://panchvani.com";
-  const urls:string[]=[`${base}/regional`];
+  const urls:string[]=[];
   for(const language of regionalLanguageSlugs){
     const cities=regionalCitiesForLanguage(language);
     if(!cities.length)continue;
