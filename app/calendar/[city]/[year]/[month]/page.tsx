@@ -14,14 +14,17 @@ import {cityCalendarYearPath} from "@/lib/yearly-expansion";
 
 export const revalidate=86400;
 
+function monthLabel(year:number,month:number){return new Intl.DateTimeFormat("en-IN",{month:"long",timeZone:"Asia/Kolkata"}).format(new Date(Date.UTC(year,month-1,1)));}
+
 export async function generateMetadata({params}:{params:Promise<{city:string;year:string;month:string}>}):Promise<Metadata>{
   const p=await params;
   const city=findCityBySlug(p.city);
   const y=parseRouteYear(p.year),m=parseRouteMonth(p.month);
   if(!city||!y||!m)notFound();
+  const name=monthLabel(y,m);
   return {
-    title:`${city.name} Hindu Calendar — ${p.month}/${p.year}`,
-    description:`Monthly Hindu calendar for ${city.name} with Tithi, festivals, Ekadashi, Purnima and Amavasya.`,
+    title:`${name} ${y} Hindu Calendar for ${city.name} — Tithi & Festivals`,
+    description:`${name} ${y} Hindu calendar for ${city.name} with daily Tithi, Nakshatra, Ekadashi, Purnima, Amavasya and maintained festival dates.`,
     alternates:{canonical:`/calendar/${city.slug}/${p.year}/${p.month}`},
     robots:robotsFor(isMonthlyIndexable(city.slug,y,m))
   };
@@ -34,13 +37,11 @@ export default async function CalendarPage({params}:{params:Promise<{city:string
   if(!city||!y||!m)notFound();
   const count=new Date(Date.UTC(y,m,0)).getUTCDate();
   const first=new Date(Date.UTC(y,m-1,1)).getUTCDay();
-  const entries=await Promise.all(
-    Array.from({length:count},(_,i)=>getPanchang(new Date(Date.UTC(y,m-1,i+1,6)),city))
-  );
+  const entries=await Promise.all(Array.from({length:count},(_,i)=>getPanchang(new Date(Date.UTC(y,m-1,i+1,6)),city)));
 
   const monthFestivals=festivalsForYear(y).filter(f=>Number(f.date.slice(5,7))===m);
   const festivalByDate=new Map(monthFestivals.map(f=>[f.date,f]));
-  const monthName=new Intl.DateTimeFormat("en-IN",{month:"long",timeZone:"Asia/Kolkata"}).format(new Date(Date.UTC(y,m-1,1)));
+  const monthName=monthLabel(y,m);
   const prev=new Date(Date.UTC(y,m-2,1));
   const next=new Date(Date.UTC(y,m,1));
   const prevMonth=String(prev.getUTCMonth()+1).padStart(2,"0");
@@ -52,9 +53,9 @@ export default async function CalendarPage({params}:{params:Promise<{city:string
 
   return <main><Header city={city}/><div className="page-shell internal-visual internal-calendar">
     <div className="breadcrumbs"><Link href="/">Home</Link> / <Link href={`/panchang/${city.slug}`}>{city.name}</Link> / <Link href={cityCalendarYearPath(city,y)}>{y}</Link> / Calendar</div>
-    <p className="page-kicker">MONTHLY CALENDAR</p>
-    <h1 className="page-title">{monthName} {y}<br/>in {city.name}</h1>
-    <p className="page-subtitle">Every day links directly to its local Panchang. Ekadashi, Purnima, Amavasya and major festivals are surfaced directly in the grid.</p>
+    <p className="page-kicker">MONTHLY HINDU CALENDAR</p>
+    <h1 className="page-title">{monthName} {y}<br/>Hindu Calendar for {city.name}</h1>
+    <p className="page-subtitle">Open any day for its local Panchang. Ekadashi, Purnima, Amavasya and maintained festival dates are highlighted directly in the month.</p>
 
     <div className="pill-links">
       <Link href={`/calendar/${city.slug}/${prev.getUTCFullYear()}/${prevMonth}`}>← Previous month</Link>
@@ -68,14 +69,8 @@ export default async function CalendarPage({params}:{params:Promise<{city:string
       {entries.map((x,i)=>{
         const festival=festivalByDate.get(x.date);
         const lunarMarker=x.tithi==="Ekadashi"?"Ekadashi":x.tithi==="Purnima"?"Purnima":x.tithi==="Amavasya"?"Amavasya":null;
-        return <Link
-          href={`/panchang/${city.slug}/${x.date}`}
-          key={x.date}
-          className={festival?"has-festival":lunarMarker?"has-lunar-marker":undefined}
-        >
-          <strong>{i+1}</strong>
-          <small>{x.tithi}</small>
-          <small>{x.nakshatra}</small>
+        return <Link href={`/panchang/${city.slug}/${x.date}`} key={x.date} className={festival?"has-festival":lunarMarker?"has-lunar-marker":undefined}>
+          <strong>{i+1}</strong><small>{x.tithi}</small><small>{x.nakshatra}</small>
           {lunarMarker?<small className="calendar-lunar-marker">{lunarMarker}</small>:null}
           {festival?<small className="calendar-festival-marker">{festival.name}</small>:null}
         </Link>;
@@ -86,7 +81,7 @@ export default async function CalendarPage({params}:{params:Promise<{city:string
       <h2 className="page-title" style={{fontSize:32}}>Festivals in {monthName}</h2>
       {monthFestivals.length
         ? <div className="city-directory">{monthFestivals.map(festival=><Link href={`/festivals/${festival.slug}/${y}/${city.slug}`} key={festival.slug}><small>{festival.date}</small><strong>{festival.name}</strong><span>{festival.short}</span></Link>)}</div>
-        : <p className="page-subtitle">No major festivals from the current curated festival database fall in this month.</p>}
+        : <p className="page-subtitle">No major festival from the maintained dataset falls in this month.</p>}
     </section>
 
     <TopicalGraph title={`Explore ${monthName} in ${city.name}`} groups={topicalGroups}/>
