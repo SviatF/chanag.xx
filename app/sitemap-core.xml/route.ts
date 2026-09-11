@@ -6,6 +6,7 @@ export async function GET(){
     base+"/",
     base+"/cities",
     base+"/regional",
+    base+"/muhurat",
     base+"/about",
     base+"/methodology",
     base+"/accuracy",
