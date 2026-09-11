@@ -20,7 +20,8 @@ import {
   regionalLanguageSupportsIntent,
 } from "@/lib/regional-seo";
 import {robotsFor} from "@/lib/seo-policy";
-import {choghadiyaNativeNames,localizePaksha,localizeTithi,nativeCityName,regionalLocale} from "@/lib/regional-i18n";
+import {choghadiyaNativeNames,localizePaksha,localizeTithi,nativeCityName} from "@/lib/regional-i18n";
+import {regionalPureLocale} from "@/lib/regional-pure-copy";
 import {nativeCalendarName,nativeRegionalMonth} from "@/lib/regional-values";
 import type {TopicalGraphGroup} from "@/lib/topical-types";
 
@@ -40,7 +41,7 @@ export async function generateMetadata({params}:{params:Promise<{language:string
   const route=resolveRoute(p.language,p.city,p.intent);
   if(!route)notFound();
   const {language,city,intent}=route;
-  const copy=regionalLocale(language);
+  const copy=regionalPureLocale(language);
   const cityName=nativeCityName(language,city);
   return {
     title:copy.intentMetaTitle(intent,cityName),
@@ -55,7 +56,7 @@ export default async function RegionalIntentPage({params}:{params:Promise<{langu
   const route=resolveRoute(p.language,p.city,p.intent);
   if(!route)notFound();
   const {language,city,intent}=route;
-  const copy=regionalLocale(language);
+  const copy=regionalPureLocale(language);
   const cityName=nativeCityName(language,city);
   const date=todayInIndia();
   const data=await getPanchang(date,city);
