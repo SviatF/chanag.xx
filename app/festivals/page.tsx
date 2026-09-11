@@ -9,7 +9,8 @@ const publicYears=festivalIndexYears();
 const range=publicYears.length?(publicYears.length===1?String(publicYears[0]):`${publicYears[0]}–${publicYears[publicYears.length-1]}`):"Festival calendar";
 export const metadata={
   title:`Hindu Festivals ${range} — Dates & Panchang`,
-  description:"Major Hindu festival dates with city-specific Panchang context, lunar-month convention notes and festival-specific observance references where supported."
+  description:"Major Hindu festival dates with city-specific Panchang context, lunar-month convention notes and festival-specific observance references where supported.",
+  alternates:{canonical:"/festivals"}
 };
 
 export default function FestivalsIndex(){
