@@ -27,10 +27,11 @@ export async function generateMetadata({params}:{params:Promise<{language:string
   if(!city||!isRegionalLanguageSlug(p.language))notFound();
   const copy=regionalPureLocale(p.language);
   const cityName=nativeCityName(p.language,city);
+  const date=todayInIndia().toISOString().slice(0,10);
   return {
     title:copy.cityMetaTitle(cityName),
     description:copy.cityMetaDescription(cityName),
-    alternates:{canonical:`/regional/${p.language}/${city.slug}`,languages:regionalAlternates(city)},
+    alternates:{canonical:`/regional/${p.language}/${city.slug}`,languages:regionalAlternates(city,undefined,date)},
     robots:robotsFor(isRegionalIndexable(p.language,city))
   };
 }
