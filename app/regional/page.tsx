@@ -5,7 +5,8 @@ import {regionalLanguageSeo,regionalLanguageSlugs,regionalCitiesForLanguage} fro
 
 export const metadata={
   title:"Panchang in Indian Languages — Bengali, Tamil, Malayalam, Gujarati & Marathi",
-  description:"Choose Bengali, Tamil, Malayalam, Gujarati or Marathi Panchang pages with local city calculations and regional calendar conventions."
+  description:"Choose Bengali, Tamil, Malayalam, Gujarati or Marathi Panchang pages with local city calculations and regional calendar conventions.",
+  alternates:{canonical:"/regional"}
 };
 
 export default function Regional(){
