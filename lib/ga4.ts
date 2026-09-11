@@ -26,6 +26,15 @@ export type Ga4Snapshot={
   devices:Ga4Row[];
 };
 
+export type Ga4TodaySnapshot={
+  propertyId:string;
+  date:string;
+  summary:Ga4Summary;
+  pages:Ga4Row[];
+  countries:Ga4Row[];
+  devices:Ga4Row[];
+};
+
 const GOOGLE_TOKEN_URL="https://oauth2.googleapis.com/token";
 const GA4_SCOPE="https://www.googleapis.com/auth/analytics.readonly";
 
@@ -145,6 +154,21 @@ export function getGa4ConnectionStatus(){
     ),
     propertyId:process.env.GA4_PROPERTY_ID??"",
   };
+}
+
+export async function getGa4TodaySnapshot():Promise<Ga4TodaySnapshot>{
+  const status=getGa4ConnectionStatus();
+  if(!status.configured)throw new Error("GA4 is not configured.");
+  const token=await serviceAccountAccessToken();
+  const metrics=["activeUsers","sessions","engagedSessions","engagementRate","averageSessionDuration","eventCount","keyEvents","screenPageViews"].map(name=>({name}));
+  const date=iso(new Date());
+  const [summaryRaw,pagesRaw,countriesRaw,devicesRaw]=await Promise.all([
+    runReport(token,status.propertyId,{dateRanges:[{startDate:"today",endDate:"today"}],metrics}),
+    runReport(token,status.propertyId,{dateRanges:[{startDate:"today",endDate:"today"}],dimensions:[{name:"pagePath"}],metrics:[{name:"screenPageViews"},{name:"activeUsers"},{name:"sessions"}],orderBys:[{metric:{metricName:"screenPageViews"},desc:true}],limit:"12"}),
+    runReport(token,status.propertyId,{dateRanges:[{startDate:"today",endDate:"today"}],dimensions:[{name:"country"}],metrics:[{name:"activeUsers"},{name:"sessions"}],orderBys:[{metric:{metricName:"activeUsers"},desc:true}],limit:"8"}),
+    runReport(token,status.propertyId,{dateRanges:[{startDate:"today",endDate:"today"}],dimensions:[{name:"deviceCategory"}],metrics:[{name:"activeUsers"},{name:"sessions"}],orderBys:[{metric:{metricName:"activeUsers"},desc:true}],limit:"6"}),
+  ]);
+  return {propertyId:status.propertyId,date,summary:summary(summaryRaw.rows?.[0]),pages:rows(pagesRaw),countries:rows(countriesRaw),devices:rows(devicesRaw)};
 }
 
 export async function getGa4Snapshot():Promise<Ga4Snapshot>{
