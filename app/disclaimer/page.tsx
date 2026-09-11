@@ -2,7 +2,8 @@ import TrustPage from "@/components/TrustPage";
 
 export const metadata={
   title:"Panchvani Disclaimer",
-  description:"Important limitations for Panchang, Muhurat, festival and astrology-related information on Panchvani."
+  description:"Important limitations for Panchang, Muhurat, festival and astrology-related information on Panchvani.",
+  alternates:{canonical:"/disclaimer"}
 };
 
 export default function Page(){
