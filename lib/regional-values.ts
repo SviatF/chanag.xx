@@ -16,13 +16,22 @@ const marathiMonths:Record<string,string>={Chaitra:"चैत्र",Vaishakha:"
 
 const calendarNames:Record<RegionalLanguageSlug,string>={
   bengali:"বাংলা সৌর পঞ্জিকা",
-  tamil:"தமிழ் சூரிய காலண்டர்",
+  tamil:"தமிழ் சூரிய நாள்காட்டி",
   malayalam:"മലയാള സൗര കലണ്ടർ",
   gujarati:"ગુજરાતી પંચાંગ · અમાન્ત",
   marathi:"मराठी पंचांग · अमान्त",
 };
 
+const states:Partial<Record<RegionalLanguageSlug,Record<string,string>>>={
+  bengali:{"West Bengal":"পশ্চিমবঙ্গ"},
+  tamil:{"Tamil Nadu":"தமிழ்நாடு"},
+  malayalam:{Kerala:"കേരളം"},
+  gujarati:{Gujarat:"ગુજરાત"},
+  marathi:{Maharashtra:"महाराष्ट्र"},
+};
+
 export function nativeRashi(language:RegionalLanguageSlug,value:string|undefined){return value?rashi[language]?.[value]??value:"";}
+export function nativeStateName(language:RegionalLanguageSlug,value:string){return states[language]?.[value]??value;}
 
 export function nativeRegionalMonth(language:RegionalLanguageSlug,profile:RegionalCalendarProfile){
   if(profile.monthNative)return profile.monthNative;
