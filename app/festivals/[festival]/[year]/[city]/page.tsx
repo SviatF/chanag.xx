@@ -4,11 +4,12 @@ import {notFound} from "next/navigation";
 import Header from "@/components/Header";
 import TopicalGraph from "@/components/TopicalGraph";
 import {findCityBySlug} from "@/lib/cities";
-import {festivalBySlugYear,festivalPujaReference} from "@/lib/festivals";
+import {festivalBySlugYear} from "@/lib/festivals";
 import {getFestivalSemantics} from "@/lib/festival-conventions";
 import {getLunarMonthConventions} from "@/lib/calendar-conventions";
 import {festivalPageIsIndexable,festivalYearSiblings} from "@/lib/festival-expansion";
 import {formatPanchangTime,getPanchang,formatWindow} from "@/lib/panchang";
+import {getFestivalLocalReference,getFestivalRuleProfile} from "@/lib/religious-integrity";
 import {isPriorityCity,robotsFor} from "@/lib/seo-policy";
 import {parseRouteYear} from "@/lib/route-validation";
 import {buildFestivalTopicalGraph} from "@/lib/topical-links";
@@ -29,8 +30,8 @@ export async function generateMetadata({params}:{params:Promise<{festival:string
   const f=year?festivalBySlugYear(p.festival,year):undefined;
   if(!city||!year||!f)notFound();
   return {
-    title:`${f.name} ${year} in ${city.name} — Local Panchang Timing`,
-    description:`${f.name} ${year} in ${city.name}: local Tithi, lunar-month conventions, sunrise, sunset, Rahu Kalam and Panchang timing context.`,
+    title:`${f.name} ${year} in ${city.name} — Local Panchang & Rule Context`,
+    description:`${f.name} ${year} in ${city.name}: local Tithi, lunar-month conventions, sunrise, sunset and festival-specific rule context without overstating ritual Muhurat accuracy.`,
     alternates:{canonical:`/festivals/${f.slug}/${year}/${city.slug}`},
     robots:robotsFor(festivalPageIsIndexable(f.slug,year)&&isPriorityCity(city.slug))
   };
@@ -47,7 +48,8 @@ export default async function Page({params}:{params:Promise<{festival:string;yea
   const data=await getPanchang(date,city);
   const lunar=getLunarMonthConventions(date,city,data);
   const semantics=getFestivalSemantics(f);
-  const referenceWindow=festivalPujaReference(data,f);
+  const ruleProfile=getFestivalRuleProfile(f);
+  const localReference=getFestivalLocalReference(f,data);
   const vrat=vratSlugForTithi(data.tithi);
   const siblingYears=festivalYearSiblings(f.slug,year);
   const tithiEnd=formatPanchangTime(data.tithiEnd,data.tithiEndDate,data.date);
@@ -67,7 +69,7 @@ export default async function Page({params}:{params:Promise<{festival:string;yea
     <div className="breadcrumbs"><Link href="/festivals">Festivals</Link> / <Link href={`/festivals/${f.slug}/${year}`}>{f.name} {year}</Link> / {city.name}</div>
     <p className="page-kicker">LOCAL FESTIVAL PANCHANG · {city.state}</p>
     <h1 className="page-title">{f.name}<br/>{city.name}</h1>
-    <p className="page-subtitle">{f.date} · Local Panchang calculated from {city.name} coordinates.</p>
+    <p className="page-subtitle">{f.date} · Local Panchang calculated from {city.name} coordinates. Festival-specific rules are separated from general astronomical context.</p>
 
     <div className="data-grid">
       <div className="data-card"><small>Date</small><strong>{f.date}</strong></div>
@@ -76,14 +78,22 @@ export default async function Page({params}:{params:Promise<{festival:string;yea
       <div className="data-card"><small>Purnimanta month</small><strong>{lunar.purnimantaLabel}</strong></div>
       <div className="data-card"><small>Nakshatra</small><strong>{data.nakshatra}</strong><small>until {nakshatraEnd}</small></div>
       <div className="data-card"><small>Sunrise / Sunset</small><strong>{data.sunrise} / {data.sunset}</strong></div>
-      <div className="data-card"><small>Local timing reference</small><strong>{formatWindow(referenceWindow)}</strong><small>Broad solar/Panchang reference, not a festival-specific ritual Muhurat.</small></div>
+      {localReference?<div className="data-card"><small>{localReference.label}</small><strong>{localReference.value}</strong><small>{localReference.note}</small></div>:<div className="data-card"><small>Ritual timing status</small><strong>Context only</strong><small>No generic clock window is presented as an exact ritual Muhurat.</small></div>}
       <div className="data-card"><small>Rahu Kalam</small><strong>{formatWindow(data.rahu)}</strong></div>
       <div className="data-card"><small>Moonrise</small><strong>{moonrise}</strong></div>
       {semantics.aliases.length?<div className="data-card"><small>Also known as</small><strong>{semantics.aliases.join(" · ")}</strong></div>:null}
       {semantics.relatedObservances.length?<div className="data-card"><small>Related regional observances</small><strong>{semantics.relatedObservances.join(" · ")}</strong></div>:null}
     </div>
 
-    <div className="seo-copy"><h2>How to read this festival Panchang</h2><p>{f.meaning}</p>{semantics.lunarConventionNote?<p><strong>Calendar convention:</strong> {semantics.lunarConventionNote}</p>:null}<p>The timing reference above is a broad local solar/Panchang window derived from the festival category. It is intentionally not presented as the exact ritual Muhurat. Festivals can require specific Tithi, Pradosh, Nishita, Bhadra, Madhyahna, moonrise or other tradition-specific rules; use the precise convention followed by your tradition for ritual observance.</p></div>
+    <section className="wide-panel"><div className="seo-copy">
+      <small>FESTIVAL RULE INTEGRITY</small><h2>{ruleProfile.title}</h2><p>{ruleProfile.ruleSummary}</p>
+      <ul>{ruleProfile.criteria.map(item=><li key={item}>{item}</li>)}</ul>
+      <p><strong>What Panchvani provides:</strong> {ruleProfile.localReference}</p>
+      {ruleProfile.limitations.length?<><h3>Not certified by this route</h3><ul>{ruleProfile.limitations.map(item=><li key={item}>{item}</li>)}</ul></>:null}
+      {ruleProfile.sources.length?<p><strong>Reference methodology:</strong> {ruleProfile.sources.map((source,index)=><span key={source.url}>{index?" · ":""}<a href={source.url} rel="noreferrer">{source.label}</a></span>)}</p>:null}
+    </div></section>
+
+    <div className="seo-copy"><h2>How to read this festival Panchang</h2><p>{f.meaning}</p>{semantics.lunarConventionNote?<p><strong>Calendar convention:</strong> {semantics.lunarConventionNote}</p>:null}<p>The astronomical values above are reproducible local Panchang context. A ritual rule can require additional conditions such as Tithi overlap during Pradosh or Nishita, Bhadra avoidance, Lagna, Rohini, Madhyahna or a tradition-specific fasting/parana rule. Panchvani does not turn a generic favorable period into a universal festival Muhurat.</p></div>
 
     <div className="pill-links">
       <Link href={`/festivals/${f.slug}/${year}`}>Festival overview</Link>
