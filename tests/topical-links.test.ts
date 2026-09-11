@@ -41,14 +41,14 @@ describe("Panchvani topical internal link graph",()=>{
     const city=findCityBySlug("mumbai")!;
     expect(isMuhuratIndexable("gold-purchase",city.slug)).toBe(false);
     const groups=buildMuhuratTopicalGraph(city,"gold-purchase",2026,11);
-    const compare=groups.find(group=>group.title==="Compare priority cities")!;
+    const compare=groups.find(group=>group.title==="Compare other cities")!;
     expect(compare.links).toEqual([]);
   });
 
   it("keeps peer-city meshes for indexable primary Muhurat events",()=>{
     const city=findCityBySlug("mumbai")!;
     const groups=buildMuhuratTopicalGraph(city,"wedding",2026,11);
-    const compare=groups.find(group=>group.title==="Compare priority cities")!;
+    const compare=groups.find(group=>group.title==="Compare other cities")!;
     expect(compare.links.length).toBeGreaterThan(0);
     expect(compare.links.every(link=>link.href.includes("/muhurat/wedding/2026/11/"))).toBe(true);
   });
