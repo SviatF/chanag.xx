@@ -4,6 +4,7 @@ import {notFound} from "next/navigation";
 import Header from "@/components/Header";
 import {cities} from "@/lib/cities";
 import {festivalBySlugYear} from "@/lib/festivals";
+import {getFestivalSemantics} from "@/lib/festival-conventions";
 import {festivalPageIsIndexable,festivalYearSiblings} from "@/lib/festival-expansion";
 import {robotsFor} from "@/lib/seo-policy";
 import {parseRouteYear} from "@/lib/route-validation";
@@ -17,7 +18,7 @@ export async function generateMetadata({params}:{params:Promise<{festival:string
   if(!year||!f)notFound();
   return {
     title:`${f.name} ${year} — Date, Meaning & Panchang`,
-    description:`${f.name} ${year}: ${f.date}. ${f.short} Open a city page for local Panchang and Puja timing reference.`,
+    description:`${f.name} ${year}: ${f.date}. ${f.short} Open a city page for local Panchang and timing context.`,
     alternates:{canonical:`/festivals/${f.slug}/${year}`},
     robots:robotsFor(festivalPageIsIndexable(f.slug,year))
   };
@@ -29,10 +30,11 @@ export default async function FestivalPage({params}:{params:Promise<{festival:st
   const f=year?festivalBySlugYear(p.festival,year):undefined;
   if(!year||!f)notFound();
 
+  const semantics=getFestivalSemantics(f);
   const month=String(Number(f.date.slice(5,7))).padStart(2,"0");
   const siblingYears=festivalYearSiblings(f.slug,year);
   const ld={"@context":"https://schema.org","@graph":[
-    {"@type":"Event","name":`${f.name} ${year}`,"startDate":f.date,"location":{"@type":"Country","name":"India"},"description":f.short},
+    {"@type":"WebPage","name":`${f.name} ${year}`,"url":`https://panchvani.com/festivals/${f.slug}/${year}`,"description":f.short,"about":{"@type":"Thing","name":f.name}},
     {"@type":"BreadcrumbList","itemListElement":[
       {"@type":"ListItem","position":1,"name":"Home","item":"https://panchvani.com/"},
       {"@type":"ListItem","position":2,"name":"Festivals","item":"https://panchvani.com/festivals/"},
@@ -48,15 +50,16 @@ export default async function FestivalPage({params}:{params:Promise<{festival:st
 
     <div className="data-grid">
       <div className="data-card"><small>Date</small><strong>{f.date}</strong></div>
-      <div className="data-card"><small>Regional names</small><strong>{f.regionalNames.join(" · ")}</strong></div>
-      <div className="data-card"><small>Dataset state</small><strong>Curated date present</strong><small>Only years with a validated ISO date record can enter the festival sitemap.</small></div>
-      <div className="data-card"><small>Timing model</small><strong>Local Panchang</strong><small>Open a city page for sunrise/sunset-sensitive reference timing.</small></div>
+      {semantics.aliases.length?<div className="data-card"><small>Also known as</small><strong>{semantics.aliases.join(" · ")}</strong></div>:null}
+      {semantics.relatedObservances.length?<div className="data-card"><small>Related regional observances</small><strong>{semantics.relatedObservances.join(" · ")}</strong></div>:null}
+      <div className="data-card"><small>Local context</small><strong>City-specific Panchang</strong><small>Open a city page for local sunrise, sunset, Tithi and timing context.</small></div>
     </div>
 
     <div className="seo-copy">
       <h2>Meaning and observance</h2>
       <p>{f.meaning}</p>
-      <p>The exact observance can vary by sampradaya, region and local Tithi boundaries. The date above is the India baseline in this festival database; city pages add local solar and Panchang timing rather than pretending every regional tradition is identical.</p>
+      {semantics.lunarConventionNote?<p><strong>Calendar convention:</strong> {semantics.lunarConventionNote}</p>:null}
+      <p>The exact observance can vary by sampradaya, region and local Tithi boundaries. Panchvani separates the shared festival date reference from city-local Panchang calculations instead of treating every regional tradition as identical.</p>
     </div>
 
     <section className="wide-panel">
@@ -66,7 +69,7 @@ export default async function FestivalPage({params}:{params:Promise<{festival:st
 
     <section className="wide-panel">
       <h2 className="page-title" style={{fontSize:32}}>Local Panchang by city</h2>
-      <p className="page-subtitle">Choose a priority city to see Tithi, sunrise/sunset, Rahu Kalam and the local Puja timing reference.</p>
+      <p className="page-subtitle">Choose a priority city to see Tithi, sunrise, sunset, Rahu Kalam and a broad local timing reference. Festival-specific ritual rules are explained separately where supported.</p>
       <div className="pill-links">{cities.slice(0,12).map(city=><Link href={`/festivals/${f.slug}/${year}/${city.slug}`} key={city.slug}>{city.name}</Link>)}</div>
     </section>
 
