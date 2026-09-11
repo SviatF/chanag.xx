@@ -8,6 +8,7 @@ import { cities, cityBySlug } from "@/lib/cities";
 import { formatPanchangTime, formatWindow, getPanchang } from "@/lib/panchang";
 import { festivalsForYear, nextFestival } from "@/lib/festivals";
 import { todayInIndia } from "@/lib/dates";
+import {regionalCitiesForLanguage} from "@/lib/regional-seo";
 import mainHero from "@/lib/main-hero.webp";
 import geneshaYourDay from "@/lib/genesha-your_day.webp";
 
@@ -24,12 +25,12 @@ const cityVisuals:Record<string,string>={
   hyderabad:"https://commons.wikimedia.org/wiki/Special:Redirect/file/Charminar_at_Sunset.JPG?width=1200"
 };
 const momentCards=[
-  ["Wedding","Find auspicious timings",Heart,"wedding"],
-  ["Griha Pravesh","A blessed new home",House,"griha-pravesh"],
-  ["Vehicle Purchase","For a safe journey",Car,"vehicle-purchase"],
-  ["Naming Ceremony","A bright beginning",Baby,"naming-ceremony"],
-  ["Start a Business","For lasting success",BriefcaseBusiness,"business-opening"],
-  ["Gold Purchase","Wealth and prosperity",Gem,"gold-purchase"],
+  ["Wedding","Review general candidate dates",Heart,"wedding"],
+  ["Griha Pravesh","Plan a home-entry date",House,"griha-pravesh"],
+  ["Vehicle Purchase","Review purchase-date candidates",Car,"vehicle-purchase"],
+  ["Naming Ceremony","Plan a naming ceremony",Baby,"naming-ceremony"],
+  ["Start a Business","Review opening-date candidates",BriefcaseBusiness,"business-opening"],
+  ["Gold Purchase","Review purchase-date candidates",Gem,"gold-purchase"],
 ] as const;
 
 const getMonthData=unstable_cache(async(citySlug:string,year:number,month:number)=>{
@@ -65,6 +66,13 @@ export default async function Home({searchParams}:{searchParams:Promise<{city?:s
     : bestChoghadiya
       ? {name:`${bestChoghadiya.name} Choghadiya`,time:`${bestChoghadiya.start} — ${bestChoghadiya.end}`}
       : {name:"See full Panchang",time:"Multiple local windows"};
+  const regionalChoices=[
+    ["বাংলা","Bengali","bengali"],
+    ["தமிழ்","Tamil","tamil"],
+    ["മലയാളം","Malayalam","malayalam"],
+    ["ગુજરાતી","Gujarati","gujarati"],
+    ["मराठी","Marathi","marathi"]
+  ].filter(([, ,slug])=>regionalCitiesForLanguage(slug).length>0);
 
   const prev=new Date(Date.UTC(year,month-2,1));
   const next=new Date(Date.UTC(year,month,1));
@@ -118,7 +126,7 @@ export default async function Home({searchParams}:{searchParams:Promise<{city?:s
 
     <section className="section shell ritual-section">
       <div className="section-symbol" aria-hidden="true">ॐ</div>
-      <div className="section-head"><div><h2>Plan an important moment</h2><p>Find the right Muhurat for life's special milestones.</p></div><Link href={`/muhurat/wedding/${year}/${String(month).padStart(2,"0")}`}>Explore all Muhurat →</Link></div>
+      <div className="section-head"><div><h2>Plan an important moment</h2><p>Explore general Muhurat candidates, then review the local timing windows for your city.</p></div><Link href="/muhurat">Explore Muhurat planning →</Link></div>
       <div className="moment-grid">
         {momentCards.map(([title,sub,Icon,slug])=><Link key={title} className="moment-card" href={`/muhurat/${slug}/${year}/${String(month).padStart(2,"0")}`}><Icon/><h3>{title}</h3><p>{sub}</p></Link>)}
       </div>
@@ -170,16 +178,16 @@ export default async function Home({searchParams}:{searchParams:Promise<{city?:s
         <div>
           <div className="section-head"><div><h2>Tools</h2><p>Simple tools for deeper insights.</p></div><Link href="/tools">View all tools →</Link></div>
           <div className="tools-grid">
-            <Link href="/tools/moon-sign-calculator"><Moon/><span><strong>Moon Sign</strong><small>Calculator</small></span></Link>
-            <Link href="/tools/nakshatra-finder"><Sparkles/><span><strong>Nakshatra</strong><small>Finder</small></span></Link>
+            <Link href="/tools/moon-sign-calculator"><Moon/><span><strong>Moon Sign</strong><small>Date + city estimate</small></span></Link>
+            <Link href="/tools/nakshatra-finder"><Sparkles/><span><strong>Nakshatra</strong><small>Date + city estimate</small></span></Link>
             <Link href="/tools/rahu-kalam-calculator"><Clock3/><span><strong>Rahu Kalam</strong><small>Calculator</small></span></Link>
-            <Link href="/tools/hindu-baby-names/ashwini"><Leaf/><span><strong>Baby Names</strong><small>by Nakshatra</small></span></Link>
+            <Link href="/tools/hindu-baby-names"><Leaf/><span><strong>Baby Names</strong><small>by Nakshatra</small></span></Link>
           </div>
         </div>
         <div>
           <div className="section-head"><div><h2>Regional Panchang</h2><p>In your language, closer to your roots.</p></div><Link href="/regional">View all languages →</Link></div>
           <div className="language-grid">
-            {[["বাংলা","Bengali","bengali"],["தமிழ்","Tamil","tamil"],["മലയാളം","Malayalam","malayalam"],["ગુજરાતી","Gujarati","gujarati"],["मराठी","Marathi","marathi"]].map(([native,label,slug])=><Link href={`/regional/${slug}/${city.slug}`} key={slug}><strong>{native}</strong><small>{label}</small></Link>)}
+            {regionalChoices.map(([native,label,slug])=><Link href={`/regional/${slug}`} key={slug}><strong>{native}</strong><small>{label}</small></Link>)}
           </div>
         </div>
       </div>
