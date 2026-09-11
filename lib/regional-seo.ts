@@ -33,14 +33,14 @@ export const regionalIntentSeo:Record<RegionalIntentSlug,{
     label:"Rahu Kalam",
     supportedLanguages:["bengali","tamil","malayalam","gujarati","marathi"],
     nativeLabels:{
-      bengali:"আজকের রাহুকাল",tamil:"இன்றைய ராகு காலம்",malayalam:"ഇന്നത്തെ രാഹുകാലം",gujarati:"આજનો રાહુકાળ",marathi:"आजचा राहुकाळ"
+      bengali:"আজকের রাহুকাল",tamil:"இன்றைய ராகு காலம்",malayalam:"ഇന്നത്തെ രാഹുകാലം",gujarati:"આજનો રાહુકાળ",marathi:"आजचा राहुकाल"
     },
     querySignals:{
       bengali:["রাহুকাল","bengali rahu kalam","bangla rahu kalam"],
       tamil:["ராகு காலம்","tamil rahu kalam","tamil rahu kaal"],
       malayalam:["രാഹുകാലം","malayalam rahu kalam","malayalam rahu kaal"],
       gujarati:["રાહુકાળ","gujarati rahu kalam","gujarati rahu kaal"],
-      marathi:["राहुकाळ","marathi rahu kalam","marathi rahu kaal"]
+      marathi:["राहुकाल","राहुकाळ","marathi rahu kalam","marathi rahu kaal"]
     }
   },
   choghadiya:{
@@ -136,7 +136,7 @@ export function regionalAlternates(city:City,intent?:RegionalIntentSlug){
   return languages;
 }
 
-function normalized(value:string){return ` ${value.toLowerCase().normalize("NFKC").replace(/[^\p{L}\p{N}]+/gu," ").trim()} `;}
+function normalized(value:string){return ` ${value.toLowerCase().normalize("NFKC").replace(/[^\p{L}\p{M}\p{N}]+/gu," ").trim()} `;}
 function includesSignal(query:string,signals:string[]){return signals.some(signal=>query.includes(normalized(signal)));}
 
 export function detectRegionalSearchQuery(rawQuery:string):{language:RegionalLanguageSlug;intent:RegionalSearchIntent}|null{
