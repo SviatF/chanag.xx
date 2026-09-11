@@ -1,16 +1,19 @@
 import Header from "@/components/Header";
 import CityCommand from "@/components/CityCommand";
 import {coreCities,supportedCities} from "@/lib/cities";
+import {todayInIndia} from "@/lib/dates";
 import {activeIndexCitySlugs} from "@/lib/seo-policy";
 import Link from "next/link";
 
 export const metadata={
   title:"Panchang by City — Local Hindu Panchang Across India",
-  description:"Choose an Indian city for location-specific Panchang, sunrise, sunset, Rahu Kalam, Yamaganda, Gulika and daily lunar timings."
+  description:"Choose an Indian city for location-specific Panchang, sunrise, sunset, Rahu Kalam, Yamaganda, Gulika and daily lunar timings.",
+  alternates:{canonical:"/cities"}
 };
 
 export default function Cities(){
   const active=new Set(activeIndexCitySlugs());
+  const today=todayInIndia().toISOString().slice(0,10);
   const featured=supportedCities.filter(city=>active.has(city.slug)).sort((a,b)=>a.state.localeCompare(b.state)||a.name.localeCompare(b.name));
   return <main><Header city={coreCities[0]}/><div className="page-shell internal-visual internal-cities">
     <p className="page-kicker">LOCAL PANCHANG · INDIA</p>
@@ -25,7 +28,7 @@ export default function Cities(){
 
     <section className="wide-panel">
       <h2 className="page-title" style={{fontSize:32}}>Popular local Panchang pages</h2>
-      <div className="city-directory">{featured.map(city=><Link href={`/panchang/${city.slug}`} key={city.slug}><strong>{city.name}</strong><small>{city.state}</small><span>Today’s local Panchang</span></Link>)}</div>
+      <div className="city-directory">{featured.map(city=><Link href={`/panchang/${city.slug}/${today}`} key={city.slug}><strong>{city.name}</strong><small>{city.state}</small><span>Today’s local Panchang</span></Link>)}</div>
     </section>
 
     <div className="seo-copy"><h2>Why city selection matters</h2><p>Sunrise, sunset, Rahu Kalam, Yamaganda, Gulika, Choghadiya and several daily Panchang references are location-sensitive. Select the city closest to where the timing will be used rather than relying on a national clock-time table.</p></div>
