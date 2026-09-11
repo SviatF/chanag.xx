@@ -2,12 +2,14 @@ import Link from "next/link";
 import Header from "@/components/Header";
 import {cities} from "@/lib/cities";
 import {festivalsForYear} from "@/lib/festivals";
-import {festivalCoverageSnapshot,festivalDatasetYears} from "@/lib/festival-expansion";
+import {getFestivalSemantics} from "@/lib/festival-conventions";
+import {festivalCoverageSnapshot,festivalIndexYears} from "@/lib/festival-expansion";
 
-const range=festivalDatasetYears.length?`${festivalDatasetYears[0]}–${festivalDatasetYears[festivalDatasetYears.length-1]}`:"Festival calendar";
+const publicYears=festivalIndexYears();
+const range=publicYears.length?(publicYears.length===1?String(publicYears[0]):`${publicYears[0]}–${publicYears[publicYears.length-1]}`):"Festival calendar";
 export const metadata={
-  title:`Hindu Festivals ${range} — Dates, Panchang & Puja Timing`,
-  description:"Major Hindu festival dates with city-specific Panchang timing, regional names and local Puja references. Only years present in the curated festival dataset are published."
+  title:`Hindu Festivals ${range} — Dates & Panchang`,
+  description:"Major Hindu festival dates with city-specific Panchang context, calendar-convention notes and festival-specific observance rules where supported."
 };
 
 export default function FestivalsIndex(){
@@ -16,16 +18,17 @@ export default function FestivalsIndex(){
     <div className="breadcrumbs"><Link href="/">Home</Link> / Festivals</div>
     <p className="page-kicker">FESTIVAL DIRECTORY</p>
     <h1 className="page-title">Hindu Festivals<br/>{range}</h1>
-    <p className="page-subtitle">Start with a curated festival date, then open the city page for local Panchang factors, sunrise/sunset and a practical Puja timing reference. New years are published only after date records are added and validated.</p>
-    {festivalDatasetYears.map(year=>{const state=coverage.get(year);return <section className="wide-panel" key={year}>
+    <p className="page-subtitle">Browse complete Panchvani festival years, then open a festival or city page for local Tithi, sunrise/sunset, lunar-month conventions and observance-rule context. A year enters this directory only after the full canonical festival set is present and structurally validated.</p>
+    {publicYears.map(year=>{const state=coverage.get(year);return <section className="wide-panel" key={year}>
       <h2 className="page-title" style={{fontSize:34}}>{year} festivals</h2>
-      <p className="page-subtitle">Dataset coverage: {state?.present??0}/{state?.expected??0} catalog festivals · {state?.coveragePct??0}%.</p>
+      <p className="page-subtitle">Complete catalog · {state?.present??0} maintained festival dates.</p>
       <div className="city-directory">
-        {festivalsForYear(year).map(f=><Link href={`/festivals/${f.slug}/${year}`} key={f.slug}>
-          <small>{f.date}</small><strong>{f.name}</strong><span>{f.short}</span>
-        </Link>)}
+        {festivalsForYear(year).map(f=>{const semantics=getFestivalSemantics(f);return <Link href={`/festivals/${f.slug}/${year}`} key={f.slug}>
+          <small>{f.date}</small><strong>{f.name}</strong><span>{semantics.displayShort}</span>
+        </Link>})}
       </div>
       <div className="pill-links"><Link href={`/festivals-calendar/${year}`}>View full {year} festival calendar →</Link></div>
     </section>})}
+    {!publicYears.length?<div className="seo-copy"><p>No festival year is currently marked complete for public indexation.</p></div>:null}
   </div></main>;
 }
