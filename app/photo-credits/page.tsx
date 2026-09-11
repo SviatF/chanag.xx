@@ -12,7 +12,7 @@ const credits=[
   ["Ganesha altar with flame","Ramon","CC BY-SA 2.0","https://commons.wikimedia.org/wiki/File:Ganesha_altar_with_flame.jpg"],
 ];
 
-export const metadata={title:"Photo Credits"};
+export const metadata={title:"Photo Credits",alternates:{canonical:"/photo-credits"}};
 
 export default function PhotoCredits(){
   return <main><Header city={cities[0]}/><div className="page-shell internal-visual internal-editorial">
