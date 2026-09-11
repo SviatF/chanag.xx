@@ -12,8 +12,9 @@ import {getRegionalCalendarProfile} from "@/lib/regional-calendar";
 import {getLunarMonthConventions,getRegionalCalendarConventions} from "@/lib/calendar-conventions";
 import {isRegionalIndexable,robotsFor} from "@/lib/seo-policy";
 import {isRegionalLanguageSlug,regionalAlternates,regionalIntentLinksForCity} from "@/lib/regional-seo";
-import {choghadiyaNativeNames,localizeNakshatra,localizePaksha,localizeTithi,nativeCityName,regionalLocale} from "@/lib/regional-i18n";
-import {nativeCalendarName,nativeRashi,nativeRegionalMonth} from "@/lib/regional-values";
+import {choghadiyaNativeNames,localizeNakshatra,localizePaksha,localizeTithi,nativeCityName} from "@/lib/regional-i18n";
+import {regionalPureLocale} from "@/lib/regional-pure-copy";
+import {nativeCalendarName,nativeRashi,nativeRegionalMonth,nativeStateName} from "@/lib/regional-values";
 import type {TopicalGraphGroup} from "@/lib/topical-types";
 
 export const revalidate=3600;
@@ -24,7 +25,7 @@ export async function generateMetadata({params}:{params:Promise<{language:string
   const p=await params;
   const city=findCityBySlug(p.city);
   if(!city||!isRegionalLanguageSlug(p.language))notFound();
-  const copy=regionalLocale(p.language);
+  const copy=regionalPureLocale(p.language);
   const cityName=nativeCityName(p.language,city);
   return {
     title:copy.cityMetaTitle(cityName),
@@ -40,8 +41,9 @@ export default async function RegionalPage({params}:{params:Promise<{language:st
   if(!city||!isRegionalLanguageSlug(p.language))notFound();
   const language=p.language;
   const lang=regional[language as RegionalKey];
-  const copy=regionalLocale(language);
+  const copy=regionalPureLocale(language);
   const cityName=nativeCityName(language,city);
+  const stateName=nativeStateName(language,city.state);
   const date=todayInIndia();
   const data=await getPanchang(date,city);
   const lunarConventions=getLunarMonthConventions(date,city,data);
@@ -84,7 +86,7 @@ export default async function RegionalPage({params}:{params:Promise<{language:st
 
   return <main><Header city={city}/><div className="page-shell internal-visual internal-regional">
     <div className="breadcrumbs"><Link href="/regional">Panchvani</Link> / <Link href={`/regional/${language}`}>{copy.panchangName}</Link> / {cityName}</div>
-    <p className="page-kicker">{copy.nativeLanguage} · {cityName} · {copy.localCalculation}</p>
+    <p className="page-kicker">{copy.nativeLanguage} · {stateName} · {copy.localCalculation}</p>
     <h1 className="page-title">{copy.cityPanchangTitle(cityName)}</h1>
     <p className="page-subtitle">{calendarName} · {displayMonth}{yearLabel?` · ${yearLabel}`:""}</p>
 
