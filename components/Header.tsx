@@ -5,6 +5,7 @@ import { todayInIndia } from "@/lib/dates";
 import { festivalsForYear } from "@/lib/festivals";
 import {festivalIndexYears} from "@/lib/festival-expansion";
 import { muhuratRules } from "@/lib/muhurat";
+import {primaryMuhuratEvents} from "@/lib/seo-policy";
 import { regional } from "@/lib/regional";
 import {regionalCitiesForLanguage} from "@/lib/regional-seo";
 import CityCommand from "@/components/CityCommand";
@@ -83,11 +84,14 @@ export default function Header({city}:{city:City}) {
       : yearFestivals
   ).slice(0,5);
 
-  const muhuratItems=Object.entries(muhuratRules).map(([slug,rule])=>({
-    label:rule.title.replace(" Muhurat",""),
-    href:`/muhurat/${slug}/${year}/${month}/${city.slug}`,
-    meta:"General screen · local windows",
-  }));
+  const muhuratItems=primaryMuhuratEvents.map(slug=>{
+    const rule=muhuratRules[slug];
+    return {
+      label:rule.title.replace(" Muhurat",""),
+      href:`/muhurat/${slug}/${year}/${month}/${city.slug}`,
+      meta:"General screen · local windows",
+    };
+  });
 
   const regionalItems=Object.entries(regional)
     .filter(([slug])=>regionalCitiesForLanguage(slug).length>0)
@@ -103,18 +107,18 @@ export default function Header({city}:{city:City}) {
     <nav className="nav" aria-label="Primary navigation">
       <NavDropdown
         label="Panchang"
-        href={`/panchang/${city.slug}`}
+        href={`/panchang/${city.slug}/${todayIso}`}
         sections={[
           {
             title:`Today in ${city.name}`,
             items:[
-              {label:"Today's Panchang",href:`/panchang/${city.slug}`,meta:"Tithi · Nakshatra · local timings"},
+              {label:"Today's Panchang",href:`/panchang/${city.slug}/${todayIso}`,meta:"Tithi · Nakshatra · local timings"},
               {label:"Today's Choghadiya",href:`/tools/choghadiya/${city.slug}`,meta:"Day + night"},
             ],
           },
           {
             title:"Popular cities",
-            items:featuredCities.map(item=>({label:item.name,href:`/panchang/${item.slug}`,meta:item.state})),
+            items:featuredCities.map(item=>({label:item.name,href:`/panchang/${item.slug}/${todayIso}`,meta:item.state})),
           },
         ]}
         footer={{label:"Browse all cities",href:"/cities",meta:"India Panchang directory"}}
@@ -161,10 +165,7 @@ export default function Header({city}:{city:City}) {
       <NavDropdown
         label="Muhurat"
         href="/muhurat"
-        sections={[
-          {title:"Plan an important moment",items:muhuratItems.slice(0,3)},
-          {title:"More Muhurat",items:muhuratItems.slice(3)},
-        ]}
+        sections={[{title:"Plan an important moment",items:muhuratItems}]}
         footer={{label:"Muhurat planning guide",href:"/muhurat",meta:"Candidate dates · limits · local windows"}}
       />
 
