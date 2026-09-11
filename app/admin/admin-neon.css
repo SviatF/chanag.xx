@@ -1,376 +1,315 @@
 :root{
-  --admin-bg:#000000;
-  --admin-panel:#050505;
-  --admin-panel2:#090909;
-  --admin-line:#24201d;
-  --admin-line-gold:#783300;
-  --admin-text:#f7f6f3;
-  --admin-muted:#858585;
-  --admin-gold:#ff7800;
-  --admin-gold2:#ff9a32;
-  --admin-green:#24ff70;
-  --admin-red:#ff5361;
-  --admin-blue:#5fb8ff;
-  --admin-orange:#ff7800;
-  --admin-orange-hot:#ff8d16;
-  --admin-orange-soft:rgba(255,120,0,.13);
-  --admin-orange-line:rgba(255,120,0,.38);
-  --admin-success:#24ff70;
-  --admin-success-soft:rgba(36,255,112,.11);
+  --admin-bg:#050608;
+  --admin-panel:#0a0c10;
+  --admin-panel2:#0e1117;
+  --admin-line:#232832;
+  --admin-line-strong:#313847;
+  --admin-text:#f5f7fa;
+  --admin-muted:#9299a6;
+  --admin-subtle:#69717f;
+  --admin-accent:#7c9cff;
+  --admin-accent-strong:#9aafff;
+  --admin-accent-soft:rgba(124,156,255,.10);
+  --admin-accent-line:rgba(124,156,255,.30);
+  --admin-cyan:#5fd3c8;
+  --admin-green:#45d483;
+  --admin-green-soft:rgba(69,212,131,.10);
+  --admin-yellow:#f1c75b;
+  --admin-yellow-soft:rgba(241,199,91,.10);
+  --admin-red:#ff6b7d;
+  --admin-red-soft:rgba(255,107,125,.10);
+  --admin-blue:#7c9cff;
+  --admin-gold:#7c9cff;
+  --admin-gold2:#9aafff;
+  --admin-orange:#7c9cff;
+  --admin-orange-hot:#9aafff;
+  --admin-orange-soft:rgba(124,156,255,.10);
+  --admin-orange-line:rgba(124,156,255,.30);
+  --admin-success:#45d483;
+  --admin-success-soft:rgba(69,212,131,.10);
 }
 
-/* BLACK CANVAS — orange is the product/UI language, green is status only. */
+/*
+  Panchvani Admin — monochrome control plane.
+  Black/graphite is the canvas. Cool blue is the only product accent.
+  Green/yellow/red are reserved for state meaning, not decoration.
+*/
 .admin-shell{
-  background:
-    radial-gradient(circle at 78% -8%,rgba(255,120,0,.085),transparent 30%),
-    radial-gradient(circle at 24% 108%,rgba(255,120,0,.035),transparent 27%),
-    #000;
+  background:#050608;
   color:var(--admin-text);
 }
 
 .admin-sidebar{
-  border-right-color:#2c1708;
-  background:
-    linear-gradient(180deg,rgba(4,3,2,.998),rgba(0,0,0,.998)),
-    radial-gradient(circle at 18% 0,rgba(255,120,0,.055),transparent 25%);
+  background:#07090d;
+  border-right-color:#20252e;
 }
-.admin-brand{border-bottom-color:#25170d}
-.admin-brand small{
-  color:#ff8a12;
-  text-shadow:0 0 13px rgba(255,120,0,.42);
-}
-.admin-brand strong{color:#f8f7f4}
-.admin-brand span{color:#6e6b68}
-.admin-nav-divider{background:#24170d}
-.admin-nav a{color:#b7b6b3}
-.admin-nav a svg{color:#8b8078}
+.admin-brand{border-bottom-color:#20252e}
+.admin-brand small{color:var(--admin-accent-strong);text-shadow:none}
+.admin-brand strong{color:#fff}
+.admin-brand span{color:#69717f}
+.admin-nav-divider{background:#20252e}
+.admin-nav a{color:#aeb4bf}
+.admin-nav a svg{color:#737c89}
 .admin-nav a:hover{
-  background:#110904;
-  border-color:#542708;
-  color:#fff7ef;
-  box-shadow:inset 0 0 20px rgba(255,120,0,.035);
+  color:#f7f9fc;
+  background:#10131a;
+  border-color:#2a303b;
+  box-shadow:none;
 }
-.admin-nav a:hover svg{color:#ff8a12}
+.admin-nav a:hover svg{color:#c0ccff}
 .admin-nav a.active{
-  background:linear-gradient(90deg,rgba(255,120,0,.17),rgba(15,7,2,.94));
-  border-color:#c95800;
-  box-shadow:
-    inset 0 0 24px rgba(255,120,0,.07),
-    0 0 18px rgba(255,120,0,.09);
-  color:#fffaf5;
+  color:#fff;
+  background:#141925;
+  border-color:#3c4c78;
+  box-shadow:inset 3px 0 0 var(--admin-accent);
 }
-.admin-nav a.active svg{
-  color:#ff8b13;
-  filter:drop-shadow(0 0 5px rgba(255,120,0,.45));
-}
+.admin-nav a.active svg{color:var(--admin-accent-strong);filter:none}
 
-/* Heritage imagery becomes warm ember/orange, never olive. */
-.admin-sidebar-art{border-bottom-color:#26170c}
+.admin-sidebar-art{border-bottom-color:#20252e}
 .admin-sidebar-art img{
-  opacity:.40;
-  filter:grayscale(.22) sepia(.62) saturate(1.55) brightness(.44) contrast(1.30);
+  opacity:.22;
+  filter:grayscale(1) brightness(.42) contrast(1.18);
 }
 .admin-sidebar-art:before{
-  background:
-    linear-gradient(180deg,#020100 0%,rgba(0,0,0,.18) 36%,rgba(8,3,0,.52) 72%,#000 100%),
-    radial-gradient(circle at 50% 73%,rgba(255,112,0,.22),transparent 43%);
+  background:linear-gradient(180deg,#07090d 0%,rgba(7,9,13,.2) 38%,rgba(7,9,13,.65) 76%,#07090d 100%);
 }
 .admin-sidebar-art:after{
-  background:linear-gradient(90deg,transparent,#ff7600,transparent);
-  opacity:.52;
+  background:linear-gradient(90deg,transparent,rgba(124,156,255,.55),transparent);
+  opacity:.42;
 }
-.admin-temple-mark{
-  color:#ff870b;
-  text-shadow:0 0 25px rgba(255,110,0,.72),0 0 50px rgba(255,95,0,.22);
-  opacity:.96;
-}
+.admin-temple-mark{color:#b9c6ff;text-shadow:none;opacity:.72}
 .admin-network-card{
-  border-color:#522708;
-  background:linear-gradient(145deg,#0b0602,#020100);
-  box-shadow:inset 0 0 18px rgba(255,120,0,.025);
+  border-color:#242a34;
+  background:#0b0e13;
+  box-shadow:none;
 }
-.admin-network-orb{
-  border-color:#b44a00;
-  color:#ff8a12;
-  box-shadow:inset 0 0 15px rgba(255,120,0,.08),0 0 10px rgba(255,120,0,.06);
-}
-.admin-network-card small,.admin-sidebar-foot>a,.admin-sidebar-foot button{color:#74716e}
-.admin-sidebar-foot>a:hover,.admin-sidebar-foot button:hover{color:#ff9528}
+.admin-network-orb{border-color:#3a465d;color:#a9b8ff;box-shadow:none}
+.admin-network-card small,.admin-sidebar-foot>a,.admin-sidebar-foot button{color:#747d8a}
+.admin-sidebar-foot>a:hover,.admin-sidebar-foot button:hover{color:#cbd4ff}
 
-/* TOPBAR */
+/* Topbar */
 .admin-topbar{
-  border-bottom-color:#2d1708;
-  background:rgba(0,0,0,.92);
-  box-shadow:0 8px 32px rgba(0,0,0,.48),inset 0 -1px 0 rgba(255,120,0,.025);
+  border-bottom-color:#20252e;
+  background:rgba(5,6,8,.94);
+  box-shadow:0 8px 28px rgba(0,0,0,.28);
 }
 .admin-global-search{
-  border-color:#2c241f;
-  background:#030303;
-  color:#77736f;
+  border-color:#272d37;
+  background:#0a0c10;
+  color:#727b88;
 }
 .admin-global-search:focus-within{
-  border-color:#8c3b00;
-  box-shadow:0 0 0 1px rgba(255,120,0,.06),0 0 18px rgba(255,120,0,.075);
+  border-color:#52679f;
+  box-shadow:0 0 0 3px rgba(124,156,255,.08);
 }
-.admin-global-search input{color:#f7f5f2}
-.admin-global-search input::placeholder{color:#62605e}
-.admin-global-search kbd{border-color:#342b25;color:#8b8681;background:#070605}
-.admin-topbar-right time{color:#76736f}
-.admin-icon-button{
-  border-left-color:#2b1a0e;
-  color:#ff8610;
-  filter:drop-shadow(0 0 4px rgba(255,120,0,.30));
-}
-.admin-avatar{background:#111111;color:#f6f5f2;border:1px solid #34302d}
-.admin-user small{color:#74706d}
+.admin-global-search input{color:#f6f8fb}
+.admin-global-search input::placeholder{color:#68717e}
+.admin-global-search kbd{border-color:#303744;color:#858e9b;background:#11141a}
+.admin-topbar-right time{color:#79818d}
+.admin-icon-button{border-left-color:#272d37;color:#aab8f2;filter:none}
+.admin-avatar{background:#171b23;color:#f6f8fb;border:1px solid #303744}
+.admin-user small{color:#747d89}
 
-/* TYPOGRAPHY / PRIMARY ACCENTS */
-.admin-page-head h1{color:#faf8f4;text-shadow:0 0 24px rgba(255,120,0,.025)}
-.admin-page-head p{color:#96928e}
-.admin-eyebrow{
-  color:#ff840b!important;
-  text-shadow:0 0 10px rgba(255,120,0,.38);
-}
-.admin-head-meta>span:first-child{color:#d96808}
-.admin-status{border-color:#2e2926;background:#030303}
+/* Type hierarchy */
+.admin-page-head h1{color:#fff;text-shadow:none}
+.admin-page-head p{color:#969eaa}
+.admin-eyebrow{color:#91a8ff!important;text-shadow:none}
+.admin-head-meta>span:first-child{color:#8294d4}
+.admin-panel h2{color:#f7f8fb}
+.admin-panel p{color:#929aa6}
+.admin-panel code{color:#b6c2ff;background:rgba(124,156,255,.05)}
+.admin-panel-head small{color:#8294d4}
+.admin-panel-head>a,.admin-panel-head>span{color:#aebcff}
+.admin-panel-head>a:hover{color:#d0d8ff;text-shadow:none}
+
+/* Status semantics */
+.admin-status{border-color:#2a303a;background:#0b0d11;color:#aeb5c0}
 .admin-status.live{
-  border-color:#167339;
-  color:#2cff76;
-  background:#031108;
-  box-shadow:inset 0 0 13px rgba(36,255,112,.06),0 0 11px rgba(36,255,112,.04);
+  border-color:#27734a;
+  color:#59df92;
+  background:#08150f;
+  box-shadow:none;
 }
-.admin-status.warn{border-color:#8a4308;color:#ff9b32;background:#140902}
-.admin-status.danger{border-color:#753039;color:#ff6673;background:#160607}
+.admin-status.warn{border-color:#77652e;color:#f2cd69;background:#171306}
+.admin-status.danger{border-color:#793845;color:#ff8291;background:#19090d}
 
-/* KPI CARDS */
+/* KPI cards */
 .admin-kpi{
-  border-color:#432009;
-  background:linear-gradient(145deg,rgba(8,6,4,.99),rgba(2,2,2,.99));
-  box-shadow:inset 0 1px 0 rgba(255,137,29,.02);
+  border-color:#242a34;
+  background:#0b0e13;
+  box-shadow:none;
 }
-.admin-kpi:after{background:radial-gradient(circle,rgba(255,120,0,.07),transparent 64%)}
-.admin-kpi small{color:#95908b}
-.admin-kpi strong{color:#fbfaf7}
-.admin-kpi span{color:#77736f}
+.admin-kpi:after{background:none}
+.admin-kpi small{color:#9098a4}
+.admin-kpi strong{color:#fff}
+.admin-kpi span{color:#757e8b}
 .admin-kpi-icon{
-  border-color:#713008;
-  color:#ff8610;
-  background:rgba(255,120,0,.065);
-  box-shadow:inset 0 0 17px rgba(255,120,0,.04),0 0 12px rgba(255,120,0,.025);
+  border-color:#35415b;
+  color:#a7b6ff;
+  background:rgba(124,156,255,.08);
+  box-shadow:none;
 }
-.admin-kpi:hover{border-color:#8a3900;box-shadow:inset 0 0 24px rgba(255,120,0,.025)}
-.admin-delta.up{color:#2cff76!important}
-.admin-delta.down{color:#ff6170!important}
-.admin-delta.neutral{color:#85817d!important}
+.admin-kpi:hover{border-color:#384354;box-shadow:none}
+.admin-delta.up{color:#59df92!important}
+.admin-delta.down{color:#ff8291!important}
+.admin-delta.neutral{color:#8d96a2!important}
 
-/* PANELS */
+/* Panels */
 .admin-panel{
-  border-color:#35200f;
-  background:linear-gradient(145deg,rgba(7,6,5,.995),rgba(1,1,1,.995));
-  box-shadow:inset 0 1px 0 rgba(255,255,255,.012);
+  border-color:#242a34;
+  background:#0a0d12;
+  box-shadow:none;
 }
-.admin-panel:before{background:linear-gradient(105deg,rgba(255,120,0,.017),transparent 31%)}
-.admin-panel h2{color:#f7f4ef}
-.admin-panel p{color:#918d89}
-.admin-panel code{color:#ff9a31}
-.admin-panel-head small{color:#ff7f08}
-.admin-panel-head>a,.admin-panel-head>span{color:#ff8d16}
-.admin-panel-head>a:hover{color:#ffad55;text-shadow:0 0 8px rgba(255,120,0,.28)}
-.admin-period{border-color:#46301f!important;color:#c3beb8!important;background:#050301}
-.admin-traffic-panel,.admin-map-panel{
-  border-color:#713000;
-  box-shadow:inset 0 0 32px rgba(255,120,0,.015);
-}
-.admin-traffic-panel:hover,.admin-map-panel:hover,.admin-source-card:hover{border-color:#a94600}
+.admin-panel:before{display:none}
+.admin-period{border-color:#303744!important;color:#c7ccd5!important;background:#0d1015}
+.admin-traffic-panel,.admin-map-panel{border-color:#2b3340;box-shadow:none}
+.admin-traffic-panel:hover,.admin-map-panel:hover,.admin-source-card:hover{border-color:#3a4658}
 
-/* SEARCH CHART: orange impressions + green clicks */
-.admin-chart-wrap{border-top-color:#26211e}
+/* Charts */
+.admin-chart-wrap{border-top-color:#222832}
 .admin-chart-grid{
   background:
-    linear-gradient(#191714 1px,transparent 1px),
-    linear-gradient(90deg,#191714 1px,transparent 1px);
-  opacity:.85;
+    linear-gradient(#1e232c 1px,transparent 1px),
+    linear-gradient(90deg,#1e232c 1px,transparent 1px);
+  opacity:.72;
 }
-.admin-line.impressions{
-  stroke:#ff7600;
-  stroke-width:2;
-  filter:drop-shadow(0 0 7px rgba(255,110,0,.48));
-}
-.admin-line.clicks{
-  stroke:#22ff6b;
-  stroke-width:1.45;
-  filter:drop-shadow(0 0 5px rgba(36,255,112,.26));
-  opacity:.95;
-}
-.admin-chart-legend{color:#7e7a76}
-.admin-chart-legend .gold{background:#ff7600;box-shadow:0 0 8px rgba(255,110,0,.55)}
-.admin-chart-legend .green{background:#24ff70;box-shadow:0 0 8px rgba(36,255,112,.42)}
-.admin-traffic-stats{border-left-color:#27211d}
-.admin-traffic-stats>div{border-bottom-color:#26211e}
-.admin-traffic-stats svg{color:#ff8410}
-.admin-traffic-stats small{color:#7e7975}
-.admin-empty-state{color:#77736f}
-.admin-empty-state svg,.admin-empty-state a{color:#ff8510}
-.admin-empty-state strong{color:#f3f1ed}
+.admin-line.impressions{stroke:#7c9cff;stroke-width:2;filter:none}
+.admin-line.clicks{stroke:#5fd3c8;stroke-width:1.55;filter:none;opacity:1}
+.admin-chart-legend{color:#7d8693}
+.admin-chart-legend .gold{background:#7c9cff;box-shadow:none}
+.admin-chart-legend .green{background:#5fd3c8;box-shadow:none}
+.admin-traffic-stats{border-left-color:#242a34}
+.admin-traffic-stats>div{border-bottom-color:#242a34}
+.admin-traffic-stats svg{color:#9eb0ff}
+.admin-traffic-stats small{color:#7d8693}
+.admin-empty-state{color:#7d8693}
+.admin-empty-state svg,.admin-empty-state a{color:#9eb0ff}
+.admin-empty-state strong{color:#eef1f5}
 
-/* INDIA OPPORTUNITY MAP */
+/* Map */
 .admin-india-map{
-  border-top-color:#2a211a;
-  background:
-    radial-gradient(circle at 48% 45%,rgba(255,112,0,.12),transparent 36%),
-    linear-gradient(transparent 96%,rgba(255,120,0,.03) 96%);
+  border-top-color:#242a34;
+  background:radial-gradient(circle at 48% 45%,rgba(124,156,255,.07),transparent 37%);
 }
-.admin-india-outline{
-  fill:rgba(20,8,1,.66);
-  stroke:#ff7600;
-  stroke-width:1.35;
-  filter:drop-shadow(0 0 6px rgba(255,112,0,.35));
-}
-.admin-india-inner{stroke:#623018}
-.admin-map-dot i{
-  background:#ff7b00;
-  box-shadow:0 0 14px #ff6a00;
-}
-.admin-map-dot.hot i{
-  background:#ff9b27;
-  box-shadow:0 0 19px 5px rgba(255,105,0,.40);
-}
-.admin-map-empty{color:#716d69}
-.admin-opportunity-list{border-left-color:#2a211c;border-top-color:#2a211c}
-.admin-opportunity-title{color:#96918c}
-.admin-opportunity-list>div:not(.admin-opportunity-title){border-top-color:#28211c}
-.admin-opportunity-list em{color:#ff830c}
-.admin-opportunity-list b{color:#29ff72}
+.admin-india-outline{fill:rgba(35,42,57,.72);stroke:#748ddd;stroke-width:1.2;filter:none}
+.admin-india-inner{stroke:#39445b}
+.admin-map-dot i{background:#7c9cff;box-shadow:0 0 0 3px rgba(124,156,255,.12)}
+.admin-map-dot.hot i{background:#9fb0ff;box-shadow:0 0 0 4px rgba(124,156,255,.17)}
+.admin-map-empty{color:#717986}
+.admin-opportunity-list{border-left-color:#242a34;border-top-color:#242a34}
+.admin-opportunity-title{color:#969eaa}
+.admin-opportunity-list>div:not(.admin-opportunity-title){border-top-color:#242a34}
+.admin-opportunity-list em{color:#a9b8ff}
+.admin-opportunity-list b{color:#59df92}
 
-/* SEO COVERAGE */
-.admin-ring{
-  background:conic-gradient(#ff7900 var(--coverage),#1b1b1b 0);
-  box-shadow:0 0 24px rgba(255,112,0,.12);
-}
-.admin-ring:after{background:#030303;border-color:#302318}
-.admin-coverage-list .gold,.admin-coverage-list .priority{
-  background:#ff7900;
-  box-shadow:0 0 8px rgba(255,112,0,.48);
-}
-.admin-coverage-list i{background:#68635f}
-.admin-coverage-list .muted{background:#33312f}
-.admin-content-count svg{color:#ff8310}
-.admin-festival-strip>div{border-color:#332318;background:#030201}
-.admin-festival-strip i{background:#27ff70;box-shadow:0 0 8px rgba(36,255,112,.35)}
+/* Coverage */
+.admin-ring{background:conic-gradient(#7c9cff var(--coverage),#1c2028 0);box-shadow:none}
+.admin-ring:after{background:#0a0d12;border-color:#2a303a}
+.admin-coverage-list .gold,.admin-coverage-list .priority{background:#7c9cff;box-shadow:none}
+.admin-coverage-list i{background:#6f7783}
+.admin-coverage-list .muted{background:#343a44}
+.admin-content-count svg{color:#a9b8ff}
+.admin-festival-strip>div{border-color:#2a303a;background:#0d1015}
+.admin-festival-strip i{background:#45d483;box-shadow:none}
 
-/* SYSTEM / STATUS — green only where state is healthy */
+/* Lists / system health */
 .admin-system-list>div,.admin-actions-list>a,.admin-compact-table th,.admin-compact-table td,
 .admin-index-list>div,.admin-build-list>div,.admin-health-list>div,.admin-mini-list>div,
-.admin-rule-card>div,.admin-source-list>a,.admin-search-results .admin-panel>a{border-color:#28231f}
-.admin-system-list svg{color:#29ff72}
-.admin-system-list b.ok,.admin-build-list .ok,.admin-health-list b.ok,.admin-source-list b{color:#29ff72}
-.admin-system-list b.missing,.admin-index-list .awaiting,.admin-build-list .awaiting{color:#ff8f18}
-.admin-action-count{
-  background:#27ff70;
-  color:#001207!important;
-  box-shadow:0 0 15px rgba(36,255,112,.30);
-}
-.admin-action-dot.info{background:#062313;color:#2cff76}
-.admin-action-dot.warning{background:#261102;color:#ff941e}
-.admin-action-dot.critical{background:#2b070b;color:#ff6572}
-.admin-actions-list>a>span:last-child{color:#27ff70}
-.admin-compact-table th{color:#77736f}
-.admin-compact-table td:first-child{color:#ff8410}
-.admin-index-list b{color:#ff8c16}
-.admin-build-list b{color:#ff8c16}
-.admin-build-list b.ok{color:#29ff72}
-.admin-production{
-  border-color:#1d7139;
-  background:#031108;
-  box-shadow:inset 0 0 18px rgba(36,255,112,.035);
-}
-.admin-production svg{color:#29ff72}
-.admin-production b{color:#9affb8}
-.admin-production small{color:#7b847e}
+.admin-rule-card>div,.admin-source-list>a,.admin-search-results .admin-panel>a{border-color:#252b35}
+.admin-system-list svg{color:#59df92}
+.admin-system-list b.ok,.admin-build-list .ok,.admin-health-list b.ok,.admin-source-list b{color:#59df92}
+.admin-system-list b.missing,.admin-index-list .awaiting,.admin-build-list .awaiting{color:#f2cd69}
+.admin-action-count{background:#45d483;color:#06140c!important;box-shadow:none}
+.admin-action-dot.info{background:rgba(124,156,255,.12);color:#9fb0ff}
+.admin-action-dot.warning{background:rgba(241,199,91,.12);color:#f2cd69}
+.admin-action-dot.critical{background:rgba(255,107,125,.12);color:#ff8291}
+.admin-actions-list>a>span:last-child{color:#aebcff}
+.admin-compact-table th{color:#7a8390}
+.admin-compact-table td:first-child{color:#c6d0ff}
+.admin-index-list b,.admin-build-list b{color:#aebcff}
+.admin-build-list b.ok{color:#59df92}
+.admin-production{border-color:#255f40;background:#08140e;box-shadow:none}
+.admin-production svg{color:#59df92}
+.admin-production b{color:#7de6aa}
+.admin-production small{color:#7d8a82}
 
-/* TABLES / FORMS / SECONDARY ADMIN PAGES */
-.admin-flow span{border-color:#4a2913;color:#e4ddd6;background:#030201}
-.admin-flow b{color:#ff7900}
-.admin-secret-list code{border-color:#4b2913;background:#030201;color:#ff9630}
-.admin-table th,.admin-table td{border-color:#29231f}
-.admin-table th{background:#030201;color:#77726e}
-.admin-table td>strong{color:#f2efeb}
-.admin-table td>small{color:#6f6b68}
-.admin-badge{border-color:#35302c;color:#a49f9a;background:#040404}
-.admin-badge.active,.admin-badge.activate{
-  border-color:#227944;
-  color:#2cff76;
-  background:#031108;
+/* Tables */
+.admin-table th,.admin-table td{border-color:#272d37}
+.admin-table th{background:#0c0f14;color:#848d9a}
+.admin-table tr:hover td{background:#0d1118}
+.admin-table td>strong{color:#f4f6f9}
+.admin-table td>small{color:#747d89}
+.admin-badge{border-color:#343b47;color:#aab1bc;background:#101319}
+.admin-badge.active,.admin-badge.activate{border-color:#2d7750;color:#59df92;background:#08150f}
+.admin-badge.watch{border-color:#77652e;color:#f2cd69;background:#171306}
+.admin-badge.hold{border-color:#3a404a;color:#858d99;background:#0d1014}
+
+/* Forms */
+.admin-filters input,.admin-filters select,
+.admin-panel input,.admin-panel select,.admin-panel textarea{
+  background:#0b0e13;
+  color:#f4f6f9;
+  border-color:#303744;
 }
-.admin-badge.watch{border-color:#86400a;color:#ff9b31;background:#130802}
-.admin-badge.hold{border-color:#35312e;color:#77736f}
-.admin-filters input,.admin-filters select{
-  background:#030303;
-  color:#f5f2ee;
-  border-color:#3b2b20;
+.admin-filters input:focus,.admin-filters select:focus,
+.admin-panel input:focus,.admin-panel select:focus,.admin-panel textarea:focus{
+  border-color:#596da7;
+  outline:none;
+  box-shadow:0 0 0 3px rgba(124,156,255,.08);
 }
-.admin-filters input:focus,.admin-filters select:focus{border-color:#9b4100;outline:none}
 .admin-filters button,.admin-primary{
-  background:linear-gradient(130deg,#ff6500,#ff9828);
-  color:#100500;
-  box-shadow:0 0 19px rgba(255,112,0,.20);
+  background:#7c9cff;
+  color:#071023;
+  box-shadow:none;
+  font-weight:700;
 }
-.admin-filters button:hover,.admin-primary:hover{filter:brightness(1.08)}
-.admin-rule-card{border-color:#44230d;background:#040201}
-.admin-rule-card>small,.admin-rule-card b{color:#ff8b18}
-.admin-rule-card p,.admin-rule-card span{color:#89847f}
-.admin-alert.danger{border-color:#71313a;color:#ff6b78;background:#160607}
-.admin-source-card{
-  border-color:#44230d;
-  background:linear-gradient(145deg,#080401,#010101);
+.admin-filters button:hover,.admin-primary:hover{background:#91a8ff;box-shadow:none}
+.admin-secondary{
+  background:#121620!important;
+  color:#c5ccda!important;
+  border-color:#323947!important;
+  box-shadow:none!important;
 }
-.admin-source-icon{
-  border-color:#713008;
-  color:#ff8610;
-  background:rgba(255,120,0,.06);
-}
-.admin-source-card small{color:#ff8210}
-.admin-source-card p{color:#837e79}
+.admin-secondary:hover{background:#171c27!important;border-color:#424b5c!important}
 
-/* LOGIN */
-.admin-login{
-  background:
-    radial-gradient(circle at 50% 0,rgba(255,112,0,.15),transparent 31%),
-    #000;
-  color:#f7f5f2;
+/* Flow / source / settings cards */
+.admin-flow span{border-color:#303744;color:#d9dde5;background:#0d1015}
+.admin-flow b{color:#aebcff}
+.admin-secret-list code{border-color:#303b55;background:#0d1119;color:#b8c4ff}
+.admin-rule-card,.admin-source-card,.admin-mini-card,.admin-setting-card{
+  border-color:#272d37!important;
+  background:#0b0e13!important;
+  box-shadow:none!important;
 }
+.admin-source-card:hover,.admin-mini-card:hover{border-color:#394355!important}
+
+/* Links and interactive affordances */
+.admin-page a:not(.admin-primary):not(.admin-badge),
+.admin-main button:not(.admin-primary){text-decoration:none}
+.admin-panel a{color:#aebcff}
+.admin-panel a:hover{color:#d2d9ff}
+
+/* Login */
+.admin-login-page,.admin-login-shell{background:#050608!important;color:#f5f7fa!important}
 .admin-login-card{
-  border-color:#552708;
-  background:linear-gradient(150deg,#080401,#000);
-  box-shadow:0 30px 90px rgba(0,0,0,.68),0 0 38px rgba(255,112,0,.035);
+  background:#0a0d12!important;
+  border-color:#272d37!important;
+  box-shadow:0 24px 80px rgba(0,0,0,.42)!important;
 }
-.admin-login-card>p,.admin-login-card label,.admin-config-box small{color:#817c77}
-.admin-login-card input{background:#020202;border-color:#402615;color:#f5f2ee}
-.admin-login-card input:focus{
-  border-color:#a84800;
-  box-shadow:0 0 0 1px rgba(255,120,0,.08),0 0 16px rgba(255,120,0,.05);
-}
-.admin-config-box{border-color:#5d2a08;background:#0a0401}
-.admin-config-box code{color:#ff9228}
+.admin-login-card input{background:#0b0e13!important;border-color:#303744!important;color:#f5f7fa!important}
+.admin-login-card input:focus{border-color:#596da7!important;box-shadow:0 0 0 3px rgba(124,156,255,.08)!important}
+.admin-login-card button{background:#7c9cff!important;color:#071023!important;box-shadow:none!important}
 
-/* Warm Panchvani imagery: black + ember orange, no green/brown haze. */
-.admin-overview:before{
-  background:
-    linear-gradient(90deg,#000 0%,rgba(0,0,0,.74) 31%,rgba(0,0,0,.17) 72%,#000 100%),
-    linear-gradient(180deg,rgba(0,0,0,.12),#000 96%),
-    url("/admin/overview-ambient.webp") center 44% / cover no-repeat;
-  opacity:.32;
-  filter:sepia(.62) saturate(1.55) brightness(.54) contrast(1.28);
-}
-.admin-india-map:before{
-  background:
-    linear-gradient(180deg,rgba(0,0,0,.58),rgba(0,0,0,.88)),
-    url("/admin/map-ambient.webp") center / cover no-repeat;
-  opacity:.28;
-  filter:sepia(.60) saturate(1.45) brightness(.50) contrast(1.28);
-}
+/* Kill legacy warm decorative glow from the base theme. */
+.admin-shell *{text-shadow:none}
+.admin-panel,.admin-kpi,.admin-network-card,.admin-production{filter:none}
 
-/* Tiny electric-green signals are deliberately reserved for health and positive data. */
-.admin-status.live i,.admin-system-list b.ok,.admin-health-list b.ok,.admin-build-list b.ok{
-  text-shadow:0 0 8px rgba(36,255,112,.30);
+/* Readability: give dense admin tables and labels a little more air. */
+.admin-table th{letter-spacing:.02em}
+.admin-table td{line-height:1.45}
+.admin-panel p,.admin-page-head p{line-height:1.62}
+
+@media (max-width:900px){
+  .admin-sidebar{background:#07090d}
+  .admin-topbar{background:rgba(5,6,8,.97)}
 }
