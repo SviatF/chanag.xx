@@ -7,6 +7,7 @@ import ChoghadiyaTable from "@/components/ChoghadiyaTable";
 import TopicalGraph from "@/components/TopicalGraph";
 import {findCityBySlug} from "@/lib/cities";
 import {formatPanchangTime,formatWindow,getPanchang} from "@/lib/panchang";
+import {getLunarMonthConventions} from "@/lib/calendar-conventions";
 import {isDailyIndexable,robotsFor} from "@/lib/seo-policy";
 import {getDailyGuidance} from "@/lib/day-guidance";
 import {nextValidatedFestival} from "@/lib/festival-expansion";
@@ -31,6 +32,7 @@ export default async function PanchangPage({params}:{params:Promise<{city:string
   const date=resolveDailyRouteDate(p.date);
   if(!city||!date)notFound();
   const data=await getPanchang(date,city);
+  const lunar=getLunarMonthConventions(date,city,data);
   const guidance=getDailyGuidance(data,city);
   const festival=nextValidatedFestival(date);
   const topicalGroups=buildDailyTopicalGraph(city,date,festival);
@@ -44,7 +46,7 @@ export default async function PanchangPage({params}:{params:Promise<{city:string
     {q:`What is Rahu Kalam today in ${city.name}?`,a:`Rahu Kalam in ${city.name} is ${formatWindow(data.rahu)} for ${data.date}.`},
     {q:`What is today's Tithi in ${city.name}?`,a:`Today's Tithi is ${data.tithi}, during ${data.paksha} Paksha.`},
     {q:`What is today's Nakshatra in ${city.name}?`,a:`The Nakshatra calculated for the day is ${data.nakshatra}.`},
-    {q:`What is today favorable for in ${city.name}?`,a:`Today's Panchang signals favor ${guidance.auspicious.map(x=>x.title.toLowerCase()).join(", ")} when scheduled outside the inauspicious periods.`}
+    {q:`Why can Hindu month names differ?`,a:`Panchvani shows both Amanta and Purnimanta lunar month labels because these two month conventions are followed in different parts of India.`}
   ];
   const ld={ "@context":"https://schema.org","@graph":[
     {"@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"Home","item":"https://panchvani.com/"},{"@type":"ListItem","position":2,"name":city.name,"item":`https://panchvani.com/panchang/${city.slug}/`},{"@type":"ListItem","position":3,"name":data.date}]},
@@ -64,7 +66,8 @@ export default async function PanchangPage({params}:{params:Promise<{city:string
       <div className="data-card"><small>Sunset</small><strong>{data.sunset}</strong></div>
       <div className="data-card"><small>Moonrise</small><strong>{moonrise}</strong></div>
       <div className="data-card"><small>Moonset</small><strong>{moonset}</strong></div>
-      <div className="data-card"><small>Amanta Lunar Month</small><strong>{data.hinduMonth}</strong><small>Amanta convention</small></div>
+      <div className="data-card"><small>Amanta Lunar Month</small><strong>{lunar.amantaLabel}</strong><small>Month ends at Amavasya</small></div>
+      <div className="data-card"><small>Purnimanta Lunar Month</small><strong>{lunar.purnimantaLabel}</strong><small>Month ends at Purnima</small></div>
       <div className="data-card"><small>Vikram Samvat</small><strong>{data.vikramSamvat}</strong></div>
       <div className="data-card"><small>Shaka Samvat</small><strong>{data.shakaSamvat}</strong></div>
       <div className="data-card"><small>Day Lord</small><strong>{data.dayLord}</strong></div>
@@ -88,7 +91,7 @@ export default async function PanchangPage({params}:{params:Promise<{city:string
     </div>
     <div className="wide-panel"><h2 className="page-title" style={{fontSize:32}}>Choghadiya</h2><p className="page-subtitle">Eight daytime and eight nighttime periods calculated from local sunrise, sunset and the next sunrise.</p><ChoghadiyaTable day={data.dayChoghadiya} night={data.nightChoghadiya}/></div>
     <TopicalGraph title={`Explore ${city.name} Panchang`} groups={topicalGroups}/>
-    <div className="seo-copy"><h2>How to use today’s Panchang</h2><p>The daily Panchang combines lunar factors such as Tithi and Nakshatra with location-sensitive solar timings. Rahu Kalam, Yamaganda and Gulika change with local sunrise and sunset, which is why the selected city matters. Times that fall after midnight are shown with the following civil date so they cannot be mistaken for an earlier clock time.</p><p>Sunrise and sunset use the upper solar limb with atmospheric refraction at a sea-level horizon. The lunar month shown above uses the Amanta convention; regional calendars can use a different month system. Use these timing bands as a general daily reference, and consult a qualified practitioner for personal rites that depend on an individual birth chart or tradition-specific rules.</p></div>
+    <div className="seo-copy"><h2>How to use today’s Panchang</h2><p>The daily Panchang combines lunar factors such as Tithi and Nakshatra with location-sensitive solar timings. Rahu Kalam, Yamaganda and Gulika change with local sunrise and sunset, which is why the selected city matters. Times that fall after midnight are shown with the following civil date so they cannot be mistaken for an earlier clock time.</p><p>India uses more than one lunar-month convention. Amanta months end at Amavasya and are common across much of western and southern India; Purnimanta months end at Purnima and are common across much of northern India. Both labels above refer to the same astronomical day under different month-reckoning conventions. If a lunar month contains no Sankranti, Panchvani marks it as Adhika rather than silently presenting it as an ordinary month.</p><p>Sunrise and sunset use the upper solar limb with atmospheric refraction at a sea-level horizon. Use these timing bands as a general daily reference, and consult a qualified practitioner for personal rites that depend on an individual birth chart or tradition-specific rules.</p></div>
     <div className="wide-panel"><h2>Frequently asked questions</h2>{faq.map(x=><div key={x.q} className="seo-copy"><strong>{x.q}</strong><p>{x.a}</p></div>)}</div>
     <script type="application/ld+json" dangerouslySetInnerHTML={{__html:JSON.stringify(ld)}}/>
   </div></main>
