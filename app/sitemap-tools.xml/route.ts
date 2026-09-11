@@ -7,6 +7,8 @@ export async function GET(){
   const base="https://panchvani.com";
   const urls=[
     `${base}/tools`,
+    `${base}/tools/choghadiya`,
+    `${base}/tools/hindu-baby-names`,
     `${base}/tools/moon-sign-calculator`,
     `${base}/tools/nakshatra-finder`,
     `${base}/tools/rahu-kalam-calculator`,
