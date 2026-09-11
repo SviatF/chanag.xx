@@ -13,6 +13,7 @@ import mainHero from "@/lib/main-hero.webp";
 import geneshaYourDay from "@/lib/genesha-your_day.webp";
 
 export const dynamic="force-dynamic";
+export const metadata={alternates:{canonical:"/"}};
 
 const featuredSlugs=["delhi","kolkata","chennai","bengaluru","hyderabad"];
 
