@@ -12,7 +12,12 @@ SEO_EXTRA_INDEX_CITIES=
 # Example: SEO_EXTRA_REGIONAL_INTENTS=tamil:coimbatore:rahu-kalam,malayalam:kochi:rahu-kalam
 SEO_EXTRA_REGIONAL_INTENTS=
 
-# SEO Opportunity Lifecycle persistence.
-# Reuses CLOUDFLARE_ACCOUNT_ID + CLOUDFLARE_API_TOKEN already used by Cloudflare analytics.
-# The API token also needs Workers KV Storage read/write permission for this namespace.
+# Optional dedicated token for Cloudflare GraphQL analytics.
+# Preferred over broadening the main worker/KV token.
+# Required permission: Zone -> Analytics -> Read for the Panchvani zone.
+CLOUDFLARE_ANALYTICS_API_TOKEN=
+
+# SEO Opportunity Lifecycle + URL indexation inventory persistence.
+# Uses CLOUDFLARE_ACCOUNT_ID + CLOUDFLARE_API_TOKEN.
+# The API token needs Workers KV Storage read/write permission for this namespace.
 SEO_OPPORTUNITY_KV_NAMESPACE_ID=
