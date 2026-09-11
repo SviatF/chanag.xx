@@ -11,6 +11,7 @@ import {getLunarMonthConventions} from "@/lib/calendar-conventions";
 import {isDailyIndexable,robotsFor} from "@/lib/seo-policy";
 import {getDailyGuidance} from "@/lib/day-guidance";
 import {nextValidatedFestival} from "@/lib/festival-expansion";
+import {todayInIndia} from "@/lib/dates";
 import {resolveDailyRouteDate} from "@/lib/route-validation";
 import {regionalAlternates} from "@/lib/regional-seo";
 import {buildDailyTopicalGraph} from "@/lib/topical-links";
@@ -24,7 +25,10 @@ export async function generateMetadata({params}:{params:Promise<{city:string,dat
   const date=resolveDailyRouteDate(p.date);
   if(!city||!date)notFound();
   const ds=date.toISOString().slice(0,10);
-  return {title:`Today Panchang in ${city.name} — ${ds}`,description:`Panchang for ${city.name}: Tithi, Nakshatra, sunrise, sunset, Rahu Kalam, Yamaganda, Gulika and Abhijit Muhurat for ${ds}.`,alternates:{canonical:`/panchang/${city.slug}/${ds}`,languages:regionalAlternates(city,undefined,ds)},robots:robotsFor(isDailyIndexable(city.slug,ds))};
+  const today=todayInIndia().toISOString().slice(0,10);
+  const alternates:Metadata["alternates"]={canonical:`/panchang/${city.slug}/${ds}`};
+  if(ds===today)alternates.languages=regionalAlternates(city,undefined,ds);
+  return {title:`Today Panchang in ${city.name} — ${ds}`,description:`Panchang for ${city.name}: Tithi, Nakshatra, sunrise, sunset, Rahu Kalam, Yamaganda, Gulika and Abhijit Muhurat for ${ds}.`,alternates,robots:robotsFor(isDailyIndexable(city.slug,ds))};
 }
 
 export default async function PanchangPage({params}:{params:Promise<{city:string,date?:string[]}>}){
