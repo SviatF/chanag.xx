@@ -2,7 +2,8 @@ import TrustPage from "@/components/TrustPage";
 
 export const metadata={
   title:"Panchvani Accuracy & Limitations",
-  description:"How Panchvani validates Panchang calculations, why timings and month names can differ between sources, and where personalized guidance is still required."
+  description:"How Panchvani validates Panchang calculations, why timings and month names can differ between sources, and where personalized guidance is still required.",
+  alternates:{canonical:"/accuracy"}
 };
 
 export default function Page(){
