@@ -20,6 +20,7 @@ const primary=[
 const operations=[
   ["Content","/admin/content",FileText],
   ["SEO & Indexing","/admin/seo",Search],
+  ["URL Indexation","/admin/indexation",Database],
   ["Deployments","/admin/deployments",Network],
   ["Monitoring","/admin/monitoring",Activity],
   ["System","/admin/system",ShieldCheck],
