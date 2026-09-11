@@ -3,7 +3,9 @@ import Link from "next/link";
 import {notFound} from "next/navigation";
 import Header from "@/components/Header";
 import {cities} from "@/lib/cities";
-import {regionalLocale,nativeCityName} from "@/lib/regional-i18n";
+import {nativeCityName} from "@/lib/regional-i18n";
+import {regionalPureLocale} from "@/lib/regional-pure-copy";
+import {nativeStateName} from "@/lib/regional-values";
 import {
   isRegionalLanguageSlug,
   regionalCitiesForLanguage,
@@ -16,7 +18,7 @@ export const revalidate=86400;
 export async function generateMetadata({params}:{params:Promise<{language:string}>}):Promise<Metadata>{
   const {language}=await params;
   if(!isRegionalLanguageSlug(language))notFound();
-  const copy=regionalLocale(language);
+  const copy=regionalPureLocale(language);
   const availableCities=regionalCitiesForLanguage(language);
   return {
     title:copy.hubTitle,
@@ -29,7 +31,7 @@ export async function generateMetadata({params}:{params:Promise<{language:string
 export default async function RegionalLanguageHub({params}:{params:Promise<{language:string}>}){
   const {language}=await params;
   if(!isRegionalLanguageSlug(language))notFound();
-  const copy=regionalLocale(language);
+  const copy=regionalPureLocale(language);
   const availableCities=regionalCitiesForLanguage(language);
   const headerCity=availableCities[0]??cities[0];
 
@@ -48,7 +50,7 @@ export default async function RegionalLanguageHub({params}:{params:Promise<{lang
         const intents=regionalIntentLinksForCity(language,city);
         const cityName=nativeCityName(language,city);
         return <Link href={`/regional/${language}/${city.slug}`} key={city.slug}>
-          <small>{city.state}</small><strong>{cityName}</strong><span>{intents.length?intents.map(item=>item.label).join(" · "):copy.panchangName}</span>
+          <small>{nativeStateName(language,city.state)}</small><strong>{cityName}</strong><span>{intents.length?intents.map(item=>item.label).join(" · "):copy.panchangName}</span>
         </Link>;
       })}</div>
     </section>:<section className="wide-panel"><div className="seo-copy"><h2>{copy.noCoverageTitle}</h2><p>{copy.noCoverageText}</p></div></section>}
