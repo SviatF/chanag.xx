@@ -8,6 +8,7 @@ import {findCityBySlug} from "@/lib/cities";
 import {getPanchang} from "@/lib/panchang";
 import {todayInIndia} from "@/lib/dates";
 import {isPriorityCity,robotsFor} from "@/lib/seo-policy";
+import {regionalAlternates} from "@/lib/regional-seo";
 import {buildChoghadiyaTopicalGraph} from "@/lib/topical-links";
 
 export const revalidate=3600;
@@ -19,7 +20,7 @@ export async function generateMetadata({params}:{params:Promise<{city:string}>})
   return {
     title:`Today's Choghadiya in ${city.name} — Day & Night Timings`,
     description:`Today Choghadiya for ${city.name}: 8 daytime and 8 nighttime periods calculated from local sunrise, sunset and next sunrise.`,
-    alternates:{canonical:`/tools/choghadiya/${city.slug}`},
+    alternates:{canonical:`/tools/choghadiya/${city.slug}`,languages:regionalAlternates(city,"choghadiya")},
     robots:robotsFor(isPriorityCity(city.slug))
   };
 }
