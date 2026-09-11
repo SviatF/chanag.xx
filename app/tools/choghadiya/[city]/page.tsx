@@ -36,13 +36,13 @@ export default async function ChoghadiyaCityPage({params}:{params:Promise<{city:
     {"@type":"WebApplication","name":`Choghadiya Calculator — ${city.name}`,"applicationCategory":"LifestyleApplication","operatingSystem":"Web","url":`https://panchvani.com/tools/choghadiya/${city.slug}`},
     {"@type":"BreadcrumbList","itemListElement":[
       {"@type":"ListItem","position":1,"name":"Tools","item":"https://panchvani.com/tools"},
-      {"@type":"ListItem","position":2,"name":"Choghadiya"},
+      {"@type":"ListItem","position":2,"name":"Choghadiya","item":"https://panchvani.com/tools/choghadiya"},
       {"@type":"ListItem","position":3,"name":city.name}
     ]}
   ]};
 
   return <main><Header city={city}/><div className="page-shell internal-visual internal-tools">
-    <div className="breadcrumbs"><Link href="/tools">Tools</Link> / Choghadiya / {city.name}</div>
+    <div className="breadcrumbs"><Link href="/tools">Tools</Link> / <Link href="/tools/choghadiya">Choghadiya</Link> / {city.name}</div>
     <p className="page-kicker">LOCAL CHOGHADIYA · {city.state}</p>
     <h1 className="page-title">Today's Choghadiya<br/>{city.name}</h1>
     <p className="page-subtitle">{data.date} · Day periods are divided from local sunrise to sunset; night periods continue to the next sunrise.</p>
@@ -50,7 +50,7 @@ export default async function ChoghadiyaCityPage({params}:{params:Promise<{city:
     <div className="data-grid">
       <div className="data-card"><small>Sunrise</small><strong>{data.sunrise}</strong></div>
       <div className="data-card"><small>Sunset</small><strong>{data.sunset}</strong></div>
-      <div className="data-card"><small>Best daytime periods</small><strong>{good.map(x=>x.name).join(" · ")||"See table"}</strong></div>
+      <div className="data-card"><small>Favorable daytime Choghadiya</small><strong>{good.map(x=>x.name).join(" · ")||"See table"}</strong></div>
       <div className="data-card"><small>Rahu Kalam</small><strong>{data.rahu.start} — {data.rahu.end}</strong></div>
     </div>
 
