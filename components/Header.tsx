@@ -3,8 +3,10 @@ import { ChevronDown, Search, UserRound } from "lucide-react";
 import { City, cities } from "@/lib/cities";
 import { todayInIndia } from "@/lib/dates";
 import { festivalsForYear } from "@/lib/festivals";
+import {festivalIndexYears} from "@/lib/festival-expansion";
 import { muhuratRules } from "@/lib/muhurat";
 import { regional } from "@/lib/regional";
+import {regionalCitiesForLanguage} from "@/lib/regional-seo";
 import CityCommand from "@/components/CityCommand";
 
 type NavLinkItem={
@@ -72,9 +74,11 @@ export default function Header({city}:{city:City}) {
     .map(slug=>cities.find(c=>c.slug===slug))
     .filter((item):item is City=>Boolean(item));
 
-  const yearFestivals=festivalsForYear(year);
+  const publicFestivalYears=festivalIndexYears();
+  const currentFestivalYear=publicFestivalYears.includes(year)?year:publicFestivalYears[0];
+  const yearFestivals=currentFestivalYear?festivalsForYear(currentFestivalYear):[];
   const upcomingFestivals=(
-    yearFestivals.filter(f=>f.date>=todayIso).length
+    currentFestivalYear===year&&yearFestivals.filter(f=>f.date>=todayIso).length
       ? yearFestivals.filter(f=>f.date>=todayIso)
       : yearFestivals
   ).slice(0,5);
@@ -82,14 +86,16 @@ export default function Header({city}:{city:City}) {
   const muhuratItems=Object.entries(muhuratRules).map(([slug,rule])=>({
     label:rule.title.replace(" Muhurat",""),
     href:`/muhurat/${slug}/${year}/${month}/${city.slug}`,
-    meta:"Local timings",
+    meta:"General screen · local windows",
   }));
 
-  const regionalItems=Object.entries(regional).map(([slug,item])=>({
-    label:item.label,
-    href:`/regional/${slug}/${city.slug}`,
-    meta:item.native,
-  }));
+  const regionalItems=Object.entries(regional)
+    .filter(([slug])=>regionalCitiesForLanguage(slug).length>0)
+    .map(([slug,item])=>({
+      label:item.label,
+      href:`/regional/${slug}`,
+      meta:item.native,
+    }));
 
   return <header className="site-header">
     <Link className="brand" href="/">PANCHVANI</Link>
@@ -102,17 +108,13 @@ export default function Header({city}:{city:City}) {
           {
             title:`Today in ${city.name}`,
             items:[
-              {label:"Today's Panchang",href:`/panchang/${city.slug}`,meta:"Tithi · Nakshatra · Muhurat"},
+              {label:"Today's Panchang",href:`/panchang/${city.slug}`,meta:"Tithi · Nakshatra · local timings"},
               {label:"Today's Choghadiya",href:`/tools/choghadiya/${city.slug}`,meta:"Day + night"},
             ],
           },
           {
             title:"Popular cities",
-            items:featuredCities.map(item=>({
-              label:item.name,
-              href:`/panchang/${item.slug}`,
-              meta:item.state,
-            })),
+            items:featuredCities.map(item=>({label:item.name,href:`/panchang/${item.slug}`,meta:item.state})),
           },
         ]}
         footer={{label:"Browse all cities",href:"/cities",meta:"India Panchang directory"}}
@@ -126,17 +128,12 @@ export default function Header({city}:{city:City}) {
             title:"Local calendar",
             items:[
               {label:`${city.name} · this month`,href:`/calendar/${city.slug}/${year}/${month}`,meta:"Tithi + lunar markers"},
-              {label:`${year} Festivals Calendar`,href:`/festivals-calendar/${year}`,meta:"Annual pillar"},
-              {label:`${year+1} Festivals Calendar`,href:`/festivals-calendar/${year+1}`,meta:"Plan ahead"},
+              ...publicFestivalYears.slice(0,2).map(festivalYear=>({label:`${festivalYear} Festivals Calendar`,href:`/festivals-calendar/${festivalYear}`,meta:"Validated festival dates"})),
             ],
           },
           {
             title:"City calendars",
-            items:featuredCities.slice(0,4).map(item=>({
-              label:item.name,
-              href:`/calendar/${item.slug}/${year}/${month}`,
-              meta:item.state,
-            })),
+            items:featuredCities.slice(0,4).map(item=>({label:item.name,href:`/calendar/${item.slug}/${year}/${month}`,meta:item.state})),
           },
         ]}
         footer={{label:"Open monthly calendar",href:`/calendar/${city.slug}/${year}/${month}`,meta:`Current city · ${city.name}`}}
@@ -147,39 +144,28 @@ export default function Header({city}:{city:City}) {
         href="/festivals"
         sections={[
           {
-            title:"Festival hubs",
+            title:"Festival calendars",
             items:[
-              {label:"All Festivals",href:"/festivals",meta:"2026–2027 directory"},
-              {label:`${year} Festival Calendar`,href:`/festivals-calendar/${year}`,meta:"Dates + dedicated pages"},
-              {label:`${year+1} Festival Calendar`,href:`/festivals-calendar/${year+1}`,meta:"Future calendar"},
+              {label:"All Festivals",href:"/festivals",meta:"Validated year directories"},
+              ...publicFestivalYears.slice(0,2).map(festivalYear=>({label:`${festivalYear} Festival Calendar`,href:`/festivals-calendar/${festivalYear}`,meta:"Dates + local Panchang"})),
             ],
           },
           {
             title:"Upcoming",
-            items:upcomingFestivals.map(festival=>({
-              label:festival.name,
-              href:`/festivals/${festival.slug}/${festival.year}/${city.slug}`,
-              meta:festival.date,
-            })),
+            items:upcomingFestivals.map(festival=>({label:festival.name,href:`/festivals/${festival.slug}/${festival.year}/${city.slug}`,meta:festival.date})),
           },
         ]}
-        footer={{label:"Explore all festivals",href:"/festivals",meta:"Dates · rituals · local Panchang"}}
+        footer={{label:"Explore all festivals",href:"/festivals",meta:"Dates · local Panchang · observance notes"}}
       />
 
       <NavDropdown
         label="Muhurat"
-        href={`/muhurat/wedding/${year}/${month}/${city.slug}`}
+        href="/muhurat"
         sections={[
-          {
-            title:"Plan an important moment",
-            items:muhuratItems.slice(0,3),
-          },
-          {
-            title:"More Muhurat",
-            items:muhuratItems.slice(3),
-          },
+          {title:"Plan an important moment",items:muhuratItems.slice(0,3)},
+          {title:"More Muhurat",items:muhuratItems.slice(3)},
         ]}
-        footer={{label:"Wedding Muhurat",href:`/muhurat/wedding/${year}/${month}/${city.slug}`,meta:`For ${city.name}`}}
+        footer={{label:"Muhurat planning guide",href:"/muhurat",meta:"Candidate dates · limits · local windows"}}
       />
 
       <NavDropdown
@@ -189,17 +175,15 @@ export default function Header({city}:{city:City}) {
           {
             title:"Panchang calculators",
             items:[
-              {label:"Moon Sign Calculator",href:"/tools/moon-sign-calculator",meta:"Chandra Rashi"},
-              {label:"Nakshatra Finder",href:"/tools/nakshatra-finder",meta:"Birth Nakshatra + Pada"},
+              {label:"Moon Sign Calculator",href:"/tools/moon-sign-calculator",meta:"Date + city estimate"},
+              {label:"Nakshatra Finder",href:"/tools/nakshatra-finder",meta:"Date + city estimate"},
               {label:"Rahu Kalam Calculator",href:"/tools/rahu-kalam-calculator",meta:"City + date"},
-              {label:"Choghadiya by City",href:`/tools/choghadiya/${city.slug}`,meta:"8 day + 8 night periods"},
+              {label:"Today's Choghadiya",href:"/tools/choghadiya",meta:"Choose a city"},
             ],
           },
           {
             title:"Naming",
-            items:[
-              {label:"Baby Names by Nakshatra",href:"/tools/hindu-baby-names/ashwini",meta:"27 Nakshatra guides"},
-            ],
+            items:[{label:"Baby Names by Nakshatra",href:"/tools/hindu-baby-names",meta:"27 Nakshatra guides"}],
           },
         ]}
         footer={{label:"View all tools",href:"/tools",meta:"Panchang utilities"}}
@@ -208,13 +192,8 @@ export default function Header({city}:{city:City}) {
       <NavDropdown
         label="Regional"
         href="/regional"
-        sections={[
-          {
-            title:"Regional Panchang",
-            items:regionalItems,
-          },
-        ]}
-        footer={{label:"Regional directory",href:"/regional",meta:"Bengali · Tamil · Malayalam · Gujarati · Marathi"}}
+        sections={[{title:"Regional Panchang",items:regionalItems}]}
+        footer={{label:"Regional directory",href:"/regional",meta:"Native-language Panchang surfaces"}}
       />
     </nav>
 
