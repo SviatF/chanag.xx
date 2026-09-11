@@ -6,6 +6,7 @@ import {cities} from "@/lib/cities";
 import {festivalBySlugYear} from "@/lib/festivals";
 import {getFestivalSemantics} from "@/lib/festival-conventions";
 import {festivalPageIsIndexable,festivalYearSiblings} from "@/lib/festival-expansion";
+import {getFestivalRuleProfile} from "@/lib/religious-integrity";
 import {robotsFor} from "@/lib/seo-policy";
 import {parseRouteYear} from "@/lib/route-validation";
 
@@ -17,8 +18,8 @@ export async function generateMetadata({params}:{params:Promise<{festival:string
   const f=year?festivalBySlugYear(p.festival,year):undefined;
   if(!year||!f)notFound();
   return {
-    title:`${f.name} ${year} — Date, Meaning & Panchang`,
-    description:`${f.name} ${year}: ${f.date}. ${f.short} Open a city page for local Panchang and timing context.`,
+    title:`${f.name} ${year} — Date, Meaning & Panchang Rule Context`,
+    description:`${f.name} ${year}: ${f.date}. ${f.short} See the observance rule context and open a city page for local Panchang values.`,
     alternates:{canonical:`/festivals/${f.slug}/${year}`},
     robots:robotsFor(festivalPageIsIndexable(f.slug,year))
   };
@@ -31,6 +32,7 @@ export default async function FestivalPage({params}:{params:Promise<{festival:st
   if(!year||!f)notFound();
 
   const semantics=getFestivalSemantics(f);
+  const ruleProfile=getFestivalRuleProfile(f);
   const month=String(Number(f.date.slice(5,7))).padStart(2,"0");
   const siblingYears=festivalYearSiblings(f.slug,year);
   const ld={"@context":"https://schema.org","@graph":[
@@ -52,7 +54,7 @@ export default async function FestivalPage({params}:{params:Promise<{festival:st
       <div className="data-card"><small>Date</small><strong>{f.date}</strong></div>
       {semantics.aliases.length?<div className="data-card"><small>Also known as</small><strong>{semantics.aliases.join(" · ")}</strong></div>:null}
       {semantics.relatedObservances.length?<div className="data-card"><small>Related regional observances</small><strong>{semantics.relatedObservances.join(" · ")}</strong></div>:null}
-      <div className="data-card"><small>Local context</small><strong>City-specific Panchang</strong><small>Open a city page for local sunrise, sunset, Tithi and timing context.</small></div>
+      <div className="data-card"><small>Rule status</small><strong>{ruleProfile.exactness==="derived-reference"?"Local reference available":"Context only"}</strong><small>Exact ritual certification is never inferred from a generic favorable period.</small></div>
     </div>
 
     <div className="seo-copy">
@@ -62,6 +64,13 @@ export default async function FestivalPage({params}:{params:Promise<{festival:st
       <p>The exact observance can vary by sampradaya, region and local Tithi boundaries. Panchvani separates the shared festival date reference from city-local Panchang calculations instead of treating every regional tradition as identical.</p>
     </div>
 
+    <section className="wide-panel"><div className="seo-copy">
+      <small>RULE PROVENANCE</small><h2>{ruleProfile.title}</h2><p>{ruleProfile.ruleSummary}</p>
+      <ul>{ruleProfile.criteria.map(item=><li key={item}>{item}</li>)}</ul>
+      <p><strong>Panchvani scope:</strong> {ruleProfile.localReference}</p>
+      {ruleProfile.sources.length?<p><strong>Reference methodology:</strong> {ruleProfile.sources.map((source,index)=><span key={source.url}>{index?" · ":""}<a href={source.url} rel="noreferrer">{source.label}</a></span>)}</p>:null}
+    </div></section>
+
     <section className="wide-panel">
       <h2 className="page-title" style={{fontSize:32}}>Common observances</h2>
       <div className="data-grid">{f.rituals.map(item=><div className="data-card" key={item}><small>Tradition</small><strong>{item}</strong></div>)}</div>
@@ -69,14 +78,14 @@ export default async function FestivalPage({params}:{params:Promise<{festival:st
 
     <section className="wide-panel">
       <h2 className="page-title" style={{fontSize:32}}>Local Panchang by city</h2>
-      <p className="page-subtitle">Choose a priority city to see Tithi, sunrise, sunset, Rahu Kalam and a broad local timing reference. Festival-specific ritual rules are explained separately where supported.</p>
+      <p className="page-subtitle">Choose a priority city to see Tithi, lunar-month conventions, sunrise/sunset, moonrise and any festival-specific local reference that Panchvani can derive without overstating accuracy.</p>
       <div className="pill-links">{cities.slice(0,12).map(city=><Link href={`/festivals/${f.slug}/${year}/${city.slug}`} key={city.slug}>{city.name}</Link>)}</div>
     </section>
 
     <div className="pill-links">
       <Link href={`/festivals-calendar/${year}`}>All {year} festivals</Link>
       {siblingYears.map(item=><Link href={`/festivals/${item.slug}/${item.year}`} key={item.year}>{item.name} {item.year}</Link>)}
-      {f.relatedMuhurat?<Link href={`/muhurat/${f.relatedMuhurat}/${year}/${month}`}>Related {f.relatedMuhurat.replaceAll("-"," ")} Muhurat →</Link>:null}
+      {f.relatedMuhurat?<Link href={`/muhurat/${f.relatedMuhurat}/${year}/${month}`}>Related {f.relatedMuhurat.replaceAll("-"," ")} planning shortlist →</Link>:null}
     </div>
 
     <script type="application/ld+json" dangerouslySetInnerHTML={{__html:JSON.stringify(ld)}}/>
