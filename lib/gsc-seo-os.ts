@@ -114,7 +114,7 @@ async function buildDataset():Promise<GscSeoOsDataset>{
 export async function getGscSeoOsDataset(force=false):Promise<GscSeoOsDataset>{
   const now=Date.now();
   if(!force&&cached&&cached.expiresAt>now)return cached.value;
-  if(!force&&inflight)return inflight;
+  if(inflight)return inflight;
   const request=buildDataset().then(value=>{cached={value,expiresAt:Date.now()+CACHE_TTL_MS};return value;}).finally(()=>{inflight=null;});
   inflight=request;
   return request;
