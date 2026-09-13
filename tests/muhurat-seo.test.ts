@@ -22,7 +22,8 @@ describe("Muhurat deterministic SEO content engine",()=>{
     if(rows[0]){
       expect(first.rankingInsight).toContain(rows[0].date.slice(0,4));
       expect(first.rankingInsight).toContain(`${rows[0].planning.score}/100`);
-      expect(first.timingInsight).toContain(`${rows[0].planning.longestWindowMinutes}`);
+      if(first.topWindow)expect(first.timingInsight).toContain(`${rows[0].planning.longestWindowMinutes}`);
+      else expect(first.timingInsight).toContain("no favorable daytime block");
     }
   });
 
