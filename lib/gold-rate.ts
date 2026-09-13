@@ -171,7 +171,8 @@ export function goldRateComparisonCities(city:City,dataset:GoldRateDataset|null,
   const allowed=goldRateIndexCitySlugs();
   const pool=(allowed.length?allowed:goldRateCandidateCitySlugs)
     .map(slug=>findCityBySlug(slug))
-    .filter((item):item is City=>Boolean(item)&&item.slug!==city.slug)
+    .filter((item):item is City=>item!==undefined)
+    .filter(item=>item.slug!==city.slug)
     .filter(item=>!dataset||Boolean(dataset.cities[item.slug]));
   return pool.sort((a,b)=>distanceKm(city,a)-distanceKm(city,b)).slice(0,count);
 }
@@ -179,7 +180,7 @@ export function goldRateComparisonCities(city:City,dataset:GoldRateDataset|null,
 export function goldRateHubCities(dataset:GoldRateDataset|null){
   const configured=goldRateIndexCitySlugs();
   const slugs=configured.length?configured:goldRateCandidateCitySlugs;
-  return slugs.map(slug=>findCityBySlug(slug)).filter((city):city is City=>Boolean(city)).filter(city=>!dataset||Boolean(dataset.cities[city.slug]));
+  return slugs.map(slug=>findCityBySlug(slug)).filter((city):city is City=>city!==undefined).filter(city=>!dataset||Boolean(dataset.cities[city.slug]));
 }
 
 export function goldRateSitemapUrls(dataset:GoldRateDataset|null){
