@@ -1,6 +1,7 @@
 import Header from "@/components/Header";
 import {cities} from "@/lib/cities";
 import Link from "next/link";
+import {goldRatePublicEnabled} from "@/lib/gold-rate";
 import {expandedToolPath,expandedTools,expandedToolSlugs} from "@/lib/tool-expansion";
 
 export const metadata={
@@ -19,12 +20,16 @@ const existingTools=[
 
 export default function Tools(){
   const evergreen=expandedToolSlugs.map(slug=>expandedTools[slug]);
+  const goldTools=goldRatePublicEnabled()?[
+    ["Gold Rate Today","Check source-verified 24K, 22K and 18K gold reference rates with city pages and trend history.","/gold-rate"],
+    ["Gold Value Calculator","Estimate raw gold value by grams and purity using the same validated reference feed.","/tools/gold-value-calculator"],
+  ] as const:[];
   return <main><Header city={cities[0]}/><div className="page-shell internal-visual internal-tools">
     <p className="page-kicker">FREE PANCHANG TOOLS</p>
     <h1 className="page-title">Hindu calendar tools<br/>for dates, lunar values and local timings</h1>
     <p className="page-subtitle">Look up Tithi, Nakshatra, Moon phase, Hindu month and daily Panchang values, or calculate local timing periods for an Indian city.</p>
     <div className="tool-list">{evergreen.map(tool=><Link href={expandedToolPath(tool.slug)} key={tool.slug}><h3>{tool.name}</h3><p>{tool.description}</p><span className="page-kicker">Open free tool →</span></Link>)}</div>
     <div className="seo-copy"><h2>More Panchvani utilities</h2><p>Use the timing tools for location-sensitive Rahu Kalam and Choghadiya, or explore date-based Moon sign, Nakshatra and naming references. Date-only birth tools are estimates; precise natal calculations require birth time.</p></div>
-    <div className="tool-list">{existingTools.map(([title,description,href])=><Link href={href} key={href}><h3>{title}</h3><p>{description}</p><span className="page-kicker">Open tool →</span></Link>)}</div>
+    <div className="tool-list">{[...existingTools,...goldTools].map(([title,description,href])=><Link href={href} key={href}><h3>{title}</h3><p>{description}</p><span className="page-kicker">Open tool →</span></Link>)}</div>
   </div></main>;
 }

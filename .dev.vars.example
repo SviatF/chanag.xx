@@ -21,3 +21,23 @@ CLOUDFLARE_ANALYTICS_API_TOKEN=
 # Uses CLOUDFLARE_ACCOUNT_ID + CLOUDFLARE_API_TOKEN.
 # The API token needs Workers KV Storage read/write permission for this namespace.
 SEO_OPPORTUNITY_KV_NAMESPACE_ID=
+
+# Gold Rate cluster — traffic-first launch gate.
+# GOLD_RATE_DATA_URL must return JSON with: updatedAt, validatedSince, updateFrequency,
+# source{name,url}, national{rates,history}, cities{slug:{rates,history}}.
+# Each rates object must contain explicit 24k, 22k and 18k INR-per-gram values.
+GOLD_RATE_DATA_URL=
+GOLD_RATE_DATA_TOKEN=
+
+# Expose Gold Rate links in Tools navigation only after the feed is ready for public review.
+GOLD_RATE_PUBLIC_ENABLED=false
+
+# Keep indexing disabled until at least 14 days of source verification are complete.
+GOLD_RATE_INDEXING_ENABLED=false
+GOLD_RATE_MIN_VALIDATION_DAYS=14
+GOLD_RATE_MAX_AGE_HOURS=24
+
+# Demand-approved launch cities only. Maximum 50. Do not populate from population alone;
+# approve these after Google Trends / GSC demand review.
+# Example: GOLD_RATE_INDEX_CITIES=mumbai,delhi,bengaluru,hyderabad,chennai,kolkata,pune,ahmedabad
+GOLD_RATE_INDEX_CITIES=

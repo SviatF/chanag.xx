@@ -54,6 +54,8 @@ export default async function Page({params}:{params:Promise<{event:string;year:s
 
     <div className="seo-copy"><h2>Why the Planning Score changes by city</h2><p>Rahu Kalam, Yamaganda, Gulika, Abhijit and Choghadiya depend on local sunrise and sunset. Panchvani recalculates those practical windows for {city.name}. The score measures continuity and availability after local exclusions; it is not an auspiciousness score.</p><p>A date first has to match the current event Tithi + Nakshatra screening profile. Only then does the Planning Score compare the longest uninterrupted clean block, total unique clean minutes, timing-source diversity and whether Abhijit remains after exclusions.</p></div>
 
+    {p.event==="gold-purchase"?<section className="wide-panel"><div className="seo-copy"><small>PRICE CONTEXT · SEPARATE FROM MUHURAT</small><h2>Check today's gold rate in {city.name}</h2><p>Muhurat screening and market price answer different questions. For current 22K, 24K and 18K reference prices, open the <Link href={`/gold-rate/${city.slug}`}>gold rate page for {city.name}</Link>. Panchvani does not treat a favorable timing window as financial advice.</p></div></section>:null}
+
     <div className="pill-links"><Link href={`/muhurat/${p.event}/${year}/${p.month}`}>India baseline · month</Link><Link href={muhuratYearPath(p.event,year)}>Full {year} planning screen</Link></div>
     <TopicalGraph title={`Explore ${rule.title} around ${city.name}`} groups={buildMuhuratTopicalGraph(city,p.event,year,month)}/>
     <script type="application/ld+json" dangerouslySetInnerHTML={{__html:JSON.stringify(ld)}}/>
