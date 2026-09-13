@@ -5,7 +5,7 @@ function pct(current:number,previous:number){return previous>0?((current-previou
 
 export default function GoldTrendChart({history,purity="24k",label}:{history:GoldRateHistoryPoint[];purity?:GoldPurity;label:string}){
   const points=history.slice(-30);
-  if(points.length<2)return <div className={styles.notice}><strong>Trend history is still building</strong><p>Panchvani will show the 7/30-day trend after enough validated daily observations are available from the same source.</p></div>;
+  if(points.length<2)return <div className={styles.notice}><strong>Trend history is still building</strong><p>Panchvani stores hourly pipeline observations and will show a 7/30-day trend after enough validated daily points can be derived from that history.</p></div>;
 
   const values=points.map(point=>point.rates[purity]);
   const min=Math.min(...values),max=Math.max(...values),range=Math.max(1,max-min);
@@ -29,6 +29,6 @@ export default function GoldTrendChart({history,purity="24k",label}:{history:Gol
       <polyline className={styles.trendLine} points={polyline}/>
     </svg>
     <div className={styles.trendMeta}><span>{points[0].date} → {points[points.length-1].date}</span><span>Latest {formatGoldRate(latest)}/g · 7d {sign(change7)} · period {sign(changeWindow)}</span></div>
-    <p className={styles.trendSummary}>Across the {points.length}-day validated series, {purity.toUpperCase()} gold in {label} moved from {formatGoldRate(values[0])} per gram to {formatGoldRate(latest)} per gram. The chart uses the same source and purity definition as the price table above.</p>
+    <p className={styles.trendSummary}>Across the {points.length}-day series, {purity.toUpperCase()} gold in {label} moved from {formatGoldRate(values[0])} per gram to {formatGoldRate(latest)} per gram. Each displayed daily point is derived from the stored hourly pipeline history and uses the same calculation method as the current price table.</p>
   </div>;
 }

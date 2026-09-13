@@ -1,9 +1,40 @@
 import {coreCities,findCityBySlug,supportedCities,type City} from "./cities";
+import {getStoredGoldRatePublicDataset} from "./gold-rate-pipeline";
+import {getGoldRateStoreStatus} from "./gold-rate-store";
 
 export type GoldPurity="24k"|"22k"|"18k";
 export type GoldRates=Record<GoldPurity,number>;
 export type GoldRateHistoryPoint={date:string;rates:GoldRates};
 export type GoldRateMarket={rates:GoldRates;history:GoldRateHistoryPoint[]};
+export type GoldRateDatasetStatus={
+  mode:"fresh"|"last-known";
+  message:string|null;
+  spotSource:string;
+  fxSource:string;
+  lastAttemptAt:string|null;
+  lastSuccessAt:string|null;
+  lastError:string|null;
+};
+export type GoldRateCalculation={
+  troyOunceGrams:number;
+  importDutyRate:number;
+  gstRate:number;
+  cityPremiumModel:string;
+  validationBenchmark:string;
+};
+export type GoldRateValidation={
+  passed:boolean;
+  firstValidationDate:string|null;
+  lastValidationDate:string|null;
+  elapsedDays:number;
+  observations:number;
+  minDays:number;
+  minObservations:number;
+  averageDifferencePct:number|null;
+  maxDifferencePct:number|null;
+  averageThresholdPct:number;
+  singleDayThresholdPct:number;
+};
 export type GoldRateDataset={
   updatedAt:string;
   validatedSince:string|null;
@@ -11,6 +42,9 @@ export type GoldRateDataset={
   source:{name:string;url:string|null};
   national:GoldRateMarket;
   cities:Record<string,GoldRateMarket>;
+  status?:GoldRateDatasetStatus;
+  calculation?:GoldRateCalculation;
+  validation?:GoldRateValidation;
 };
 
 export type GoldRateGate={
@@ -18,14 +52,16 @@ export type GoldRateGate={
   publicEnabled:boolean;
   indexingEnabled:boolean;
   fresh:boolean;
+  validationPassed:boolean;
   validationDays:number;
+  validationObservations:number;
   minValidationDays:number;
   launchCities:string[];
   missingCities:string[];
   reasons:string[];
 };
 
-const DATA_CACHE_TTL_MS=30*60*1000;
+const DATA_CACHE_TTL_MS=10*60*1000;
 const DEFAULT_MAX_AGE_HOURS=24;
 const DEFAULT_MIN_VALIDATION_DAYS=14;
 const MAX_LAUNCH_CITIES=50;
@@ -39,6 +75,7 @@ const supportedCitySet=new Set(supportedCities.map(city=>city.slug));
 const candidateSet=new Set(goldRateCandidateCitySlugs);
 
 function positiveNumber(value:unknown){return typeof value==="number"&&Number.isFinite(value)&&value>0?value:null;}
+function nonNegativeNumber(value:unknown){return typeof value==="number"&&Number.isFinite(value)&&value>=0?value:null;}
 function validIsoDate(value:unknown){return typeof value==="string"&&/^\d{4}-\d{2}-\d{2}$/.test(value)?value:null;}
 function validDateTime(value:unknown){if(typeof value!=="string")return null;const time=Date.parse(value);return Number.isFinite(time)?value:null;}
 
@@ -69,6 +106,59 @@ function parseMarket(value:unknown):GoldRateMarket|null{
   return {rates,history:parseHistory(raw.history)};
 }
 
+function parseStatus(value:unknown):GoldRateDatasetStatus|undefined{
+  if(!value||typeof value!=="object")return undefined;
+  const raw=value as Record<string,unknown>;
+  const mode=raw.mode==="fresh"||raw.mode==="last-known"?raw.mode:null;
+  if(!mode)return undefined;
+  return {
+    mode,
+    message:typeof raw.message==="string"?raw.message:null,
+    spotSource:typeof raw.spotSource==="string"?raw.spotSource:"unknown",
+    fxSource:typeof raw.fxSource==="string"?raw.fxSource:"unknown",
+    lastAttemptAt:validDateTime(raw.lastAttemptAt),
+    lastSuccessAt:validDateTime(raw.lastSuccessAt),
+    lastError:typeof raw.lastError==="string"?raw.lastError:null,
+  };
+}
+
+function parseCalculation(value:unknown):GoldRateCalculation|undefined{
+  if(!value||typeof value!=="object")return undefined;
+  const raw=value as Record<string,unknown>;
+  const troy=positiveNumber(raw.troyOunceGrams),duty=nonNegativeNumber(raw.importDutyRate),gst=nonNegativeNumber(raw.gstRate);
+  if(troy===null||duty===null||gst===null)return undefined;
+  return {
+    troyOunceGrams:troy,
+    importDutyRate:duty,
+    gstRate:gst,
+    cityPremiumModel:typeof raw.cityPremiumModel==="string"?raw.cityPremiumModel:"documented regional estimate",
+    validationBenchmark:typeof raw.validationBenchmark==="string"?raw.validationBenchmark:"manual benchmark",
+  };
+}
+
+function parseValidation(value:unknown):GoldRateValidation|undefined{
+  if(!value||typeof value!=="object")return undefined;
+  const raw=value as Record<string,unknown>;
+  const elapsed=nonNegativeNumber(raw.elapsedDays),observations=nonNegativeNumber(raw.observations),minDays=positiveNumber(raw.minDays),minObservations=positiveNumber(raw.minObservations);
+  const avgThreshold=positiveNumber(raw.averageThresholdPct),singleThreshold=positiveNumber(raw.singleDayThresholdPct);
+  if(elapsed===null||observations===null||minDays===null||minObservations===null||avgThreshold===null||singleThreshold===null)return undefined;
+  const average=raw.averageDifferencePct===null?null:nonNegativeNumber(raw.averageDifferencePct);
+  const max=raw.maxDifferencePct===null?null:nonNegativeNumber(raw.maxDifferencePct);
+  return {
+    passed:raw.passed===true,
+    firstValidationDate:validIsoDate(raw.firstValidationDate),
+    lastValidationDate:validIsoDate(raw.lastValidationDate),
+    elapsedDays:elapsed,
+    observations,
+    minDays,
+    minObservations,
+    averageDifferencePct:average,
+    maxDifferencePct:max,
+    averageThresholdPct:avgThreshold,
+    singleDayThresholdPct:singleThreshold,
+  };
+}
+
 export function parseGoldRateDataset(value:unknown):GoldRateDataset|null{
   if(!value||typeof value!=="object")return null;
   const raw=value as Record<string,unknown>;
@@ -85,13 +175,16 @@ export function parseGoldRateDataset(value:unknown):GoldRateDataset|null{
     if(market)cities[slug]=market;
   }
   const validatedSince=validDateTime(raw.validatedSince);
-  const updateFrequency=typeof raw.updateFrequency==="string"&&raw.updateFrequency.trim()?raw.updateFrequency.trim().slice(0,120):"source schedule";
+  const updateFrequency=typeof raw.updateFrequency==="string"&&raw.updateFrequency.trim()?raw.updateFrequency.trim().slice(0,160):"source schedule";
   const sourceUrl=typeof sourceRaw.url==="string"&&/^https?:\/\//.test(sourceRaw.url)?sourceRaw.url:null;
-  return {updatedAt,validatedSince,updateFrequency,source:{name:sourceName,url:sourceUrl},national,cities};
+  const status=parseStatus(raw.status),calculation=parseCalculation(raw.calculation),validation=parseValidation(raw.validation);
+  return {updatedAt,validatedSince,updateFrequency,source:{name:sourceName,url:sourceUrl},national,cities,...(status?{status}:{}),...(calculation?{calculation}:{}),...(validation?{validation}:{})};
 }
 
 export function goldRatePublicEnabled(){
-  return process.env.GOLD_RATE_PUBLIC_ENABLED==="true"||Boolean(process.env.GOLD_RATE_DATA_URL);
+  if(process.env.GOLD_RATE_PUBLIC_ENABLED==="true")return true;
+  if(process.env.GOLD_RATE_PUBLIC_ENABLED==="false")return false;
+  return Boolean(process.env.GOLD_RATE_DATA_URL)||getGoldRateStoreStatus().configured;
 }
 
 export function goldRateIndexCitySlugs(){
@@ -106,7 +199,7 @@ export function goldRateGate(dataset:GoldRateDataset|null):GoldRateGate{
   const publicEnabled=goldRatePublicEnabled();
   const indexingEnabled=process.env.GOLD_RATE_INDEXING_ENABLED==="true";
   const launchCities=goldRateIndexCitySlugs();
-  const minDays=minValidationDays();
+  const minDays=dataset?.validation?.minDays??minValidationDays();
   const reasons:string[]=[];
   if(!publicEnabled)reasons.push("public gold-rate cluster is not enabled");
   if(!indexingEnabled)reasons.push("indexing gate is disabled");
@@ -118,7 +211,11 @@ export function goldRateGate(dataset:GoldRateDataset|null):GoldRateGate{
   if(dataset&&!fresh)reasons.push("rate dataset is stale");
 
   const validationTime=dataset?.validatedSince?Date.parse(dataset.validatedSince):NaN;
-  const validationDays=Number.isFinite(validationTime)?Math.max(0,Math.floor((Date.now()-validationTime)/86400000)):0;
+  const fallbackValidationDays=Number.isFinite(validationTime)?Math.max(0,Math.floor((Date.now()-validationTime)/86400000)):0;
+  const validationDays=dataset?.validation?.elapsedDays??fallbackValidationDays;
+  const validationObservations=dataset?.validation?.observations??0;
+  const validationPassed=dataset?.validation?.passed===true;
+  if(dataset&&!validationPassed)reasons.push("IBJA benchmark validation has not passed the 14-day accuracy protocol");
   if(dataset&&validationDays<minDays)reasons.push(`source validation has not reached ${minDays} days`);
   if(!launchCities.length)reasons.push("no demand-approved launch cities configured");
 
@@ -128,29 +225,37 @@ export function goldRateGate(dataset:GoldRateDataset|null):GoldRateGate{
   }):launchCities;
   if(missingCities.length)reasons.push("one or more launch cities lack current rates or trend history");
 
-  const ready=publicEnabled&&indexingEnabled&&Boolean(dataset)&&fresh&&validationDays>=minDays&&launchCities.length>0&&!missingCities.length;
-  return {ready,publicEnabled,indexingEnabled,fresh,validationDays,minValidationDays:minDays,launchCities,missingCities,reasons};
+  const ready=publicEnabled&&indexingEnabled&&Boolean(dataset)&&fresh&&validationPassed&&validationDays>=minDays&&launchCities.length>0&&!missingCities.length;
+  return {ready,publicEnabled,indexingEnabled,fresh,validationPassed,validationDays,validationObservations,minValidationDays:minDays,launchCities,missingCities,reasons};
 }
 
 export function isGoldRateCandidateCity(slug:string){return candidateSet.has(slug);}
 export function isGoldRateCityIndexable(slug:string,dataset:GoldRateDataset|null){const gate=goldRateGate(dataset);return gate.ready&&gate.launchCities.includes(slug)&&Boolean(dataset?.cities[slug]);}
 export function isGoldRateHubIndexable(dataset:GoldRateDataset|null){return goldRateGate(dataset).ready;}
 
+async function loadGoldRateDataset():Promise<GoldRateDataset|null>{
+  const url=process.env.GOLD_RATE_DATA_URL;
+  if(url){
+    try{
+      const headers:Record<string,string>={accept:"application/json"};
+      if(process.env.GOLD_RATE_DATA_TOKEN)headers.authorization=`Bearer ${process.env.GOLD_RATE_DATA_TOKEN}`;
+      const response=await fetch(url,{headers,next:{revalidate:600}});
+      if(!response.ok)return null;
+      return parseGoldRateDataset(await response.json());
+    }catch{return null;}
+  }
+  if(!getGoldRateStoreStatus().configured)return null;
+  try{return parseGoldRateDataset(await getStoredGoldRatePublicDataset());}
+  catch{return null;}
+}
+
 export async function getGoldRateDataset():Promise<GoldRateDataset|null>{
   const now=Date.now();
   if(datasetCache&&datasetCache.expiresAt>now)return datasetCache.value;
   if(inflight)return inflight;
-  const url=process.env.GOLD_RATE_DATA_URL;
-  if(!url){datasetCache={value:null,expiresAt:now+DATA_CACHE_TTL_MS};return null;}
-  const request=(async()=>{
-    try{
-      const headers:Record<string,string>={accept:"application/json"};
-      if(process.env.GOLD_RATE_DATA_TOKEN)headers.authorization=`Bearer ${process.env.GOLD_RATE_DATA_TOKEN}`;
-      const response=await fetch(url,{headers,next:{revalidate:1800}});
-      if(!response.ok)return null;
-      return parseGoldRateDataset(await response.json());
-    }catch{return null;}
-  })().then(value=>{datasetCache={value,expiresAt:Date.now()+DATA_CACHE_TTL_MS};return value;}).finally(()=>{inflight=null;});
+  const request=loadGoldRateDataset()
+    .then(value=>{datasetCache={value,expiresAt:Date.now()+DATA_CACHE_TTL_MS};return value;})
+    .finally(()=>{inflight=null;});
   inflight=request;
   return request;
 }

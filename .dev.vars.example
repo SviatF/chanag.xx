@@ -22,20 +22,34 @@ CLOUDFLARE_ANALYTICS_API_TOKEN=
 # The API token needs Workers KV Storage read/write permission for this namespace.
 SEO_OPPORTUNITY_KV_NAMESPACE_ID=
 
-# Gold Rate cluster — traffic-first launch gate.
-# GOLD_RATE_DATA_URL must return JSON with: updatedAt, validatedSince, updateFrequency,
-# source{name,url}, national{rates,history}, cities{slug:{rates,history}}.
-# Each rates object must contain explicit 24k, 22k and 18k INR-per-gram values.
+# Gold Rate free-stack pipeline.
+# The native pipeline uses gold-api.com for XAU/USD, a documented fallback spot endpoint,
+# and Frankfurter/ECB for USD/INR. GOLD_RATE_DATA_URL is now only an optional external override.
 GOLD_RATE_DATA_URL=
 GOLD_RATE_DATA_TOKEN=
 
-# Expose Gold Rate links in Tools navigation only after the feed is ready for public review.
-GOLD_RATE_PUBLIC_ENABLED=false
+# Optional dedicated KV namespace. If blank, the pipeline reuses SEO_OPPORTUNITY_KV_NAMESPACE_ID
+# with its own isolated storage key. The Cloudflare token needs Workers KV read/write permission.
+GOLD_RATE_KV_NAMESPACE_ID=
 
-# Keep indexing disabled until at least 14 days of source verification are complete.
+# Public review can be enabled while every Gold Rate page remains noindex.
+# Leave blank to auto-enable when a pipeline store or external data URL is configured.
+GOLD_RATE_PUBLIC_ENABLED=
+
+# Indexing remains OFF until the manual IBJA validation protocol passes AND demand cities are approved.
 GOLD_RATE_INDEXING_ENABLED=false
 GOLD_RATE_MIN_VALIDATION_DAYS=14
+GOLD_RATE_MIN_VALIDATION_OBSERVATIONS=10
 GOLD_RATE_MAX_AGE_HOURS=24
+
+# India pricing assumptions are deliberately configurable because duties/taxes can change.
+# Baseline verified for Sep 2026: total gold import tariff 15%; GST on gold 3%.
+GOLD_RATE_IMPORT_DUTY_RATE=0.15
+GOLD_RATE_GST_RATE=0.03
+
+# Optional JSON overrides for the documented city-premium estimate (0.00–0.01 only).
+# Example: GOLD_RATE_CITY_PREMIUMS_JSON={"mumbai":0,"chennai":0.005}
+GOLD_RATE_CITY_PREMIUMS_JSON=
 
 # Demand-approved launch cities only. Maximum 50. Do not populate from population alone;
 # approve these after Google Trends / GSC demand review.
