@@ -42,9 +42,7 @@ export async function POST(request:Request){
       const base=baseline(body.baseline);
       if(!url||!query||!actionType||!recommendation||!base)return NextResponse.json({error:"url, query, actionType, recommendation and baseline are required."},{status:400});
       const id=seoTaskId(url,query);
-      const completedAt=nowIso;
-      const verifyAt=addDays(now,10).toISOString();
-      const task:SeoCommandTask={id,url,query,actionType,recommendation,status:"observation",baseline:base,completedAt,verifyAt,result:null,reviewerNote:text(body.reviewerNote,1200),commitSha:text(body.commitSha,80)||null,updatedAt:nowIso};
+      const task:SeoCommandTask={id,url,query,actionType,recommendation,status:"observation",baseline:base,completedAt:nowIso,verifyAt:addDays(now,10).toISOString(),result:null,reviewerNote:text(body.reviewerNote,1200),commitSha:text(body.commitSha,80)||null,updatedAt:nowIso};
       tasks[id]=task;
       await writeSeoTaskMap(tasks);
       return NextResponse.json({task});
@@ -55,25 +53,26 @@ export async function POST(request:Request){
     const current=tasks[id];
 
     if(action==="close"){
-      const next:{[K in keyof SeoCommandTask]:SeoCommandTask[K]}={...current,status:"closed",result:result(body.result),closedAt:nowIso,updatedAt:nowIso};
-      tasks[id]=next as SeoCommandTask;
+      const next:SeoCommandTask={...current,status:"closed",result:result(body.result),closedAt:nowIso,updatedAt:nowIso};
+      tasks[id]=next;
       await writeSeoTaskMap(tasks);
-      return NextResponse.json({task:tasks[id]});
+      return NextResponse.json({task:next});
     }
 
     if(action==="restore"){
       if(!current.closedAt||now.getTime()-new Date(current.closedAt).getTime()>12*60*60*1000)return NextResponse.json({error:"Only tasks closed in the last 12 hours can be restored."},{status:400});
-      const verifyTime=new Date(current.verifyAt).getTime();
-      tasks[id]={...current,status:verifyTime<=now.getTime()?"review_ready":"observation",result:null,closedAt:undefined,updatedAt:nowIso};
+      const next:SeoCommandTask={...current,status:new Date(current.verifyAt).getTime()<=now.getTime()?"review_ready":"observation",result:null,closedAt:undefined,updatedAt:nowIso};
+      tasks[id]=next;
       await writeSeoTaskMap(tasks);
-      return NextResponse.json({task:tasks[id]});
+      return NextResponse.json({task:next});
     }
 
     if(action==="snooze"){
       const days=Math.max(1,Math.min(30,Number(body.days)||7));
-      tasks[id]={...current,status:"snoozed",snoozedUntil:addDays(now,days).toISOString(),updatedAt:nowIso};
+      const next:SeoCommandTask={...current,status:"snoozed",snoozedUntil:addDays(now,days).toISOString(),updatedAt:nowIso};
+      tasks[id]=next;
       await writeSeoTaskMap(tasks);
-      return NextResponse.json({task:tasks[id]});
+      return NextResponse.json({task:next});
     }
 
     return NextResponse.json({error:"Unsupported task action."},{status:400});
