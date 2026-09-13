@@ -34,7 +34,7 @@ export async function loadSeoOperatingData(force=false):Promise<SeoOsClientPaylo
   const now=Date.now();
   if(!force&&memory&&memory.expiresAt>now)return memory.payload;
   if(!force){const stored=readSession();if(stored){memory=stored;return stored.payload;}}
-  if(!force&&inflight)return inflight;
+  if(inflight)return inflight;
 
   const request=fetch(`/api/admin/seo-data${force?"?refresh=1":""}`,{cache:"no-store"})
     .then(async response=>{const json=await response.json() as SeoOsClientPayload&{error?:string};if(!response.ok)throw new Error(json.error??`SEO data request failed (${response.status})`);const entry={payload:json,expiresAt:Date.now()+TTL_MS};write(entry);return json;})
