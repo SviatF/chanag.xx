@@ -43,10 +43,10 @@ export default async function YearlyMuhurat({params}:{params:Promise<{event:stri
 
     <section className="wide-panel"><h2 className="page-title" style={{fontSize:32}}>Top planning fits of {year}</h2>{summary.topRows.length?<div className="wide-panel"><table className="table"><thead><tr><th>Rank / Date</th><th>Score</th><th>Screening match</th><th>Clean time</th></tr></thead><tbody>{summary.topRows.map((row,index)=><tr key={row.date}><td>#{index+1} · <Link href={`/panchang/${city.slug}/${row.date}`}>{row.date}</Link></td><td><strong>{row.planning.score}/100 · {row.planning.grade}</strong></td><td>{row.reasons.join(" · ")}</td><td>{row.planning.longestWindowMinutes} min longest · {row.planning.totalCleanMinutes} min total</td></tr>)}</tbody></table></div>:<p className="page-subtitle">No dates matched the current Tithi + Nakshatra screening profile in {year}.</p>}</section>
 
-    <section className="wide-panel"><div className="seo-copy"><small>LIMITS OF THE YEARLY SCREEN</small><h2>What still requires full Panchang Shuddhi or personal review</h2><ul>{muhuratExcludedFactors.map(item=><li key={item}>{item}</li>)}</ul></div></section>
+    <section className="wide-panel"><div className="seo-copy"><small>ADDITIONAL FACTORS</small><h2>Checks outside this screening model</h2><ul>{muhuratExcludedFactors.map(item=><li key={item}>{item}</li>)}</ul><p>These factors remain outside the current screen and are listed once here so the ranking can stay readable without repeating the same scope warning beside every result.</p></div></section>
 
     <div className="pill-links">{activeYears.includes(year-1)?<Link href={muhuratYearPath(p.event,year-1)}>← {year-1}</Link>:null}<Link href={hinduCalendarYearPath(year)}>Hindu Calendar {year}</Link>{activeYears.includes(year+1)?<Link href={muhuratYearPath(p.event,year+1)}>{year+1} →</Link>:null}</div>
-    <div className="seo-copy"><h2>How to use the annual ranking</h2><p>The annual page is a planning overview, not a religious certification layer. Open a month to inspect screened dates and then a city page for location-specific clean-time windows.</p></div>
+    <div className="seo-copy"><h2>How to use the annual ranking</h2><p>Open a month to inspect its screened dates, then open a city page to compare the local clean-time windows that produced the practical score.</p></div>
     <script type="application/ld+json" dangerouslySetInnerHTML={{__html:JSON.stringify(ld)}}/>
   </div></main>;
 }

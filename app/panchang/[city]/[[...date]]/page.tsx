@@ -6,6 +6,7 @@ import DayWheel from "@/components/DayWheel";
 import ChoghadiyaTable from "@/components/ChoghadiyaTable";
 import TopicalGraph from "@/components/TopicalGraph";
 import {findCityBySlug} from "@/lib/cities";
+import {buildDailyDataNarrative} from "@/lib/content-uniqueness";
 import {formatPanchangTime,formatWindow,getPanchang} from "@/lib/panchang";
 import {getLunarMonthConventions} from "@/lib/calendar-conventions";
 import {isDailyIndexable,robotsFor} from "@/lib/seo-policy";
@@ -39,6 +40,7 @@ export default async function PanchangPage({params}:{params:Promise<{city:string
   const data=await getPanchang(date,city);
   const lunar=getLunarMonthConventions(date,city,data);
   const guidance=getDailyGuidance(data,city);
+  const dataNarrative=buildDailyDataNarrative(data,city);
   const festival=nextValidatedFestival(date);
   const topicalGroups=buildDailyTopicalGraph(city,date,festival);
   const vratLink=vratLinkForTithi(city,date,data.tithi);
@@ -96,7 +98,7 @@ export default async function PanchangPage({params}:{params:Promise<{city:string
     </div>
     <div className="wide-panel"><h2 className="page-title" style={{fontSize:32}}>Choghadiya</h2><p className="page-subtitle">Eight daytime and eight nighttime periods calculated from local sunrise, sunset and the next sunrise.</p><ChoghadiyaTable day={data.dayChoghadiya} night={data.nightChoghadiya}/></div>
     <TopicalGraph title={`Explore ${city.name} Panchang`} groups={topicalGroups}/>
-    <div className="seo-copy"><h2>How to use today’s Panchang</h2><p>The daily Panchang combines lunar factors such as Tithi and Nakshatra with location-sensitive solar timings. Rahu Kalam, Yamaganda and Gulika change with local sunrise and sunset, which is why the selected city matters. Times that fall after midnight are shown with the following civil date so they cannot be mistaken for an earlier clock time.</p><p>India uses more than one lunar-month convention. Amanta months end at Amavasya and are common across much of western and southern India; Purnimanta months end at Purnima and are common across much of northern India. Both labels above refer to the same astronomical day under different month-reckoning conventions. If a lunar month contains no Sankranti, Panchvani marks it as Adhika rather than silently presenting it as an ordinary month.</p><p>Sunrise and sunset use the upper solar limb with atmospheric refraction at a sea-level horizon. Use these timing bands as a general daily reference, and consult a qualified practitioner for personal rites that depend on an individual birth chart or tradition-specific rules.</p></div>
+    <div className="seo-copy"><h2>How to read this day's Panchang</h2><p>{dataNarrative}</p><p>India uses more than one lunar-month convention. Amanta months end at Amavasya and Purnimanta months end at Purnima; both labels above describe the same astronomical day under different month-reckoning conventions. Sunrise and sunset use the upper solar limb with atmospheric refraction at a sea-level horizon.</p><p>For personal rites that depend on an individual birth chart or tradition-specific rules, use these location-sensitive timings as the daily reference rather than as a personalized ritual decision.</p></div>
     <div className="wide-panel"><h2>Frequently asked questions</h2>{faq.map(x=><div key={x.q} className="seo-copy"><strong>{x.q}</strong><p>{x.a}</p></div>)}</div>
     <script type="application/ld+json" dangerouslySetInnerHTML={{__html:JSON.stringify(ld)}}/>
   </div></main>

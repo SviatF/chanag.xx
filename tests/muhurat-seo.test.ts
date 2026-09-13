@@ -16,13 +16,13 @@ describe("Muhurat deterministic SEO content engine",()=>{
     expect(first.averageScore).toBe(rows.length?Math.round(rows.reduce((sum,row)=>sum+row.planning.score,0)/rows.length):0);
     expect(first.topDate).toBe(rows[0]?.date??null);
     expect(first.headline).toContain("Mumbai baseline");
-    expect(first.overview).toContain(`${rows.length} wedding muhurat candidate`);
-    expect(first.overview).toContain("not a complete Panchang Shuddhi");
+    expect(first.overview).toContain("Mumbai baseline");
+    expect(first.overview).not.toMatch(/not a complete Panchang Shuddhi|religiously certified|personalized ceremony certification/i);
 
     if(rows[0]){
       expect(first.rankingInsight).toContain(rows[0].date.slice(0,4));
       expect(first.rankingInsight).toContain(`${rows[0].planning.score}/100`);
-      expect(first.timingInsight).toContain(`${rows[0].planning.longestWindowMinutes} minutes`);
+      expect(first.timingInsight).toContain(`${rows[0].planning.longestWindowMinutes}`);
     }
   });
 
@@ -46,7 +46,7 @@ describe("Muhurat deterministic SEO content engine",()=>{
     expect(summary.topWindow).toBeNull();
     expect(summary.headline).toContain("No griha pravesh muhurat candidates matched");
     expect(summary.headline).toContain("Tithi + Nakshatra screening profile");
-    expect(summary.overview).toContain("No date matched both filters");
+    expect(summary.overview).toContain("produced no date");
     expect(summary.alternatives).toContain("adjacent month");
   });
 });

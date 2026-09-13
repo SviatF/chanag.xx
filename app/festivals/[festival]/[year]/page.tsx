@@ -69,7 +69,7 @@ export default async function FestivalPage({params}:{params:Promise<{festival:st
       <small>RULE PROVENANCE</small><h2>{ruleProfile.title}</h2><p>{ruleProfile.ruleSummary}</p>
       <ul>{ruleProfile.criteria.map(item=><li key={item}>{item}</li>)}</ul>
       <p><strong>Panchvani scope:</strong> {ruleProfile.localReference}</p>
-      {ruleProfile.sources.length?<p><strong>Reference methodology:</strong> {ruleProfile.sources.map((source,index)=><span key={source.url}>{index?" · ":""}<a href={source.url} rel="noreferrer">{source.label}</a></span>)}</p>:null}
+      {ruleProfile.sources.length?<p><strong>Reference methodology:</strong> {ruleProfile.sources.map((source,index)=><span key={source.label}>{index?" · ":""}{source.label}</span>)}</p>:null}
     </div></section>
 
     <section className="wide-panel">

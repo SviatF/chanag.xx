@@ -4,6 +4,7 @@ import {notFound} from "next/navigation";
 import Header from "@/components/Header";
 import TopicalGraph from "@/components/TopicalGraph";
 import {findCityBySlug} from "@/lib/cities";
+import {buildVratCityNarrative} from "@/lib/content-uniqueness";
 import {parseRouteYear} from "@/lib/route-validation";
 import {isVratIndexable,robotsFor} from "@/lib/seo-policy";
 import {calculateVratCalendar,findVratBySlug,vratCalendarSummary} from "@/lib/vrat";
@@ -36,6 +37,7 @@ export default async function VratCityPage({params}:{params:Promise<{vrat:string
 
   const rows=calculateVratCalendar(vrat.slug,year,city);
   const summary=vratCalendarSummary(rows);
+  const narrative=buildVratCityNarrative(vrat,year,city,rows);
   const firstMonth=rows[0]?.date.slice(5,7)??"01";
   const ld={"@context":"https://schema.org","@graph":[
     {"@type":"WebPage","name":`${vrat.name} ${year} in ${city.name}`,"description":vrat.short,"url":`https://panchvani.com/vrat/${vrat.slug}/${year}/${city.slug}`},
@@ -71,7 +73,7 @@ export default async function VratCityPage({params}:{params:Promise<{vrat:string
       </Link>)}</div>
     </section>
 
-    <div className="seo-copy"><h2>Why {city.name} can differ from another city</h2><p>{vrat.methodology}</p><p>A Tithi is an angular relationship between the Moon and Sun, while this list assigns it to a civil date using local sunrise. If the Tithi changes between the sunrise times of two cities, their yearly lists can differ by a day.</p><p>{vrat.ritualCaution}</p></div>
+    <div className="seo-copy"><h2>What is distinctive about {city.name}'s {year} list</h2><p>{narrative}</p><h3>Calculation and observance scope</h3><p>{vrat.methodology}</p><p>{vrat.ritualCaution}</p></div>
 
     <div className="pill-links"><Link href={`/vrat/${vrat.slug}/${year}`}>India reference</Link><Link href={`/calendar/${city.slug}/${year}/${firstMonth}`}>{city.name} monthly calendar</Link></div>
     <TopicalGraph title={`Explore ${vrat.name} in ${city.name}`} groups={buildVratTopicalGraph(city,vrat.slug,year,rows,"city")}/>

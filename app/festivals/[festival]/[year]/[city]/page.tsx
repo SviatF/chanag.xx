@@ -90,7 +90,7 @@ export default async function Page({params}:{params:Promise<{festival:string;yea
       <ul>{ruleProfile.criteria.map(item=><li key={item}>{item}</li>)}</ul>
       <p><strong>What Panchvani provides:</strong> {ruleProfile.localReference}</p>
       {ruleProfile.limitations.length?<><h3>Not certified by this route</h3><ul>{ruleProfile.limitations.map(item=><li key={item}>{item}</li>)}</ul></>:null}
-      {ruleProfile.sources.length?<p><strong>Reference methodology:</strong> {ruleProfile.sources.map((source,index)=><span key={source.url}>{index?" · ":""}<a href={source.url} rel="noreferrer">{source.label}</a></span>)}</p>:null}
+      {ruleProfile.sources.length?<p><strong>Reference methodology:</strong> {ruleProfile.sources.map((source,index)=><span key={source.label}>{index?" · ":""}{source.label}</span>)}</p>:null}
     </div></section>
 
     <div className="seo-copy"><h2>How to read this festival Panchang</h2><p>{f.meaning}</p>{semantics.lunarConventionNote?<p><strong>Calendar convention:</strong> {semantics.lunarConventionNote}</p>:null}<p>The astronomical values above are reproducible local Panchang context. A ritual rule can require additional conditions such as Tithi overlap during Pradosh or Nishita, Bhadra avoidance, Lagna, Rohini, Madhyahna or a tradition-specific fasting/parana rule. Panchvani does not turn a generic favorable period into a universal festival Muhurat.</p></div>

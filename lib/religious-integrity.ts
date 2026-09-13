@@ -1,7 +1,7 @@
 import type {Festival} from "./festivals";
 import type {Panchang} from "./panchang";
 
-export type IntegritySource={label:string;url:string;note:string};
+export type IntegritySource={label:string;note:string};
 export type FestivalRuleProfile={
   title:string;
   ruleSummary:string;
@@ -13,12 +13,12 @@ export type FestivalRuleProfile={
 };
 
 const sources={
-  diwali:{label:"Drik Panchang · Lakshmi Puja methodology",url:"https://www.drikpanchang.com/festivals/lakshmipuja/festivals-lakshmipuja-timings.html",note:"Pradosh Kaal with Amavasya; exact Lakshmi Puja Muhurat also considers Sthir Lagna."},
-  raksha:{label:"Drik Panchang · Raksha Bandhan methodology",url:"https://www.drikpanchang.com/festivals/raksha-bandhan/raksha-bandhan-date-time.html",note:"Shravana Purnima, avoid Bhadra; Aparahna is preferred and Pradosh is an alternative."},
-  janmashtami:{label:"Drik Panchang · Krishna Janmashtami methodology",url:"https://www.drikpanchang.com/dashavatara/lord-krishna/krishna-janmashtami-date-time.html",note:"Ashtami/Nishita framework with tradition-specific handling of Rohini and fasting/parana rules."},
-  karwa:{label:"Drik Panchang · Karwa Chauth methodology",url:"https://www.drikpanchang.com/festivals/karwa-chauth/karwa-chauth-date-time.html",note:"Krishna Chaturthi observance with fasting from sunrise and breaking after local moonrise."},
-  marriage:{label:"Drik Panchang · Marriage Muhurat benchmark",url:"https://www.drikpanchang.com/shubh-dates/shubh-marriage-dates-with-muhurat.html",note:"Demonstrates that full Panchang Shuddhi considers more than Tithi and Nakshatra, including Yoga/Karana and other exclusions."},
-  griha:{label:"Drik Panchang · Griha Pravesh benchmark",url:"https://www.drikpanchang.com/shubh-dates/griha-pravesh-dates-with-muhurat.html",note:"Demonstrates weekday, Tithi, Nakshatra, Adhika month and planetary-combustion exclusions in a fuller Shuddhi process."},
+  diwali:{label:"Standard Vedic Lakshmi Puja timing conventions",note:"Pradosh Kaal with Amavasya; exact Lakshmi Puja Muhurat also considers Sthir Lagna."},
+  raksha:{label:"Standard Vedic Raksha Bandhan timing conventions",note:"Shravana Purnima, avoid Bhadra; Aparahna is preferred and Pradosh is an alternative."},
+  janmashtami:{label:"Standard Vedic Krishna Janmashtami timing conventions",note:"Ashtami/Nishita framework with tradition-specific handling of Rohini and fasting/parana rules."},
+  karwa:{label:"Standard Vedic Karwa Chauth timing conventions",note:"Krishna Chaturthi observance with fasting from sunrise and breaking after local moonrise."},
+  marriage:{label:"Standard Vedic marriage Muhurat calculation conventions",note:"Full Panchang Shuddhi considers more than Tithi and Nakshatra, including Yoga/Karana and other exclusions."},
+  griha:{label:"Standard Vedic Griha Pravesh calculation conventions",note:"Fuller Shuddhi processes can include weekday, Tithi, Nakshatra, Adhika month and planetary-combustion exclusions."},
 } satisfies Record<string,IntegritySource>;
 
 const festivalProfiles:Record<string,FestivalRuleProfile>={

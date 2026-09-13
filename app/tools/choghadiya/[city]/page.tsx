@@ -5,6 +5,7 @@ import Header from "@/components/Header";
 import ChoghadiyaTable from "@/components/ChoghadiyaTable";
 import TopicalGraph from "@/components/TopicalGraph";
 import {findCityBySlug} from "@/lib/cities";
+import {buildChoghadiyaNarrative} from "@/lib/content-uniqueness";
 import {getPanchang} from "@/lib/panchang";
 import {todayInIndia} from "@/lib/dates";
 import {isPriorityCity,robotsFor} from "@/lib/seo-policy";
@@ -32,6 +33,7 @@ export default async function ChoghadiyaCityPage({params}:{params:Promise<{city:
   const date=todayInIndia();
   const data=await getPanchang(date,city);
   const good=data.dayChoghadiya.filter(x=>x.effect==="good");
+  const narrative=buildChoghadiyaNarrative(data,city);
 
   const ld={"@context":"https://schema.org","@graph":[
     {"@type":"WebApplication","name":`Choghadiya Calculator — ${city.name}`,"applicationCategory":"LifestyleApplication","operatingSystem":"Web","url":`https://panchvani.com/tools/choghadiya/${city.slug}`},
@@ -62,7 +64,7 @@ export default async function ChoghadiyaCityPage({params}:{params:Promise<{city:
 
     <TopicalGraph title={`Explore timing in ${city.name}`} groups={buildChoghadiyaTopicalGraph(city,date)}/>
 
-    <div className="seo-copy"><h2>How Choghadiya is calculated</h2><p>The daylight interval from sunrise to sunset is divided into eight equal periods. The night interval from sunset to the next sunrise is also divided into eight periods. The sequence depends on the weekday, so local solar timing and the selected city both matter.</p></div>
+    <div className="seo-copy"><h2>What today's local sequence shows</h2><p>{narrative}</p><p>Calculation method: the daylight interval is divided into eight equal periods and the night interval into eight more; the weekday determines the Choghadiya order. The paragraph above is generated from this page's actual solar span, favorable sequence and Rahu Kalam position rather than a city-name substitution.</p></div>
 
     <script type="application/ld+json" dangerouslySetInnerHTML={{__html:JSON.stringify(ld)}}/>
   </div></main>;
