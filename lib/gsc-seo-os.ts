@@ -20,9 +20,10 @@ export type GscSeoOsDataset={
 
 const GOOGLE_TOKEN_URL="https://oauth2.googleapis.com/token";
 const GSC_SCOPE="https://www.googleapis.com/auth/webmasters.readonly";
-const CACHE_TTL_MS=10*60*1000;
+const CACHE_TTL_MS=6*60*60*1000;
+const FORCE_REFRESH_COOLDOWN_MS=30*60*1000;
 
-let cached:{expiresAt:number;value:GscSeoOsDataset}|null=null;
+let cached:{expiresAt:number;builtAt:number;value:GscSeoOsDataset}|null=null;
 let inflight:Promise<GscSeoOsDataset>|null=null;
 
 function iso(date:Date){return date.toISOString().slice(0,10);}
@@ -59,6 +60,13 @@ async function query(token:string,siteUrl:string,payload:{startDate:string;endDa
   return await response.json() as {rows?:GscRow[]};
 }
 
+function aggregateSummary(rows:GscRow[]|undefined):GscSummary{
+  const items=rows??[];
+  const clicks=items.reduce((sum,row)=>sum+(row.clicks??0),0);
+  const impressions=items.reduce((sum,row)=>sum+(row.impressions??0),0);
+  const weightedPosition=items.reduce((sum,row)=>sum+(row.position??0)*(row.impressions??0),0);
+  return {clicks,impressions,ctr:impressions?clicks/impressions:0,position:impressions?weightedPosition/impressions:0};
+}
 function summary(rows:GscRow[]|undefined):GscSummary{const row=rows?.[0];return row?{clicks:row.clicks??0,impressions:row.impressions??0,ctr:row.ctr??0,position:row.position??0}:{clicks:0,impressions:0,ctr:0,position:0};}
 
 async function buildDataset():Promise<GscSeoOsDataset>{
@@ -80,42 +88,49 @@ async function buildDataset():Promise<GscSeoOsDataset>{
   const current28Dates={startDate:iso(current28Start),endDate:iso(end)};
   const previous28Dates={startDate:iso(previous28Start),endDate:iso(previous28End)};
 
+  // Cost-safe payload: Queries + Command Center only need query and query/page rows.
+  // This deliberately avoids extra page/country/daily calls on every cache miss.
   const [
-    current7Summary,current7Queries,current7QueryPages,
-    previous7Summary,previous7Queries,previous7QueryPages,
-    current28Summary,current28Queries,current28QueryPages,current28Pages,current28Countries,current28Daily,
+    current7Queries,current7QueryPages,
+    previous7Queries,previous7QueryPages,
+    current28Queries,current28QueryPages,
     previous28Summary,
   ]=await Promise.all([
-    query(token,status.siteUrl,{...current7Dates,rowLimit:1}),
     query(token,status.siteUrl,{...current7Dates,dimensions:["query"],rowLimit:10000}),
     query(token,status.siteUrl,{...current7Dates,dimensions:["query","page"],rowLimit:25000}),
-    query(token,status.siteUrl,{...previous7Dates,rowLimit:1}),
     query(token,status.siteUrl,{...previous7Dates,dimensions:["query"],rowLimit:10000}),
     query(token,status.siteUrl,{...previous7Dates,dimensions:["query","page"],rowLimit:25000}),
-    query(token,status.siteUrl,{...current28Dates,rowLimit:1}),
     query(token,status.siteUrl,{...current28Dates,dimensions:["query"],rowLimit:10000}),
     query(token,status.siteUrl,{...current28Dates,dimensions:["query","page"],rowLimit:25000}),
-    query(token,status.siteUrl,{...current28Dates,dimensions:["page"],rowLimit:5000}),
-    query(token,status.siteUrl,{...current28Dates,dimensions:["country"],rowLimit:1000}),
-    query(token,status.siteUrl,{...current28Dates,dimensions:["date"],rowLimit:1000}),
     query(token,status.siteUrl,{...previous28Dates,rowLimit:1}),
   ]);
+
+  const current7Rows=current7Queries.rows??[];
+  const previous7Rows=previous7Queries.rows??[];
+  const current28Rows=current28Queries.rows??[];
 
   return {
     siteUrl:status.siteUrl,
     generatedAt:new Date().toISOString(),
-    current7d:{...current7Dates,summary:summary(current7Summary.rows),queries:current7Queries.rows??[],queryPages:current7QueryPages.rows??[]},
-    previous7d:{...previous7Dates,summary:summary(previous7Summary.rows),queries:previous7Queries.rows??[],queryPages:previous7QueryPages.rows??[]},
-    current28d:{...current28Dates,summary:summary(current28Summary.rows),queries:current28Queries.rows??[],queryPages:current28QueryPages.rows??[],pages:current28Pages.rows??[],countries:current28Countries.rows??[],daily:(current28Daily.rows??[]).sort((a,b)=>(a.keys?.[0]??"").localeCompare(b.keys?.[0]??""))},
+    current7d:{...current7Dates,summary:aggregateSummary(current7Rows),queries:current7Rows,queryPages:current7QueryPages.rows??[]},
+    previous7d:{...previous7Dates,summary:aggregateSummary(previous7Rows),queries:previous7Rows,queryPages:previous7QueryPages.rows??[]},
+    current28d:{...current28Dates,summary:aggregateSummary(current28Rows),queries:current28Rows,queryPages:current28QueryPages.rows??[],pages:[],countries:[],daily:[]},
     previous28d:{...previous28Dates,summary:summary(previous28Summary.rows)},
   };
 }
 
 export async function getGscSeoOsDataset(force=false):Promise<GscSeoOsDataset>{
   const now=Date.now();
-  if(!force&&cached&&cached.expiresAt>now)return cached.value;
+  if(cached){
+    if(force&&now-cached.builtAt<FORCE_REFRESH_COOLDOWN_MS)return cached.value;
+    if(!force&&cached.expiresAt>now)return cached.value;
+  }
   if(inflight)return inflight;
-  const request=buildDataset().then(value=>{cached={value,expiresAt:Date.now()+CACHE_TTL_MS};return value;}).finally(()=>{inflight=null;});
+  const request=buildDataset().then(value=>{
+    const builtAt=Date.now();
+    cached={value,builtAt,expiresAt:builtAt+CACHE_TTL_MS};
+    return value;
+  }).finally(()=>{inflight=null;});
   inflight=request;
   return request;
 }
