@@ -58,7 +58,8 @@ describe("Cloudflare SEO/Admin runtime architecture",()=>{
     expect(worker).toContain("refreshGscDailySnapshot");
     expect(worker).toContain("setGscDailyKvBinding");
     expect(worker).toContain("env?.GSC_SNAPSHOT_KV??env?.GOLD_RATE_KV");
-    expect(gscStore).toContain("runtimeBinding");
+    expect(gscStore).toContain("__PANCHVANI_GSC_DAILY_KV__");
+    expect(gscStore).toContain("globalThis as GlobalWithGscKv");
     expect(gscStore).toContain('mode:"binding"');
     expect(kyivCron).toContain('KYIV_TIME_ZONE="Europe/Kyiv"');
     expect(kyivCron).toContain('GSC_DAILY_CRONS=["0 21 * * *","0 22 * * *"]');
