@@ -3,17 +3,23 @@
 import type {GscSeoOsDataset} from "./gsc-seo-os";
 import type {SeoTaskMap} from "./seo-task-store";
 
+export type SeoRuntimeTelemetry={
+  cache:"HIT"|"MISS"|"COALESCED";
+  apiCalls:number;
+  upstreamSubrequests:number;
+  latencyMs:number;
+};
+
 export type SeoOsClientPayload={
   dataset:GscSeoOsDataset;
   tasks:SeoTaskMap;
   taskStorage:{configured:boolean;required:Record<string,boolean>;storageKey:string};
+  telemetry?:SeoRuntimeTelemetry;
 };
 
 type CacheEntry={expiresAt:number;payload:SeoOsClientPayload};
-const CACHE_KEY="panchvani:admin:seo-os:v2";
-const FORCE_REFRESH_KEY="panchvani:admin:seo-os:last-force:v1";
-const TTL_MS=60*60*1000;
-const FORCE_REFRESH_COOLDOWN_MS=30*60*1000;
+const CACHE_KEY="panchvani:admin:seo-os:v3";
+export const SEO_CLIENT_TTL_MS=5*60*1000;
 let memory:CacheEntry|null=null;
 let inflight:Promise<SeoOsClientPayload>|null=null;
 
@@ -32,40 +38,25 @@ function write(entry:CacheEntry){
   if(typeof window!=="undefined")try{sessionStorage.setItem(CACHE_KEY,JSON.stringify(entry));}catch{}
 }
 
-function forcedRefreshAllowed(now:number){
-  if(typeof window==="undefined")return true;
-  try{
-    const last=Number(sessionStorage.getItem(FORCE_REFRESH_KEY)??"0");
-    return !Number.isFinite(last)||last<=0||now-last>=FORCE_REFRESH_COOLDOWN_MS;
-  }catch{return true;}
-}
-
-function markForcedRefresh(){
-  if(typeof window!=="undefined")try{sessionStorage.setItem(FORCE_REFRESH_KEY,String(Date.now()));}catch{}
-}
-
 export async function loadSeoOperatingData(force=false):Promise<SeoOsClientPayload>{
   const now=Date.now();
-  let effectiveForce=force;
-
-  if(force&&!forcedRefreshAllowed(now)){
-    effectiveForce=false;
-    if(memory&&memory.expiresAt>now)return memory.payload;
-    const stored=readSession();if(stored){memory=stored;return stored.payload;}
-  }
-
-  if(!effectiveForce&&memory&&memory.expiresAt>now)return memory.payload;
-  if(!effectiveForce){const stored=readSession();if(stored){memory=stored;return stored.payload;}}
+  if(!force&&memory&&memory.expiresAt>now)return memory.payload;
+  if(!force){const stored=readSession();if(stored){memory=stored;return stored.payload;}}
   if(inflight)return inflight;
 
-  const request=fetch(`/api/admin/seo-data${effectiveForce?"?refresh=1":""}`,{cache:"no-store"})
+  const request=fetch(`/api/admin/seo-data${force?"?refresh=1":""}`,{cache:"no-store"})
     .then(async response=>{
       const json=await response.json() as SeoOsClientPayload&{error?:string};
       if(!response.ok)throw new Error(json.error??`SEO data request failed (${response.status})`);
-      const entry={payload:json,expiresAt:Date.now()+TTL_MS};
-      write(entry);
-      if(effectiveForce)markForcedRefresh();
-      return json;
+      const telemetry:SeoRuntimeTelemetry={
+        cache:(response.headers.get("x-cache") as SeoRuntimeTelemetry["cache"]|null)??json.telemetry?.cache??"MISS",
+        apiCalls:Number(response.headers.get("x-api-calls")??json.telemetry?.apiCalls??0),
+        upstreamSubrequests:Number(response.headers.get("x-upstream-subrequests")??json.telemetry?.upstreamSubrequests??0),
+        latencyMs:Number(response.headers.get("x-endpoint-latency-ms")??json.telemetry?.latencyMs??0),
+      };
+      const payload={...json,telemetry};
+      write({payload,expiresAt:Date.now()+SEO_CLIENT_TTL_MS});
+      return payload;
     })
     .finally(()=>{inflight=null;});
   inflight=request;
