@@ -40,18 +40,23 @@ describe("Cloudflare SEO/Admin runtime architecture",()=>{
     expect(wrangler).toContain('"run_worker_first": ["/api/*"]');
     expect(wrangler).toContain('"cpu_ms": 500');
     expect(wrangler).toContain('"subrequests": 30');
-    expect(wrangler).toContain('"5 0 * * *"');
+    expect(wrangler).toContain('"0 21 * * *"');
+    expect(wrangler).toContain('"0 22 * * *"');
+    expect(wrangler).not.toContain('"5 0 * * *"');
   });
 
   it("keeps admin GSC reads snapshot-only",()=>{
     const seo=readFileSync("lib/gsc-seo-os.ts","utf8");
     const gsc=readFileSync("lib/gsc.ts","utf8");
     const worker=readFileSync("worker/index.ts","utf8");
+    const kyivCron=readFileSync("lib/kyiv-midnight-cron.ts","utf8");
     expect(seo).toContain("readGscDailySnapshot");
     expect(seo).not.toContain("searchconsole.googleapis.com");
     expect(gsc).toContain("stored.snapshot.traffic");
-    expect(worker).toContain('GSC_DAILY_CRON="5 0 * * *"');
+    expect(worker).toContain("shouldRunGscDailyAtKyivMidnight");
     expect(worker).toContain("refreshGscDailySnapshot");
+    expect(kyivCron).toContain('KYIV_TIME_ZONE="Europe/Kyiv"');
+    expect(kyivCron).toContain('GSC_DAILY_CRONS=["0 21 * * *","0 22 * * *"]');
   });
 
   it("exposes endpoint cache and cost telemetry headers",()=>{
