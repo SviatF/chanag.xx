@@ -4,6 +4,7 @@ import {notFound} from "next/navigation";
 import Header from "@/components/Header";
 import DayWheel from "@/components/DayWheel";
 import ChoghadiyaTable from "@/components/ChoghadiyaTable";
+import MethodologyNote from "@/components/MethodologyNote";
 import TopicalGraph from "@/components/TopicalGraph";
 import {findCityBySlug} from "@/lib/cities";
 import {buildDailyDataNarrative} from "@/lib/content-uniqueness";
@@ -62,7 +63,7 @@ export default async function PanchangPage({params}:{params:Promise<{city:string
   return <main><Header city={city}/><div className="page-shell internal-visual internal-panchang">
     <div className="breadcrumbs"><Link href="/">Home</Link> / {city.name} / {data.date}</div>
     <p className="page-kicker">DAILY PANCHANG · {city.state}</p><h1 className="page-title">{city.name} Panchang<br/>{data.date}</h1>
-    <p className="page-subtitle">Location-specific Panchang for {city.name}, including sunrise- and sunset-dependent periods. Calculation engine: {data.engine}.</p>
+    <p className="page-subtitle">Location-specific Panchang for {city.name}, including Tithi, Nakshatra and local solar timings.</p>
     <div className="wide-panel"><DayWheel data={data}/></div>
     <div className="data-grid">
       <div className="data-card"><small>Tithi</small><strong>{data.tithi}</strong><small>{data.paksha} Paksha · until {tithiEnd}</small></div>
@@ -96,10 +97,11 @@ export default async function PanchangPage({params}:{params:Promise<{city:string
         {guidance.avoid.map(item=><div className="data-card" key={item.title}><small>Timing caution</small><strong>{item.title}</strong><small>{item.detail}</small></div>)}
       </div>
     </div>
-    <div className="wide-panel"><h2 className="page-title" style={{fontSize:32}}>Choghadiya</h2><p className="page-subtitle">Eight daytime and eight nighttime periods calculated from local sunrise, sunset and the next sunrise.</p><ChoghadiyaTable day={data.dayChoghadiya} night={data.nightChoghadiya}/></div>
+    <div className="wide-panel"><h2 className="page-title" style={{fontSize:32}}>Choghadiya</h2><p className="page-subtitle">Eight daytime and eight nighttime periods for {city.name}.</p><ChoghadiyaTable day={data.dayChoghadiya} night={data.nightChoghadiya}/></div>
     <TopicalGraph title={`Explore ${city.name} Panchang`} groups={topicalGroups}/>
-    <div className="seo-copy"><h2>How to read this day's Panchang</h2><p>{dataNarrative}</p><p>India uses more than one lunar-month convention. Amanta months end at Amavasya and Purnimanta months end at Purnima; both labels above describe the same astronomical day under different month-reckoning conventions. Sunrise and sunset use the upper solar limb with atmospheric refraction at a sea-level horizon.</p><p>For personal rites that depend on an individual birth chart or tradition-specific rules, use these location-sensitive timings as the daily reference rather than as a personalized ritual decision.</p></div>
+    <div className="seo-copy"><h2>How to read this day's Panchang</h2><p>{dataNarrative}</p><p>India uses more than one lunar-month convention. Amanta months end at Amavasya and Purnimanta months end at Purnima; both labels above describe the same astronomical day under different month-reckoning conventions.</p></div>
     <div className="wide-panel"><h2>Frequently asked questions</h2>{faq.map(x=><div key={x.q} className="seo-copy"><strong>{x.q}</strong><p>{x.a}</p></div>)}</div>
+    <MethodologyNote><p>Calculation engine: {data.engine}. Sunrise and sunset use the upper solar limb with atmospheric refraction at a sea-level horizon. For personal rites that depend on an individual birth chart or tradition-specific rules, these location-sensitive timings are a daily Panchang reference rather than a personalized ritual decision.</p></MethodologyNote>
     <script type="application/ld+json" dangerouslySetInnerHTML={{__html:JSON.stringify(ld)}}/>
   </div></main>
 }
