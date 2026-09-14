@@ -18,11 +18,19 @@ export type GscDailyKvBinding={
   put(key:string,value:string):Promise<void>;
 };
 
+type GlobalWithGscKv=typeof globalThis&{__PANCHVANI_GSC_DAILY_KV__?:GscDailyKvBinding|null};
+
 let memory:{expiresAt:number;snapshot:GscDailySnapshot}|null=null;
-let runtimeBinding:GscDailyKvBinding|null=null;
+
+function currentRuntimeBinding(){
+  return (globalThis as GlobalWithGscKv).__PANCHVANI_GSC_DAILY_KV__??null;
+}
 
 export function setGscDailyKvBinding(binding:GscDailyKvBinding|null|undefined){
-  runtimeBinding=binding??null;
+  // Vinext can bundle the Worker entry and Next route graph as separate module copies.
+  // Module-local state is therefore not a safe bridge for runtime bindings. globalThis
+  // is isolate-wide and lets the API route and scheduled handler see the same KV binding.
+  (globalThis as GlobalWithGscKv).__PANCHVANI_GSC_DAILY_KV__=binding??null;
 }
 
 function namespaceId(){
@@ -31,7 +39,7 @@ function namespaceId(){
 
 export function getGscDailyStoreStatus(){
   const namespace=namespaceId();
-  if(runtimeBinding){
+  if(currentRuntimeBinding()){
     return {
       configured:true,
       mode:"binding" as const,
@@ -80,8 +88,9 @@ function validSnapshot(value:unknown):value is GscDailySnapshot{
 export async function readGscDailySnapshot(force=false):Promise<GscDailyStoreRead>{
   const now=Date.now();
   if(!force&&memory&&memory.expiresAt>now)return {snapshot:memory.snapshot,source:"MEMORY",subrequests:0};
-  if(runtimeBinding){
-    const raw=await runtimeBinding.get(STORAGE_KEY);
+  const binding=currentRuntimeBinding();
+  if(binding){
+    const raw=await binding.get(STORAGE_KEY);
     if(!raw?.trim())return {snapshot:null,source:"KV",subrequests:1};
     let parsed:unknown;
     try{parsed=JSON.parse(raw);}catch{throw new Error("Cloudflare KV daily GSC payload is not valid JSON.");}
@@ -103,8 +112,9 @@ export async function readGscDailySnapshot(force=false):Promise<GscDailyStoreRea
 }
 
 export async function writeGscDailySnapshot(snapshot:GscDailySnapshot){
-  if(runtimeBinding){
-    await runtimeBinding.put(STORAGE_KEY,JSON.stringify(snapshot));
+  const binding=currentRuntimeBinding();
+  if(binding){
+    await binding.put(STORAGE_KEY,JSON.stringify(snapshot));
     memory={snapshot,expiresAt:Date.now()+MEMORY_TTL_MS};
     return;
   }
