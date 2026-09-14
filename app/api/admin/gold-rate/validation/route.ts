@@ -1,7 +1,8 @@
 import {NextResponse} from "next/server";
 import {isAdminAuthenticated} from "@/lib/admin-auth";
-import {getGoldRatePipelineStatus,recordGoldRateValidation} from "@/lib/gold-rate-pipeline";
+import {recordGoldRateValidation} from "@/lib/gold-rate-pipeline";
 import {getGoldRateStoreStatus} from "@/lib/gold-rate-store";
+import {getGoldRateValidationLog} from "@/lib/gold-rate-validation-log";
 
 export const dynamic="force-dynamic";
 
@@ -10,8 +11,8 @@ async function authorized(){return isAdminAuthenticated();}
 export async function GET(){
   if(!(await authorized()))return NextResponse.json({error:"Unauthorized"},{status:401});
   if(!getGoldRateStoreStatus().configured)return NextResponse.json({error:"Gold Rate KV storage is not configured."},{status:503});
-  try{return NextResponse.json({state:await getGoldRatePipelineStatus()},{headers:{"Cache-Control":"no-store"}});}
-  catch(error){return NextResponse.json({error:error instanceof Error?error.message:"Unable to read Gold Rate validation status."},{status:502});}
+  try{return NextResponse.json({log:await getGoldRateValidationLog()},{headers:{"Cache-Control":"no-store"}});}
+  catch(error){return NextResponse.json({error:error instanceof Error?error.message:"Unable to read Gold Rate validation log."},{status:502});}
 }
 
 export async function POST(request:Request){

@@ -22,6 +22,7 @@ const operations=[
   ["Content","/admin/content",FileText],
   ["SEO & Indexing","/admin/seo",Search],
   ["URL Indexation","/admin/indexation",Database],
+  ["Gold Rate Readiness","/admin/gold-rate/validation-log",Activity],
   ["Deployments","/admin/deployments",Network],
   ["Monitoring","/admin/monitoring",Activity],
   ["System","/admin/system",ShieldCheck],
