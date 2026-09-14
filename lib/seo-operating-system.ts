@@ -59,7 +59,7 @@ const CANNIBALIZATION_MIN_LANDING_IMPRESSIONS=3;
 const CANNIBALIZATION_MIN_LANDING_SHARE=.15;
 const CANNIBALIZATION_HIGH_SECONDARY_SHARE=.25;
 
-function key(row:GscRow,index=0){return row.keys?.[index]??"";}
+function key(row:GscRow|undefined,index=0){return row?.keys?.[index]??"";}
 function safePct(current:number,previous:number){if(previous<=0)return current>0?100:null;return ((current-previous)/previous)*100;}
 function weightedPosition(rows:GscRow[]){const total=rows.reduce((sum,row)=>sum+(row.impressions??0),0);return total?rows.reduce((sum,row)=>sum+(row.position??0)*(row.impressions??0),0)/total:0;}
 function metric(rows:GscRow[]):SeoMetric{const impressions=rows.reduce((sum,row)=>sum+(row.impressions??0),0);const clicks=rows.reduce((sum,row)=>sum+(row.clicks??0),0);return {impressions,clicks,ctr:impressions?clicks/impressions:0,position:impressions?weightedPosition(rows):0};}
