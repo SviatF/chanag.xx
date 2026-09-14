@@ -1,5 +1,6 @@
 import type {Metadata} from "next";
 import Header from "@/components/Header";
+import MethodologyNote from "@/components/MethodologyNote";
 import {cities} from "@/lib/cities";
 import {festivalsForYear} from "@/lib/festivals";
 import {festivalCatalog,festivalIndexYears,validateFestivalYear} from "@/lib/festival-expansion";
@@ -35,13 +36,13 @@ export default async function Page({params}:{params:Promise<{year:string}>}){
     <div className="breadcrumbs"><Link href="/">Home</Link> / <Link href="/festivals">Festivals</Link> / {year}</div>
     <p className="page-kicker">PILLAR CALENDAR</p>
     <h1 className="page-title">Hindu Festivals<br/>{year}</h1>
-    <p className="page-subtitle">Annual festival hub backed by the current curated date registry. Only festival/year records actually present in the dataset are exposed as dedicated pages.</p>
+    <p className="page-subtitle">Annual Hindu festival dates for {year}, with links to festival pages and local Panchang context.</p>
     <div className="data-grid">
       <div className="data-card"><small>Catalog coverage</small><strong>{coverage.present}/{coverage.expected}</strong><small>{coverage.coveragePct}% of the canonical festival set</small></div>
       <div className="data-card"><small>Dataset validation</small><strong>{coverage.issues.length?"Review required":"Valid"}</strong><small>{coverage.issues.length?`${coverage.issues.length} structural issue(s) detected`:"ISO date and year checks passed"}</small></div>
       <div className="data-card"><small>Missing records</small><strong>{coverage.missing.length}</strong><small>{missingNames.length?missingNames.join(" · "):"None"}</small></div>
     </div>
     <div className="wide-panel"><table className="table"><thead><tr><th>Festival</th><th>Date</th></tr></thead><tbody>{festivals.map(f=><tr key={f.slug}><td><Link href={`/festivals/${f.slug}/${year}`}>{f.name}</Link></td><td>{f.date}</td></tr>)}</tbody></table></div>
-    {coverage.missing.length?<div className="seo-copy"><h2>Dataset coverage note</h2><p>This year does not yet contain every festival in Panchvani’s canonical festival catalog. Missing records are intentionally not fabricated and do not receive indexable URLs until their date entry is added and validated.</p></div>:null}
+    <MethodologyNote title="Dataset coverage"><p>This calendar is built from Panchvani's curated date registry. Dedicated festival/year pages are exposed only for records present in that dataset.{coverage.missing.length?` ${missingNames.join(" · ")} ${missingNames.length===1?"is":"are"} not fabricated and remain unpublished until a date entry is added and validated.`:" The annual catalog coverage check is complete for this year."}</p></MethodologyNote>
   </div></main>;
 }
