@@ -5,10 +5,14 @@ import {getGoldRateStoreStatus,setGoldRateKvBinding,type GoldRateKvBinding} from
 import {refreshGscDailySnapshot} from "../lib/gsc-daily-refresh";
 import {getGscDailyStoreStatus} from "../lib/gsc-daily-store";
 import {isGscDailyCron,shouldRunGscDailyAtKyivMidnight} from "../lib/kyiv-midnight-cron";
+import {servePublicWithEdgeCache} from "../lib/public-edge-cache";
 
 type ScheduledEvent={scheduledTime:number;cron?:string};
 type ExecutionContextLike={waitUntil(promise:Promise<unknown>):void};
-type WorkerEnv={GOLD_RATE_KV?:GoldRateKvBinding};
+type WorkerEnv={
+  GOLD_RATE_KV?:GoldRateKvBinding;
+  CF_VERSION_METADATA?:{id?:string};
+};
 
 const GOLD_RATE_CRON="17 * * * *";
 const SEO_AUTOPILOT_CRON="30 2 * * *";
@@ -47,7 +51,12 @@ async function runSeoScheduled(controller:ScheduledEvent){
 export default {
   fetch(request:Request,env:WorkerEnv,ctx:ExecutionContextLike){
     setGoldRateKvBinding(env?.GOLD_RATE_KV);
-    return handler.fetch(request,env,ctx);
+    return servePublicWithEdgeCache(
+      request,
+      env?.CF_VERSION_METADATA?.id,
+      ctx,
+      ()=>handler.fetch(request,env,ctx),
+    );
   },
   scheduled(controller:ScheduledEvent,env:WorkerEnv,ctx:ExecutionContextLike){
     setGoldRateKvBinding(env?.GOLD_RATE_KV);
