@@ -2,6 +2,7 @@ import type {Metadata} from "next";
 import Link from "next/link";
 import {notFound} from "next/navigation";
 import Header from "@/components/Header";
+import MethodologyNote from "@/components/MethodologyNote";
 import TopicalGraph from "@/components/TopicalGraph";
 import {findCityBySlug} from "@/lib/cities";
 import {parseRouteYear} from "@/lib/route-validation";
@@ -43,14 +44,14 @@ export default async function VratYearPage({params}:{params:Promise<{vrat:string
     <div className="breadcrumbs"><Link href="/">Home</Link> / <Link href="/vrat">Vrat & Lunar Dates</Link> / {vrat.name} / {year}</div>
     <p className="page-kicker">YEARLY LUNAR REFERENCE · INDIA BASELINE</p>
     <h1 className="page-title">{vrat.name} {year}<br/>Tithi Dates</h1>
-    <p className="page-subtitle">{vrat.hindi} · Sunrise-based reference calculated for {referenceCity.name}. Select a city below when a Tithi transition occurs close to local sunrise.</p>
+    <p className="page-subtitle">{vrat.hindi} · {referenceCity.name} sunrise observations for {year}.</p>
 
     <div className="data-grid">
       <div className="data-card"><small>Sunrise observations</small><strong>{summary.count}</strong><small>{summary.first??"—"} → {summary.last??"—"}</small></div>
       <div className="data-card"><small>Shukla Paksha</small><strong>{summary.shukla}</strong><small>Observations at sunrise</small></div>
       <div className="data-card"><small>Krishna Paksha</small><strong>{summary.krishna}</strong><small>Observations at sunrise</small></div>
       <div className="data-card"><small>Repeated at sunrise</small><strong>{summary.repeated}</strong><small>Cases where the same Tithi spans two consecutive local sunrises.</small></div>
-      <div className="data-card"><small>Reference city</small><strong>{referenceCity.name}</strong><small>{referenceCity.state} · local sunrise sensitive</small></div>
+      <div className="data-card"><small>Reference city</small><strong>{referenceCity.name}</strong><small>{referenceCity.state}</small></div>
       <div className="data-card"><small>Calculation basis</small><strong>Sun–Moon elongation</strong><small>Swiss Ephemeris · Moshier + local sunrise</small></div>
     </div>
 
@@ -64,9 +65,8 @@ export default async function VratYearPage({params}:{params:Promise<{vrat:string
       </Link>)}</div>
     </section>
 
-    <div className="seo-copy"><h2>How Panchvani calculates this list</h2><p>{vrat.methodology}</p><p>{vrat.ritualCaution}</p><p>If the same Tithi is active at two consecutive sunrises, both observations are retained instead of silently selecting one ritual day. That decision requires rules beyond the basic lunar state.</p></div>
-
     <TopicalGraph title={`Explore ${vrat.name} ${year}`} groups={buildVratTopicalGraph(referenceCity,vrat.slug,year,rows,"baseline")}/>
+    <MethodologyNote title="How Panchvani calculates this list"><p>{vrat.methodology}</p><p>{vrat.ritualCaution}</p><p>If the same Tithi is active at two consecutive sunrises, both observations are retained. Selecting a single ritual observance day can require rules beyond the basic lunar state.</p></MethodologyNote>
     <script type="application/ld+json" dangerouslySetInnerHTML={{__html:JSON.stringify(ld)}}/>
   </div></main>;
 }
