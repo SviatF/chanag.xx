@@ -1,5 +1,6 @@
 import Link from "next/link";
 import Header from "@/components/Header";
+import MethodologyNote from "@/components/MethodologyNote";
 import {cities} from "@/lib/cities";
 import {festivalsForYear} from "@/lib/festivals";
 import {getFestivalSemantics} from "@/lib/festival-conventions";
@@ -19,7 +20,7 @@ export default function FestivalsIndex(){
     <div className="breadcrumbs"><Link href="/">Home</Link> / Festivals</div>
     <p className="page-kicker">FESTIVAL DIRECTORY</p>
     <h1 className="page-title">Hindu Festivals<br/>{range}</h1>
-    <p className="page-subtitle">Browse maintained festival years, then open a festival or city page for local Tithi, sunrise and sunset, lunar-month conventions and observance-rule context. Panchvani only shows a year here after the maintained festival list for that year is complete.</p>
+    <p className="page-subtitle">Browse festival years, then open a festival or city page for local Tithi, sunrise and sunset, lunar-month conventions and observance-rule context.</p>
     {publicYears.map(year=>{const state=coverage.get(year);return <section className="wide-panel" key={year}>
       <h2 className="page-title" style={{fontSize:34}}>{year} festivals</h2>
       <p className="page-subtitle">{state?.present??0} maintained festival dates.</p>
@@ -31,5 +32,6 @@ export default function FestivalsIndex(){
       <div className="pill-links"><Link href={`/festivals-calendar/${year}`}>View full {year} festival calendar →</Link></div>
     </section>})}
     {!publicYears.length?<div className="seo-copy"><p>Festival dates are being reviewed before a full annual directory is shown.</p></div>:null}
+    <MethodologyNote title="Festival directory coverage"><p>Panchvani publishes a year in this directory after its maintained festival list passes the annual coverage checks. Festival/year pages are generated only from validated date records already present in the registry.</p></MethodologyNote>
   </div></main>;
 }
