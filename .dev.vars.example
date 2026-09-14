@@ -29,8 +29,13 @@ GOLD_RATE_DATA_URL=
 GOLD_RATE_DATA_TOKEN=
 
 # Optional dedicated KV namespace. If blank, the pipeline reuses SEO_OPPORTUNITY_KV_NAMESPACE_ID
-# with its own isolated storage key. The Cloudflare token needs Workers KV read/write permission.
+# with its own isolated storage key.
 GOLD_RATE_KV_NAMESPACE_ID=
+
+# Preferred dedicated API token for Gold Rate KV only.
+# Grant Account -> Workers KV Storage -> Edit for the Panchvani Cloudflare account.
+# If blank, code falls back to CLOUDFLARE_API_TOKEN for backward compatibility.
+GOLD_RATE_KV_API_TOKEN=
 
 # Public review can be enabled while every Gold Rate page remains noindex.
 # Leave blank to auto-enable when a pipeline store or external data URL is configured.
