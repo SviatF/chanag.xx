@@ -32,7 +32,7 @@ export default function SeoCommandCenterClient(){
   if(loading&&!payload)return <div className={styles.loading}>Завантажую SEO Command Center…</div>;
   return <>
     {error?<div className={styles.error}>{error}</div>:null}
-    <div className={styles.toolbar}><div><strong>Що робити прямо зараз</strong><div className={styles.note}>Один shared GSC payload · 7d + 28d · локальні scoring/trends/cannibalization · без polling</div></div><button className={styles.refresh} onClick={()=>void load(true)} disabled={loading}><RefreshCw size={14}/> {loading?"Оновлюю…":"Оновити вручну"}</button></div>
+    <div className={styles.toolbar}><div><strong>Що робити прямо зараз</strong><div className={styles.note}>Daily GSC snapshot · 7d + 28d · 0 GSC API calls при відкритті · локальні scoring/trends/cannibalization · без polling</div></div><button className={styles.refresh} title="Перечитує збережений snapshot із KV; Google Search Console API не викликається." onClick={()=>void load(true)} disabled={loading}><RefreshCw size={14}/> {loading?"Оновлюю…":"Перечитати snapshot"}</button></div>
 
     <section className={styles.summaryGrid}>{actionOrder.map(action=><div className={styles.summaryCard} key={action}><small>{actionLabel(action)}</small><strong>{counts[action]}</strong></div>)}</section>
 

@@ -1,4 +1,4 @@
-import {ADMIN_PROVIDER_TTL_MS,cachedCoalesced} from "./worker-data-cache";
+import {readGscDailySnapshot} from "./gsc-daily-store";
 
 export type GscRow={keys?:string[];clicks:number;impressions:number;ctr:number;position:number;};
 export type GscSummary={clicks:number;impressions:number;ctr:number;position:number;};
@@ -52,9 +52,6 @@ async function query(token:string,siteUrl:string,payload:{startDate:string;endDa
   if(!response.ok){const text=await response.text();throw new Error(`Search Console API failed (${response.status}): ${text.slice(0,240)}`);}return await response.json() as {rows?:GscRow[]};
 }
 
-function summary(rows:GscRow[]|undefined):GscSummary{const row=rows?.[0];return row?{clicks:row.clicks??0,impressions:row.impressions??0,ctr:row.ctr??0,position:row.position??0}:{clicks:0,impressions:0,ctr:0,position:0};}
-function aggregateSummary(rows:GscRow[]):GscSummary{const clicks=rows.reduce((s,r)=>s+(r.clicks??0),0),impressions=rows.reduce((s,r)=>s+(r.impressions??0),0),weighted=rows.reduce((s,r)=>s+(r.position??0)*(r.impressions??0),0);return {clicks,impressions,ctr:impressions?clicks/impressions:0,position:impressions?weighted/impressions:0};}
-function aggregateRows(rows:GscRow[],indexes:number[]):GscRow[]{const map=new Map<string,{keys:string[];clicks:number;impressions:number;weighted:number}>();for(const row of rows){const keys=indexes.map(i=>row.keys?.[i]??"");if(keys.some(v=>!v))continue;const id=JSON.stringify(keys),a=map.get(id)??{keys,clicks:0,impressions:0,weighted:0};a.clicks+=row.clicks??0;a.impressions+=row.impressions??0;a.weighted+=(row.position??0)*(row.impressions??0);map.set(id,a);}return [...map.values()].map(a=>({keys:a.keys,clicks:a.clicks,impressions:a.impressions,ctr:a.impressions?a.clicks/a.impressions:0,position:a.impressions?a.weighted/a.impressions:0}));}
 function aggregateOutcomeWindow(startDate:string,endDate:string,rows:GscRow[]|undefined):GscOutcomeWindow{const items=rows??[];const clicks=items.reduce((sum,row)=>sum+(row.clicks??0),0);const impressions=items.reduce((sum,row)=>sum+(row.impressions??0),0);const weightedPosition=items.reduce((sum,row)=>sum+(row.position??0)*(row.impressions??0),0);const top=items.slice().sort((a,b)=>(b.impressions??0)-(a.impressions??0)||(b.clicks??0)-(a.clicks??0))[0];return {startDate,endDate,clicks,impressions,ctr:impressions?clicks/impressions:0,position:impressions?weightedPosition/impressions:0,topLanding:top?.keys?.[1]??null};}
 
 export function gscCheckpointWindow(shippedAt:string,days:14|28|56){const shipped=new Date(`${shippedAt.slice(0,10)}T00:00:00Z`);if(Number.isNaN(shipped.getTime()))throw new Error("Invalid shippedAt date for GSC checkpoint.");const preEnd=shift(shipped,-1),preStart=shift(shipped,-days),postStart=new Date(shipped),postEnd=shift(shipped,days-1);return {preStart:iso(preStart),preEnd:iso(preEnd),postStart:iso(postStart),postEnd:iso(postEnd)};}
@@ -62,25 +59,16 @@ export function isGscCheckpointReady(shippedAt:string,days:14|28|56,asOf=new Dat
 
 export async function getGscOutcomeComparisons(requests:GscOutcomeRequest[]):Promise<Record<string,GscOutcomeComparison>>{
   if(!requests.length)return {};const status=getGscConnectionStatus();if(!status.configured)throw new Error("Google Search Console service account is not configured.");const token=await accessToken();const output:Record<string,GscOutcomeComparison>={};
-  // Deliberately sequential: outcome checks are scheduled/manual work and must not
-  // fan out 2×N simultaneous upstream requests.
+  // Outcome checks remain deliberate scheduled/manual work and never run as part of admin page rendering.
   for(const request of requests){const window=gscCheckpointWindow(request.shippedAt,request.days),filters:SearchAnalyticsFilter[]=[{dimension:"query",operator:"equals",expression:request.query}];const preRaw=await query(token,status.siteUrl,{startDate:window.preStart,endDate:window.preEnd,dimensions:["query","page"],rowLimit:5000,filters});const postRaw=await query(token,status.siteUrl,{startDate:window.postStart,endDate:window.postEnd,dimensions:["query","page"],rowLimit:5000,filters});output[`${request.key}:${request.days}`]={query:request.query,pre:aggregateOutcomeWindow(window.preStart,window.preEnd,preRaw.rows),post:aggregateOutcomeWindow(window.postStart,window.postEnd,postRaw.rows)};}
   return output;
 }
 
-async function buildGscTrafficSnapshot():Promise<GscTrafficSnapshot>{
-  const status=getGscConnectionStatus();if(!status.configured)throw new Error("Google Search Console service account is not configured.");
-  const today=new Date(),end=shift(today,-2),start=shift(end,-27),previousEnd=shift(start,-1),previousStart=shift(previousEnd,-27),startDate=iso(start),endDate=iso(end),previousStartDate=iso(previousStart),previousEndDate=iso(previousEnd),token=await accessToken();
-  // One detailed current-period call derives pages, queries, query/page and daily
-  // locally; one compact call supplies the previous-period baseline.
-  const detailed=await query(token,status.siteUrl,{startDate,endDate,dimensions:["date","query","page"],rowLimit:25000});
-  const previousRaw=await query(token,status.siteUrl,{startDate:previousStartDate,endDate:previousEndDate,rowLimit:1});
-  const raw=detailed.rows??[];
-  const queryPages=aggregateRows(raw,[1,2]);
-  return {siteUrl:status.siteUrl,startDate,endDate,previousStartDate,previousEndDate,current:aggregateSummary(raw),previous:summary(previousRaw.rows),pages:aggregateRows(raw,[2]).sort((a,b)=>b.impressions-a.impressions),queries:aggregateRows(queryPages,[0]).sort((a,b)=>b.impressions-a.impressions),queryPages,daily:aggregateRows(raw,[0]).sort((a,b)=>(a.keys?.[0]??"").localeCompare(b.keys?.[0]??""))};
+export async function getGscTrafficSnapshot():Promise<GscTrafficSnapshot>{
+  const stored=await readGscDailySnapshot();
+  if(!stored.snapshot)throw new Error("Daily GSC snapshot is not available yet. It will populate after the scheduled refresh.");
+  return stored.snapshot.traffic;
 }
-
-export async function getGscTrafficSnapshot():Promise<GscTrafficSnapshot>{return (await cachedCoalesced("gsc:traffic:28d:v3",ADMIN_PROVIDER_TTL_MS.gsc,buildGscTrafficSnapshot)).value;}
 
 type RawIndexStatus={verdict?:string;coverageState?:string;robotsTxtState?:string;indexingState?:string;lastCrawlTime?:string;pageFetchState?:string;googleCanonical?:string;userCanonical?:string;crawledAs?:string;sitemap?:string[];referringUrls?:string[];};
 type RawInspectionResponse={inspectionResult?:{indexStatusResult?:RawIndexStatus}};
