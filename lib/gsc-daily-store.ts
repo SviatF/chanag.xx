@@ -7,7 +7,13 @@ const MEMORY_TTL_MS=60*60*1000;
 export type GscDailySnapshot={
   version:1;
   refreshedAt:string;
+  // Latest day Google currently reports as final. This may be earlier than the
+  // requested range when the fresh-data API marks recent rows as incomplete.
   finalDataThrough:string;
+  // Latest completed Europe/Kyiv calendar day requested from GSC.
+  requestedDataThrough?:string;
+  // First date Google marks as incomplete when dataState="all" is used.
+  firstIncompleteDate?:string|null;
   dataset:GscSeoOsDataset;
   traffic:GscTrafficSnapshot;
 };
