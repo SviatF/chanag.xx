@@ -2,7 +2,7 @@
 
 import {useEffect,useMemo,useState} from "react";
 import {RefreshCw} from "lucide-react";
-import {loadSeoOperatingData,patchSeoTask,type SeoOsClientPayload} from "@/lib/admin-seo-data-client";
+import {clearSeoOperatingCache,loadSeoOperatingData,patchSeoTask,type SeoOsClientPayload} from "@/lib/admin-seo-data-client";
 import {actionLabel,buildPageOpportunities,evaluateTask,type PageOpportunity,type SeoCommandAction,type SeoMetric} from "@/lib/seo-operating-system";
 import type {SeoCommandTask,SeoTaskResult} from "@/lib/seo-task-store";
 import styles from "./SeoOperatingSystem.module.css";
@@ -15,7 +15,7 @@ function baselineFor(page:PageOpportunity){return page.current7.impressions?page
 function currentMetricForTask(task:SeoCommandTask,pages:PageOpportunity[]):SeoMetric|null{const row=pages.find(page=>page.url===task.url);return row?.current7??null;}
 
 export default function SeoCommandCenterClient(){
-  const [payload,setPayload]=useState<SeoOsClientPayload|null>(null);const [error,setError]=useState<string|null>(null);const [loading,setLoading]=useState(true);const [selected,setSelected]=useState<PageOpportunity|null>(null);const [note,setNote]=useState("");const [commitSha,setCommitSha]=useState("");const [saving,setSaving]=useState(false);
+  const [payload,setPayload]=useState<SeoOsClientPayload|null>(null);const [error,setError]=useState<string|null>(null);const [loading,setLoading]=useState(true);const [selected,setSelected]=useState<PageOpportunity|null>(null);const [note,setNote]=useState("");const [commitSha,setCommitSha]=useState("");const [saving,setSaving]=useState(false);const [refreshingGsc,setRefreshingGsc]=useState(false);
   async function load(force=false){setLoading(true);setError(null);try{setPayload(await loadSeoOperatingData(force));}catch(err){setError(err instanceof Error?err.message:"Unable to load SEO data.");}finally{setLoading(false);}}
   useEffect(()=>{void load(false);},[]);
   const pages=useMemo(()=>payload?buildPageOpportunities(payload.dataset,payload.tasks):[],[payload]);
@@ -28,11 +28,23 @@ export default function SeoCommandCenterClient(){
   async function confirmObservation(){if(!selected||saving)return;setSaving(true);setError(null);try{await postTask({action:"observe",url:selected.url,query:selected.topQuery,actionType:selected.action,recommendation:selected.concreteAction,baseline:baselineFor(selected),reviewerNote:note,commitSha});setSelected(null);setNote("");setCommitSha("");}catch(err){setError(err instanceof Error?err.message:"Unable to start observation.");}finally{setSaving(false);}}
   async function closeTask(task:SeoCommandTask,result:SeoTaskResult){if(saving)return;setSaving(true);try{await postTask({action:"close",id:task.id,result});}catch(err){setError(err instanceof Error?err.message:"Unable to close task.");}finally{setSaving(false);}}
   async function restoreTask(task:SeoCommandTask){if(saving)return;setSaving(true);try{await postTask({action:"restore",id:task.id});}catch(err){setError(err instanceof Error?err.message:"Unable to restore task.");}finally{setSaving(false);}}
+  async function refreshGscNow(){
+    if(refreshingGsc)return;
+    setRefreshingGsc(true);setError(null);
+    try{
+      const response=await fetch("/api/admin/gsc-refresh",{method:"POST",cache:"no-store"});
+      const json=await response.json() as {error?:string};
+      if(!response.ok)throw new Error(json.error??`GSC refresh failed (${response.status})`);
+      clearSeoOperatingCache();
+      await load(true);
+    }catch(err){setError(err instanceof Error?err.message:"Unable to refresh GSC snapshot.");}
+    finally{setRefreshingGsc(false);}
+  }
 
   if(loading&&!payload)return <div className={styles.loading}>Завантажую SEO Command Center…</div>;
   return <>
     {error?<div className={styles.error}>{error}</div>:null}
-    <div className={styles.toolbar}><div><strong>Що робити прямо зараз</strong><div className={styles.note}>Daily GSC snapshot · 7d + 28d · 0 GSC API calls при відкритті · локальні scoring/trends/cannibalization · без polling</div></div><button className={styles.refresh} title="Перечитує збережений snapshot із KV; Google Search Console API не викликається." onClick={()=>void load(true)} disabled={loading}><RefreshCw size={14}/> {loading?"Оновлюю…":"Перечитати snapshot"}</button></div>
+    <div className={styles.toolbar}><div><strong>Що робити прямо зараз</strong><div className={styles.note}>Daily GSC snapshot · 7d + 28d · 0 GSC API calls при відкритті · локальні scoring/trends/cannibalization · без polling · scheduled refresh 00:00 Europe/Kyiv</div></div><div style={{display:"flex",gap:8,flexWrap:"wrap"}}><button className={styles.actionButton} title="Разово викликає production GSC refresh і перезаписує daily snapshot. Подальші оновлення залишаються за розкладом 00:00 Europe/Kyiv." onClick={()=>void refreshGscNow()} disabled={refreshingGsc||loading}><RefreshCw size={14}/> {refreshingGsc?"Стягую GSC…":"Оновити GSC зараз"}</button><button className={styles.refresh} title="Перечитує збережений snapshot із KV; Google Search Console API не викликається." onClick={()=>void load(true)} disabled={loading||refreshingGsc}><RefreshCw size={14}/> {loading?"Оновлюю…":"Перечитати snapshot"}</button></div></div>
 
     <section className={styles.summaryGrid}>{actionOrder.map(action=><div className={styles.summaryCard} key={action}><small>{actionLabel(action)}</small><strong>{counts[action]}</strong></div>)}</section>
 
