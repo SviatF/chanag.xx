@@ -55,4 +55,16 @@ describe("Gold Rate free-stack pipeline",()=>{
     expect(chennaiPremium).toBeLessThan(0.01);
     expect(Math.max(...Object.values(goldRatePipelineDefaults.cityPremiums))).toBeLessThan(0.01);
   });
+
+  it("keeps the last known valid rate visible when a later live refresh fails",()=>{
+    const value=state();
+    value.lastAttemptAt="2026-09-13T13:00:00.000Z";
+    value.lastSuccessAt="2026-09-13T12:00:00.000Z";
+    value.lastError="Both spot sources failed in staging test";
+    const dataset=buildGoldRatePublicDataset(value,new Date("2026-09-13T13:05:00Z"));
+    expect(dataset).not.toBeNull();
+    expect(dataset!.status?.mode).toBe("last-known");
+    expect(dataset!.status?.message).toContain("showing last known rate");
+    expect(dataset!.national.rates["24k"]).toBeGreaterThan(0);
+  });
 });
