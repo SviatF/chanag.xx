@@ -36,7 +36,15 @@ GOLD_RATE_KV_NAMESPACE_ID=
 # Leave blank to auto-enable when a pipeline store or external data URL is configured.
 GOLD_RATE_PUBLIC_ENABLED=
 
-# Indexing remains OFF until the manual IBJA validation protocol passes AND demand cities are approved.
+# FINAL GOLD RATE INDEXING GATE — do not switch to true until ALL are confirmed:
+# [ ] >=14 continuous production days accumulated
+# [ ] average IBJA deviation <=2%
+# [ ] no validation day >5% deviation
+# [ ] GOLD_RATE_INDEX_CITIES contains only cities approved via config/gold-rate-city-approvals.json
+# [ ] sitemap-goldrate.xml manually checked after enabling and contains approved URLs only
+# [ ] 3-5 random city pages manually QA'd (H1, direct answer, trend, methodology, bottom disclaimer)
+# [ ] sitemap will be submitted separately in GSC and weekly monitoring starts immediately
+# Full runbook: docs/gold-rate-indexing-readiness.md
 GOLD_RATE_INDEXING_ENABLED=false
 GOLD_RATE_MIN_VALIDATION_DAYS=14
 GOLD_RATE_MIN_VALIDATION_OBSERVATIONS=10
@@ -51,7 +59,7 @@ GOLD_RATE_GST_RATE=0.03
 # Example: GOLD_RATE_CITY_PREMIUMS_JSON={"mumbai":0,"chennai":0.005}
 GOLD_RATE_CITY_PREMIUMS_JSON=
 
-# Demand-approved launch cities only. Maximum 50. Do not populate from population alone;
-# approve these after Google Trends / GSC demand review.
-# Example: GOLD_RATE_INDEX_CITIES=mumbai,delhi,bengaluru,hyderabad,chennai,kolkata,pune,ahmedabad
+# Demand-approved launch cities only. Maximum 50. Do not populate from population alone.
+# Use scripts/approve-gold-rate-cities.mjs after a manual Google Trends demand review,
+# then copy the exact GOLD_RATE_INDEX_CITIES=... line printed by the script.
 GOLD_RATE_INDEX_CITIES=
