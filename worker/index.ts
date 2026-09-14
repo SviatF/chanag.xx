@@ -3,7 +3,7 @@ import {runSeoAutopilot} from "../lib/seo-autopilot";
 import {runGoldRatePipeline} from "../lib/gold-rate-pipeline";
 import {getGoldRateStoreStatus,setGoldRateKvBinding,type GoldRateKvBinding} from "../lib/gold-rate-store";
 import {refreshGscDailySnapshot} from "../lib/gsc-daily-refresh";
-import {getGscDailyStoreStatus} from "../lib/gsc-daily-store";
+import {getGscDailyStoreStatus,setGscDailyKvBinding,type GscDailyKvBinding} from "../lib/gsc-daily-store";
 import {isGscDailyCron,shouldRunGscDailyAtKyivMidnight} from "../lib/kyiv-midnight-cron";
 import {servePublicWithEdgeCache} from "../lib/public-edge-cache";
 
@@ -11,11 +11,19 @@ type ScheduledEvent={scheduledTime:number;cron?:string};
 type ExecutionContextLike={waitUntil(promise:Promise<unknown>):void};
 type WorkerEnv={
   GOLD_RATE_KV?:GoldRateKvBinding;
+  GSC_SNAPSHOT_KV?:GscDailyKvBinding;
   CF_VERSION_METADATA?:{id?:string};
 };
 
 const GOLD_RATE_CRON="17 * * * *";
 const SEO_AUTOPILOT_CRON="30 2 * * *";
+
+function bindRuntimeStorage(env:WorkerEnv){
+  setGoldRateKvBinding(env?.GOLD_RATE_KV);
+  // Reuse the already-connected Panchvani KV namespace until a dedicated
+  // GSC_SNAPSHOT_KV binding is added. Distinct storage keys keep datasets isolated.
+  setGscDailyKvBinding(env?.GSC_SNAPSHOT_KV??env?.GOLD_RATE_KV);
+}
 
 async function runGoldRateScheduled(controller:ScheduledEvent){
   if(!getGoldRateStoreStatus().configured){
@@ -50,7 +58,7 @@ async function runSeoScheduled(controller:ScheduledEvent){
 
 export default {
   fetch(request:Request,env:WorkerEnv,ctx:ExecutionContextLike){
-    setGoldRateKvBinding(env?.GOLD_RATE_KV);
+    bindRuntimeStorage(env);
     return servePublicWithEdgeCache(
       request,
       env?.CF_VERSION_METADATA?.id,
@@ -59,7 +67,7 @@ export default {
     );
   },
   scheduled(controller:ScheduledEvent,env:WorkerEnv,ctx:ExecutionContextLike){
-    setGoldRateKvBinding(env?.GOLD_RATE_KV);
+    bindRuntimeStorage(env);
     const cron=controller.cron??"";
     const gscDailyCron=isGscDailyCron(cron);
     let run:Promise<unknown>;
