@@ -1,5 +1,16 @@
 const STORAGE_KEY="panchvani:gold-rate:pipeline:v1";
 
+export type GoldRateKvBinding={
+  get(key:string):Promise<string|null>;
+  put(key:string,value:string):Promise<void>;
+};
+
+let runtimeBinding:GoldRateKvBinding|null=null;
+
+export function setGoldRateKvBinding(binding:GoldRateKvBinding|null|undefined){
+  runtimeBinding=binding??null;
+}
+
 function namespaceId(){
   return process.env.GOLD_RATE_KV_NAMESPACE_ID??process.env.SEO_OPPORTUNITY_KV_NAMESPACE_ID??null;
 }
@@ -11,6 +22,19 @@ function apiToken(){
 export function getGoldRateStoreStatus(){
   const namespace=namespaceId();
   const token=apiToken();
+  if(runtimeBinding){
+    return {
+      configured:true,
+      mode:"binding" as const,
+      required:{GOLD_RATE_KV_BINDING:true},
+      missing:[] as string[],
+      namespaceId:namespace,
+      storageKey:STORAGE_KEY,
+      usingDedicatedToken:false,
+      usingSharedSeoNamespace:false,
+      usingNativeBinding:true,
+    };
+  }
   const required={
     CLOUDFLARE_ACCOUNT_ID:Boolean(process.env.CLOUDFLARE_ACCOUNT_ID),
     GOLD_RATE_KV_API_TOKEN:Boolean(token),
@@ -19,12 +43,14 @@ export function getGoldRateStoreStatus(){
   const missing=Object.entries(required).filter(([,configured])=>!configured).map(([name])=>name);
   return {
     configured:Object.values(required).every(Boolean),
+    mode:"rest" as const,
     required,
     missing,
     namespaceId:namespace,
     storageKey:STORAGE_KEY,
     usingDedicatedToken:Boolean(process.env.GOLD_RATE_KV_API_TOKEN),
     usingSharedSeoNamespace:!process.env.GOLD_RATE_KV_NAMESPACE_ID&&Boolean(process.env.SEO_OPPORTUNITY_KV_NAMESPACE_ID),
+    usingNativeBinding:false,
   };
 }
 
@@ -45,6 +71,12 @@ function headers(contentType=false){
 }
 
 export async function readGoldRatePipelineState<T=unknown>():Promise<T|null>{
+  if(runtimeBinding){
+    const raw=await runtimeBinding.get(STORAGE_KEY);
+    if(!raw?.trim())return null;
+    try{return JSON.parse(raw) as T;}
+    catch{throw new Error("Cloudflare KV gold-rate payload is not valid JSON.");}
+  }
   if(!getGoldRateStoreStatus().configured)return null;
   const response=await fetch(endpoint(),{headers:headers(),cache:"no-store"});
   if(response.status===404)return null;
@@ -59,6 +91,10 @@ export async function readGoldRatePipelineState<T=unknown>():Promise<T|null>{
 }
 
 export async function writeGoldRatePipelineState(value:unknown){
+  if(runtimeBinding){
+    await runtimeBinding.put(STORAGE_KEY,JSON.stringify(value));
+    return;
+  }
   if(!getGoldRateStoreStatus().configured)throw new Error("Gold Rate KV storage is not configured.");
   const response=await fetch(endpoint(),{
     method:"PUT",

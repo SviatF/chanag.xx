@@ -24,17 +24,14 @@ SEO_OPPORTUNITY_KV_NAMESPACE_ID=
 
 # Gold Rate free-stack pipeline.
 # The native pipeline uses gold-api.com for XAU/USD, a documented fallback spot endpoint,
-# and Frankfurter/ECB for USD/INR. GOLD_RATE_DATA_URL is now only an optional external override.
+# and Frankfurter/ECB for USD/INR. GOLD_RATE_DATA_URL is only an optional external override.
 GOLD_RATE_DATA_URL=
 GOLD_RATE_DATA_TOKEN=
 
-# Optional dedicated KV namespace. If blank, the pipeline reuses SEO_OPPORTUNITY_KV_NAMESPACE_ID
-# with its own isolated storage key.
+# PRODUCTION PREFERRED: bind the Cloudflare KV namespace directly to the Worker with binding name GOLD_RATE_KV.
+# Native Worker bindings avoid REST credentials and extra Cloudflare API subrequests.
+# The variables below are only the backward-compatible REST fallback for local/external access.
 GOLD_RATE_KV_NAMESPACE_ID=
-
-# Preferred dedicated API token for Gold Rate KV only.
-# Grant Account -> Workers KV Storage -> Edit for the Panchvani Cloudflare account.
-# If blank, code falls back to CLOUDFLARE_API_TOKEN for backward compatibility.
 GOLD_RATE_KV_API_TOKEN=
 
 # Public review can be enabled while every Gold Rate page remains noindex.

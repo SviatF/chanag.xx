@@ -1,12 +1,13 @@
 import handler from "vinext/server/fetch-handler";
 import {runSeoAutopilot} from "../lib/seo-autopilot";
 import {runGoldRatePipeline} from "../lib/gold-rate-pipeline";
-import {getGoldRateStoreStatus} from "../lib/gold-rate-store";
+import {getGoldRateStoreStatus,setGoldRateKvBinding,type GoldRateKvBinding} from "../lib/gold-rate-store";
 import {refreshGscDailySnapshot} from "../lib/gsc-daily-refresh";
 import {getGscDailyStoreStatus} from "../lib/gsc-daily-store";
 
 type ScheduledEvent={scheduledTime:number;cron?:string};
 type ExecutionContextLike={waitUntil(promise:Promise<unknown>):void};
+type WorkerEnv={GOLD_RATE_KV?:GoldRateKvBinding};
 
 const GOLD_RATE_CRON="17 * * * *";
 const GSC_DAILY_CRON="5 0 * * *";
@@ -43,8 +44,12 @@ async function runSeoScheduled(controller:ScheduledEvent){
 }
 
 export default {
-  fetch:handler.fetch,
-  scheduled(controller:ScheduledEvent,_env:unknown,ctx:ExecutionContextLike){
+  fetch(request:Request,env:WorkerEnv,ctx:ExecutionContextLike){
+    setGoldRateKvBinding(env?.GOLD_RATE_KV);
+    return handler.fetch(request,env,ctx);
+  },
+  scheduled(controller:ScheduledEvent,env:WorkerEnv,ctx:ExecutionContextLike){
+    setGoldRateKvBinding(env?.GOLD_RATE_KV);
     const cron=controller.cron??"";
     const run=cron===GOLD_RATE_CRON?runGoldRateScheduled(controller):cron===GSC_DAILY_CRON?runGscDailyScheduled(controller):cron===SEO_AUTOPILOT_CRON?runSeoScheduled(controller):Promise.resolve();
     ctx.waitUntil(run.catch(error=>{
