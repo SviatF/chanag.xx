@@ -57,8 +57,9 @@ describe("People-first public SEO integrity",()=>{
   it("does not claim date-only Nakshatra tools provide an exact birth result",()=>{
     const hub=readFileSync("app/tools/hindu-baby-names/page.tsx","utf8");
     const child=readFileSync("app/tools/hindu-baby-names/[nakshatra]/page.tsx","utf8");
-    expect(hub).toContain("exact birth-time chart");
-    expect(child).toContain("date-only Nakshatra Finder is an estimate");
+    expect(hub).toContain("Exact Janma Nakshatra and Pada require birth time and birthplace.");
+    expect(child).toContain("exact Nakshatra and Pada come from the Moon's position at birth");
+    expect(child).toContain("exact natal calculation requires birth time and birthplace");
   });
 
   it("recognizes the generic baby-names hub as an existing landing page",()=>{
