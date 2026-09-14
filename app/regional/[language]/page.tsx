@@ -2,6 +2,7 @@ import type {Metadata} from "next";
 import Link from "next/link";
 import {notFound} from "next/navigation";
 import Header from "@/components/Header";
+import MethodologyNote from "@/components/MethodologyNote";
 import {cities} from "@/lib/cities";
 import {nativeCityName} from "@/lib/regional-i18n";
 import {regionalPureLocale} from "@/lib/regional-pure-copy";
@@ -55,8 +56,8 @@ export default async function RegionalLanguageHub({params}:{params:Promise<{lang
       })}</div>
     </section>:<section className="wide-panel"><div className="seo-copy"><h2>{copy.noCoverageTitle}</h2><p>{copy.noCoverageText}</p></div></section>}
 
-    <div className="seo-copy"><h2>{copy.methodologyTitle}</h2><p>{copy.methodologyText}</p></div>
     <div className="pill-links"><Link href="/regional">{copy.allLanguages}</Link></div>
+    <MethodologyNote title={copy.methodologyTitle} lang={copy.hreflang}><p>{copy.methodologyText}</p></MethodologyNote>
     <script type="application/ld+json" dangerouslySetInnerHTML={{__html:JSON.stringify(ld)}}/>
   </div></main>;
 }
