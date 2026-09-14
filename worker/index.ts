@@ -4,13 +4,13 @@ import {runGoldRatePipeline} from "../lib/gold-rate-pipeline";
 import {getGoldRateStoreStatus,setGoldRateKvBinding,type GoldRateKvBinding} from "../lib/gold-rate-store";
 import {refreshGscDailySnapshot} from "../lib/gsc-daily-refresh";
 import {getGscDailyStoreStatus} from "../lib/gsc-daily-store";
+import {isGscDailyCron,shouldRunGscDailyAtKyivMidnight} from "../lib/kyiv-midnight-cron";
 
 type ScheduledEvent={scheduledTime:number;cron?:string};
 type ExecutionContextLike={waitUntil(promise:Promise<unknown>):void};
 type WorkerEnv={GOLD_RATE_KV?:GoldRateKvBinding};
 
 const GOLD_RATE_CRON="17 * * * *";
-const GSC_DAILY_CRON="5 0 * * *";
 const SEO_AUTOPILOT_CRON="30 2 * * *";
 
 async function runGoldRateScheduled(controller:ScheduledEvent){
@@ -35,6 +35,7 @@ async function runGscDailyScheduled(controller:ScheduledEvent){
     apiCalls:result.apiCalls,
     upstreamSubrequests:result.upstreamSubrequests,
     cron:controller.cron??null,
+    localSchedule:"00:00 Europe/Kyiv",
   }));
 }
 
@@ -51,9 +52,26 @@ export default {
   scheduled(controller:ScheduledEvent,env:WorkerEnv,ctx:ExecutionContextLike){
     setGoldRateKvBinding(env?.GOLD_RATE_KV);
     const cron=controller.cron??"";
-    const run=cron===GOLD_RATE_CRON?runGoldRateScheduled(controller):cron===GSC_DAILY_CRON?runGscDailyScheduled(controller):cron===SEO_AUTOPILOT_CRON?runSeoScheduled(controller):Promise.resolve();
+    const gscDailyCron=isGscDailyCron(cron);
+    let run:Promise<unknown>;
+
+    if(cron===GOLD_RATE_CRON){
+      run=runGoldRateScheduled(controller);
+    }else if(gscDailyCron){
+      if(shouldRunGscDailyAtKyivMidnight(cron,controller.scheduledTime)){
+        run=runGscDailyScheduled(controller);
+      }else{
+        console.log("GSC_DAILY_SNAPSHOT_SKIPPED",JSON.stringify({reason:"candidate UTC trigger is not 00:00 in Europe/Kyiv",cron,scheduledTime:new Date(controller.scheduledTime).toISOString()}));
+        run=Promise.resolve();
+      }
+    }else if(cron===SEO_AUTOPILOT_CRON){
+      run=runSeoScheduled(controller);
+    }else{
+      run=Promise.resolve();
+    }
+
     ctx.waitUntil(run.catch(error=>{
-      const prefix=cron===GOLD_RATE_CRON?"GOLD_RATE_PIPELINE_FAILED":cron===GSC_DAILY_CRON?"GSC_DAILY_SNAPSHOT_FAILED":"SEO_AUTOPILOT_FAILED";
+      const prefix=cron===GOLD_RATE_CRON?"GOLD_RATE_PIPELINE_FAILED":gscDailyCron?"GSC_DAILY_SNAPSHOT_FAILED":"SEO_AUTOPILOT_FAILED";
       console.error(prefix,error instanceof Error?error.message:String(error));
       throw error;
     }));
