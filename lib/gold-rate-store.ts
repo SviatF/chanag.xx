@@ -4,18 +4,26 @@ function namespaceId(){
   return process.env.GOLD_RATE_KV_NAMESPACE_ID??process.env.SEO_OPPORTUNITY_KV_NAMESPACE_ID??null;
 }
 
+function apiToken(){
+  return process.env.GOLD_RATE_KV_API_TOKEN??process.env.CLOUDFLARE_API_TOKEN??null;
+}
+
 export function getGoldRateStoreStatus(){
   const namespace=namespaceId();
+  const token=apiToken();
   const required={
     CLOUDFLARE_ACCOUNT_ID:Boolean(process.env.CLOUDFLARE_ACCOUNT_ID),
-    CLOUDFLARE_API_TOKEN:Boolean(process.env.CLOUDFLARE_API_TOKEN),
+    GOLD_RATE_KV_API_TOKEN:Boolean(token),
     GOLD_RATE_KV_NAMESPACE_ID:Boolean(namespace),
   };
+  const missing=Object.entries(required).filter(([,configured])=>!configured).map(([name])=>name);
   return {
     configured:Object.values(required).every(Boolean),
     required,
+    missing,
     namespaceId:namespace,
     storageKey:STORAGE_KEY,
+    usingDedicatedToken:Boolean(process.env.GOLD_RATE_KV_API_TOKEN),
     usingSharedSeoNamespace:!process.env.GOLD_RATE_KV_NAMESPACE_ID&&Boolean(process.env.SEO_OPPORTUNITY_KV_NAMESPACE_ID),
   };
 }
@@ -28,8 +36,8 @@ function endpoint(){
 }
 
 function headers(contentType=false){
-  const token=process.env.CLOUDFLARE_API_TOKEN;
-  if(!token)throw new Error("CLOUDFLARE_API_TOKEN is not configured.");
+  const token=apiToken();
+  if(!token)throw new Error("GOLD_RATE_KV_API_TOKEN (or fallback CLOUDFLARE_API_TOKEN) is not configured.");
   return {
     authorization:`Bearer ${token}`,
     ...(contentType?{"content-type":"application/json"}:{}),

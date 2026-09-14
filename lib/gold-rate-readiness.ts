@@ -54,7 +54,9 @@ export async function getGoldRateIndexingReadiness(now=new Date(),probeDataUrl=t
     kv:{
       configured:log.store.configured,
       usingSharedSeoNamespace:log.store.usingSharedSeoNamespace,
+      usingDedicatedToken:log.store.usingDedicatedToken,
       namespaceConfigured:Boolean(log.store.namespaceId),
+      missing:log.store.missing,
     },
     cronEvidence:{
       recentRunsObserved,
