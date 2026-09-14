@@ -38,6 +38,7 @@ describe("Cloudflare SEO/Admin runtime architecture",()=>{
     expect(source).not.toContain("MutationObserver");
     const wrangler=readFileSync("wrangler.jsonc","utf8");
     expect(wrangler).toContain('"run_worker_first": ["/api/*"]');
+    expect(wrangler).toContain('"binding": "GOLD_RATE_KV"');
     expect(wrangler).toContain('"cpu_ms": 500');
     expect(wrangler).toContain('"subrequests": 30');
     expect(wrangler).toContain('"0 21 * * *"');
@@ -45,10 +46,13 @@ describe("Cloudflare SEO/Admin runtime architecture",()=>{
     expect(wrangler).not.toContain('"5 0 * * *"');
   });
 
-  it("keeps admin GSC reads snapshot-only",()=>{
+  it("keeps admin GSC reads snapshot-only and resolves bindings inside Vinext routes",()=>{
     const seo=readFileSync("lib/gsc-seo-os.ts","utf8");
     const gsc=readFileSync("lib/gsc.ts","utf8");
     const gscStore=readFileSync("lib/gsc-daily-store.ts","utf8");
+    const cfBindings=readFileSync("lib/cloudflare-bindings.ts","utf8");
+    const refreshRoute=readFileSync("app/api/admin/gsc-refresh/route.ts","utf8");
+    const seoRoute=readFileSync("app/api/admin/seo-data/route.ts","utf8");
     const worker=readFileSync("worker/index.ts","utf8");
     const kyivCron=readFileSync("lib/kyiv-midnight-cron.ts","utf8");
     expect(seo).toContain("readGscDailySnapshot");
@@ -56,10 +60,11 @@ describe("Cloudflare SEO/Admin runtime architecture",()=>{
     expect(gsc).toContain("stored.snapshot.traffic");
     expect(worker).toContain("shouldRunGscDailyAtKyivMidnight");
     expect(worker).toContain("refreshGscDailySnapshot");
-    expect(worker).toContain("setGscDailyKvBinding");
-    expect(worker).toContain("env?.GSC_SNAPSHOT_KV??env?.GOLD_RATE_KV");
+    expect(cfBindings).toContain('"cloudflare:"+"workers"');
+    expect(cfBindings).toContain("GSC_SNAPSHOT_KV??cfEnv.GOLD_RATE_KV");
+    expect(refreshRoute).toContain("bindGscStoreFromCloudflareEnv");
+    expect(seoRoute).toContain("bindGscStoreFromCloudflareEnv");
     expect(gscStore).toContain("__PANCHVANI_GSC_DAILY_KV__");
-    expect(gscStore).toContain("globalThis as GlobalWithGscKv");
     expect(gscStore).toContain('mode:"binding"');
     expect(kyivCron).toContain('KYIV_TIME_ZONE="Europe/Kyiv"');
     expect(kyivCron).toContain('GSC_DAILY_CRONS=["0 21 * * *","0 22 * * *"]');
