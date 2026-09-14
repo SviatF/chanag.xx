@@ -1,4 +1,5 @@
 import Header from "@/components/Header";
+import MethodologyNote from "@/components/MethodologyNote";
 import {cityBySlug,supportedCities} from "@/lib/cities";
 import {formatWindow,getPanchang} from "@/lib/panchang";
 import {todayInIndia} from "@/lib/dates";
@@ -17,10 +18,10 @@ export default async function Page({searchParams}:{searchParams:Promise<{city?:s
   const ld={"@context":"https://schema.org","@type":"WebApplication","name":"Rahu Kalam Calculator","applicationCategory":"LifestyleApplication","operatingSystem":"Web"};
   return <main><Header city={city}/><div className="page-shell internal-visual internal-tools">
     <p className="page-kicker">CALCULATOR</p><h1 className="page-title">Rahu Kalam Calculator</h1>
-    <p className="page-subtitle">Rahu Kalam is calculated from local sunrise and sunset, so city and date both matter.</p>
+    <p className="page-subtitle">Calculate Rahu Kalam for any supported city and date.</p>
     <form className="wide-panel" method="get"><label>City<br/><select name="city" defaultValue={city.slug}>{supportedCities.map(c=><option value={c.slug} key={c.slug}>{c.name}, {c.state}</option>)}</select></label><label>Date<br/><input type="date" name="date" defaultValue={raw}/></label><button className="gold-button" type="submit">Calculate →</button></form>
     <div className="data-grid"><div className="data-card"><small>Rahu Kalam</small><strong>{formatWindow(data.rahu)}</strong></div><div className="data-card"><small>Sunrise</small><strong>{data.sunrise}</strong></div><div className="data-card"><small>Sunset</small><strong>{data.sunset}</strong></div><div className="data-card"><small>City</small><strong>{city.name}</strong></div></div>
-    <div className="seo-copy"><h2>Calculation basis</h2><p>Rahu Kalam uses one eighth of the selected city's local daylight interval, with the segment determined by weekday. Sunrise and sunset are recalculated for the chosen civil date and city rather than copied from a national timetable.</p></div>
+    <MethodologyNote><p>Rahu Kalam uses one eighth of the selected city's local daylight interval, with the segment determined by weekday. Sunrise and sunset are recalculated for the selected civil date and city.</p></MethodologyNote>
     <script type="application/ld+json" dangerouslySetInnerHTML={{__html:JSON.stringify(ld)}}/>
   </div></main>;
 }
