@@ -2,6 +2,7 @@ import type {Metadata} from "next";
 import Link from "next/link";
 import {notFound} from "next/navigation";
 import Header from "@/components/Header";
+import MethodologyNote from "@/components/MethodologyNote";
 import {cities} from "@/lib/cities";
 import {nakshatraBySlug,nakshatraNaming} from "@/lib/baby-names";
 
@@ -29,7 +30,7 @@ export default async function Page({params}:{params:Promise<{nakshatra:string}>}
     <div className="breadcrumbs"><Link href="/tools">Tools</Link> / <Link href="/tools/hindu-baby-names">Baby Names by Nakshatra</Link> / {item.name}</div>
     <p className="page-kicker">BABY NAMES BY NAKSHATRA</p>
     <h1 className="page-title">{item.name}<br/>baby names</h1>
-    <p className="page-subtitle">{item.note} If your family follows Janma Nakshatra naming, use the exact Nakshatra and Pada from a birth-time chart. Panchvani’s date-only Nakshatra Finder is an estimate, not an exact natal calculation.</p>
+    <p className="page-subtitle">{item.note}</p>
 
     <div className="data-grid">
       {item.sounds.map((sound,index)=><div className="data-card" key={sound}><small>Pada {index+1}</small><strong>{sound}</strong><small>Traditional starting sound</small></div>)}
@@ -48,6 +49,7 @@ export default async function Page({params}:{params:Promise<{nakshatra:string}>}
       {nakshatraNaming.slice(0,6).filter(n=>n.slug!==item.slug).map(n=><Link href={`/tools/hindu-baby-names/${n.slug}`} key={n.slug}>{n.name}</Link>)}
     </div>
 
+    <MethodologyNote><p>If your family follows Janma Nakshatra naming, the exact Nakshatra and Pada come from the Moon's position at birth. Panchvani's date-only finder is an estimate; exact natal calculation requires birth time and birthplace.</p></MethodologyNote>
     <script type="application/ld+json" dangerouslySetInnerHTML={{__html:JSON.stringify(ld)}}/>
   </div></main>;
 }
