@@ -2,6 +2,7 @@ import {NextResponse} from "next/server";
 import {isAdminAuthenticated} from "@/lib/admin-auth";
 import {refreshGscDailySnapshot,type GscDailyRefreshResult} from "@/lib/gsc-daily-refresh";
 import {readGscDailySnapshot} from "@/lib/gsc-daily-store";
+import {bindGscStoreFromCloudflareEnv} from "@/lib/cloudflare-bindings";
 
 export const dynamic="force-dynamic";
 
@@ -15,6 +16,10 @@ export async function POST(){
   }
 
   try{
+    // Route handlers are a separate Vinext server graph. Resolve the KV binding
+    // from Cloudflare's native runtime here instead of relying on worker-module state.
+    await bindGscStoreFromCloudflareEnv();
+
     // Cross-isolate duplicate guard: if another click/instance refreshed very recently,
     // reuse the persisted snapshot instead of spending another GSC query budget.
     const existing=await readGscDailySnapshot(true);
