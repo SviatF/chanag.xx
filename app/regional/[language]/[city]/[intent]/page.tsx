@@ -3,6 +3,7 @@ import Link from "next/link";
 import {notFound} from "next/navigation";
 import Header from "@/components/Header";
 import ChoghadiyaTable from "@/components/ChoghadiyaTable";
+import MethodologyNote from "@/components/MethodologyNote";
 import TopicalGraph from "@/components/TopicalGraph";
 import {findCityBySlug} from "@/lib/cities";
 import {todayInIndia} from "@/lib/dates";
@@ -107,7 +108,7 @@ export default async function RegionalIntentPage({params}:{params:Promise<{langu
         <div className="data-card"><small>{lang.terms.tithi}</small><strong>{localizeTithi(language,data.tithi)}</strong><small>{localizePaksha(language,data.paksha)}</small></div>
         <div className="data-card"><small>{lang.terms.month}</small><strong>{month}</strong><small>{calendarName}</small></div>
       </div>
-      <div className="seo-copy"><h2>{native}</h2><p>{copy.rahuExplanation(cityName)}</p><p>{copy.methodologyText}</p></div>
+      <div className="seo-copy"><h2>{native}</h2><p>{copy.rahuExplanation(cityName)}</p></div>
     </>:<>
       <div className="data-grid">
         <div className="data-card"><small>{lang.terms.sunrise}</small><strong>{data.sunrise}</strong></div>
@@ -117,10 +118,10 @@ export default async function RegionalIntentPage({params}:{params:Promise<{langu
         <div className="data-card"><small>{lang.terms.month}</small><strong>{month}</strong><small>{calendarName}</small></div>
       </div>
       <section className="wide-panel"><h2 className="page-title" style={{fontSize:32}}>{native}</h2><p className="page-subtitle">{copy.choghadiyaExplanation(cityName)}</p><ChoghadiyaTable day={data.dayChoghadiya} night={data.nightChoghadiya} locale={{dayTitle:copy.dayChoghadiya,nightTitle:copy.nightChoghadiya,daySubtitle:copy.sunriseToSunset,nightSubtitle:copy.sunsetToNextSunrise,goodLabel:copy.goodPeriods,neutralLabel:copy.neutralPeriod,badLabel:copy.difficultPeriods,names:choghadiyaNativeNames[language]}}/></section>
-      <div className="seo-copy"><h2>{copy.calendarExplanationTitle}</h2><p>{copy.methodologyText}</p></div>
     </>}
 
     <TopicalGraph title={`${copy.regionalContext} · ${cityName}`} groupEyebrow={copy.nativeLanguage} groups={topical}/>
+    <MethodologyNote title={copy.calendarExplanationTitle} lang={copy.hreflang}><p>{copy.methodologyText}</p></MethodologyNote>
     <script type="application/ld+json" dangerouslySetInnerHTML={{__html:JSON.stringify(ld)}}/>
   </div></main>;
 }

@@ -2,6 +2,7 @@ import type {Metadata} from "next";
 import Link from "next/link";
 import {notFound} from "next/navigation";
 import Header from "@/components/Header";
+import MethodologyNote from "@/components/MethodologyNote";
 import TopicalGraph from "@/components/TopicalGraph";
 import {findCityBySlug} from "@/lib/cities";
 import {buildVratCityNarrative} from "@/lib/content-uniqueness";
@@ -53,7 +54,7 @@ export default async function VratCityPage({params}:{params:Promise<{vrat:string
     <div className="breadcrumbs"><Link href="/vrat">Vrat & Lunar Dates</Link> / <Link href={`/vrat/${vrat.slug}/${year}`}>{vrat.name} {year}</Link> / {city.name}</div>
     <p className="page-kicker">LOCAL LUNAR REFERENCE · {city.state}</p>
     <h1 className="page-title">{vrat.name} {year}<br/>{city.name}</h1>
-    <p className="page-subtitle">{vrat.hindi} · Tithi active at local sunrise for {city.name}. Local coordinates matter when a lunar transition happens close to sunrise.</p>
+    <p className="page-subtitle">{vrat.hindi} · Tithi active at local sunrise for {city.name}.</p>
 
     <div className="data-grid">
       <div className="data-card"><small>Sunrise observations</small><strong>{summary.count}</strong><small>{summary.first??"—"} → {summary.last??"—"}</small></div>
@@ -73,10 +74,10 @@ export default async function VratCityPage({params}:{params:Promise<{vrat:string
       </Link>)}</div>
     </section>
 
-    <div className="seo-copy"><h2>What is distinctive about {city.name}'s {year} list</h2><p>{narrative}</p><h3>Calculation and observance scope</h3><p>{vrat.methodology}</p><p>{vrat.ritualCaution}</p></div>
-
+    <div className="seo-copy"><h2>What is distinctive about {city.name}'s {year} list</h2><p>{narrative}</p></div>
     <div className="pill-links"><Link href={`/vrat/${vrat.slug}/${year}`}>India reference</Link><Link href={`/calendar/${city.slug}/${year}/${firstMonth}`}>{city.name} monthly calendar</Link></div>
     <TopicalGraph title={`Explore ${vrat.name} in ${city.name}`} groups={buildVratTopicalGraph(city,vrat.slug,year,rows,"city")}/>
+    <MethodologyNote title="Calculation and observance scope"><p>{vrat.methodology}</p><p>{vrat.ritualCaution}</p><p>Local coordinates matter when a lunar transition occurs close to sunrise.</p></MethodologyNote>
     <script type="application/ld+json" dangerouslySetInnerHTML={{__html:JSON.stringify(ld)}}/>
   </div></main>;
 }

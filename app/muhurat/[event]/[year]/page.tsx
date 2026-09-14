@@ -2,6 +2,7 @@ import type {Metadata} from "next";
 import Link from "next/link";
 import {notFound} from "next/navigation";
 import Header from "@/components/Header";
+import MethodologyNote from "@/components/MethodologyNote";
 import {cityBySlug} from "@/lib/cities";
 import {muhuratRules} from "@/lib/muhurat";
 import {muhuratExcludedFactors,muhuratScreeningStatement} from "@/lib/religious-integrity";
@@ -28,11 +29,11 @@ export default async function YearlyMuhurat({params}:{params:Promise<{event:stri
     <div className="breadcrumbs"><Link href="/muhurat">Muhurat</Link> / {rule.title} / {year}</div>
     <p className="page-kicker">YEARLY MUHURAT PLANNING SCREEN · INDIA BASELINE</p>
     <h1 className="page-title">{rule.title}<br/>{year}</h1>
-    <p className="page-subtitle">{muhuratScreeningStatement} This annual view aggregates all 12 monthly screens using Mumbai as the baseline location.</p>
+    <p className="page-subtitle">All 12 monthly screens for {year}, with Mumbai as the baseline location.</p>
 
     <section className="wide-panel"><div className="data-grid">
       <div className="data-card"><small>Screened candidates</small><strong>{summary.totalQualified}</strong><small>Across 12 months</small></div>
-      <div className="data-card"><small>Average Planning Score</small><strong>{summary.averageScore}/100</strong><small>Practical metric only</small></div>
+      <div className="data-card"><small>Average Planning Score</small><strong>{summary.averageScore}/100</strong><small>Practical planning metric</small></div>
       <div className="data-card"><small>Excellent planning band</small><strong>{summary.excellentCount}</strong><small>Score 85+</small></div>
       <div className="data-card"><small>Strong planning band</small><strong>{summary.strongCount}</strong><small>Score 70–84</small></div>
       <div className="data-card"><small>Strongest planning month</small><strong>{summary.strongestMonth?.name??"—"}</strong><small>{summary.strongestMonth?.top?`Top ${summary.strongestMonth.top.planning.score}/100`:"No screened candidate"}</small></div>
@@ -43,10 +44,9 @@ export default async function YearlyMuhurat({params}:{params:Promise<{event:stri
 
     <section className="wide-panel"><h2 className="page-title" style={{fontSize:32}}>Top planning fits of {year}</h2>{summary.topRows.length?<div className="wide-panel"><table className="table"><thead><tr><th>Rank / Date</th><th>Score</th><th>Screening match</th><th>Clean time</th></tr></thead><tbody>{summary.topRows.map((row,index)=><tr key={row.date}><td>#{index+1} · <Link href={`/panchang/${city.slug}/${row.date}`}>{row.date}</Link></td><td><strong>{row.planning.score}/100 · {row.planning.grade}</strong></td><td>{row.reasons.join(" · ")}</td><td>{row.planning.longestWindowMinutes} min longest · {row.planning.totalCleanMinutes} min total</td></tr>)}</tbody></table></div>:<p className="page-subtitle">No dates matched the current Tithi + Nakshatra screening profile in {year}.</p>}</section>
 
-    <section className="wide-panel"><div className="seo-copy"><small>ADDITIONAL FACTORS</small><h2>Checks outside this screening model</h2><ul>{muhuratExcludedFactors.map(item=><li key={item}>{item}</li>)}</ul><p>These factors remain outside the current screen and are listed once here so the ranking can stay readable without repeating the same scope warning beside every result.</p></div></section>
-
     <div className="pill-links">{activeYears.includes(year-1)?<Link href={muhuratYearPath(p.event,year-1)}>← {year-1}</Link>:null}<Link href={hinduCalendarYearPath(year)}>Hindu Calendar {year}</Link>{activeYears.includes(year+1)?<Link href={muhuratYearPath(p.event,year+1)}>{year+1} →</Link>:null}</div>
     <div className="seo-copy"><h2>How to use the annual ranking</h2><p>Open a month to inspect its screened dates, then open a city page to compare the local clean-time windows that produced the practical score.</p></div>
+    <MethodologyNote title="Screening scope"><p>{muhuratScreeningStatement}</p><p>Additional factors outside this screen:</p><ul>{muhuratExcludedFactors.map(item=><li key={item}>{item}</li>)}</ul></MethodologyNote>
     <script type="application/ld+json" dangerouslySetInnerHTML={{__html:JSON.stringify(ld)}}/>
   </div></main>;
 }

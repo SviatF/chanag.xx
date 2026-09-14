@@ -2,6 +2,7 @@ import type {Metadata} from "next";
 import Link from "next/link";
 import {notFound} from "next/navigation";
 import Header from "@/components/Header";
+import MethodologyNote from "@/components/MethodologyNote";
 import TopicalGraph from "@/components/TopicalGraph";
 import {findCityBySlug} from "@/lib/cities";
 import {festivalBySlugYear} from "@/lib/festivals";
@@ -78,22 +79,14 @@ export default async function Page({params}:{params:Promise<{festival:string;yea
       <div className="data-card"><small>Purnimanta month</small><strong>{lunar.purnimantaLabel}</strong></div>
       <div className="data-card"><small>Nakshatra</small><strong>{data.nakshatra}</strong><small>until {nakshatraEnd}</small></div>
       <div className="data-card"><small>Sunrise / Sunset</small><strong>{data.sunrise} / {data.sunset}</strong></div>
-      {localReference?<div className="data-card"><small>{localReference.label}</small><strong>{localReference.value}</strong><small>{localReference.note}</small></div>:<div className="data-card"><small>Ritual timing status</small><strong>Context only</strong><small>No generic clock window is presented as an exact ritual Muhurat.</small></div>}
+      {localReference?<div className="data-card"><small>{localReference.label}</small><strong>{localReference.value}</strong></div>:<div className="data-card"><small>Festival timing reference</small><strong>Local Panchang context</strong></div>}
       <div className="data-card"><small>Rahu Kalam</small><strong>{formatWindow(data.rahu)}</strong></div>
       <div className="data-card"><small>Moonrise</small><strong>{moonrise}</strong></div>
       {semantics.aliases.length?<div className="data-card"><small>Also known as</small><strong>{semantics.aliases.join(" · ")}</strong></div>:null}
       {semantics.relatedObservances.length?<div className="data-card"><small>Related regional observances</small><strong>{semantics.relatedObservances.join(" · ")}</strong></div>:null}
     </div>
 
-    <section className="wide-panel"><div className="seo-copy">
-      <small>FESTIVAL RULE INTEGRITY</small><h2>{ruleProfile.title}</h2><p>{ruleProfile.ruleSummary}</p>
-      <ul>{ruleProfile.criteria.map(item=><li key={item}>{item}</li>)}</ul>
-      <p><strong>What Panchvani provides:</strong> {ruleProfile.localReference}</p>
-      {ruleProfile.limitations.length?<><h3>Not certified by this route</h3><ul>{ruleProfile.limitations.map(item=><li key={item}>{item}</li>)}</ul></>:null}
-      {ruleProfile.sources.length?<p><strong>Reference methodology:</strong> {ruleProfile.sources.map((source,index)=><span key={source.label}>{index?" · ":""}{source.label}</span>)}</p>:null}
-    </div></section>
-
-    <div className="seo-copy"><h2>How to read this festival Panchang</h2><p>{f.meaning}</p>{semantics.lunarConventionNote?<p><strong>Calendar convention:</strong> {semantics.lunarConventionNote}</p>:null}<p>The astronomical values above are reproducible local Panchang context. A ritual rule can require additional conditions such as Tithi overlap during Pradosh or Nishita, Bhadra avoidance, Lagna, Rohini, Madhyahna or a tradition-specific fasting/parana rule. Panchvani does not turn a generic favorable period into a universal festival Muhurat.</p></div>
+    <div className="seo-copy"><h2>How to read this festival Panchang</h2><p>{f.meaning}</p>{semantics.lunarConventionNote?<p><strong>Calendar convention:</strong> {semantics.lunarConventionNote}</p>:null}</div>
 
     <div className="pill-links">
       <Link href={`/festivals/${f.slug}/${year}`}>Festival overview</Link>
@@ -101,6 +94,7 @@ export default async function Page({params}:{params:Promise<{festival:string;yea
       {siblingYears.map(item=><Link href={`/festivals/${item.slug}/${item.year}/${city.slug}`} key={item.year}>{item.name} {item.year}</Link>)}
     </div>
     <TopicalGraph title={`Explore ${f.name} in ${city.name}`} groups={buildFestivalTopicalGraph(city,f)}/>
+    <MethodologyNote title="Festival calculation and observance scope"><p>{ruleProfile.ruleSummary}</p><ul>{ruleProfile.criteria.map(item=><li key={item}>{item}</li>)}</ul><p>{ruleProfile.localReference}</p>{localReference?<p>{localReference.note}</p>:null}{ruleProfile.limitations.length?<ul>{ruleProfile.limitations.map(item=><li key={item}>{item}</li>)}</ul>:null}<p>A ritual rule can require conditions beyond the astronomical values shown here, including tradition-specific Tithi overlap, Bhadra, Lagna, Rohini, Madhyahna or fasting/parana rules.</p>{ruleProfile.sources.length?<p><strong>Reference methodology:</strong> {ruleProfile.sources.map((source,index)=><span key={source.label}>{index?" · ":""}{source.label}</span>)}</p>:null}</MethodologyNote>
 
     <script type="application/ld+json" dangerouslySetInnerHTML={{__html:JSON.stringify(ld)}}/>
   </div></main>;

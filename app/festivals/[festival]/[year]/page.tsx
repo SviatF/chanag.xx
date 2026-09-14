@@ -2,6 +2,7 @@ import type {Metadata} from "next";
 import Link from "next/link";
 import {notFound} from "next/navigation";
 import Header from "@/components/Header";
+import MethodologyNote from "@/components/MethodologyNote";
 import {cities} from "@/lib/cities";
 import {festivalBySlugYear} from "@/lib/festivals";
 import {getFestivalSemantics} from "@/lib/festival-conventions";
@@ -55,22 +56,14 @@ export default async function FestivalPage({params}:{params:Promise<{festival:st
       <div className="data-card"><small>Date</small><strong>{f.date}</strong></div>
       {semantics.aliases.length?<div className="data-card"><small>Also known as</small><strong>{semantics.aliases.join(" · ")}</strong></div>:null}
       {semantics.relatedObservances.length?<div className="data-card"><small>Related regional observances</small><strong>{semantics.relatedObservances.join(" · ")}</strong></div>:null}
-      <div className="data-card"><small>Rule status</small><strong>{ruleProfile.exactness==="derived-reference"?"Local reference available":"Context only"}</strong><small>Exact ritual certification is never inferred from a generic favorable period.</small></div>
+      <div className="data-card"><small>Rule profile</small><strong>{ruleProfile.exactness==="derived-reference"?"Local reference available":"Panchang context"}</strong></div>
     </div>
 
     <div className="seo-copy">
       <h2>Meaning and observance</h2>
       <p>{f.meaning}</p>
       {semantics.lunarConventionNote?<p><strong>Calendar convention:</strong> {semantics.lunarConventionNote}</p>:null}
-      <p>The exact observance can vary by sampradaya, region and local Tithi boundaries. Panchvani separates the shared festival date reference from city-local Panchang calculations instead of treating every regional tradition as identical.</p>
     </div>
-
-    <section className="wide-panel"><div className="seo-copy">
-      <small>RULE PROVENANCE</small><h2>{ruleProfile.title}</h2><p>{ruleProfile.ruleSummary}</p>
-      <ul>{ruleProfile.criteria.map(item=><li key={item}>{item}</li>)}</ul>
-      <p><strong>Panchvani scope:</strong> {ruleProfile.localReference}</p>
-      {ruleProfile.sources.length?<p><strong>Reference methodology:</strong> {ruleProfile.sources.map((source,index)=><span key={source.label}>{index?" · ":""}{source.label}</span>)}</p>:null}
-    </div></section>
 
     <section className="wide-panel">
       <h2 className="page-title" style={{fontSize:32}}>Common observances</h2>
@@ -79,7 +72,7 @@ export default async function FestivalPage({params}:{params:Promise<{festival:st
 
     <section className="wide-panel">
       <h2 className="page-title" style={{fontSize:32}}>Local Panchang by city</h2>
-      <p className="page-subtitle">Choose a priority city to see Tithi, lunar-month conventions, sunrise/sunset, moonrise and any festival-specific local reference that Panchvani can derive without overstating accuracy.</p>
+      <p className="page-subtitle">Choose a priority city to see local Tithi, lunar-month conventions, sunrise, sunset, moonrise and supported festival references.</p>
       <div className="pill-links">{cities.slice(0,12).map(city=><Link href={`/festivals/${f.slug}/${year}/${city.slug}`} key={city.slug}>{city.name}</Link>)}</div>
     </section>
 
@@ -89,6 +82,7 @@ export default async function FestivalPage({params}:{params:Promise<{festival:st
       {f.relatedMuhurat?<Link href={`/muhurat/${f.relatedMuhurat}/${year}/${month}`}>Related {f.relatedMuhurat.replaceAll("-"," ")} planning shortlist →</Link>:null}
     </div>
 
+    <MethodologyNote title="Observance and calculation scope"><p>{ruleProfile.ruleSummary}</p><ul>{ruleProfile.criteria.map(item=><li key={item}>{item}</li>)}</ul><p>{ruleProfile.localReference}</p>{ruleProfile.limitations.length?<ul>{ruleProfile.limitations.map(item=><li key={item}>{item}</li>)}</ul>:null}<p>The shared festival date and city-local Panchang context are separate from tradition-specific observance selection.</p>{ruleProfile.sources.length?<p><strong>Reference methodology:</strong> {ruleProfile.sources.map((source,index)=><span key={source.label}>{index?" · ":""}{source.label}</span>)}</p>:null}</MethodologyNote>
     <script type="application/ld+json" dangerouslySetInnerHTML={{__html:JSON.stringify(ld)}}/>
   </div></main>;
 }

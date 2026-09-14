@@ -96,16 +96,24 @@ describe("global content uniqueness and citation integrity",()=>{
     }
   });
 
-  it("keeps the full Muhurat disclaimer at the hero and removes repeated full-sentence variants",()=>{
+  it("keeps the Muhurat scope disclosure once, after primary content rather than in the hero",()=>{
     const pages=[
+      "app/muhurat/page.tsx",
       "app/muhurat/[event]/[year]/page.tsx",
       "app/muhurat/[event]/[year]/[month]/page.tsx",
       "app/muhurat/[event]/[year]/[month]/[city]/page.tsx",
     ];
     for(const file of pages){
       const text=source(file);
-      expect(countMatches(text,/>\{muhuratScreeningStatement\}/g),`${file} hero disclaimer count`).toBe(1);
-      expect(countMatches(text,/not a complete|not a certification|not certified by a complete|does not certify religious suitability|religious certification layer/gi),`${file} repeated disclaimer language`).toBeLessThanOrEqual(1);
+      const render=text.slice(text.indexOf("return <main"));
+      const firstContent=render.indexOf("<section");
+      const hero=firstContent>0?render.slice(0,firstContent):render.slice(0,render.indexOf("<div className=\"data-grid\""));
+      const noteIndex=render.indexOf("<MethodologyNote");
+      expect(noteIndex,`${file} must render a final methodology disclosure`).toBeGreaterThan(0);
+      expect(countMatches(render,/<MethodologyNote/g),`${file} methodology disclosure count`).toBe(1);
+      expect(hero,`${file} hero must not lead with the Muhurat limitation`).not.toContain("muhuratScreeningStatement");
+      expect(render.slice(noteIndex),`${file} final disclosure must retain the scope statement`).toContain("muhuratScreeningStatement");
+      expect(noteIndex,`${file} disclosure must follow the page H1`).toBeGreaterThan(render.indexOf("page-title"));
     }
     const seo=source("lib/muhurat-seo.ts");
     expect(seo).not.toMatch(/not a complete Panchang Shuddhi|religiously certified Muhurat|personalized ceremony certification/i);
