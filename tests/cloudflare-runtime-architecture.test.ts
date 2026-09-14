@@ -59,6 +59,19 @@ describe("Cloudflare SEO/Admin runtime architecture",()=>{
     expect(kyivCron).toContain('GSC_DAILY_CRONS=["0 21 * * *","0 22 * * *"]');
   });
 
+  it("shields public HTML before Vinext SSR while bypassing admin and APIs",()=>{
+    const worker=readFileSync("worker/index.ts","utf8");
+    const edgeCache=readFileSync("lib/public-edge-cache.ts","utf8");
+    expect(worker).toContain("servePublicWithEdgeCache");
+    expect(worker).toContain("CF_VERSION_METADATA");
+    expect(edgeCache).toContain('url.pathname==="/admin"');
+    expect(edgeCache).toContain('url.pathname==="/api"');
+    expect(edgeCache).toContain("edgeCache.match");
+    expect(edgeCache).toContain("edgeCache.put");
+    expect(edgeCache).toContain("COALESCED");
+    expect(edgeCache).not.toContain("setInterval(");
+  });
+
   it("exposes endpoint cache and cost telemetry headers",()=>{
     const route=readFileSync("app/api/admin/seo-data/route.ts","utf8");
     for(const header of ["x-cache","x-api-calls","x-upstream-subrequests","x-endpoint-latency-ms","server-timing"])expect(route).toContain(header);
