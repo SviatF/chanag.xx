@@ -1,6 +1,7 @@
 import type {Metadata} from "next";
 import Link from "next/link";
 import Header from "@/components/Header";
+import MethodologyNote from "@/components/MethodologyNote";
 import {cities} from "@/lib/cities";
 import {todayInIndia} from "@/lib/dates";
 import {muhuratRules} from "@/lib/muhurat";
@@ -37,7 +38,7 @@ export default function MuhuratHub(){
     <div className="breadcrumbs"><Link href="/">Home</Link> / Muhurat</div>
     <p className="page-kicker">MUHURAT PLANNING</p>
     <h1 className="page-title">General Muhurat candidates<br/>for important moments</h1>
-    <p className="page-subtitle">Start with a milestone, then open a year, month and city to review screened dates and local timing windows. Panchvani is a planning reference, not a replacement for full Panchang Shuddhi or personalized horoscope review.</p>
+    <p className="page-subtitle">Start with a milestone, then open a year, month and city to review screened dates and local timing windows.</p>
 
     <section className="wide-panel">
       <h2 className="page-title" style={{fontSize:32}}>Most-used Muhurat planning guides</h2>
@@ -49,9 +50,8 @@ export default function MuhuratHub(){
       <div className="city-directory">{entries.filter(([slug])=>!primary.has(slug)).map(([slug,rule])=><Link href={`/muhurat/${slug}/${year}/${month}`} key={slug}><small>Current month reference</small><strong>{rule.title}</strong><span>{descriptions[slug]}</span></Link>)}</div>
     </section>
 
-    <div className="seo-copy"><h2>What Panchvani screens — and what it does not</h2><p>{muhuratScreeningStatement}</p><p>The Planning Score measures practical availability of clean local timing windows. It is not a religious auspiciousness score.</p><ul>{muhuratExcludedFactors.slice(0,6).map(item=><li key={item}>{item}</li>)}</ul></div>
-
     <div className="pill-links"><Link href={`/panchang/${city.slug}`}>Today’s Panchang</Link><Link href="/methodology">Calculation methodology</Link><Link href="/disclaimer">Muhurat limitations</Link></div>
+    <MethodologyNote title="How Muhurat screening works"><p>{muhuratScreeningStatement}</p><p>The Planning Score measures practical availability of clean local timing windows; it is not a religious auspiciousness score.</p><ul>{muhuratExcludedFactors.slice(0,6).map(item=><li key={item}>{item}</li>)}</ul></MethodologyNote>
     <script type="application/ld+json" dangerouslySetInnerHTML={{__html:JSON.stringify(ld)}}/>
   </div></main>;
 }
