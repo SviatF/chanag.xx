@@ -2,6 +2,7 @@ import {NextResponse} from "next/server";
 import {isAdminAuthenticated} from "@/lib/admin-auth";
 import {getGscSeoOsDatasetWithMeta} from "@/lib/gsc-seo-os";
 import {getSeoTaskStoreStatus,readSeoTaskMap} from "@/lib/seo-task-store";
+import {bindGscStoreFromCloudflareEnv} from "@/lib/cloudflare-bindings";
 
 export const dynamic="force-dynamic";
 
@@ -23,6 +24,9 @@ export async function GET(request:Request){
   const force=url.searchParams.get("refresh")==="1";
   const taskStorage=getSeoTaskStoreStatus();
   try{
+    // Resolve the binding from the actual Cloudflare route runtime. This avoids
+    // depending on module-local state from the custom Worker entrypoint.
+    await bindGscStoreFromCloudflareEnv();
     const [gsc,tasks]=await Promise.all([
       getGscSeoOsDatasetWithMeta(force),
       taskStorage.configured?readSeoTaskMap():Promise.resolve({}),

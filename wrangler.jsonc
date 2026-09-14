@@ -12,6 +12,11 @@
     "binding": "ASSETS",
     "run_worker_first": ["/api/*"]
   },
+  "kv_namespaces": [
+    {
+      "binding": "GOLD_RATE_KV"
+    }
+  ],
   "limits": {
     "cpu_ms": 500,
     "subrequests": 30
