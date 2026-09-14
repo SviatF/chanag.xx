@@ -7,7 +7,7 @@ export const ADMIN_PROVIDER_TTL_MS={
   cloudflare:60*1000,
 } as const;
 
-export const ADMIN_RUNTIME_LIMITS={cpuMs:100,subrequests:30} as const;
+export const ADMIN_RUNTIME_LIMITS={cpuMs:500,subrequests:30} as const;
 
 type MemoryEntry<T>={expiresAt:number;value:T};
 type EdgeCacheLike={match(request:Request):Promise<Response|undefined>;put(request:Request,response:Response):Promise<void>};
