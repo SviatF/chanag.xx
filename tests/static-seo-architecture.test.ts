@@ -20,6 +20,8 @@ import {
   muhuratMonthSsgPriority,
   muhuratMonthStaticKey,
   muhuratSsgPriorityCitySlugs,
+  muhuratYearSsgPriority,
+  muhuratYearStaticKey,
   vratCitySsgPriority,
   vratCityStaticKey,
   vratYearSsgPriority,
@@ -104,6 +106,19 @@ describe("SSG/ISR SEO architecture",()=>{
     }
   });
 
+  it("pre-renders all twelve sitemap-visible yearly Muhurat hubs",()=>{
+    const years=yearlyIndexYears();
+    expect(years).toHaveLength(4);
+    expect(primaryMuhuratEvents).toHaveLength(3);
+    expect(muhuratYearSsgPriority).toHaveLength(primaryMuhuratEvents.length*years.length);
+    expect(muhuratYearSsgPriority).toHaveLength(12);
+    const keys=muhuratYearSsgPriority.map(muhuratYearStaticKey);
+    expect(new Set(keys).size).toBe(keys.length);
+    for(const event of primaryMuhuratEvents){
+      expect(muhuratYearSsgPriority.filter(item=>item.event===event)).toHaveLength(years.length);
+    }
+  });
+
   it("pre-renders the complete sitemap-visible Muhurat monthly matrix at exactly 819 pages",()=>{
     const priorityMonths=rollingMonths(0,12);
     expect(primaryMuhuratEvents).toHaveLength(3);
@@ -179,9 +194,14 @@ describe("SSG/ISR SEO architecture",()=>{
     expect(citySource).toContain("export const revalidate=86400");
   });
 
-  it("pre-renders the Muhurat priority batch while preserving daily ISR fallback",()=>{
+  it("pre-renders yearly and monthly Muhurat pages while preserving daily ISR fallback",()=>{
+    const yearlySource=readFileSync("app/muhurat/[event]/[year]/page.tsx","utf8");
     const baselineSource=readFileSync("app/muhurat/[event]/[year]/[month]/page.tsx","utf8");
     const citySource=readFileSync("app/muhurat/[event]/[year]/[month]/[city]/page.tsx","utf8");
+    expect(yearlySource).toContain("generateStaticParams");
+    expect(yearlySource).toContain("muhuratYearSsgPriority");
+    expect(yearlySource).toContain("export const dynamicParams=true");
+    expect(yearlySource).toContain("export const revalidate=86400");
     expect(baselineSource).toContain("generateStaticParams");
     expect(baselineSource).toContain("muhuratMonthSsgPriority");
     expect(baselineSource).toContain("export const dynamicParams=true");
