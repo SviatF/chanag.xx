@@ -1,4 +1,5 @@
-import {urlset,xml} from "@/lib/xml";
+import {sitemapFreshnessDates} from "@/lib/sitemap-freshness";
+import {type SitemapUrlEntry,urlset,xml} from "@/lib/xml";
 import {
   regionalCitiesForLanguage,
   regionalIntentLinksForCity,
@@ -7,15 +8,21 @@ import {
 
 export async function GET(){
   const base="https://panchvani.com";
-  const urls:string[]=[];
+  const {today}=sitemapFreshnessDates();
+  const urls=new Map<string,SitemapUrlEntry>();
   for(const language of regionalLanguageSlugs){
     const cities=regionalCitiesForLanguage(language);
     if(!cities.length)continue;
-    urls.push(`${base}/regional/${language}`);
+    const languageHub=`${base}/regional/${language}`;
+    urls.set(languageHub,languageHub);
     for(const city of cities){
-      urls.push(`${base}/regional/${language}/${city.slug}`);
-      for(const item of regionalIntentLinksForCity(language,city))urls.push(`${base}${item.href}`);
+      const cityHub=`${base}/regional/${language}/${city.slug}`;
+      urls.set(cityHub,{loc:cityHub,lastmod:today});
+      for(const item of regionalIntentLinksForCity(language,city)){
+        const loc=`${base}${item.href}`;
+        urls.set(loc,{loc,lastmod:today});
+      }
     }
   }
-  return xml(urlset([...new Set(urls)]));
+  return xml(urlset([...urls.values()]));
 }
