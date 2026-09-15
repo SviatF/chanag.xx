@@ -6,11 +6,15 @@ import {rollingDailyDates,rollingMonths,sitemapPriorityCities} from "../lib/seo-
 import {
   calendarMonthSsgPriority,
   calendarMonthStaticKey,
+  cityCalendarYearSsgPriority,
+  cityCalendarYearStaticKey,
   datedPanchangSsgPriority,
   datedPanchangStaticKey,
   festivalCitySsgPilot,
   festivalCitySsgPriority,
   festivalCityStaticKey,
+  hinduCalendarYearSsgPriority,
+  hinduCalendarYearStaticKey,
   vratCitySsgPriority,
   vratCityStaticKey,
   vratYearSsgPriority,
@@ -77,6 +81,24 @@ describe("SSG/ISR SEO architecture",()=>{
     expect(new Set(keys).size).toBe(keys.length);
   });
 
+  it("pre-renders the SEO-policy yearly Hindu calendar matrix",()=>{
+    const years=yearlyIndexYears();
+    expect(years.length).toBe(4);
+    expect(hinduCalendarYearSsgPriority).toHaveLength(years.length);
+    expect(hinduCalendarYearSsgPriority).toHaveLength(4);
+    expect(cityCalendarYearSsgPriority).toHaveLength(sitemapPriorityCities.length*years.length);
+    expect(cityCalendarYearSsgPriority).toHaveLength(80);
+
+    const nationalKeys=hinduCalendarYearSsgPriority.map(hinduCalendarYearStaticKey);
+    const cityKeys=cityCalendarYearSsgPriority.map(cityCalendarYearStaticKey);
+    expect(new Set(nationalKeys).size).toBe(nationalKeys.length);
+    expect(new Set(cityKeys).size).toBe(cityKeys.length);
+
+    for(const city of sitemapPriorityCities){
+      expect(cityCalendarYearSsgPriority.filter(item=>item.city===city.slug)).toHaveLength(years.length);
+    }
+  });
+
   it("pre-renders priority festival pages while preserving ISR fallback",()=>{
     const source=readFileSync("app/festivals/[festival]/[year]/[city]/page.tsx","utf8");
     expect(source).toContain("generateStaticParams");
@@ -114,6 +136,19 @@ describe("SSG/ISR SEO architecture",()=>{
     expect(source).toContain("calendarMonthSsgPriority");
     expect(source).toContain("export const dynamicParams=true");
     expect(source).toContain("export const revalidate=86400");
+  });
+
+  it("pre-renders yearly calendar hubs while preserving daily ISR fallback",()=>{
+    const nationalSource=readFileSync("app/hindu-calendar/[year]/page.tsx","utf8");
+    const citySource=readFileSync("app/calendar/[city]/[year]/page.tsx","utf8");
+    expect(nationalSource).toContain("generateStaticParams");
+    expect(nationalSource).toContain("hinduCalendarYearSsgPriority");
+    expect(nationalSource).toContain("export const dynamicParams=true");
+    expect(nationalSource).toContain("export const revalidate=86400");
+    expect(citySource).toContain("generateStaticParams");
+    expect(citySource).toContain("cityCalendarYearSsgPriority");
+    expect(citySource).toContain("export const dynamicParams=true");
+    expect(citySource).toContain("export const revalidate=86400");
   });
 
   it("keeps static assets asset-first and the Worker API-first",()=>{

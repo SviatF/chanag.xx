@@ -7,10 +7,14 @@ import {festivalsForYear} from "@/lib/festivals";
 import {festivalDateIsValidated,validateFestivalYear} from "@/lib/festival-expansion";
 import {isVratIndexable,isYearlyCalendarIndexable,isYearlyMuhuratIndexable,primaryMuhuratEvents,primaryVratTypes,robotsFor,yearlyIndexYears} from "@/lib/seo-policy";
 import {sitemapPriorityCities} from "@/lib/seo-sitemap";
+import {hinduCalendarYearSsgPriority} from "@/lib/static-seo-routes";
 import {parseRouteYear} from "@/lib/route-validation";
 import {cityCalendarYearPath,hinduCalendarYearPath,muhuratYearPath,yearlyMonths} from "@/lib/yearly-expansion";
 
+export const dynamicParams=true;
 export const revalidate=86400;
+
+export function generateStaticParams(){return hinduCalendarYearSsgPriority;}
 
 export async function generateMetadata({params}:{params:Promise<{year:string}>}):Promise<Metadata>{
   const p=await params;const year=parseRouteYear(p.year);if(!year)notFound();
