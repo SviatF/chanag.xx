@@ -10,14 +10,14 @@ import {buildMuhuratSeoSummary} from "@/lib/muhurat-seo";
 import {muhuratBenchmarkSources,muhuratExcludedFactors,muhuratScreeningStatement} from "@/lib/religious-integrity";
 import {isYearlyMuhuratIndexable,robotsFor} from "@/lib/seo-policy";
 import {parseRouteMonth,parseRouteYear} from "@/lib/route-validation";
-import {muhuratCityMonthSsgPilot} from "@/lib/static-seo-routes";
+import {muhuratCityMonthSsgPriority} from "@/lib/static-seo-routes";
 import {buildMuhuratTopicalGraph} from "@/lib/topical-links";
 import {muhuratYearPath} from "@/lib/yearly-expansion";
 
 export const dynamicParams=true;
 export const revalidate=86400;
 
-export function generateStaticParams(){return muhuratCityMonthSsgPilot;}
+export function generateStaticParams(){return muhuratCityMonthSsgPriority;}
 
 export async function generateMetadata({params}:{params:Promise<{event:string;year:string;month:string;city:string}>}):Promise<Metadata>{
   const p=await params;

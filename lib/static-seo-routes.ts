@@ -62,18 +62,18 @@ export const cityCalendarYearSsgPriority:CityCalendarYearStaticParam[]=sitemapPr
 );
 
 /**
- * Bounded Muhurat pilot: current + next month, three primary events, and three
- * calculation contexts (Mumbai baseline + Ahmedabad + Hyderabad). Ordering is
- * month -> context -> event so nearby static renders can reuse the same cached
- * Panchang month before moving to the next location/month.
+ * Phase 7B Muhurat priority batch: current + four forward months, three primary
+ * events, India/Mumbai baseline pages, and the first ten SEO-priority city pages.
+ * Mumbai is intentionally included in the city matrix; the precompute generator
+ * deduplicates it against the baseline so 165 pages require only 50 month datasets.
  */
-const muhuratPilotMonths=rollingMonths(0,1);
-export const muhuratSsgPilotCitySlugs=["ahmedabad","hyderabad"] as const;
-export const muhuratMonthSsgPilot:MuhuratMonthStaticParam[]=muhuratPilotMonths.flatMap(item=>
+const muhuratPriorityMonths=rollingMonths(0,4);
+export const muhuratSsgPriorityCitySlugs=phase1PriorityCities.slice(0,10);
+export const muhuratMonthSsgPriority:MuhuratMonthStaticParam[]=muhuratPriorityMonths.flatMap(item=>
   primaryMuhuratEvents.map(event=>({event,year:String(item.year),month:item.slug}))
 );
-export const muhuratCityMonthSsgPilot:MuhuratCityMonthStaticParam[]=muhuratPilotMonths.flatMap(item=>
-  muhuratSsgPilotCitySlugs.flatMap(city=>
+export const muhuratCityMonthSsgPriority:MuhuratCityMonthStaticParam[]=muhuratPriorityMonths.flatMap(item=>
+  muhuratSsgPriorityCitySlugs.flatMap(city=>
     primaryMuhuratEvents.map(event=>({event,year:String(item.year),month:item.slug,city}))
   )
 );
