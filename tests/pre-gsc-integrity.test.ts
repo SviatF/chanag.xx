@@ -1,5 +1,7 @@
 import {readFileSync} from "node:fs";
 import {describe,expect,it} from "vitest";
+import {GET as getCoreSitemap} from "../app/sitemap-core.xml/route";
+import {GET as getRegionalSitemap} from "../app/sitemap-regional.xml/route";
 
 function source(path:string){return readFileSync(path,"utf8");}
 
@@ -29,12 +31,12 @@ describe("Pre-GSC technical indexation integrity",()=>{
     }
   });
 
-  it("keeps the regional root in only the core sitemap",()=>{
-    const core=source("app/sitemap-core.xml/route.ts");
-    const regional=source("app/sitemap-regional.xml/route.ts");
-    expect(core).toContain('base+"/regional"');
-    expect(regional).toContain("const urls:string[]=[]");
-    expect(regional).not.toContain('const urls:string[]=[`${base}/regional`]');
+  it("keeps the regional root in only the core sitemap",async()=>{
+    const core=await (await getCoreSitemap()).text();
+    const regional=await (await getRegionalSitemap()).text();
+    expect(core).toContain("<loc>https://panchvani.com/regional</loc>");
+    expect(regional).not.toContain("<loc>https://panchvani.com/regional</loc>");
+    expect(regional).toContain("<loc>https://panchvani.com/regional/");
   });
 
   it("keeps monthly Muhurat SERP titles month-specific",()=>{
