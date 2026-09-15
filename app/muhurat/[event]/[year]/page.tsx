@@ -8,9 +8,12 @@ import {muhuratRules} from "@/lib/muhurat";
 import {muhuratExcludedFactors,muhuratScreeningStatement} from "@/lib/religious-integrity";
 import {isYearlyMuhuratIndexable,robotsFor,yearlyIndexYears} from "@/lib/seo-policy";
 import {parseRouteYear} from "@/lib/route-validation";
+import {muhuratYearSsgPriority} from "@/lib/static-seo-routes";
 import {buildYearlyMuhuratSummary,hinduCalendarYearPath,muhuratYearPath} from "@/lib/yearly-expansion";
 
+export const dynamicParams=true;
 export const revalidate=86400;
+export function generateStaticParams(){return muhuratYearSsgPriority;}
 
 export async function generateMetadata({params}:{params:Promise<{event:string;year:string}>}):Promise<Metadata>{
   const p=await params;const rule=muhuratRules[p.event];const year=parseRouteYear(p.year);if(!rule||!year)notFound();
