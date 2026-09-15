@@ -91,15 +91,17 @@ describe("Cloudflare SEO/Admin runtime architecture",()=>{
     expect(edgeCache).not.toContain("setInterval(");
   });
 
-  it("reuses the existing KV namespace for cached daily Panchang calculations",()=>{
+  it("reuses the existing KV namespace and keeps Swiss Ephemeris behind the daily cache miss boundary",()=>{
     const worker=readFileSync("worker/index.ts","utf8");
     const cache=readFileSync("lib/panchang-cache.ts","utf8");
     const dailyPage=readFileSync("app/panchang/[city]/[[...date]]/page.tsx","utf8");
     expect(worker).toContain("setPanchangKvBinding(env?.PANCHANG_DATA_KV??env?.GOLD_RATE_KV)");
-    expect(cache).toContain("panchang:v1");
+    expect(cache).toContain("daily-panchang:v2");
     expect(cache).toContain('import("./panchang")');
-    expect(dailyPage).toContain("getCachedPanchang(date,city)");
+    expect(cache).toContain('import("./calendar-conventions")');
+    expect(dailyPage).toContain("getCachedDailyPanchangData(date,city)");
     expect(dailyPage).not.toContain('from "@/lib/panchang"');
+    expect(dailyPage).not.toContain('from "@/lib/calendar-conventions"');
   });
 
   it("exposes endpoint cache and cost telemetry headers",()=>{
