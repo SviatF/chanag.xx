@@ -2,26 +2,28 @@ import {createHash} from "node:crypto";
 import {mkdir,readFile,readdir,unlink,writeFile} from "node:fs/promises";
 import {resolve} from "node:path";
 import {gzipSync,gunzipSync} from "node:zlib";
-import {MUHURAT_PANCHANG_GZIP_BASE64} from "../generated/muhurat-panchang-data";
 import {findCityBySlug,type City} from "../lib/cities";
 import {
-  MUHURAT_BUILD_DATA_MAX_BYTES,
+  MUHURAT_BUILD_DATA_SHARD_MAX_BYTES,
   MUHURAT_BUILD_DATA_VERSION,
   muhuratBuildDataKey,
+  muhuratBuildDataShardId,
   toMuhuratPanchangSnapshot,
-  type MuhuratBuildDataManifest,
+  type MuhuratBuildDataShard,
 } from "../lib/muhurat-build-data-schema";
 import {clearMuhuratPanchangMonthCache,getMuhuratPanchangMonth} from "../lib/muhurat";
 import {muhuratCityMonthSsgPriority,muhuratMonthSsgPriority} from "../lib/static-seo-routes";
 
 const root=resolve(process.cwd());
 const generatedDir=resolve(root,"generated");
-const indexPath=resolve(generatedDir,"muhurat-panchang-data.ts");
-const chunkPrefix="muhurat-panchang-chunk-";
-const chunkSize=6000;
+const registryPath=resolve(generatedDir,"muhurat-panchang-shards.ts");
+const shardPrefix="muhurat-panchang-shard-";
+const legacyIndex="muhurat-panchang-data.ts";
+const legacyChunkPattern=/^muhurat-panchang-chunk-\d+\.ts$/;
+const shardPattern=/^muhurat-panchang-shard-(\d{4}-\d{2})\.ts$/;
 const verifyOnly=process.argv.includes("--verify");
 
-type Target={city:City;year:number;month:number;key:string};
+type Target={city:City;year:number;month:number;key:string;shardId:string};
 
 function collectTargets():Target[]{
   const raw=[
@@ -33,37 +35,67 @@ function collectTargets():Target[]{
     const city=findCityBySlug(item.city);
     if(!city)throw new Error(`Unknown Muhurat precompute city: ${item.city}`);
     const key=muhuratBuildDataKey(item.year,item.month,city);
-    unique.set(key,{city,year:item.year,month:item.month,key});
+    unique.set(key,{city,year:item.year,month:item.month,key,shardId:muhuratBuildDataShardId(item.year,item.month)});
   }
   return [...unique.values()].sort((a,b)=>a.key.localeCompare(b.key));
 }
 
-async function expectedSignature(targets:Target[]){
+function groupTargets(targets:Target[]){
+  const grouped=new Map<string,Target[]>();
+  for(const target of targets){
+    const list=grouped.get(target.shardId)??[];
+    list.push(target);
+    grouped.set(target.shardId,list);
+  }
+  return new Map([...grouped.entries()].sort(([a],[b])=>a.localeCompare(b)));
+}
+
+async function freshnessSources(){
   const [engine,schema]=await Promise.all([
     readFile(resolve(root,"lib/panchang.ts"),"utf8"),
     readFile(resolve(root,"lib/muhurat-build-data-schema.ts"),"utf8"),
   ]);
+  return {engine,schema};
+}
+
+function expectedSignature(shardId:string,targets:Target[],engine:string,schema:string){
   return createHash("sha256")
-    .update(JSON.stringify({version:MUHURAT_BUILD_DATA_VERSION,targets:targets.map(target=>target.key)}))
+    .update(JSON.stringify({version:MUHURAT_BUILD_DATA_VERSION,shardId,targets:targets.map(target=>target.key)}))
     .update(engine)
     .update(schema)
     .digest("hex");
 }
 
-function readCommittedManifest():MuhuratBuildDataManifest|null{
+function registrySource(shardIds:string[]){
+  const ids=JSON.stringify(shardIds);
+  const loaders=shardIds.map(shardId=>`  ${JSON.stringify(shardId)}:()=>import("./${shardPrefix}${shardId}"),`).join("\n");
+  return `export const MUHURAT_PANCHANG_SHARD_IDS=${ids} as const;\nexport const MUHURAT_PANCHANG_SHARD_LOADERS:Record<string,()=>Promise<{default:string}>>={\n${loaders}\n};\n`;
+}
+
+function shardPath(shardId:string){return resolve(generatedDir,`${shardPrefix}${shardId}.ts`);}
+
+function decodeShardModule(source:string):MuhuratBuildDataShard|null{
   try{
-    const json=gunzipSync(Buffer.from(MUHURAT_PANCHANG_GZIP_BASE64,"base64")).toString("utf8");
-    return JSON.parse(json) as MuhuratBuildDataManifest;
+    const match=source.match(/^export default (.+);\s*$/s);
+    if(!match)return null;
+    const base64=JSON.parse(match[1]) as string;
+    const json=gunzipSync(Buffer.from(base64,"base64")).toString("utf8");
+    return JSON.parse(json) as MuhuratBuildDataShard;
   }catch{return null;}
 }
 
-function isFresh(manifest:MuhuratBuildDataManifest|null,signature:string,targets:Target[]){
-  if(!manifest||manifest.version!==MUHURAT_BUILD_DATA_VERSION||manifest.signature!==signature)return false;
+async function readCommittedShard(shardId:string){
+  try{return decodeShardModule(await readFile(shardPath(shardId),"utf8"));}
+  catch{return null;}
+}
+
+function isFreshShard(shard:MuhuratBuildDataShard|null,signature:string,shardId:string,targets:Target[]){
+  if(!shard||shard.version!==MUHURAT_BUILD_DATA_VERSION||shard.shardId!==shardId||shard.signature!==signature)return false;
   const keys=targets.map(target=>target.key);
-  if(manifest.targets.length!==keys.length||manifest.targets.some((key,index)=>key!==keys[index]))return false;
-  if(Object.keys(manifest.entries).length!==keys.length)return false;
+  if(shard.targets.length!==keys.length||shard.targets.some((key,index)=>key!==keys[index]))return false;
+  if(Object.keys(shard.entries).length!==keys.length)return false;
   for(const target of targets){
-    const rows=manifest.entries[target.key];
+    const rows=shard.entries[target.key];
     const expectedDays=new Date(Date.UTC(target.year,target.month,0)).getUTCDate();
     if(!rows||rows.length!==expectedDays)return false;
     if(rows.some(row=>!row.date||!row.tithi||!row.nakshatra||!row.rahu||!row.yamaganda||!row.gulika||!Array.isArray(row.dayChoghadiya)))return false;
@@ -71,57 +103,97 @@ function isFresh(manifest:MuhuratBuildDataManifest|null,signature:string,targets
   return true;
 }
 
-async function writeCompressedPayload(encoded:string){
-  await mkdir(generatedDir,{recursive:true});
+async function generatedFileSetMatches(shardIds:string[]){
+  const files=await readdir(generatedDir);
+  const actualShards=files.map(file=>file.match(shardPattern)?.[1]).filter((item):item is string=>Boolean(item)).sort();
+  if(actualShards.length!==shardIds.length||actualShards.some((id,index)=>id!==shardIds[index]))return false;
+  if(files.includes(legacyIndex)||files.some(file=>legacyChunkPattern.test(file)))return false;
+  try{return (await readFile(registryPath,"utf8"))===registrySource(shardIds);}
+  catch{return false;}
+}
+
+async function cleanGeneratedFiles(expectedShardIds:string[]){
+  const expected=new Set(expectedShardIds);
+  for(const file of await readdir(generatedDir)){
+    const shardMatch=file.match(shardPattern);
+    if(shardMatch&&!expected.has(shardMatch[1]))await unlink(resolve(generatedDir,file));
+    if(file===legacyIndex||legacyChunkPattern.test(file))await unlink(resolve(generatedDir,file));
+  }
+}
+
+async function writeShard(shard:MuhuratBuildDataShard){
+  const encoded=`${JSON.stringify(shard)}\n`;
+  const rawBytes=Buffer.byteLength(encoded);
+  if(rawBytes>MUHURAT_BUILD_DATA_SHARD_MAX_BYTES){
+    throw new Error(`Muhurat shard ${shard.shardId} is ${rawBytes} bytes, above the ${MUHURAT_BUILD_DATA_SHARD_MAX_BYTES} byte shard safety cap.`);
+  }
   const compressed=gzipSync(Buffer.from(encoded,"utf8"),{level:9});
   const base64=compressed.toString("base64");
-  const chunks:string[]=[];
-  for(let offset=0;offset<base64.length;offset+=chunkSize)chunks.push(base64.slice(offset,offset+chunkSize));
-
-  for(const file of await readdir(generatedDir)){
-    if(new RegExp(`^${chunkPrefix}\\d+\\.ts$`).test(file))await unlink(resolve(generatedDir,file));
-  }
-  for(const [index,chunk] of chunks.entries()){
-    await writeFile(resolve(generatedDir,`${chunkPrefix}${index}.ts`),`export default ${JSON.stringify(chunk)};\n`,"utf8");
-  }
-  const imports=chunks.map((_,index)=>`import chunk${index} from "./${chunkPrefix}${index}";`).join("\n");
-  const expression=chunks.map((_,index)=>`chunk${index}`).join("+");
-  await writeFile(indexPath,`${imports}\n\nexport const MUHURAT_PANCHANG_GZIP_BASE64=${expression};\n`,"utf8");
-  return {compressedBytes:compressed.byteLength,base64Chars:base64.length,chunks:chunks.length};
+  await writeFile(shardPath(shard.shardId),`export default ${JSON.stringify(base64)};\n`,"utf8");
+  return {rawBytes,compressedBytes:compressed.byteLength,base64Chars:base64.length};
 }
 
 const targets=collectTargets();
-const signature=await expectedSignature(targets);
-const existing=readCommittedManifest();
+const grouped=groupTargets(targets);
+const shardIds=[...grouped.keys()];
+const {engine,schema}=await freshnessSources();
+const stale:string[]=[];
+let verifiedTargets=0;
 
-if(isFresh(existing,signature,targets)){
-  console.log(`[muhurat-precompute] verified ${targets.length} committed month datasets; no Swiss Ephemeris work needed`);
+for(const [shardId,shardTargets] of grouped){
+  const signature=expectedSignature(shardId,shardTargets,engine,schema);
+  const existing=await readCommittedShard(shardId);
+  if(isFreshShard(existing,signature,shardId,shardTargets))verifiedTargets+=shardTargets.length;
+  else stale.push(shardId);
+}
+
+const fileSetFresh=await generatedFileSetMatches(shardIds);
+if(stale.length===0&&fileSetFresh){
+  console.log(`[muhurat-precompute] verified ${shardIds.length} month shards / ${verifiedTargets} datasets; no Swiss Ephemeris work needed`);
   process.exit(0);
 }
 
 if(verifyOnly){
-  throw new Error(`Muhurat build data is stale. Run npm run precompute:muhurat and commit generated/muhurat-panchang-data.ts plus its chunk files (${targets.length} month datasets expected).`);
+  const reason=stale.length?`stale shards: ${stale.join(", ")}`:"generated shard registry/file set is stale";
+  throw new Error(`Muhurat build data is stale (${reason}). Run npm run precompute:muhurat and commit generated/muhurat-panchang-shards.ts plus its shard files.`);
 }
 
+await mkdir(generatedDir,{recursive:true});
 clearMuhuratPanchangMonthCache();
-const entries:MuhuratBuildDataManifest["entries"]={};
-for(const target of targets){
-  console.log(`[muhurat-precompute] calculating ${target.key}`);
-  const month=await getMuhuratPanchangMonth(target.year,target.month,target.city);
-  entries[target.key]=month.map(toMuhuratPanchangSnapshot);
+let totalRaw=0,totalGzip=0,totalBase64=0,generatedTargets=0;
+for(const [shardId,shardTargets] of grouped){
+  const signature=expectedSignature(shardId,shardTargets,engine,schema);
+  const existing=await readCommittedShard(shardId);
+  if(isFreshShard(existing,signature,shardId,shardTargets)){
+    const source=await readFile(shardPath(shardId),"utf8");
+    const match=source.match(/^export default (.+);\s*$/s);
+    const base64=match?JSON.parse(match[1]) as string:"";
+    const compressed=Buffer.from(base64,"base64");
+    const raw=compressed.length?gunzipSync(compressed).byteLength:0;
+    totalRaw+=raw; totalGzip+=compressed.byteLength; totalBase64+=base64.length;
+    console.log(`[muhurat-precompute] reused ${shardId} (${shardTargets.length} datasets)`);
+    continue;
+  }
+
+  const entries:MuhuratBuildDataShard["entries"]={};
+  for(const target of shardTargets){
+    console.log(`[muhurat-precompute] calculating ${target.key}`);
+    const month=await getMuhuratPanchangMonth(target.year,target.month,target.city);
+    entries[target.key]=month.map(toMuhuratPanchangSnapshot);
+  }
+  const shard:MuhuratBuildDataShard={
+    version:MUHURAT_BUILD_DATA_VERSION,
+    shardId,
+    signature,
+    generatedAt:new Date().toISOString(),
+    targets:shardTargets.map(target=>target.key),
+    entries,
+  };
+  const packed=await writeShard(shard);
+  totalRaw+=packed.rawBytes; totalGzip+=packed.compressedBytes; totalBase64+=packed.base64Chars; generatedTargets+=shardTargets.length;
+  console.log(`[muhurat-precompute] wrote shard ${shardId}: ${shardTargets.length} datasets, ${packed.rawBytes} raw bytes -> ${packed.compressedBytes} gzip bytes`);
 }
 
-const manifest:MuhuratBuildDataManifest={
-  version:MUHURAT_BUILD_DATA_VERSION,
-  signature,
-  generatedAt:new Date().toISOString(),
-  targets:targets.map(target=>target.key),
-  entries,
-};
-const encoded=`${JSON.stringify(manifest)}\n`;
-const bytes=Buffer.byteLength(encoded);
-if(bytes>MUHURAT_BUILD_DATA_MAX_BYTES){
-  throw new Error(`Muhurat build data is ${bytes} bytes, above the ${MUHURAT_BUILD_DATA_MAX_BYTES} byte safety cap. Shard or reduce the static matrix before shipping.`);
-}
-const packed=await writeCompressedPayload(encoded);
-console.log(`[muhurat-precompute] wrote ${targets.length} month datasets: ${bytes} raw bytes -> ${packed.compressedBytes} gzip bytes -> ${packed.base64Chars} base64 chars across ${packed.chunks} chunks`);
+await cleanGeneratedFiles(shardIds);
+await writeFile(registryPath,registrySource(shardIds),"utf8");
+console.log(`[muhurat-precompute] ready ${shardIds.length} month shards / ${targets.length} datasets (${generatedTargets} recalculated): ${totalRaw} raw bytes -> ${totalGzip} gzip bytes -> ${totalBase64} base64 chars`);
