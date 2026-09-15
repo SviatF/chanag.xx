@@ -12,9 +12,10 @@ describe("Muhurat build-time Panchang reuse",()=>{
     expect(source).not.toContain("caches.default");
   });
 
-  it("reuses event-independent month Panchang data before event filtering",()=>{
+  it("prefers precomputed month data and keeps the live month cache as fallback",()=>{
     const monthly=source.slice(source.indexOf("export async function getMonthlyMuhurat"));
-    expect(monthly).toContain("await getMuhuratPanchangMonth(year,month,city)");
+    expect(monthly).toContain("getPrecomputedMuhuratPanchangMonth(year,month,city)");
+    expect(monthly).toContain("??await getMuhuratPanchangMonth(year,month,city)");
     expect(monthly).not.toContain("await getPanchang(");
   });
 

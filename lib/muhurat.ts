@@ -1,5 +1,7 @@
 import { City } from "./cities";
 import { createBoundedPromiseCache } from "./bounded-promise-cache";
+import { type MuhuratPanchangSnapshot } from "./muhurat-build-data-schema";
+import { getPrecomputedMuhuratPanchangMonth } from "./muhurat-precomputed";
 import { getPanchang, Panchang, TimeWindow } from "./panchang";
 
 export type MuhuratEvent="wedding"|"griha-pravesh"|"vehicle-purchase"|"naming-ceremony"|"business-opening"|"gold-purchase";
@@ -26,7 +28,7 @@ export type MuhuratPlanningScore={
 
 export type MuhuratRow={
   date:string;
-  data:Panchang;
+  data:MuhuratPanchangSnapshot;
   recommendedWindows:RecommendedMuhuratWindow[];
   avoidWindows:{label:string;window:TimeWindow}[];
   reasons:string[];
@@ -116,7 +118,7 @@ function planningGrade(score:number):MuhuratPlanningGrade{
   return "Limited";
 }
 
-export function buildRecommendedMuhuratWindows(data:Panchang):RecommendedMuhuratWindow[]{
+export function buildRecommendedMuhuratWindows(data:MuhuratPanchangSnapshot):RecommendedMuhuratWindow[]{
   const blocked=mergeRanges([data.rahu,data.yamaganda,data.gulika].map(window=>({start:toMinutes(window.start),end:toMinutes(window.end)})));
   const candidates:{range:Range;source:string}[]=[];
 
@@ -186,7 +188,8 @@ export function buildMuhuratPlanningScore(event:string,windows:RecommendedMuhura
 export async function getMonthlyMuhurat(event:string,year:number,month:number,city:City){
   const rule=muhuratRules[event];
   if(!rule)throw new Error(`Unsupported Muhurat event: ${event}`);
-  const monthPanchang=await getMuhuratPanchangMonth(year,month,city);
+  const precomputed=await getPrecomputedMuhuratPanchangMonth(year,month,city);
+  const monthPanchang=precomputed??await getMuhuratPanchangMonth(year,month,city);
   const rows:MuhuratRow[]=[];
   for(const data of monthPanchang){
     if(!rule.goodTithi.includes(data.tithi)||!rule.goodNakshatra.includes(data.nakshatra))continue;
