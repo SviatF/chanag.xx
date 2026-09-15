@@ -6,9 +6,6 @@ on:
   pull_request:
     branches: [main]
 
-permissions:
-  contents: write
-
 jobs:
   test-and-build:
     runs-on: ubuntu-latest
@@ -27,22 +24,6 @@ jobs:
       - name: Install dependencies
         run: npm install --legacy-peer-deps --no-audit --no-fund
 
-      - name: Regenerate Muhurat shard artifacts on migration branch
-        if: github.event_name == 'pull_request' && github.head_ref == 'feat/muhurat-sharded-precompute'
-        env:
-          HEAD_REF: ${{ github.head_ref }}
-        run: |
-          git fetch origin "$HEAD_REF"
-          git checkout -B "$HEAD_REF" "origin/$HEAD_REF"
-          npm run precompute:muhurat
-          if ! git diff --quiet -- generated/; then
-            git config user.name "github-actions[bot]"
-            git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-            git add generated/
-            git commit -m "Regenerate Muhurat month-sharded precompute artifacts"
-            git push origin HEAD:"$HEAD_REF"
-          fi
-
       - name: Verify committed Muhurat build data
         run: npm run verify:muhurat-precompute
 
@@ -58,3 +39,18 @@ jobs:
 
       - name: Build Cloudflare vinext bundle
         run: npm run build
+
+      - name: Smoke Muhurat shard and live fallback on Cloudflare preview
+        if: github.event_name == 'pull_request' && github.head_ref == 'feat/muhurat-sharded-precompute'
+        run: |
+          base="https://feat-muhurat-sharded-precompute-chanag-xx.oleg22777.workers.dev"
+          for path in \
+            "/muhurat/wedding/2026/09/varanasi" \
+            "/muhurat/griha-pravesh/2027/01/patna" \
+            "/muhurat/wedding/2027/02/delhi"
+          do
+            echo "smoke: $path"
+            curl --fail --silent --show-error --location \
+              --retry 12 --retry-delay 10 --retry-all-errors --max-time 60 \
+              --output /dev/null "$base$path"
+          done
