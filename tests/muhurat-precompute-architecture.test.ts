@@ -9,17 +9,17 @@ function manifest(){
 }
 
 describe("Muhurat precomputed build-data architecture",()=>{
-  it("ships a compact, complete six-month-context pilot artifact",()=>{
+  it("ships a compact, complete 50-month-context priority artifact",()=>{
     const data=manifest();
     expect(data.version).toBe(1);
     expect(data.signature).toMatch(/^[a-f0-9]{64}$/);
-    expect(data.targets).toHaveLength(6);
-    expect(Object.keys(data.entries)).toHaveLength(6);
+    expect(data.targets).toHaveLength(50);
+    expect(Object.keys(data.entries)).toHaveLength(50);
     expect(Buffer.byteLength(JSON.stringify(data))).toBeLessThan(MUHURAT_BUILD_DATA_MAX_BYTES);
 
     for(const target of data.targets){
       const rows=data.entries[target];
-      expect(rows.length===30||rows.length===31).toBe(true);
+      expect(rows.length===28||rows.length===29||rows.length===30||rows.length===31).toBe(true);
       for(const row of rows){
         expect(Object.keys(row).sort()).toEqual([
           "abhijit","date","dayChoghadiya","gulika","nakshatra","rahu","tithi","yamaganda",
@@ -30,13 +30,13 @@ describe("Muhurat precomputed build-data architecture",()=>{
 
   it("does not ship the old raw JSON artifact",()=>{
     expect(existsSync("generated/muhurat-panchang.json")).toBe(false);
-    expect(MUHURAT_PANCHANG_GZIP_BASE64.length).toBeLessThan(100_000);
+    expect(MUHURAT_PANCHANG_GZIP_BASE64.length).toBeLessThan(1_000_000);
   });
 
-  it("derives freshness from the target matrix, Panchang engine and snapshot schema",()=>{
+  it("derives freshness from the priority target matrix, Panchang engine and snapshot schema",()=>{
     const source=readFileSync("scripts/precompute-muhurat.ts","utf8");
-    expect(source).toContain("muhuratMonthSsgPilot");
-    expect(source).toContain("muhuratCityMonthSsgPilot");
+    expect(source).toContain("muhuratMonthSsgPriority");
+    expect(source).toContain("muhuratCityMonthSsgPriority");
     expect(source).toContain('readFile(resolve(root,"lib/panchang.ts"');
     expect(source).toContain('readFile(resolve(root,"lib/muhurat-build-data-schema.ts"');
     expect(source).toContain("muhuratBuildDataKey");
