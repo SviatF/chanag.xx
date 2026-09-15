@@ -4,6 +4,7 @@ import {notFound} from "next/navigation";
 import Header from "@/components/Header";
 import TopicalGraph from "@/components/TopicalGraph";
 import {findCityBySlug} from "@/lib/cities";
+import {getPrecomputedMuhuratPanchangMonth} from "@/lib/muhurat-precomputed";
 import {getPanchang} from "@/lib/panchang";
 import {festivalsForYear} from "@/lib/festivals";
 import {isMonthlyIndexable,robotsFor} from "@/lib/seo-policy";
@@ -43,7 +44,8 @@ export default async function CalendarPage({params}:{params:Promise<{city:string
   if(!city||!y||!m)notFound();
   const count=new Date(Date.UTC(y,m,0)).getUTCDate();
   const first=new Date(Date.UTC(y,m-1,1)).getUTCDay();
-  const entries=await Promise.all(Array.from({length:count},(_,i)=>getPanchang(new Date(Date.UTC(y,m-1,i+1,6)),city)));
+  const precomputed=await getPrecomputedMuhuratPanchangMonth(y,m,city);
+  const entries=precomputed??await Promise.all(Array.from({length:count},(_,i)=>getPanchang(new Date(Date.UTC(y,m-1,i+1,6)),city)));
 
   const monthFestivals=festivalsForYear(y).filter(f=>Number(f.date.slice(5,7))===m);
   const festivalByDate=new Map(monthFestivals.map(f=>[f.date,f]));
