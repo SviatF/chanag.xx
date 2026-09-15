@@ -8,11 +8,17 @@ import {getPanchang} from "@/lib/panchang";
 import {festivalsForYear} from "@/lib/festivals";
 import {isMonthlyIndexable,robotsFor} from "@/lib/seo-policy";
 import {parseRouteMonth,parseRouteYear} from "@/lib/route-validation";
+import {calendarMonthSsgPriority} from "@/lib/static-seo-routes";
 import {buildCalendarTopicalGraph} from "@/lib/topical-links";
 import {vratYearLinks} from "@/lib/vrat-topical-links";
 import {cityCalendarYearPath} from "@/lib/yearly-expansion";
 
+export const dynamicParams=true;
 export const revalidate=86400;
+
+export function generateStaticParams(){
+  return calendarMonthSsgPriority;
+}
 
 function monthLabel(year:number,month:number){return new Intl.DateTimeFormat("en-IN",{month:"long",timeZone:"Asia/Kolkata"}).format(new Date(Date.UTC(year,month-1,1)));}
 

@@ -16,10 +16,16 @@ import {nextValidatedFestival} from "@/lib/festival-expansion";
 import {todayInIndia} from "@/lib/dates";
 import {resolveDailyRouteDate} from "@/lib/route-validation";
 import {regionalAlternates} from "@/lib/regional-seo";
+import {datedPanchangSsgPriority} from "@/lib/static-seo-routes";
 import {buildDailyTopicalGraph} from "@/lib/topical-links";
 import {vratLinkForTithi} from "@/lib/vrat-topical-links";
 
+export const dynamicParams=true;
 export const revalidate=3600;
+
+export function generateStaticParams(){
+  return datedPanchangSsgPriority;
+}
 
 export async function generateMetadata({params}:{params:Promise<{city:string,date?:string[]}>}):Promise<Metadata>{
   const p=await params;

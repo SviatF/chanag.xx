@@ -2,7 +2,12 @@ import {readFileSync} from "node:fs";
 import {describe,expect,it} from "vitest";
 import {festivals2026} from "../lib/festivals";
 import {phase1PriorityCities,primaryVratTypes,yearlyIndexYears} from "../lib/seo-policy";
+import {rollingDailyDates,rollingMonths,sitemapPriorityCities} from "../lib/seo-sitemap";
 import {
+  calendarMonthSsgPriority,
+  calendarMonthStaticKey,
+  datedPanchangSsgPriority,
+  datedPanchangStaticKey,
   festivalCitySsgPilot,
   festivalCitySsgPriority,
   festivalCityStaticKey,
@@ -49,6 +54,29 @@ describe("SSG/ISR SEO architecture",()=>{
     expect(new Set(cityKeys).size).toBe(cityKeys.length);
   });
 
+  it("pre-renders only explicit dated Panchang URLs from the live sitemap window",()=>{
+    const dates=rollingDailyDates(14,45);
+    expect(sitemapPriorityCities.length).toBe(20);
+    expect(dates.length).toBe(60);
+    expect(datedPanchangSsgPriority).toHaveLength(sitemapPriorityCities.length*dates.length);
+    expect(datedPanchangSsgPriority).toHaveLength(1200);
+    expect(datedPanchangSsgPriority.every(item=>item.date.length===1&&/^\d{4}-\d{2}-\d{2}$/.test(item.date[0]))).toBe(true);
+
+    const keys=datedPanchangSsgPriority.map(datedPanchangStaticKey);
+    expect(new Set(keys).size).toBe(keys.length);
+    expect(keys.some(key=>/^[^/]+$/.test(key))).toBe(false);
+  });
+
+  it("pre-renders monthly calendar URLs from the live sitemap window",()=>{
+    const months=rollingMonths(2,12);
+    expect(months.length).toBe(15);
+    expect(calendarMonthSsgPriority).toHaveLength(sitemapPriorityCities.length*months.length);
+    expect(calendarMonthSsgPriority).toHaveLength(300);
+
+    const keys=calendarMonthSsgPriority.map(calendarMonthStaticKey);
+    expect(new Set(keys).size).toBe(keys.length);
+  });
+
   it("pre-renders priority festival pages while preserving ISR fallback",()=>{
     const source=readFileSync("app/festivals/[festival]/[year]/[city]/page.tsx","utf8");
     expect(source).toContain("generateStaticParams");
@@ -71,10 +99,21 @@ describe("SSG/ISR SEO architecture",()=>{
     expect(citySource).toContain("export const revalidate=604800");
   });
 
-  it("keeps daily Panchang on hourly ISR rather than freezing current-day content at build time",()=>{
+  it("pre-renders explicit dated Panchang pages while keeping the undated today route on hourly ISR",()=>{
     const source=readFileSync("app/panchang/[city]/[[...date]]/page.tsx","utf8");
+    expect(source).toContain("generateStaticParams");
+    expect(source).toContain("datedPanchangSsgPriority");
+    expect(source).toContain("export const dynamicParams=true");
     expect(source).toContain("export const revalidate=3600");
-    expect(source).not.toContain("generateStaticParams");
+    expect(datedPanchangSsgPriority.every(item=>item.date.length===1)).toBe(true);
+  });
+
+  it("pre-renders sitemap-visible monthly calendars while preserving daily ISR fallback",()=>{
+    const source=readFileSync("app/calendar/[city]/[year]/[month]/page.tsx","utf8");
+    expect(source).toContain("generateStaticParams");
+    expect(source).toContain("calendarMonthSsgPriority");
+    expect(source).toContain("export const dynamicParams=true");
+    expect(source).toContain("export const revalidate=86400");
   });
 
   it("keeps static assets asset-first and the Worker API-first",()=>{
