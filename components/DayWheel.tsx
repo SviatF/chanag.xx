@@ -193,9 +193,6 @@ function wheelGeometry(data:Panchang){
 function labelPoint(start:number,end:number,key:Tone,muted=false){
   const mid=(start+end)/2;
 
-  // Exact timing windows can become narrow and adjacent around midday.
-  // Preserve the approved typography and sector geometry, but stagger their
-  // labels radially so copy never stacks on top of neighboring copy.
   const radius:Partial<Record<Tone,number>>={
     night:186,
     rahu:207,
@@ -405,15 +402,17 @@ export default function DayWheel({data,placement="content"}:{data:Panchang;place
         />;
       })}
 
-      <g filter="url(#soft-shadow)">
+      <g opacity=".22">
         {wheel.baseSectors.map(sector=><path
           key={`base-${sector.key}`}
           d={sectorPath(sector.start,sector.end)}
           fill={sectorFill(sector.key)}
-          stroke="rgba(191,143,52,.26)"
-          strokeWidth=".8"
+          stroke="rgba(191,143,52,.14)"
+          strokeWidth=".6"
         />)}
+      </g>
 
+      <g filter="url(#soft-shadow)">
         {wheel.sectors.map(sector=><path
           key={sector.key}
           d={sectorPath(sector.start,sector.end)}
