@@ -14,8 +14,16 @@ import {getFestivalLocalReference,getFestivalRuleProfile} from "@/lib/religious-
 import {isPriorityCity,robotsFor} from "@/lib/seo-policy";
 import {parseRouteYear} from "@/lib/route-validation";
 import {buildFestivalTopicalGraph} from "@/lib/topical-links";
+import {festivalCitySsgPilot} from "@/lib/static-seo-routes";
 
+// Phase 1 hybrid model: the demand-priority registry is generated at build time,
+// while every other valid festival/city URL remains available through ISR.
+export const dynamicParams=true;
 export const revalidate=86400;
+
+export function generateStaticParams(){
+  return festivalCitySsgPilot;
+}
 
 function vratSlugForTithi(tithi:string){
   if(tithi==="Ekadashi")return "ekadashi";
