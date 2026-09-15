@@ -6,9 +6,6 @@ on:
   pull_request:
     branches: [main]
 
-permissions:
-  contents: write
-
 jobs:
   test-and-build:
     runs-on: ubuntu-latest
@@ -27,22 +24,6 @@ jobs:
       - name: Install dependencies
         run: npm install --legacy-peer-deps --no-audit --no-fund
 
-      - name: Repair Muhurat build artifact on PR branch
-        if: github.event_name == 'pull_request'
-        env:
-          HEAD_REF: ${{ github.head_ref }}
-        run: |
-          git fetch origin "$HEAD_REF"
-          git checkout -B "$HEAD_REF" "origin/$HEAD_REF"
-          npm run precompute:muhurat
-          if ! git diff --quiet -- generated/; then
-            git config user.name "github-actions[bot]"
-            git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-            git add generated/
-            git commit -m "Regenerate Muhurat precompute artifact"
-            git push origin HEAD:"$HEAD_REF"
-          fi
-
       - name: Verify committed Muhurat build data
         run: npm run verify:muhurat-precompute
 
@@ -58,3 +39,24 @@ jobs:
 
       - name: Build Cloudflare vinext bundle
         run: npm run build
+
+      - name: Smoke-test Muhurat Cloudflare preview
+        if: github.event_name == 'pull_request' && github.head_ref == 'feat/muhurat-precomputed-datasets'
+        env:
+          HEAD_REF: ${{ github.head_ref }}
+        run: |
+          slug=$(printf '%s' "$HEAD_REF" | tr '[:upper:]' '[:lower:]' | sed -E 's#[/_]+#-#g; s#[^a-z0-9-]+#-#g; s#^-+##; s#-+$##')
+          base="https://${slug}-chanag-xx.oleg22777.workers.dev"
+          check_page() {
+            path="$1"
+            needle="$2"
+            for attempt in 1 2 3 4 5 6; do
+              body=$(curl -fsSL --max-time 45 "$base$path") && printf '%s' "$body" | grep -Fq "$needle" && return 0
+              sleep 5
+            done
+            echo "::error::Preview smoke failed for $path"
+            exit 1
+          }
+          check_page "/muhurat/wedding/2026/09" "Wedding Muhurat"
+          check_page "/muhurat/griha-pravesh/2026/09/ahmedabad" "Griha Pravesh Muhurat"
+          check_page "/muhurat/vehicle-purchase/2026/09/delhi" "Vehicle Purchase Muhurat"
