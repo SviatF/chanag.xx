@@ -34,7 +34,7 @@ describe("DayWheel time geometry",()=>{
     const sunrise=parseClockMinutes("06:30")!;
 
     expect(forwardSpanMinutes(sunset,sunrise)).toBe(720);
-    expect(midpointMinutes(sunset,sunrise)).toBe(0);
+    expect(midpointMinutes(sunset,sunrise)).toBe(30);
   });
 
   it("keeps the approved cardinal clock orientation",()=>{
