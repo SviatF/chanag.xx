@@ -58,6 +58,9 @@ const CANNIBALIZATION_HIGH_MIN_TOTAL_IMPRESSIONS=20;
 const CANNIBALIZATION_MIN_LANDING_IMPRESSIONS=3;
 const CANNIBALIZATION_MIN_LANDING_SHARE=.15;
 const CANNIBALIZATION_HIGH_SECONDARY_SHARE=.25;
+const DO_NOW_MIN_IMPRESSIONS=20;
+const SCALE_MIN_IMPRESSIONS=30;
+const ANALYZE_INTENT_MIN_IMPRESSIONS=50;
 
 function key(row:GscRow|undefined,index=0){return row?.keys?.[index]??"";}
 function safePct(current:number,previous:number){if(previous<=0)return current>0?100:null;return ((current-previous)/previous)*100;}
@@ -167,7 +170,13 @@ function scoreOpportunity(impressions:number,position:number,ctr:number,maxImpre
   return Math.round(clamp((demand*.35+proximity*.4+headroom*.25)*100*confidence));
 }
 
-function priority(score:number,impressions:number):SeoPriority{if(score>=75&&impressions>=10)return "P0";if(score>=55&&impressions>=5)return "P1";if(score>=35&&impressions>=3)return "P2";return "WATCH";}
+function priority(score:number,impressions:number):SeoPriority{
+  if(impressions<DO_NOW_MIN_IMPRESSIONS)return "WATCH";
+  if(score>=75&&impressions>=SCALE_MIN_IMPRESSIONS)return "P0";
+  if(score>=55)return "P1";
+  if(score>=35)return "P2";
+  return "WATCH";
+}
 function decline(current:SeoMetric,previous:SeoMetric){const pct=safePct(current.impressions,previous.impressions);const positionWorsened=current.impressions+previous.impressions>=5&&current.position-previous.position>=8;return previous.impressions>=5&&((pct!==null&&pct<=-40)||positionWorsened);}
 function trend(current:SeoMetric,previous:SeoMetric){return safePct(current.impressions,previous.impressions);}
 
@@ -183,12 +192,11 @@ function cannibalizationForPage(url:string,queries:QueryIntelligence[]){
 function commandAction(position:number,impressions:number,cannibalization:QueryCannibalizationRisk,isDeclining:boolean,task:SeoCommandTask|null):SeoCommandAction{
   if(task&&task.status!=="closed")return "DO_NOT_TOUCH";
   if(cannibalization==="HIGH"||isDeclining)return "FIX";
-  if(impressions<=2)return "WAIT";
-  if(position<=3)return "SCALE";
-  if(position<=10&&impressions>=3)return "SCALE";
-  if(position<=20&&impressions>=3)return "DO_NOW";
-  if(position<=50&&impressions>=5)return "DO_NOW";
-  if(position<=100&&impressions>=10)return "ANALYZE_INTENT";
+  if(impressions<DO_NOW_MIN_IMPRESSIONS)return "WAIT";
+  if(position<=10&&impressions>=SCALE_MIN_IMPRESSIONS)return "SCALE";
+  if(position<=20&&impressions>=DO_NOW_MIN_IMPRESSIONS)return "DO_NOW";
+  if(position<=50&&impressions>=SCALE_MIN_IMPRESSIONS)return "DO_NOW";
+  if(position<=100&&impressions>=ANALYZE_INTENT_MIN_IMPRESSIONS)return "ANALYZE_INTENT";
   return "WAIT";
 }
 
@@ -196,10 +204,10 @@ function reason(action:SeoCommandAction,page:{position:number;impressions:number
   if(action==="DO_NOT_TOUCH")return `Зміна вже в observation. Не чіпай сторінку до ${page.task?new Date(page.task.verifyAt).toLocaleDateString("uk-UA"):"перевірки"}.`;
   if(action==="FIX"&&page.cannibalization!=="NONE")return `Один або кілька запитів мають достатній GSC evidence і реально конкурують між landing pages. Ризик канібалізації: ${page.cannibalization}.`;
   if(action==="FIX")return "Сигнал сторінки погіршується: impressions або позиція суттєво просіли відносно попереднього тижня.";
-  if(action==="SCALE")return `Сторінка вже близько або всередині TOP10 при повторному non-brand попиті (${page.impressions} показів).`;
-  if(action==="DO_NOW")return `Позиція ${page.position.toFixed(1)} при повторних non-brand показах — реальна зона швидкого SEO-приросту.`;
-  if(action==="ANALYZE_INTENT")return `Google тестує сторінку по query “${page.topQuery}”, але релевантність ще слабка. Спочатку перевір intent.`;
-  return "Даних по non-brand intent поки недостатньо для безпечної SEO-зміни. Накопичуємо сигнал.";
+  if(action==="SCALE")return `Сторінка вже близько або всередині TOP10 при достатньому повторному non-brand попиті (${page.impressions} показів).`;
+  if(action==="DO_NOW")return `Позиція ${page.position.toFixed(1)} при достатньому повторному non-brand попиті (${page.impressions} показів) — реальна зона швидкого SEO-приросту.`;
+  if(action==="ANALYZE_INTENT")return `Google стабільно тестує сторінку по query “${page.topQuery}”, але релевантність ще слабка. Спочатку перевір intent.`;
+  return `Даних по non-brand intent поки недостатньо для безпечної SEO-зміни (${page.impressions} показів; action threshold ${DO_NOW_MIN_IMPRESSIONS}+). Накопичуємо сигнал.`;
 }
 
 function actionText(action:SeoCommandAction,page:{topQuery:string;position:number;cannibalization:QueryCannibalizationRisk},links:string[]){
