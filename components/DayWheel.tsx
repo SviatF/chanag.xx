@@ -201,7 +201,7 @@ function labelPoint(start:number,end:number,key:Tone,muted=false){
     rahu:207,
     sunset:185,
     day:183,
-    abhijit:muted?148:154,
+    abhijit:muted?140:154,
     sunrise:185,
     yamaganda:196,
     gulika:216,
