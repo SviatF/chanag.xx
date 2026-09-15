@@ -25,7 +25,15 @@ jobs:
         run: npm install --legacy-peer-deps --no-audit --no-fund
 
       - name: Generate Muhurat pilot build data
-        run: npm run precompute:muhurat:print
+        run: npm run precompute:muhurat
+
+      - name: Upload Muhurat build data
+        uses: actions/upload-artifact@v4
+        with:
+          name: muhurat-panchang-build-data
+          path: generated/muhurat-panchang.json
+          if-no-files-found: error
+          retention-days: 1
 
       - name: Check Cloudflare vinext compatibility
         continue-on-error: true
