@@ -1,9 +1,13 @@
+import {guardedNotFoundResponse,publicRouteGuard} from "./public-route-guard";
+
 type ExecutionContextLike={waitUntil(promise:Promise<unknown>):void};
 type EdgeCache={match(request:Request):Promise<Response|undefined>;put(request:Request,response:Response):Promise<void>};
 
 type CacheStorageWithDefault={default?:EdgeCache};
 
 const TRACKING_PARAMS=new Set(["gclid","fbclid","msclkid","dclid","gbraid","wbraid"]);
+const SEO_CONTENT_PREFIXES=["/panchang/","/festivals/","/vrat/","/muhurat/","/calendar/","/hindu-calendar/","/festivals-calendar/","/regional/","/knowledge/"];
+const SEO_CONTENT_EXACT=new Set(["/","/panchang","/festivals","/vrat","/muhurat","/calendar","/hindu-calendar","/festivals-calendar","/regional","/knowledge"]);
 const inflight=new Map<string,Promise<Response>>();
 
 export type PublicEdgeCacheDecision={eligible:boolean;reason:string;cacheUrl:string|null};
@@ -13,6 +17,7 @@ function defaultEdgeCache(){
 }
 
 function isTrackingParam(name:string){return name.toLowerCase().startsWith("utm_")||TRACKING_PARAMS.has(name.toLowerCase());}
+function isSeoContentPath(pathname:string){return SEO_CONTENT_EXACT.has(pathname)||SEO_CONTENT_PREFIXES.some(prefix=>pathname.startsWith(prefix));}
 
 export function publicEdgeCacheDecision(request:Request,versionId="dev"):PublicEdgeCacheDecision{
   if(request.method!=="GET")return {eligible:false,reason:"method",cacheUrl:null};
@@ -26,7 +31,12 @@ export function publicEdgeCacheDecision(request:Request,versionId="dev"):PublicE
   for(const key of [...url.searchParams.keys()]){
     if(isTrackingParam(key))url.searchParams.delete(key);
   }
-  if(url.searchParams.size>0)return {eligible:false,reason:"functional-query",cacheUrl:null};
+  if(url.searchParams.size>0){
+    // SEO content does not use query-string state. Collapse bot/referrer noise onto
+    // the canonical pathname instead of forcing a fresh SSR render for every variant.
+    if(isSeoContentPath(url.pathname))url.search="";
+    else return {eligible:false,reason:"functional-query",cacheUrl:null};
+  }
 
   url.searchParams.set("__pv_edge_v",versionId||"dev");
   return {eligible:true,reason:"public-html",cacheUrl:url.toString()};
@@ -61,7 +71,6 @@ function withTelemetry(response:Response,cacheStatus:"HIT"|"MISS"|"COALESCED"|"B
 
 function cacheableCopy(response:Response,ttl:number){
   const headers=new Headers(response.headers);
-  // Browser stays revalidation-first while Cloudflare Cache API retains the object at the edge.
   headers.set("cache-control",`public, max-age=0, s-maxage=${ttl}, stale-while-revalidate=60`);
   headers.set("x-panchvani-edge-cache","STORED");
   return new Response(response.body,{status:response.status,statusText:response.statusText,headers});
@@ -82,6 +91,11 @@ export async function servePublicWithEdgeCache(
   ctx:ExecutionContextLike,
   render:()=>Promise<Response>,
 ){
+  // Reject obvious scanner garbage and malformed deterministic route shapes before
+  // importing Vinext/Next. This keeps bot noise close to zero CPU.
+  const guard=publicRouteGuard(new URL(request.url).pathname);
+  if(guard.blocked)return guardedNotFoundResponse(guard.reason);
+
   const decision=publicEdgeCacheDecision(request,versionId??"dev");
   if(!decision.eligible||!decision.cacheUrl)return withTelemetry(await render(),"BYPASS");
 
