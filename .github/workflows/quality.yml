@@ -6,9 +6,6 @@ on:
   pull_request:
     branches: [main]
 
-permissions:
-  contents: write
-
 jobs:
   test-and-build:
     runs-on: ubuntu-latest
@@ -16,8 +13,6 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
-        with:
-          ref: ${{ github.event.pull_request.head.sha || github.sha }}
 
       - name: Setup Node
         uses: actions/setup-node@v4
@@ -28,18 +23,6 @@ jobs:
 
       - name: Install dependencies
         run: npm install --legacy-peer-deps --no-audit --no-fund
-
-      - name: Refresh shared Panchang build data
-        if: github.event_name == 'pull_request' && github.head_ref == 'feat/calendar-precomputed-serving'
-        run: |
-          npm run precompute:muhurat
-          if ! git diff --quiet -- generated; then
-            git config user.name "github-actions[bot]"
-            git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-            git add generated/muhurat-panchang-shard-*.ts generated/muhurat-panchang-shards.ts
-            git commit -m "Refresh Panchang precompute for calendar serving"
-            git push origin HEAD:${{ github.head_ref }}
-          fi
 
       - name: Verify committed Muhurat build data
         run: npm run verify:muhurat-precompute
