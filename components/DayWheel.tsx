@@ -1,6 +1,12 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
+import {
+  centeredClockwiseWedge,
+  clockwiseWedgeForTimeInterval,
+  minutesToDialAngle,
+  parseClockMinutes,
+} from "@/lib/day-wheel-geometry";
 import type { Panchang, TimeWindow } from "@/lib/panchang";
 import styles from "./DayWheel.module.css";
 
@@ -82,12 +88,6 @@ function indiaDateKey(){
   return `${year}-${month}-${day}`;
 }
 
-function liveAngle(minutes:number){
-  // The approved concept runs counter-clockwise:
-  // 24:00 top, 06:00 left, 12:00 bottom, 18:00 right.
-  return (360-(minutes/1440)*360)%360;
-}
-
 function polar(radius:number,angle:number){
   const radians=(angle-90)*Math.PI/180;
   return {
@@ -112,24 +112,85 @@ function sectorPath(start:number,end:number){
   ].join(" ");
 }
 
-function sectors(data:Panchang):Sector[]{
-  return [
+function exactWindowSector(
+  key:Extract<Tone,"rahu"|"abhijit"|"yamaganda"|"gulika">,
+  label:string,
+  value:TimeWindow|null,
+  fallback:{start:number;end:number},
+  muted=false,
+):Sector{
+  const startMinutes=parseClockMinutes(value?.start);
+  const endMinutes=parseClockMinutes(value?.end);
+  const wedge=startMinutes===null||endMinutes===null
+    ? fallback
+    : clockwiseWedgeForTimeInterval(startMinutes,endMinutes);
+
+  return {
+    key,
+    label,
+    value:formatWindow(value),
+    start:wedge.start,
+    end:wedge.end,
+    muted,
+  };
+}
+
+function instantSector(
+  key:Extract<Tone,"sunrise"|"sunset">,
+  label:string,
+  value:string,
+  fallback:{start:number;end:number},
+):Sector{
+  const minutes=parseClockMinutes(value);
+  const wedge=minutes===null
+    ? fallback
+    : centeredClockwiseWedge(minutes,fallback.end-fallback.start);
+
+  return {
+    key,
+    label,
+    value,
+    start:wedge.start,
+    end:wedge.end,
+    icon:"☀",
+  };
+}
+
+function wheelGeometry(data:Panchang){
+  const sunriseMinutes=parseClockMinutes(data.sunrise);
+  const sunsetMinutes=parseClockMinutes(data.sunset);
+
+  const baseSectors:Sector[]=[];
+  if(sunriseMinutes!==null&&sunsetMinutes!==null){
+    const day=clockwiseWedgeForTimeInterval(sunriseMinutes,sunsetMinutes);
+    const night=clockwiseWedgeForTimeInterval(sunsetMinutes,sunriseMinutes);
+    baseSectors.push(
+      {key:"day",label:"",start:day.start,end:day.end},
+      {key:"night",label:"",start:night.start,end:night.end},
+    );
+  }
+
+  const sectors:Sector[]=[
+    // Keep the approved visual accent wedges for Day/Night exactly where they were.
     {key:"night",label:"Night",start:330,end:390,icon:"☾"},
-    {key:"rahu",label:"Rahu Kalam",value:formatWindow(data.rahu),start:30,end:72},
-    {key:"sunset",label:"Sunset",value:data.sunset,start:72,end:112,icon:"☀"},
     {key:"day",label:"Day",start:112,end:150,icon:"☀"},
-    {
-      key:"abhijit",
-      label:"Abhijit Muhurat",
-      value:formatWindow(data.abhijit),
-      start:150,
-      end:210,
-      muted:!data.abhijit,
-    },
-    {key:"sunrise",label:"Sunrise",value:data.sunrise,start:210,end:250,icon:"☀"},
-    {key:"yamaganda",label:"Yamaganda",value:formatWindow(data.yamaganda),start:250,end:290},
-    {key:"gulika",label:"Gulika",value:formatWindow(data.gulika),start:290,end:330},
+    // Sunrise/Sunset keep their approved visual width, but their center is the exact time.
+    instantSector("sunset","Sunset",data.sunset,{start:72,end:112}),
+    exactWindowSector(
+      "abhijit",
+      "Abhijit Muhurat",
+      data.abhijit,
+      {start:150,end:210},
+      !data.abhijit,
+    ),
+    instantSector("sunrise","Sunrise",data.sunrise,{start:210,end:250}),
+    // Timed windows use exact start/end geometry and are drawn last so they stay readable.
+    exactWindowSector("yamaganda","Yamaganda",data.yamaganda,{start:250,end:290}),
+    exactWindowSector("gulika","Gulika",data.gulika,{start:290,end:330}),
+    exactWindowSector("rahu","Rahu Kalam",data.rahu,{start:30,end:72}),
   ];
+
+  return {baseSectors,sectors};
 }
 
 function labelPoint(start:number,end:number,key:Tone){
@@ -153,7 +214,7 @@ function sectorFill(key:Tone,muted?:boolean){
 }
 
 export default function DayWheel({data,placement="content"}:{data:Panchang;placement?:"hero"|"content"}){
-  const wheelSectors=useMemo(()=>sectors(data),[data]);
+  const wheel=useMemo(()=>wheelGeometry(data),[data]);
   const [clock,setClock]=useState<{minutes:number;label:string}|null>(null);
 
   useEffect(()=>{
@@ -164,7 +225,7 @@ export default function DayWheel({data,placement="content"}:{data:Panchang;place
   },[]);
 
   const isToday=data.date===indiaDateKey();
-  const handAngle=clock&&isToday?liveAngle(clock.minutes):null;
+  const handAngle=clock&&isToday?minutesToDialAngle(clock.minutes):null;
   const handTip=handAngle===null?null:polar(GOLD_RING_INNER_R-13,handAngle);
   const handGlow=handAngle===null?null:polar(GOLD_RING_R-2,handAngle);
   const handLabel=handAngle===null?null:polar(GOLD_RING_R+20,handAngle);
@@ -344,9 +405,18 @@ export default function DayWheel({data,placement="content"}:{data:Panchang;place
         />;
       })}
 
-      {/* deep gradient sectors */}
+      {/* exact day/night fill beneath the approved accent wedges */}
       <g filter="url(#soft-shadow)">
-        {wheelSectors.map(sector=><path
+        {wheel.baseSectors.map(sector=><path
+          key={`base-${sector.key}`}
+          d={sectorPath(sector.start,sector.end)}
+          fill={sectorFill(sector.key)}
+          stroke="rgba(191,143,52,.26)"
+          strokeWidth=".8"
+        />)}
+
+        {/* approved premium wedge styling; only geometry is data-driven */}
+        {wheel.sectors.map(sector=><path
           key={sector.key}
           d={sectorPath(sector.start,sector.end)}
           fill={sectorFill(sector.key,sector.muted)}
@@ -420,7 +490,7 @@ export default function DayWheel({data,placement="content"}:{data:Panchang;place
       />
 
       {/* sector labels */}
-      {wheelSectors.map(sector=>{
+      {wheel.sectors.map(sector=>{
         const p=labelPoint(sector.start,sector.end,sector.key);
         const color=labelColors[sector.key];
 
