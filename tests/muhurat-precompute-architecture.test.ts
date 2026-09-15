@@ -2,7 +2,7 @@ import {existsSync,readFileSync,readdirSync} from "node:fs";
 import {gunzipSync} from "node:zlib";
 import {describe,expect,it} from "vitest";
 import {MUHURAT_BUILD_DATA_SHARD_MAX_BYTES,type MuhuratBuildDataShard} from "../lib/muhurat-build-data-schema";
-import {muhuratMonthSsgPriority} from "../lib/static-seo-routes";
+import {muhuratMonthSsgPriority,muhuratYearSsgPriority} from "../lib/static-seo-routes";
 
 function decodeShard(path:string){
   const source=readFileSync(path,"utf8");
@@ -16,9 +16,15 @@ function decodeShard(path:string){
 }
 
 describe("Muhurat precomputed build-data architecture",()=>{
-  it("ships thirteen bounded month shards covering the complete 260-context sitemap matrix",()=>{
-    const expectedShardIds=[...new Set(muhuratMonthSsgPriority.map(item=>`${item.year}-${item.month}`))].sort();
-    expect(expectedShardIds).toHaveLength(13);
+  it("ships bounded month shards covering monthly city SSG plus yearly Mumbai baselines",()=>{
+    const monthlyShardIds=new Set(muhuratMonthSsgPriority.map(item=>`${item.year}-${item.month}`));
+    const yearlyShardIds=new Set(muhuratYearSsgPriority.flatMap(item=>
+      Array.from({length:12},(_,index)=>`${item.year}-${String(index+1).padStart(2,"0")}`)
+    ));
+    const expectedShardIds=[...new Set([...monthlyShardIds,...yearlyShardIds])].sort();
+    expect(monthlyShardIds.size).toBe(13);
+    expect(yearlyShardIds.size).toBe(48);
+    expect(expectedShardIds).toHaveLength(48);
 
     const shardFiles=readdirSync("generated")
       .filter(file=>/^muhurat-panchang-shard-\d{4}-\d{2}\.ts$/.test(file))
@@ -31,8 +37,10 @@ describe("Muhurat precomputed build-data architecture",()=>{
       expect(data.version).toBe(2);
       expect(data.shardId).toBe(expectedShardIds[index]);
       expect(data.signature).toMatch(/^[a-f0-9]{64}$/);
-      expect(data.targets).toHaveLength(20);
-      expect(Object.keys(data.entries)).toHaveLength(20);
+      const expectedTargets=monthlyShardIds.has(data.shardId)?20:1;
+      expect(data.targets).toHaveLength(expectedTargets);
+      expect(Object.keys(data.entries)).toHaveLength(expectedTargets);
+      if(expectedTargets===1)expect(data.targets[0].startsWith("mumbai|")).toBe(true);
       expect(Buffer.byteLength(JSON.stringify(data))).toBeLessThan(MUHURAT_BUILD_DATA_SHARD_MAX_BYTES);
       expect(base64Length).toBeLessThan(100_000);
       totalTargets+=data.targets.length;
@@ -47,7 +55,7 @@ describe("Muhurat precomputed build-data architecture",()=>{
         }
       }
     }
-    expect(totalTargets).toBe(260);
+    expect(totalTargets).toBe(295);
   });
 
   it("uses a generated lazy-loader registry and removes the monolithic artifact",()=>{
@@ -59,10 +67,11 @@ describe("Muhurat precomputed build-data architecture",()=>{
     expect(readdirSync("generated").some(file=>/^muhurat-panchang-chunk-\d+\.ts$/.test(file))).toBe(false);
   });
 
-  it("derives per-shard freshness from the priority matrix, Panchang engine and snapshot schema",()=>{
+  it("derives per-shard freshness from monthly and yearly targets, Panchang engine and snapshot schema",()=>{
     const source=readFileSync("scripts/precompute-muhurat.ts","utf8");
     expect(source).toContain("muhuratMonthSsgPriority");
     expect(source).toContain("muhuratCityMonthSsgPriority");
+    expect(source).toContain("muhuratYearSsgPriority");
     expect(source).toContain('readFile(resolve(root,"lib/panchang.ts"');
     expect(source).toContain('readFile(resolve(root,"lib/muhurat-build-data-schema.ts"');
     expect(source).toContain("muhuratBuildDataShardId");

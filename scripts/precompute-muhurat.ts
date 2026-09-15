@@ -12,7 +12,7 @@ import {
   type MuhuratBuildDataShard,
 } from "../lib/muhurat-build-data-schema";
 import {clearMuhuratPanchangMonthCache,getMuhuratPanchangMonth} from "../lib/muhurat";
-import {muhuratCityMonthSsgPriority,muhuratMonthSsgPriority} from "../lib/static-seo-routes";
+import {muhuratCityMonthSsgPriority,muhuratMonthSsgPriority,muhuratYearSsgPriority} from "../lib/static-seo-routes";
 
 const root=resolve(process.cwd());
 const generatedDir=resolve(root,"generated");
@@ -29,6 +29,7 @@ function collectTargets():Target[]{
   const raw=[
     ...muhuratMonthSsgPriority.map(item=>({city:"mumbai",year:Number(item.year),month:Number(item.month)})),
     ...muhuratCityMonthSsgPriority.map(item=>({city:item.city,year:Number(item.year),month:Number(item.month)})),
+    ...muhuratYearSsgPriority.flatMap(item=>Array.from({length:12},(_,index)=>({city:"mumbai",year:Number(item.year),month:index+1}))),
   ];
   const unique=new Map<string,Target>();
   for(const item of raw){

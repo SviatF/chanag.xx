@@ -9,6 +9,7 @@ export type DatedPanchangStaticParam={city:string;date:string[]};
 export type CalendarMonthStaticParam={city:string;year:string;month:string};
 export type HinduCalendarYearStaticParam={year:string};
 export type CityCalendarYearStaticParam={city:string;year:string};
+export type MuhuratYearStaticParam={event:string;year:string};
 export type MuhuratMonthStaticParam={event:string;year:string;month:string};
 export type MuhuratCityMonthStaticParam=MuhuratMonthStaticParam&{city:string};
 
@@ -52,13 +53,17 @@ export const calendarMonthSsgPriority:CalendarMonthStaticParam[]=sitemapPriority
 );
 
 /**
- * Yearly calendar hubs are deterministic inside the same four-year SEO policy
- * used by the yearly sitemap. Keep Muhurat yearly hubs out of this registry for
- * now because each one performs a full 12-month Panchang calculation pass.
+ * Yearly calendar and Muhurat hubs are deterministic inside the same four-year
+ * SEO policy used by the yearly sitemap. Muhurat yearly hubs use Mumbai as their
+ * national baseline and are backed by the same month-sharded build data as the
+ * monthly Muhurat pages.
  */
 export const hinduCalendarYearSsgPriority:HinduCalendarYearStaticParam[]=yearlyStaticYears.map(year=>({year:String(year)}));
 export const cityCalendarYearSsgPriority:CityCalendarYearStaticParam[]=sitemapPriorityCities.flatMap(city=>
   yearlyStaticYears.map(year=>({city:city.slug,year:String(year)}))
+);
+export const muhuratYearSsgPriority:MuhuratYearStaticParam[]=primaryMuhuratEvents.flatMap(event=>
+  yearlyStaticYears.map(year=>({event,year:String(year)}))
 );
 
 /**
@@ -100,6 +105,9 @@ export function hinduCalendarYearStaticKey(item:HinduCalendarYearStaticParam){
 }
 export function cityCalendarYearStaticKey(item:CityCalendarYearStaticParam){
   return `${item.city}/${item.year}`;
+}
+export function muhuratYearStaticKey(item:MuhuratYearStaticParam){
+  return `${item.event}/${item.year}`;
 }
 export function muhuratMonthStaticKey(item:MuhuratMonthStaticParam){
   return `${item.event}/${item.year}/${item.month}`;
