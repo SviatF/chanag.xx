@@ -1,7 +1,9 @@
 import {festivals2026} from "./festivals";
-import {phase1PriorityCities} from "./seo-policy";
+import {phase1PriorityCities,primaryVratTypes,yearlyIndexYears} from "./seo-policy";
 
 export type FestivalCityStaticParam={festival:string;year:string;city:string};
+export type VratYearStaticParam={vrat:string;year:string};
+export type VratCityStaticParam=VratYearStaticParam&{city:string};
 
 /**
  * Phase 2 SSG priority registry for deterministic festival/city pages.
@@ -22,6 +24,25 @@ export const festivalCitySsgPriority:FestivalCityStaticParam[]=phase1PriorityCit
 // It now points at the validated Phase 2 priority registry.
 export const festivalCitySsgPilot=festivalCitySsgPriority;
 
+/**
+ * Vrat routes are deterministic for a fixed vrat/year/city. Keep the build-time
+ * matrix aligned with the exact SEO indexation policy: 3 primary vrat types,
+ * four rolling index years, and the 20 phase-1 priority cities.
+ */
+const vratStaticYears=yearlyIndexYears();
+export const vratYearSsgPriority:VratYearStaticParam[]=primaryVratTypes.flatMap(vrat=>
+  vratStaticYears.map(year=>({vrat,year:String(year)}))
+);
+export const vratCitySsgPriority:VratCityStaticParam[]=vratYearSsgPriority.flatMap(item=>
+  phase1PriorityCities.map(city=>({...item,city}))
+);
+
 export function festivalCityStaticKey(item:FestivalCityStaticParam){
   return `${item.festival}/${item.year}/${item.city}`;
+}
+export function vratYearStaticKey(item:VratYearStaticParam){
+  return `${item.vrat}/${item.year}`;
+}
+export function vratCityStaticKey(item:VratCityStaticParam){
+  return `${item.vrat}/${item.year}/${item.city}`;
 }
