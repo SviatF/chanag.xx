@@ -1,4 +1,5 @@
 import { City } from "./cities";
+import { createBoundedPromiseCache } from "./bounded-promise-cache";
 import { getPanchang, Panchang, TimeWindow } from "./panchang";
 
 export type MuhuratEvent="wedding"|"griha-pravesh"|"vehicle-purchase"|"naming-ceremony"|"business-opening"|"gold-purchase";
@@ -31,6 +32,31 @@ export type MuhuratRow={
   reasons:string[];
   planning:MuhuratPlanningScore;
 };
+
+export const MUHURAT_PANCHANG_MONTH_CACHE_MAX_ENTRIES=24;
+const panchangMonthCache=createBoundedPromiseCache<string,ReadonlyArray<Panchang>>(MUHURAT_PANCHANG_MONTH_CACHE_MAX_ENTRIES);
+
+export function muhuratPanchangMonthCacheKey(year:number,month:number,city:City){
+  return `${city.slug}|${city.lat.toFixed(6)}|${city.lng.toFixed(6)}|${year}-${String(month).padStart(2,"0")}`;
+}
+
+async function buildMuhuratPanchangMonth(year:number,month:number,city:City):Promise<ReadonlyArray<Panchang>>{
+  const days=new Date(Date.UTC(year,month,0)).getUTCDate();
+  const rows:Panchang[]=[];
+  for(let d=1;d<=days;d++){
+    const date=new Date(Date.UTC(year,month-1,d,6));
+    rows.push(await getPanchang(date,city));
+  }
+  return rows;
+}
+
+export function getMuhuratPanchangMonth(year:number,month:number,city:City){
+  const key=muhuratPanchangMonthCacheKey(year,month,city);
+  return panchangMonthCache.getOrCreate(key,()=>buildMuhuratPanchangMonth(year,month,city));
+}
+
+export function clearMuhuratPanchangMonthCache(){panchangMonthCache.clear();}
+export function getMuhuratPanchangMonthCacheSize(){return panchangMonthCache.size();}
 
 export const muhuratRules:Record<string,Rule>={
   "wedding":{title:"Wedding Muhurat",goodTithi:["Dvitiya","Tritiya","Panchami","Saptami","Ekadashi","Trayodashi"],goodNakshatra:["Rohini","Mrigashirsha","Magha","Uttara Phalguni","Hasta","Swati","Anuradha","Mula","Uttara Ashadha","Uttara Bhadrapada","Revati"],idealContinuousMinutes:90,note:"Candidate dates combine traditionally preferred Tithi and Nakshatra. Recommended local reference windows use favorable Panchang periods with Rahu Kalam, Yamaganda and Gulika removed."},
@@ -160,11 +186,9 @@ export function buildMuhuratPlanningScore(event:string,windows:RecommendedMuhura
 export async function getMonthlyMuhurat(event:string,year:number,month:number,city:City){
   const rule=muhuratRules[event];
   if(!rule)throw new Error(`Unsupported Muhurat event: ${event}`);
-  const days=new Date(Date.UTC(year,month,0)).getUTCDate();
+  const monthPanchang=await getMuhuratPanchangMonth(year,month,city);
   const rows:MuhuratRow[]=[];
-  for(let d=1;d<=days;d++){
-    const date=new Date(Date.UTC(year,month-1,d,6));
-    const data=await getPanchang(date,city);
+  for(const data of monthPanchang){
     if(!rule.goodTithi.includes(data.tithi)||!rule.goodNakshatra.includes(data.nakshatra))continue;
     const recommendedWindows=buildRecommendedMuhuratWindows(data);
     rows.push({
