@@ -8,7 +8,7 @@ import {cityBySlug} from "@/lib/cities";
 import {getMonthlyMuhurat,muhuratRules} from "@/lib/muhurat";
 import {buildMuhuratSeoSummary} from "@/lib/muhurat-seo";
 import {muhuratBenchmarkSources,muhuratExcludedFactors,muhuratScreeningStatement} from "@/lib/religious-integrity";
-import {isYearlyMuhuratIndexable,robotsFor} from "@/lib/seo-policy";
+import {isMonthlyMuhuratIndexable,robotsFor} from "@/lib/seo-policy";
 import {parseRouteMonth,parseRouteYear} from "@/lib/route-validation";
 import {muhuratMonthSsgPriority} from "@/lib/static-seo-routes";
 import {buildMuhuratTopicalGraph} from "@/lib/topical-links";
@@ -29,7 +29,7 @@ export async function generateMetadata({params}:{params:Promise<{event:string;ye
   const year=parseRouteYear(p.year),month=parseRouteMonth(p.month);
   if(!rule||!year||!month)notFound();
   const monthName=monthLabel(year,month);
-  return {title:`${rule.title} — ${monthName} ${year} Candidate Dates`,description:`${rule.title} candidate dates for ${monthName} ${year} using Panchvani's Tithi + Nakshatra screening profile and Mumbai baseline planning windows.`,alternates:{canonical:`/muhurat/${p.event}/${year}/${p.month}`},robots:robotsFor(isYearlyMuhuratIndexable(p.event,year))};
+  return {title:`${rule.title} — ${monthName} ${year} Candidate Dates`,description:`${rule.title} candidate dates for ${monthName} ${year} using Panchvani's Tithi + Nakshatra screening profile and Mumbai baseline planning windows.`,alternates:{canonical:`/muhurat/${p.event}/${year}/${p.month}`},robots:robotsFor(isMonthlyMuhuratIndexable(p.event,year,month))};
 }
 
 export default async function MuhuratPage({params}:{params:Promise<{event:string;year:string;month:string}>}){
