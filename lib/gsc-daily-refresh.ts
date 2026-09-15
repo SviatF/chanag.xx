@@ -103,16 +103,15 @@ function aggregateRows(rows:GscRow[],keyIndexes:number[]):GscRow[]{
   return [...map.values()].map(row=>({keys:row.keys,clicks:row.clicks,impressions:row.impressions,ctr:row.impressions?row.clicks/row.impressions:0,position:row.impressions?row.weightedPosition/row.impressions:0}));
 }
 
-function aggregateSummary(rows:GscRow[]):GscSummary{
+export function summarizeGscRows(rows:GscRow[]):GscSummary{
   const clicks=rows.reduce((sum,row)=>sum+(row.clicks??0),0);
   const impressions=rows.reduce((sum,row)=>sum+(row.impressions??0),0);
   const weightedPosition=rows.reduce((sum,row)=>sum+(row.position??0)*(row.impressions??0),0);
   return {clicks,impressions,ctr:impressions?clicks/impressions:0,position:impressions?weightedPosition/impressions:0};
 }
 
-function summary(rows:GscRow[]|undefined):GscSummary{
-  const row=rows?.[0];
-  return row?{clicks:row.clicks??0,impressions:row.impressions??0,ctr:row.ctr??0,position:row.position??0}:{clicks:0,impressions:0,ctr:0,position:0};
+function rowsInRange(rows:GscRow[],startDate:string,endDate:string){
+  return rows.filter(row=>{const date=row.keys?.[0]??"";return date>=startDate&&date<=endDate;});
 }
 
 export type GscDailyRefreshResult={snapshot:GscDailySnapshot;apiCalls:number;upstreamSubrequests:number;searchAnalyticsCalls:number};
@@ -124,31 +123,45 @@ export async function refreshGscDailySnapshot(asOf=new Date()):Promise<GscDailyR
   const {current28Dates,previous28Dates,current7Dates,previous7Dates}=resolveGscSnapshotRanges(asOf);
   const token=await accessToken(counter);
 
-  // Daily-only upstream work stays at two Search Analytics calls. The current
-  // detailed range uses fresh data so yesterday can be included as soon as GSC
-  // exposes it; previous-period baseline remains final-only. 7d/previous-7d,
-  // pages, trends and query/page data are derived locally from the 28d rows.
-  const currentRaw=await query(counter,token,status.siteUrl,{...current28Dates,dimensions:["date","query","page"],rowLimit:25000,dataState:"all"});
-  const previousRaw=await query(counter,token,status.siteUrl,{...previous28Dates,rowLimit:1,dataState:"final"});
-  const dated28=currentRaw.rows??[];
-  const current28QueryPages=aggregateRows(dated28,[1,2]);
+  // Keep the upstream Search Analytics budget at exactly two calls, but split
+  // responsibilities correctly:
+  // 1) property-level daily traffic over 56 days (no query dimension) gives the
+  //    same headline totals class as the GSC performance graph, including traffic
+  //    that cannot be exposed as named queries;
+  // 2) current-28d date/query/page detail powers SEO decisions, page/query tables,
+  //    cannibalization and internal-link evidence. Detail rows must never be used
+  //    as the site's headline traffic total because query-level data is filtered.
+  const trafficRaw=await query(counter,token,status.siteUrl,{startDate:previous28Dates.startDate,endDate:current28Dates.endDate,dimensions:["date"],rowLimit:1000,dataState:"all"});
+  const detailRaw=await query(counter,token,status.siteUrl,{...current28Dates,dimensions:["date","query","page"],rowLimit:25000,dataState:"all"});
+
+  const trafficDaily=aggregateRows(trafficRaw.rows??[],[0]).sort((a,b)=>(a.keys?.[0]??"").localeCompare(b.keys?.[0]??""));
+  const currentTrafficDaily=rowsInRange(trafficDaily,current28Dates.startDate,current28Dates.endDate);
+  const previousTrafficDaily=rowsInRange(trafficDaily,previous28Dates.startDate,previous28Dates.endDate);
+  const current7TrafficDaily=rowsInRange(trafficDaily,current7Dates.startDate,current7Dates.endDate);
+  const previous7TrafficDaily=rowsInRange(trafficDaily,previous7Dates.startDate,previous7Dates.endDate);
+
+  const datedDetail=detailRaw.rows??[];
+  const current28QueryPages=aggregateRows(datedDetail,[1,2]);
   const current28Queries=aggregateRows(current28QueryPages,[0]);
-  const pages=aggregateRows(dated28,[2]).sort((a,b)=>b.impressions-a.impressions);
-  const daily=aggregateRows(dated28,[0]).sort((a,b)=>(a.keys?.[0]??"").localeCompare(b.keys?.[0]??""));
-  const current7Dated=dated28.filter(row=>{const date=row.keys?.[0]??"";return date>=current7Dates.startDate&&date<=current7Dates.endDate;});
-  const previous7Dated=dated28.filter(row=>{const date=row.keys?.[0]??"";return date>=previous7Dates.startDate&&date<=previous7Dates.endDate;});
-  const current7QueryPages=aggregateRows(current7Dated,[1,2]);
-  const previous7QueryPages=aggregateRows(previous7Dated,[1,2]);
-  const previousSummary=summary(previousRaw.rows);
+  const pages=aggregateRows(datedDetail,[2]).sort((a,b)=>b.impressions-a.impressions);
+  const current7Detail=rowsInRange(datedDetail,current7Dates.startDate,current7Dates.endDate);
+  const previous7Detail=rowsInRange(datedDetail,previous7Dates.startDate,previous7Dates.endDate);
+  const current7QueryPages=aggregateRows(current7Detail,[1,2]);
+  const previous7QueryPages=aggregateRows(previous7Detail,[1,2]);
+
+  const current28Summary=summarizeGscRows(currentTrafficDaily);
+  const previous28Summary=summarizeGscRows(previousTrafficDaily);
+  const current7Summary=summarizeGscRows(current7TrafficDaily);
+  const previous7Summary=summarizeGscRows(previous7TrafficDaily);
   const refreshedAt=new Date().toISOString();
 
   const dataset:GscSeoOsDataset={
     siteUrl:status.siteUrl,
     generatedAt:refreshedAt,
-    current7d:{...current7Dates,summary:aggregateSummary(current7QueryPages),queries:aggregateRows(current7QueryPages,[0]),queryPages:current7QueryPages},
-    previous7d:{...previous7Dates,summary:aggregateSummary(previous7QueryPages),queries:aggregateRows(previous7QueryPages,[0]),queryPages:previous7QueryPages},
-    current28d:{...current28Dates,summary:aggregateSummary(current28QueryPages),queries:current28Queries,queryPages:current28QueryPages,pages,countries:[],daily},
-    previous28d:{...previous28Dates,summary:previousSummary},
+    current7d:{...current7Dates,summary:current7Summary,queries:aggregateRows(current7QueryPages,[0]),queryPages:current7QueryPages},
+    previous7d:{...previous7Dates,summary:previous7Summary,queries:aggregateRows(previous7QueryPages,[0]),queryPages:previous7QueryPages},
+    current28d:{...current28Dates,summary:current28Summary,queries:current28Queries,queryPages:current28QueryPages,pages,countries:[],daily:currentTrafficDaily},
+    previous28d:{...previous28Dates,summary:previous28Summary},
   };
   const traffic:GscTrafficSnapshot={
     siteUrl:status.siteUrl,
@@ -156,14 +169,14 @@ export async function refreshGscDailySnapshot(asOf=new Date()):Promise<GscDailyR
     endDate:current28Dates.endDate,
     previousStartDate:previous28Dates.startDate,
     previousEndDate:previous28Dates.endDate,
-    current:dataset.current28d.summary,
-    previous:previousSummary,
+    current:current28Summary,
+    previous:previous28Summary,
     pages,
     queries:current28Queries,
     queryPages:current28QueryPages,
-    daily,
+    daily:currentTrafficDaily,
   };
-  const firstIncompleteDate=currentRaw.metadata?.first_incomplete_date??null;
+  const firstIncompleteDate=trafficRaw.metadata?.first_incomplete_date??detailRaw.metadata?.first_incomplete_date??null;
   const finalDataThrough=firstIncompleteDate?shiftIsoDate(firstIncompleteDate,-1):current28Dates.endDate;
   const snapshot:GscDailySnapshot={
     version:1,

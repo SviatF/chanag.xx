@@ -1,6 +1,6 @@
 import {readFileSync} from "node:fs";
 import {describe,expect,it} from "vitest";
-import {GSC_DAILY_REFRESH_QUERY_BUDGET,resolveGscSnapshotRanges} from "../lib/gsc-daily-refresh";
+import {GSC_DAILY_REFRESH_QUERY_BUDGET,resolveGscSnapshotRanges,summarizeGscRows} from "../lib/gsc-daily-refresh";
 
 describe("GSC daily snapshot date boundary",()=>{
   it("requests through the previous Kyiv calendar day during DST",()=>{
@@ -18,12 +18,27 @@ describe("GSC daily snapshot date boundary",()=>{
     expect(ranges.current7Dates.endDate).toBe("2026-12-31");
   });
 
-  it("uses fresh GSC data without increasing the Search Analytics budget",()=>{
+  it("keeps two Search Analytics calls while separating traffic totals from query detail",()=>{
     const source=readFileSync("lib/gsc-daily-refresh.ts","utf8");
     expect(GSC_DAILY_REFRESH_QUERY_BUDGET).toBe(2);
+    expect(source).toContain('dimensions:["date"]');
+    expect(source).toContain('dimensions:["date","query","page"]');
+    expect(source).toContain('startDate:previous28Dates.startDate');
+    expect(source).toContain('const current28Summary=summarizeGscRows(currentTrafficDaily)');
+    expect(source).toContain('daily:currentTrafficDaily');
     expect(source).toContain('dataState:"all"');
-    expect(source).toContain('dataState:"final"');
     expect(source).not.toContain("shift(asOf,-2)");
     expect(source).toContain('const KYIV_TIME_ZONE="Europe/Kyiv"');
+  });
+
+  it("aggregates property daily rows into headline metrics",()=>{
+    const summary=summarizeGscRows([
+      {keys:["2026-09-13"],clicks:15,impressions:2470,ctr:15/2470,position:8.8},
+      {keys:["2026-09-14"],clicks:2,impressions:530,ctr:2/530,position:10.2},
+    ]);
+    expect(summary.clicks).toBe(17);
+    expect(summary.impressions).toBe(3000);
+    expect(summary.ctr).toBeCloseTo(17/3000,8);
+    expect(summary.position).toBeCloseTo((8.8*2470+10.2*530)/3000,8);
   });
 });
