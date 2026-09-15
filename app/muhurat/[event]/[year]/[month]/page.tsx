@@ -10,10 +10,14 @@ import {buildMuhuratSeoSummary} from "@/lib/muhurat-seo";
 import {muhuratBenchmarkSources,muhuratExcludedFactors,muhuratScreeningStatement} from "@/lib/religious-integrity";
 import {isYearlyMuhuratIndexable,robotsFor} from "@/lib/seo-policy";
 import {parseRouteMonth,parseRouteYear} from "@/lib/route-validation";
+import {muhuratMonthSsgPilot} from "@/lib/static-seo-routes";
 import {buildMuhuratTopicalGraph} from "@/lib/topical-links";
 import {muhuratYearPath} from "@/lib/yearly-expansion";
 
+export const dynamicParams=true;
 export const revalidate=86400;
+
+export function generateStaticParams(){return muhuratMonthSsgPilot;}
 
 function monthLabel(year:number,month:number){
   return new Intl.DateTimeFormat("en-IN",{month:"long",timeZone:"Asia/Kolkata"}).format(new Date(Date.UTC(year,month-1,1)));
