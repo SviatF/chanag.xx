@@ -188,7 +188,8 @@ export function buildMuhuratPlanningScore(event:string,windows:RecommendedMuhura
 export async function getMonthlyMuhurat(event:string,year:number,month:number,city:City){
   const rule=muhuratRules[event];
   if(!rule)throw new Error(`Unsupported Muhurat event: ${event}`);
-  const monthPanchang=getPrecomputedMuhuratPanchangMonth(year,month,city)??await getMuhuratPanchangMonth(year,month,city);
+  const precomputed=await getPrecomputedMuhuratPanchangMonth(year,month,city);
+  const monthPanchang=precomputed??await getMuhuratPanchangMonth(year,month,city);
   const rows:MuhuratRow[]=[];
   for(const data of monthPanchang){
     if(!rule.goodTithi.includes(data.tithi)||!rule.goodNakshatra.includes(data.nakshatra))continue;
