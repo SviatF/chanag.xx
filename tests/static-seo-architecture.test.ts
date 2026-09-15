@@ -1,11 +1,19 @@
 import {readFileSync} from "node:fs";
 import {describe,expect,it} from "vitest";
 import {festivals2026} from "../lib/festivals";
-import {phase1PriorityCities} from "../lib/seo-policy";
-import {festivalCitySsgPilot,festivalCitySsgPriority,festivalCityStaticKey} from "../lib/static-seo-routes";
+import {phase1PriorityCities,primaryVratTypes,yearlyIndexYears} from "../lib/seo-policy";
+import {
+  festivalCitySsgPilot,
+  festivalCitySsgPriority,
+  festivalCityStaticKey,
+  vratCitySsgPriority,
+  vratCityStaticKey,
+  vratYearSsgPriority,
+  vratYearStaticKey,
+} from "../lib/static-seo-routes";
 
 describe("SSG/ISR SEO architecture",()=>{
-  it("pre-renders the 2026 priority matrix and keeps it duplicate-free",()=>{
+  it("pre-renders the 2026 festival priority matrix and keeps it duplicate-free",()=>{
     const expectedCount=phase1PriorityCities.length*festivals2026.length;
     expect(phase1PriorityCities.length).toBe(20);
     expect(festivals2026.length).toBe(19);
@@ -26,6 +34,21 @@ describe("SSG/ISR SEO architecture",()=>{
     }
   });
 
+  it("pre-renders the full SEO-policy Vrat matrix",()=>{
+    const years=yearlyIndexYears();
+    expect(primaryVratTypes.length).toBe(3);
+    expect(years.length).toBe(4);
+    expect(vratYearSsgPriority).toHaveLength(primaryVratTypes.length*years.length);
+    expect(vratCitySsgPriority).toHaveLength(primaryVratTypes.length*years.length*phase1PriorityCities.length);
+    expect(vratYearSsgPriority).toHaveLength(12);
+    expect(vratCitySsgPriority).toHaveLength(240);
+
+    const yearKeys=vratYearSsgPriority.map(vratYearStaticKey);
+    const cityKeys=vratCitySsgPriority.map(vratCityStaticKey);
+    expect(new Set(yearKeys).size).toBe(yearKeys.length);
+    expect(new Set(cityKeys).size).toBe(cityKeys.length);
+  });
+
   it("pre-renders priority festival pages while preserving ISR fallback",()=>{
     const source=readFileSync("app/festivals/[festival]/[year]/[city]/page.tsx","utf8");
     expect(source).toContain("generateStaticParams");
@@ -33,6 +56,19 @@ describe("SSG/ISR SEO architecture",()=>{
     expect(source).toContain("export const dynamicParams=true");
     expect(source).toContain("export const revalidate=86400");
     expect(source).not.toContain('dynamic=\"force-dynamic\"');
+  });
+
+  it("pre-renders Vrat year and city pages while preserving ISR fallback",()=>{
+    const yearSource=readFileSync("app/vrat/[vrat]/[year]/page.tsx","utf8");
+    const citySource=readFileSync("app/vrat/[vrat]/[year]/[city]/page.tsx","utf8");
+    expect(yearSource).toContain("generateStaticParams");
+    expect(yearSource).toContain("vratYearSsgPriority");
+    expect(yearSource).toContain("export const dynamicParams=true");
+    expect(citySource).toContain("generateStaticParams");
+    expect(citySource).toContain("vratCitySsgPriority");
+    expect(citySource).toContain("export const dynamicParams=true");
+    expect(yearSource).toContain("export const revalidate=604800");
+    expect(citySource).toContain("export const revalidate=604800");
   });
 
   it("keeps daily Panchang on hourly ISR rather than freezing current-day content at build time",()=>{
