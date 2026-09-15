@@ -1,4 +1,4 @@
-import type {PageOpportunity,SeoMetric} from "./seo-operating-system";
+import type {PageOpportunity} from "./seo-operating-system";
 import type {SeoCommandTask,SeoTaskMap,SeoTaskResult} from "./seo-task-store";
 
 export const commandLearningPatterns=[
@@ -10,16 +10,6 @@ export const commandLearningPatterns=[
 ] as const;
 export type SeoCommandLearningPattern=typeof commandLearningPatterns[number];
 export type SeoCommandLearningSignal="PROVEN"|"PROMISING"|"MIXED"|"NEGATIVE"|"INSUFFICIENT";
-
-export type SeoCommandOutcome={
-  measuredAt:string;
-  metric:SeoMetric;
-  impressionsChangePct:number|null;
-  clicksChangePct:number|null;
-  ctrDeltaPoints:number;
-  positionImprovement:number|null;
-  score:number;
-};
 
 export type SeoCommandLearningSample={
   taskId:string;
