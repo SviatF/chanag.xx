@@ -4,7 +4,7 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
-    "build": "npm run precompute:muhurat && vinext build",
+    "build": "npm run verify:muhurat-precompute && vinext build",
     "start": "next start",
     "lint": "next lint",
     "test": "vitest run",
@@ -14,9 +14,8 @@
     "start:vinext": "wrangler dev --config dist/server/wrangler.json",
     "deploy:vinext": "vinext-cloudflare deploy",
     "cf-typegen": "wrangler types",
-    "build:next": "next build",
+    "build:next": "npm run verify:muhurat-precompute && next build",
     "precompute:muhurat": "npx --yes tsx@4.23.13 scripts/precompute-muhurat.ts",
-    "precompute:muhurat:print": "npx --yes tsx@4.23.13 scripts/precompute-muhurat.ts --print",
     "verify:muhurat-precompute": "npx --yes tsx@4.23.13 scripts/precompute-muhurat.ts --verify"
   },
   "dependencies": {
