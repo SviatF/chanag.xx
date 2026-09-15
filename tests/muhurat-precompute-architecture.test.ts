@@ -16,9 +16,9 @@ function decodeShard(path:string){
 }
 
 describe("Muhurat precomputed build-data architecture",()=>{
-  it("ships five bounded month shards covering the complete 100-context priority matrix",()=>{
+  it("ships thirteen bounded month shards covering the complete 260-context sitemap matrix",()=>{
     const expectedShardIds=[...new Set(muhuratMonthSsgPriority.map(item=>`${item.year}-${item.month}`))].sort();
-    expect(expectedShardIds).toHaveLength(5);
+    expect(expectedShardIds).toHaveLength(13);
 
     const shardFiles=readdirSync("generated")
       .filter(file=>/^muhurat-panchang-shard-\d{4}-\d{2}\.ts$/.test(file))
@@ -47,7 +47,7 @@ describe("Muhurat precomputed build-data architecture",()=>{
         }
       }
     }
-    expect(totalTargets).toBe(100);
+    expect(totalTargets).toBe(260);
   });
 
   it("uses a generated lazy-loader registry and removes the monolithic artifact",()=>{
