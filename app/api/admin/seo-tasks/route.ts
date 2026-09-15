@@ -68,7 +68,9 @@ export async function POST(request:Request){
     const current=tasks[id];
 
     if(action==="close"){
-      const next:SeoCommandTask={...current,status:"closed",result:result(body.result),closedAt:nowIso,updatedAt:nowIso};
+      const finalResult=result(body.result)??current.result;
+      if(!finalResult)return NextResponse.json({error:"A measured verdict is required before closing the SEO cycle."},{status:400});
+      const next:SeoCommandTask={...current,status:"closed",result:finalResult,closedAt:nowIso,updatedAt:nowIso};
       tasks[id]=next;
       await writeSeoTaskMap(tasks);
       return NextResponse.json({task:next});
@@ -76,7 +78,7 @@ export async function POST(request:Request){
 
     if(action==="restore"){
       if(!current.closedAt||now.getTime()-new Date(current.closedAt).getTime()>12*60*60*1000)return NextResponse.json({error:"Only tasks closed in the last 12 hours can be restored."},{status:400});
-      const next:SeoCommandTask={...current,status:new Date(current.verifyAt).getTime()<=now.getTime()?"review_ready":"observation",result:null,closedAt:undefined,updatedAt:nowIso};
+      const next:SeoCommandTask={...current,status:new Date(current.verifyAt).getTime()<=now.getTime()?"review_ready":"observation",closedAt:undefined,updatedAt:nowIso};
       tasks[id]=next;
       await writeSeoTaskMap(tasks);
       return NextResponse.json({task:next});
