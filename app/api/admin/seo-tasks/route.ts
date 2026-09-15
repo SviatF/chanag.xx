@@ -1,5 +1,6 @@
 import {NextResponse} from "next/server";
 import {isAdminAuthenticated} from "@/lib/admin-auth";
+import {bindGscStoreFromCloudflareEnv} from "@/lib/cloudflare-bindings";
 import {getSeoTaskStoreStatus,readSeoTaskMap,seoTaskId,writeSeoTaskMap,type SeoCommandTask,type SeoTaskBaseline,type SeoTaskResult} from "@/lib/seo-task-store";
 
 export const dynamic="force-dynamic";
@@ -17,6 +18,7 @@ function addDays(date:Date,days:number){const next=new Date(date);next.setUTCDat
 
 export async function GET(){
   if(!(await isAdminAuthenticated()))return NextResponse.json({error:"Unauthorized"},{status:401});
+  await bindGscStoreFromCloudflareEnv();
   const storage=getSeoTaskStoreStatus();
   if(!storage.configured)return NextResponse.json({storage,tasks:{}});
   try{return NextResponse.json({storage,tasks:await readSeoTaskMap()});}
@@ -25,6 +27,7 @@ export async function GET(){
 
 export async function POST(request:Request){
   if(!(await isAdminAuthenticated()))return NextResponse.json({error:"Unauthorized"},{status:401});
+  await bindGscStoreFromCloudflareEnv();
   const storage=getSeoTaskStoreStatus();
   if(!storage.configured)return NextResponse.json({error:"SEO task persistence is not configured.",storage},{status:503});
 
