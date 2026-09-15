@@ -76,7 +76,7 @@ function shardPath(shardId:string){return resolve(generatedDir,`${shardPrefix}${
 
 function decodeShardModule(source:string):MuhuratBuildDataShard|null{
   try{
-    const match=source.match(/^export default (.+);\s*$/s);
+    const match=source.match(/^export default (.+);\s*$/);
     if(!match)return null;
     const base64=JSON.parse(match[1]) as string;
     const json=gunzipSync(Buffer.from(base64,"base64")).toString("utf8");
@@ -166,7 +166,7 @@ for(const [shardId,shardTargets] of grouped){
   const existing=await readCommittedShard(shardId);
   if(isFreshShard(existing,signature,shardId,shardTargets)){
     const source=await readFile(shardPath(shardId),"utf8");
-    const match=source.match(/^export default (.+);\s*$/s);
+    const match=source.match(/^export default (.+);\s*$/);
     const base64=match?JSON.parse(match[1]) as string:"";
     const compressed=Buffer.from(base64,"base64");
     const raw=compressed.length?gunzipSync(compressed).byteLength:0;
