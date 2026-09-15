@@ -8,7 +8,8 @@ import MethodologyNote from "@/components/MethodologyNote";
 import TopicalGraph from "@/components/TopicalGraph";
 import {findCityBySlug} from "@/lib/cities";
 import {buildDailyDataNarrative} from "@/lib/content-uniqueness";
-import {formatPanchangTime,formatWindow,getPanchang} from "@/lib/panchang";
+import {getCachedPanchang} from "@/lib/panchang-cache";
+import {formatPanchangTime,formatWindow} from "@/lib/panchang-display";
 import {getLunarMonthConventions} from "@/lib/calendar-conventions";
 import {isDailyIndexable,robotsFor} from "@/lib/seo-policy";
 import {getDailyGuidance} from "@/lib/day-guidance";
@@ -38,7 +39,7 @@ export default async function PanchangPage({params}:{params:Promise<{city:string
   const city=findCityBySlug(p.city);
   const date=resolveDailyRouteDate(p.date);
   if(!city||!date)notFound();
-  const data=await getPanchang(date,city);
+  const data=await getCachedPanchang(date,city);
   const lunar=getLunarMonthConventions(date,city,data);
   const guidance=getDailyGuidance(data,city);
   const dataNarrative=buildDailyDataNarrative(data,city);
