@@ -10,8 +10,12 @@ import {isVratIndexable,isYearlyCalendarIndexable,isYearlyMuhuratIndexable,prima
 import {parseRouteYear} from "@/lib/route-validation";
 import {cityCalendarYearPath,hinduCalendarYearPath,muhuratYearPath,yearlyMonths} from "@/lib/yearly-expansion";
 import {sitemapPriorityCities} from "@/lib/seo-sitemap";
+import {cityCalendarYearSsgPriority} from "@/lib/static-seo-routes";
 
+export const dynamicParams=true;
 export const revalidate=86400;
+
+export function generateStaticParams(){return cityCalendarYearSsgPriority;}
 
 export async function generateMetadata({params}:{params:Promise<{city:string;year:string}>}):Promise<Metadata>{
   const p=await params;const city=findCityBySlug(p.city);const year=parseRouteYear(p.year);if(!city||!year)notFound();
