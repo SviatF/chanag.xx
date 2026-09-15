@@ -1,13 +1,14 @@
-import {MUHURAT_PANCHANG_GZIP_BASE64} from "../generated/muhurat-panchang-data";
+import {MUHURAT_PANCHANG_SHARD_IDS,MUHURAT_PANCHANG_SHARD_LOADERS} from "../generated/muhurat-panchang-shards";
 import type {City} from "./cities";
 import {
   MUHURAT_BUILD_DATA_VERSION,
   muhuratBuildDataKey,
-  type MuhuratBuildDataManifest,
+  muhuratBuildDataShardId,
+  type MuhuratBuildDataShard,
   type MuhuratPanchangSnapshot,
 } from "./muhurat-build-data-schema";
 
-let manifestPromise:Promise<MuhuratBuildDataManifest|null>|null=null;
+const shardPromises=new Map<string,Promise<MuhuratBuildDataShard|null>>();
 
 function decodeBase64(value:string){
   const binary=atob(value);
@@ -16,40 +17,60 @@ function decodeBase64(value:string){
   return bytes;
 }
 
-async function decodeManifest():Promise<MuhuratBuildDataManifest|null>{
+async function decodeShard(shardId:string):Promise<MuhuratBuildDataShard|null>{
   try{
-    const compressed=decodeBase64(MUHURAT_PANCHANG_GZIP_BASE64);
+    const loader=MUHURAT_PANCHANG_SHARD_LOADERS[shardId];
+    if(!loader)return null;
+    const module=await loader();
+    const compressed=decodeBase64(module.default);
     const source=new Response(compressed).body;
     if(!source)return null;
     const stream=source.pipeThrough(new DecompressionStream("gzip"));
-    const manifest=JSON.parse(await new Response(stream).text()) as MuhuratBuildDataManifest;
-    if(manifest.version!==MUHURAT_BUILD_DATA_VERSION)return null;
-    return manifest;
+    const shard=JSON.parse(await new Response(stream).text()) as MuhuratBuildDataShard;
+    if(shard.version!==MUHURAT_BUILD_DATA_VERSION||shard.shardId!==shardId)return null;
+    return shard;
   }catch(error){
-    console.error("[muhurat-precompute] unable to decode committed build data",error);
+    console.error(`[muhurat-precompute] unable to decode committed shard ${shardId}`,error);
     return null;
   }
 }
 
-export function loadMuhuratPrecomputedManifest(){
-  manifestPromise??=decodeManifest();
-  return manifestPromise;
+export function loadMuhuratPrecomputedShard(shardId:string){
+  let promise=shardPromises.get(shardId);
+  if(!promise){
+    promise=decodeShard(shardId);
+    shardPromises.set(shardId,promise);
+  }
+  return promise;
+}
+
+/**
+ * Backward-compatible aggregate loader for diagnostics only. Normal Muhurat page
+ * requests use `loadMuhuratPrecomputedShard` and therefore load exactly one month.
+ */
+export async function loadMuhuratPrecomputedManifest(){
+  const shards=(await Promise.all(MUHURAT_PANCHANG_SHARD_IDS.map(loadMuhuratPrecomputedShard))).filter((item):item is MuhuratBuildDataShard=>Boolean(item));
+  if(shards.length!==MUHURAT_PANCHANG_SHARD_IDS.length)return null;
+  return {
+    version:MUHURAT_BUILD_DATA_VERSION,
+    signature:shards.map(shard=>shard.signature).join(":"),
+    generatedAt:shards.map(shard=>shard.generatedAt).sort().at(-1)??"",
+    targets:shards.flatMap(shard=>shard.targets),
+    entries:Object.assign({},...shards.map(shard=>shard.entries)) as Record<string,MuhuratPanchangSnapshot[]>,
+  };
 }
 
 export async function getPrecomputedMuhuratPanchangMonth(year:number,month:number,city:City):Promise<ReadonlyArray<MuhuratPanchangSnapshot>|null>{
-  const manifest=await loadMuhuratPrecomputedManifest();
-  if(!manifest)return null;
-  return manifest.entries[muhuratBuildDataKey(year,month,city)]??null;
+  const shard=await loadMuhuratPrecomputedShard(muhuratBuildDataShardId(year,month));
+  if(!shard)return null;
+  return shard.entries[muhuratBuildDataKey(year,month,city)]??null;
 }
 
 export async function getMuhuratPrecomputedManifestMeta(){
-  const manifest=await loadMuhuratPrecomputedManifest();
-  if(!manifest)return null;
   return {
-    version:manifest.version,
-    signature:manifest.signature,
-    generatedAt:manifest.generatedAt,
-    targets:[...manifest.targets],
-    entryCount:Object.keys(manifest.entries).length,
+    version:MUHURAT_BUILD_DATA_VERSION,
+    shardIds:[...MUHURAT_PANCHANG_SHARD_IDS],
+    shardCount:MUHURAT_PANCHANG_SHARD_IDS.length,
+    loadedShardCount:shardPromises.size,
   };
 }

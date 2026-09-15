@@ -1,48 +1,77 @@
-import {existsSync,readFileSync} from "node:fs";
+import {existsSync,readFileSync,readdirSync} from "node:fs";
 import {gunzipSync} from "node:zlib";
 import {describe,expect,it} from "vitest";
-import {MUHURAT_PANCHANG_GZIP_BASE64} from "../generated/muhurat-panchang-data";
-import {MUHURAT_BUILD_DATA_MAX_BYTES,type MuhuratBuildDataManifest} from "../lib/muhurat-build-data-schema";
+import {MUHURAT_BUILD_DATA_SHARD_MAX_BYTES,type MuhuratBuildDataShard} from "../lib/muhurat-build-data-schema";
+import {muhuratMonthSsgPriority} from "../lib/static-seo-routes";
 
-function manifest(){
-  return JSON.parse(gunzipSync(Buffer.from(MUHURAT_PANCHANG_GZIP_BASE64,"base64")).toString("utf8")) as MuhuratBuildDataManifest;
+function decodeShard(path:string){
+  const source=readFileSync(path,"utf8");
+  const match=source.match(/^export default (.+);\s*$/);
+  if(!match)throw new Error(`Invalid generated shard module: ${path}`);
+  const base64=JSON.parse(match[1]) as string;
+  return {
+    base64Length:base64.length,
+    data:JSON.parse(gunzipSync(Buffer.from(base64,"base64")).toString("utf8")) as MuhuratBuildDataShard,
+  };
 }
 
 describe("Muhurat precomputed build-data architecture",()=>{
-  it("ships a compact, complete 100-month-context priority artifact",()=>{
-    const data=manifest();
-    expect(data.version).toBe(1);
-    expect(data.signature).toMatch(/^[a-f0-9]{64}$/);
-    expect(data.targets).toHaveLength(100);
-    expect(Object.keys(data.entries)).toHaveLength(100);
-    expect(Buffer.byteLength(JSON.stringify(data))).toBeLessThan(MUHURAT_BUILD_DATA_MAX_BYTES);
+  it("ships five bounded month shards covering the complete 100-context priority matrix",()=>{
+    const expectedShardIds=[...new Set(muhuratMonthSsgPriority.map(item=>`${item.year}-${item.month}`))].sort();
+    expect(expectedShardIds).toHaveLength(5);
 
-    for(const target of data.targets){
-      const rows=data.entries[target];
-      expect(rows.length===28||rows.length===29||rows.length===30||rows.length===31).toBe(true);
-      for(const row of rows){
-        expect(Object.keys(row).sort()).toEqual([
-          "abhijit","date","dayChoghadiya","gulika","nakshatra","rahu","tithi","yamaganda",
-        ]);
+    const shardFiles=readdirSync("generated")
+      .filter(file=>/^muhurat-panchang-shard-\d{4}-\d{2}\.ts$/.test(file))
+      .sort();
+    expect(shardFiles).toHaveLength(expectedShardIds.length);
+
+    let totalTargets=0;
+    for(const [index,file] of shardFiles.entries()){
+      const {data,base64Length}=decodeShard(`generated/${file}`);
+      expect(data.version).toBe(2);
+      expect(data.shardId).toBe(expectedShardIds[index]);
+      expect(data.signature).toMatch(/^[a-f0-9]{64}$/);
+      expect(data.targets).toHaveLength(20);
+      expect(Object.keys(data.entries)).toHaveLength(20);
+      expect(Buffer.byteLength(JSON.stringify(data))).toBeLessThan(MUHURAT_BUILD_DATA_SHARD_MAX_BYTES);
+      expect(base64Length).toBeLessThan(100_000);
+      totalTargets+=data.targets.length;
+
+      for(const target of data.targets){
+        const rows=data.entries[target];
+        expect(rows.length===28||rows.length===29||rows.length===30||rows.length===31).toBe(true);
+        for(const row of rows){
+          expect(Object.keys(row).sort()).toEqual([
+            "abhijit","date","dayChoghadiya","gulika","nakshatra","rahu","tithi","yamaganda",
+          ]);
+        }
       }
     }
+    expect(totalTargets).toBe(100);
   });
 
-  it("does not ship the old raw JSON artifact",()=>{
-    expect(existsSync("generated/muhurat-panchang.json")).toBe(false);
-    expect(MUHURAT_PANCHANG_GZIP_BASE64.length).toBeLessThan(1_000_000);
+  it("uses a generated lazy-loader registry and removes the monolithic artifact",()=>{
+    const registry=readFileSync("generated/muhurat-panchang-shards.ts","utf8");
+    expect(registry).toContain("MUHURAT_PANCHANG_SHARD_IDS");
+    expect(registry).toContain("MUHURAT_PANCHANG_SHARD_LOADERS");
+    expect(registry).toContain('()=>import("./muhurat-panchang-shard-');
+    expect(existsSync("generated/muhurat-panchang-data.ts")).toBe(false);
+    expect(readdirSync("generated").some(file=>/^muhurat-panchang-chunk-\d+\.ts$/.test(file))).toBe(false);
   });
 
-  it("derives freshness from the priority target matrix, Panchang engine and snapshot schema",()=>{
+  it("derives per-shard freshness from the priority matrix, Panchang engine and snapshot schema",()=>{
     const source=readFileSync("scripts/precompute-muhurat.ts","utf8");
     expect(source).toContain("muhuratMonthSsgPriority");
     expect(source).toContain("muhuratCityMonthSsgPriority");
     expect(source).toContain('readFile(resolve(root,"lib/panchang.ts"');
     expect(source).toContain('readFile(resolve(root,"lib/muhurat-build-data-schema.ts"');
-    expect(source).toContain("muhuratBuildDataKey");
+    expect(source).toContain("muhuratBuildDataShardId");
+    expect(source).toContain("groupTargets");
+    expect(source).toContain("isFreshShard");
 
     const calculation=source.slice(source.indexOf("clearMuhuratPanchangMonthCache()"));
-    expect(calculation).toContain("for(const target of targets)");
+    expect(calculation).toContain("for(const [shardId,shardTargets] of grouped)");
+    expect(calculation).toContain("for(const target of shardTargets)");
     expect(calculation).toContain("await getMuhuratPanchangMonth");
     expect(calculation).not.toContain("Promise.all");
   });
@@ -61,11 +90,13 @@ describe("Muhurat precomputed build-data architecture",()=>{
     expect(workflow).not.toContain("actions/upload-artifact");
   });
 
-  it("uses portable gzip decompression and preserves live fallback",()=>{
+  it("lazy-loads only the requested month shard and preserves live fallback",()=>{
     const loader=readFileSync("lib/muhurat-precomputed.ts","utf8");
     const muhurat=readFileSync("lib/muhurat.ts","utf8");
     expect(loader).toContain('new DecompressionStream("gzip")');
-    expect(loader).toContain("manifestPromise??=decodeManifest()");
+    expect(loader).toContain("MUHURAT_PANCHANG_SHARD_LOADERS[shardId]");
+    expect(loader).toContain("shardPromises.get(shardId)");
+    expect(loader).toContain("muhuratBuildDataShardId(year,month)");
     expect(muhurat).toContain("await getPrecomputedMuhuratPanchangMonth(year,month,city)");
     expect(muhurat).toContain("precomputed??await getMuhuratPanchangMonth(year,month,city)");
   });
