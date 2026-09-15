@@ -15,11 +15,11 @@ import {
   festivalCityStaticKey,
   hinduCalendarYearSsgPriority,
   hinduCalendarYearStaticKey,
-  muhuratCityMonthSsgPilot,
+  muhuratCityMonthSsgPriority,
   muhuratCityMonthStaticKey,
-  muhuratMonthSsgPilot,
+  muhuratMonthSsgPriority,
   muhuratMonthStaticKey,
-  muhuratSsgPilotCitySlugs,
+  muhuratSsgPriorityCitySlugs,
   vratCitySsgPriority,
   vratCityStaticKey,
   vratYearSsgPriority,
@@ -104,24 +104,27 @@ describe("SSG/ISR SEO architecture",()=>{
     }
   });
 
-  it("keeps the Muhurat SSG pilot bounded to 18 current/next-month pages",()=>{
-    const pilotMonths=rollingMonths(0,1);
+  it("pre-renders the Phase 7B Muhurat priority batch at exactly 165 pages",()=>{
+    const priorityMonths=rollingMonths(0,4);
     expect(primaryMuhuratEvents).toHaveLength(3);
-    expect(pilotMonths).toHaveLength(2);
-    expect(muhuratSsgPilotCitySlugs).toEqual(["ahmedabad","hyderabad"]);
-    expect(muhuratMonthSsgPilot).toHaveLength(6);
-    expect(muhuratCityMonthSsgPilot).toHaveLength(12);
-    expect(muhuratMonthSsgPilot.length+muhuratCityMonthSsgPilot.length).toBe(18);
+    expect(priorityMonths).toHaveLength(5);
+    expect(muhuratSsgPriorityCitySlugs).toEqual([
+      "mumbai","delhi","bengaluru","hyderabad","ahmedabad",
+      "chennai","kolkata","surat","pune","jaipur",
+    ]);
+    expect(muhuratMonthSsgPriority).toHaveLength(15);
+    expect(muhuratCityMonthSsgPriority).toHaveLength(150);
+    expect(muhuratMonthSsgPriority.length+muhuratCityMonthSsgPriority.length).toBe(165);
 
-    const baselineKeys=muhuratMonthSsgPilot.map(muhuratMonthStaticKey);
-    const cityKeys=muhuratCityMonthSsgPilot.map(muhuratCityMonthStaticKey);
+    const baselineKeys=muhuratMonthSsgPriority.map(muhuratMonthStaticKey);
+    const cityKeys=muhuratCityMonthSsgPriority.map(muhuratCityMonthStaticKey);
     expect(new Set(baselineKeys).size).toBe(baselineKeys.length);
     expect(new Set(cityKeys).size).toBe(cityKeys.length);
 
-    for(const month of pilotMonths){
-      expect(muhuratMonthSsgPilot.filter(item=>item.year===String(month.year)&&item.month===month.slug)).toHaveLength(primaryMuhuratEvents.length);
-      for(const city of muhuratSsgPilotCitySlugs){
-        expect(muhuratCityMonthSsgPilot.filter(item=>item.year===String(month.year)&&item.month===month.slug&&item.city===city)).toHaveLength(primaryMuhuratEvents.length);
+    for(const month of priorityMonths){
+      expect(muhuratMonthSsgPriority.filter(item=>item.year===String(month.year)&&item.month===month.slug)).toHaveLength(primaryMuhuratEvents.length);
+      for(const city of muhuratSsgPriorityCitySlugs){
+        expect(muhuratCityMonthSsgPriority.filter(item=>item.year===String(month.year)&&item.month===month.slug&&item.city===city)).toHaveLength(primaryMuhuratEvents.length);
       }
     }
   });
@@ -178,15 +181,15 @@ describe("SSG/ISR SEO architecture",()=>{
     expect(citySource).toContain("export const revalidate=86400");
   });
 
-  it("pre-renders only the bounded Muhurat pilot while preserving daily ISR fallback",()=>{
+  it("pre-renders the Muhurat priority batch while preserving daily ISR fallback",()=>{
     const baselineSource=readFileSync("app/muhurat/[event]/[year]/[month]/page.tsx","utf8");
     const citySource=readFileSync("app/muhurat/[event]/[year]/[month]/[city]/page.tsx","utf8");
     expect(baselineSource).toContain("generateStaticParams");
-    expect(baselineSource).toContain("muhuratMonthSsgPilot");
+    expect(baselineSource).toContain("muhuratMonthSsgPriority");
     expect(baselineSource).toContain("export const dynamicParams=true");
     expect(baselineSource).toContain("export const revalidate=86400");
     expect(citySource).toContain("generateStaticParams");
-    expect(citySource).toContain("muhuratCityMonthSsgPilot");
+    expect(citySource).toContain("muhuratCityMonthSsgPriority");
     expect(citySource).toContain("export const dynamicParams=true");
     expect(citySource).toContain("export const revalidate=86400");
   });
