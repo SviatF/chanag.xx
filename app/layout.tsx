@@ -12,6 +12,7 @@ export const metadata: Metadata = {
   title:{default:"Panchvani — Hindu Panchang, Calendar & Muhurat Planning",template:"%s | Panchvani"},
   description:"Location-sensitive Hindu Panchang, Tithi, Nakshatra, Rahu Kalam, Choghadiya, festivals, calendars and general Muhurat planning for cities across India.",
   icons:{icon:[{url:"/favicon-panch.webp",type:"image/webp"}],shortcut:"/favicon-panch.webp"},
+  other:{"p:domain_verify":"d0b8867a93ed985d749d05ee260f53e2"},
   openGraph:{
     type:"website",url:SITE_URL,siteName:"Panchvani",
     title:"Panchvani — Hindu Panchang, Calendar & Muhurat Planning",

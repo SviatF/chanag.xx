@@ -104,15 +104,15 @@ describe("SSG/ISR SEO architecture",()=>{
     }
   });
 
-  it("pre-renders the Phase 7C Muhurat priority batch at exactly 315 pages",()=>{
-    const priorityMonths=rollingMonths(0,4);
+  it("pre-renders the complete sitemap-visible Muhurat monthly matrix at exactly 819 pages",()=>{
+    const priorityMonths=rollingMonths(0,12);
     expect(primaryMuhuratEvents).toHaveLength(3);
-    expect(priorityMonths).toHaveLength(5);
+    expect(priorityMonths).toHaveLength(13);
     expect(phase1PriorityCities).toHaveLength(20);
     expect(muhuratSsgPriorityCitySlugs).toEqual(phase1PriorityCities);
-    expect(muhuratMonthSsgPriority).toHaveLength(15);
-    expect(muhuratCityMonthSsgPriority).toHaveLength(300);
-    expect(muhuratMonthSsgPriority.length+muhuratCityMonthSsgPriority.length).toBe(315);
+    expect(muhuratMonthSsgPriority).toHaveLength(39);
+    expect(muhuratCityMonthSsgPriority).toHaveLength(780);
+    expect(muhuratMonthSsgPriority.length+muhuratCityMonthSsgPriority.length).toBe(819);
 
     const baselineKeys=muhuratMonthSsgPriority.map(muhuratMonthStaticKey);
     const cityKeys=muhuratCityMonthSsgPriority.map(muhuratCityMonthStaticKey);

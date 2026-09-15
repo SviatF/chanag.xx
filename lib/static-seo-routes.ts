@@ -62,12 +62,14 @@ export const cityCalendarYearSsgPriority:CityCalendarYearStaticParam[]=sitemapPr
 );
 
 /**
- * Phase 7C Muhurat priority batch: current + four forward months, three primary
- * events, India/Mumbai baseline pages, and all twenty SEO-priority city pages.
- * Mumbai is intentionally included in the city matrix; the precompute generator
- * deduplicates it against the baseline so 315 pages require only 100 month datasets.
+ * Phase 7E Muhurat full monthly sitemap matrix: current + twelve forward months,
+ * three primary events, India/Mumbai baseline pages, and all twenty SEO-priority
+ * city pages. This mirrors `/sitemap-muhurat.xml` exactly: 13 months × 3 events ×
+ * (1 baseline + 20 cities) = 819 SSG URLs. Mumbai is intentionally included in
+ * the city matrix; the precompute generator deduplicates it against the baseline,
+ * so the complete monthly matrix needs only 260 month/city datasets.
  */
-const muhuratPriorityMonths=rollingMonths(0,4);
+const muhuratPriorityMonths=rollingMonths(0,12);
 export const muhuratSsgPriorityCitySlugs=phase1PriorityCities;
 export const muhuratMonthSsgPriority:MuhuratMonthStaticParam[]=muhuratPriorityMonths.flatMap(item=>
   primaryMuhuratEvents.map(event=>({event,year:String(item.year),month:item.slug}))

@@ -73,4 +73,9 @@ describe("Pre-GSC technical indexation integrity",()=>{
     expect(regionalSeo).toContain("}else if(!intent&&date){");
     expect(regionalSeo).not.toContain('intent==="choghadiya"?`/tools/choghadiya/${city.slug}`:`/panchang/${city.slug}`');
   });
+
+  it("keeps the Pinterest domain verification meta in the root metadata",()=>{
+    const layout=source("app/layout.tsx");
+    expect(layout).toContain('other:{"p:domain_verify":"d0b8867a93ed985d749d05ee260f53e2"}');
+  });
 });
