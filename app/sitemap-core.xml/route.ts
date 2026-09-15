@@ -1,9 +1,11 @@
+import {sitemapFreshnessDates} from "@/lib/sitemap-freshness";
 import {urlset,xml} from "@/lib/xml";
 
 export async function GET(){
   const base="https://panchvani.com";
+  const {today}=sitemapFreshnessDates();
   return xml(urlset([
-    base+"/",
+    {loc:base+"/",lastmod:today},
     base+"/cities",
     base+"/regional",
     base+"/muhurat",

@@ -2,7 +2,8 @@ import {readFileSync,readdirSync,statSync} from "node:fs";
 import path from "node:path";
 import {describe,expect,it} from "vitest";
 import {findCityBySlug,type City} from "../lib/cities";
-import {buildChoghadiyaNarrative,buildDailyDataNarrative,buildVratCityNarrative,jaccardTextSimilarity} from "../lib/content-uniqueness";
+import {buildChoghadiyaNarrative,buildDailyDataNarrative,buildFestivalCityNarrative,buildVratCityNarrative,jaccardTextSimilarity} from "../lib/content-uniqueness";
+import {festivalBySlugYear} from "../lib/festivals";
 import {buildMuhuratSeoSummary} from "../lib/muhurat-seo";
 import type {MuhuratRow} from "../lib/muhurat";
 import type {Panchang} from "../lib/panchang";
@@ -129,9 +130,24 @@ describe("global content uniqueness and citation integrity",()=>{
       const value=buildMuhuratSeoSummary("wedding",2026,9,city,muhuratRows(index),"city");
       return [value.headline,value.overview,value.rankingInsight,value.timingInsight,value.alternatives].join(" ");
     });
+    const festival=festivalBySlugYear("ganesh-chaturthi",2026)!;
+    const festivalCopy=cities.map((city,index)=>{
+      const data={...panchangFixture(index,city),date:festival.date} as Panchang;
+      const value=buildFestivalCityNarrative(festival,data,city,{label:"Local festival reference",value:`${data.sunrise}–${data.sunset}`});
+      return [value.heading,...value.paragraphs].join(" ");
+    });
     expect(maxPairwise(daily,ignored)).toBeLessThan(0.8);
     expect(maxPairwise(choghadiya,ignored)).toBeLessThan(0.8);
     expect(maxPairwise(vratCopy,ignored)).toBeLessThan(0.8);
     expect(maxPairwise(muhurat,ignored)).toBeLessThan(0.8);
+    expect(maxPairwise(festivalCopy,ignored)).toBeLessThan(0.8);
+  });
+
+  it("keeps active festival SEO experiments isolated from generalized local enrichment",()=>{
+    const festivalPage=source("app/festivals/[festival]/[year]/[city]/page.tsx");
+    expect(festivalPage).toContain("const isSeoExperiment=isGaneshAhmedabad||isDussehraHyderabad");
+    expect(festivalPage).toContain("const localNarrative=isSeoExperiment?null:buildFestivalCityNarrative");
+    expect(festivalPage).toContain("Ganesh Chaturthi 2026 timing in Ahmedabad");
+    expect(festivalPage).toContain("Dasara 2026 date in Telangana");
   });
 });
