@@ -171,10 +171,8 @@ function wheelGeometry(data:Panchang){
   }
 
   const sectors:Sector[]=[
-    // Keep the approved visual accent wedges for Day/Night exactly where they were.
     {key:"night",label:"Night",start:330,end:390,icon:"☾"},
     {key:"day",label:"Day",start:112,end:150,icon:"☀"},
-    // Sunrise/Sunset keep their approved visual width, but their center is the exact time.
     instantSector("sunset","Sunset",data.sunset,{start:72,end:112}),
     exactWindowSector(
       "abhijit",
@@ -184,7 +182,6 @@ function wheelGeometry(data:Panchang){
       !data.abhijit,
     ),
     instantSector("sunrise","Sunrise",data.sunrise,{start:210,end:250}),
-    // Timed windows use exact start/end geometry and are drawn last so they stay readable.
     exactWindowSector("yamaganda","Yamaganda",data.yamaganda,{start:250,end:290}),
     exactWindowSector("gulika","Gulika",data.gulika,{start:290,end:330}),
     exactWindowSector("rahu","Rahu Kalam",data.rahu,{start:30,end:72}),
@@ -193,18 +190,23 @@ function wheelGeometry(data:Panchang){
   return {baseSectors,sectors};
 }
 
-function labelPoint(start:number,end:number,key:Tone){
+function labelPoint(start:number,end:number,key:Tone,muted=false){
   const mid=(start+end)/2;
+
+  // Exact timing windows can become narrow and adjacent around midday.
+  // Preserve the approved typography and sector geometry, but stagger their
+  // labels radially so copy never stacks on top of neighboring copy.
   const radius:Partial<Record<Tone,number>>={
     night:186,
-    rahu:187,
+    rahu:207,
     sunset:185,
     day:183,
-    abhijit:184,
+    abhijit:muted?148:154,
     sunrise:185,
-    yamaganda:186,
-    gulika:186,
+    yamaganda:196,
+    gulika:216,
   };
+
   return polar(radius[key]??185,mid);
 }
 
@@ -360,7 +362,6 @@ export default function DayWheel({data,placement="content"}:{data:Panchang;place
 
       <circle cx={CX} cy={CY} r="282" fill="url(#outer-halo)"/>
 
-      {/* full premium golden outer ring */}
       <circle
         cx={CX} cy={CY} r={GOLD_RING_R+4}
         fill="none"
@@ -387,7 +388,6 @@ export default function DayWheel({data,placement="content"}:{data:Panchang;place
         strokeWidth=".8"
       />
 
-      {/* gold ticks sit inside the complete ring */}
       {Array.from({length:72},(_,index)=>{
         const angle=index*5;
         const major=index%6===0;
@@ -405,7 +405,6 @@ export default function DayWheel({data,placement="content"}:{data:Panchang;place
         />;
       })}
 
-      {/* exact day/night fill beneath the approved accent wedges */}
       <g filter="url(#soft-shadow)">
         {wheel.baseSectors.map(sector=><path
           key={`base-${sector.key}`}
@@ -415,7 +414,6 @@ export default function DayWheel({data,placement="content"}:{data:Panchang;place
           strokeWidth=".8"
         />)}
 
-        {/* approved premium wedge styling; only geometry is data-driven */}
         {wheel.sectors.map(sector=><path
           key={sector.key}
           d={sectorPath(sector.start,sector.end)}
@@ -425,7 +423,6 @@ export default function DayWheel({data,placement="content"}:{data:Panchang;place
         />)}
       </g>
 
-      {/* subtle depth lines */}
       <circle
         cx={CX} cy={CY} r={OUTER_R-8}
         fill="none"
@@ -439,7 +436,6 @@ export default function DayWheel({data,placement="content"}:{data:Panchang;place
         strokeWidth="1"
       />
 
-      {/* live IST hand — visible only for today's Panchang */}
       {handAngle!==null&&handTip&&handGlow?<>
         <line
           x1={CX}
@@ -469,7 +465,6 @@ export default function DayWheel({data,placement="content"}:{data:Panchang;place
         />
       </>:null}
 
-      {/* center */}
       <circle
         cx={CX} cy={CY} r={CENTER_R+3}
         fill="rgba(5,7,6,.86)"
@@ -489,9 +484,8 @@ export default function DayWheel({data,placement="content"}:{data:Panchang;place
         strokeWidth="1"
       />
 
-      {/* sector labels */}
       {wheel.sectors.map(sector=>{
-        const p=labelPoint(sector.start,sector.end,sector.key);
+        const p=labelPoint(sector.start,sector.end,sector.key,Boolean(sector.muted));
         const color=labelColors[sector.key];
 
         return <g key={"label-"+sector.key} transform={`translate(${p.x} ${p.y})`}>
@@ -513,7 +507,6 @@ export default function DayWheel({data,placement="content"}:{data:Panchang;place
         </g>;
       })}
 
-      {/* center content */}
       <text x={CX} y={CY-54} className={styles.centerSun}>☀</text>
       <text x={CX} y={CY-13} className={styles.centerDay}>{data.weekday}</text>
       <text x={CX} y={CY+18} className={styles.centerDate}>{displayDate}</text>
@@ -529,7 +522,6 @@ export default function DayWheel({data,placement="content"}:{data:Panchang;place
         NOW · {clock.label}
       </text>:null}
 
-      {/* cardinal clock labels */}
       {[
         ["24:00",0],
         ["18:00",90],
