@@ -59,7 +59,7 @@ describe("Cloudflare SEO/Admin runtime architecture",()=>{
     expect(seo).not.toContain("searchconsole.googleapis.com");
     expect(gsc).toContain("stored.snapshot.traffic");
     expect(worker).toContain("shouldRunGscDailyAtKyivMidnight");
-    expect(worker).toContain("refreshGscDailySnapshot");
+    expect(worker).toContain('import("../lib/gsc-daily-refresh")');
     expect(cfBindings).toContain('"cloudflare:"+"workers"');
     expect(cfBindings).toContain("GSC_SNAPSHOT_KV??cfEnv.GOLD_RATE_KV");
     expect(refreshRoute).toContain("bindGscStoreFromCloudflareEnv");
@@ -74,7 +74,13 @@ describe("Cloudflare SEO/Admin runtime architecture",()=>{
     const worker=readFileSync("worker/index.ts","utf8");
     const edgeCache=readFileSync("lib/public-edge-cache.ts","utf8");
     expect(worker).toContain("servePublicWithEdgeCache");
-    expect(worker).toContain("CF_VERSION_METADATA");
+    expect(worker).toContain("PUBLIC_EDGE_CACHE_VERSION");
+    expect(worker).toContain("DEFAULT_PUBLIC_EDGE_CACHE_VERSION");
+    expect(worker).not.toContain("CF_VERSION_METADATA");
+    expect(worker).not.toContain('import handler from "vinext/server/fetch-handler"');
+    expect(worker).toContain('import("vinext/server/fetch-handler")');
+    expect(worker).not.toContain('import {runGoldRatePipeline} from "../lib/gold-rate-pipeline"');
+    expect(worker).not.toContain('import {runSeoAutopilot} from "../lib/seo-autopilot"');
     expect(edgeCache).toContain('url.pathname==="/admin"');
     expect(edgeCache).toContain('url.pathname==="/api"');
     expect(edgeCache).toContain("edgeCache.match");
