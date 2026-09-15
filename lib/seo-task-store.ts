@@ -23,6 +23,8 @@ export type SeoCommandTask={
   result:SeoTaskResult;
   reviewerNote:string;
   commitSha:string|null;
+  revalidatedAt?:string;
+  revalidatedPath?:string;
   closedAt?:string;
   snoozedUntil?:string;
   updatedAt:string;
