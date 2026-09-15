@@ -2,8 +2,6 @@ import {getGoldRateStoreStatus,setGoldRateKvBinding} from "../lib/gold-rate-stor
 import type {GoldRateKvBinding} from "../lib/gold-rate-store";
 import {getGscDailyStoreStatus,setGscDailyKvBinding} from "../lib/gsc-daily-store";
 import type {GscDailyKvBinding} from "../lib/gsc-daily-store";
-import {setPanchangKvBinding} from "../lib/panchang-cache";
-import type {PanchangKvBinding} from "../lib/panchang-cache";
 import {isGscDailyCron,shouldRunGscDailyAtKyivMidnight} from "../lib/kyiv-midnight-cron";
 import {servePublicWithEdgeCache} from "../lib/public-edge-cache";
 
@@ -12,7 +10,6 @@ type ExecutionContextLike={waitUntil(promise:Promise<unknown>):void};
 type WorkerEnv={
   GOLD_RATE_KV?:GoldRateKvBinding;
   GSC_SNAPSHOT_KV?:GscDailyKvBinding;
-  PANCHANG_DATA_KV?:PanchangKvBinding;
   PUBLIC_EDGE_CACHE_VERSION?:string;
 };
 
@@ -36,10 +33,9 @@ function publicEdgeCacheVersion(env:WorkerEnv){
 
 function bindRuntimeStorage(env:WorkerEnv){
   setGoldRateKvBinding(env?.GOLD_RATE_KV);
-  // Reuse the already-connected Panchvani KV namespace until dedicated bindings
-  // are added. Versioned/distinct key prefixes keep Gold, GSC and Panchang isolated.
+  // Reuse the already-connected Panchvani KV namespace until a dedicated
+  // GSC_SNAPSHOT_KV binding is added. Distinct storage keys keep datasets isolated.
   setGscDailyKvBinding(env?.GSC_SNAPSHOT_KV??env?.GOLD_RATE_KV);
-  setPanchangKvBinding(env?.PANCHANG_DATA_KV??env?.GOLD_RATE_KV);
 }
 
 async function runGoldRateScheduled(controller:ScheduledEvent){

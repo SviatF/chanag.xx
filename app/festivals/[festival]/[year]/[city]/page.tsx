@@ -7,33 +7,15 @@ import TopicalGraph from "@/components/TopicalGraph";
 import {findCityBySlug} from "@/lib/cities";
 import {festivalBySlugYear} from "@/lib/festivals";
 import {getFestivalSemantics} from "@/lib/festival-conventions";
+import {getLunarMonthConventions} from "@/lib/calendar-conventions";
 import {festivalPageIsIndexable,festivalYearSiblings} from "@/lib/festival-expansion";
-import {getCachedDailyPanchangData} from "@/lib/panchang-cache";
-import {formatPanchangTime,formatWindow} from "@/lib/panchang-display";
+import {formatPanchangTime,getPanchang,formatWindow} from "@/lib/panchang";
 import {getFestivalLocalReference,getFestivalRuleProfile} from "@/lib/religious-integrity";
 import {isPriorityCity,robotsFor} from "@/lib/seo-policy";
 import {parseRouteYear} from "@/lib/route-validation";
 import {buildFestivalTopicalGraph} from "@/lib/topical-links";
 
 export const revalidate=86400;
-export const dynamicParams=true;
-
-// Current GSC winners are pre-rendered at build time so these SEO-critical URLs
-// are served as assets instead of requiring a cold Worker + Swiss Ephemeris render.
-// Keep dynamicParams=true so the rest of the long-tail route continues to work.
-export function generateStaticParams(){
-  return [
-    {festival:"ganesh-chaturthi",year:"2026",city:"ahmedabad"},
-    {festival:"ganesh-chaturthi",year:"2026",city:"delhi"},
-    {festival:"ganesh-chaturthi",year:"2026",city:"hyderabad"},
-    {festival:"dussehra",year:"2026",city:"hyderabad"},
-    {festival:"dussehra",year:"2026",city:"chennai"},
-    {festival:"dussehra",year:"2026",city:"kolkata"},
-    {festival:"shardiya-navratri",year:"2026",city:"hyderabad"},
-    {festival:"shardiya-navratri",year:"2026",city:"chennai"},
-    {festival:"shardiya-navratri",year:"2026",city:"kolkata"},
-  ];
-}
 
 function vratSlugForTithi(tithi:string){
   if(tithi==="Ekadashi")return "ekadashi";
@@ -64,7 +46,8 @@ export default async function Page({params}:{params:Promise<{festival:string;yea
   if(!city||!year||!f)notFound();
 
   const date=new Date(f.date+"T06:00:00Z");
-  const {data,lunar}=await getCachedDailyPanchangData(date,city);
+  const data=await getPanchang(date,city);
+  const lunar=getLunarMonthConventions(date,city,data);
   const semantics=getFestivalSemantics(f);
   const ruleProfile=getFestivalRuleProfile(f);
   const localReference=getFestivalLocalReference(f,data);

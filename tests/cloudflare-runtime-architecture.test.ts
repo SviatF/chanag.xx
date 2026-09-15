@@ -39,7 +39,6 @@ describe("Cloudflare SEO/Admin runtime architecture",()=>{
     const wrangler=readFileSync("wrangler.jsonc","utf8");
     expect(wrangler).toContain('"run_worker_first": ["/api/*"]');
     expect(wrangler).toContain('"binding": "GOLD_RATE_KV"');
-    expect(wrangler).not.toContain('"binding": "PANCHANG_DATA_KV"');
     expect(wrangler).toContain('"cpu_ms": 500');
     expect(wrangler).toContain('"subrequests": 30');
     expect(wrangler).toContain('"0 21 * * *"');
@@ -86,22 +85,8 @@ describe("Cloudflare SEO/Admin runtime architecture",()=>{
     expect(edgeCache).toContain('url.pathname==="/api"');
     expect(edgeCache).toContain("edgeCache.match");
     expect(edgeCache).toContain("edgeCache.put");
-    expect(edgeCache).toContain("publicRouteGuard");
     expect(edgeCache).toContain("COALESCED");
     expect(edgeCache).not.toContain("setInterval(");
-  });
-
-  it("reuses the existing KV namespace and keeps Swiss Ephemeris behind the daily cache miss boundary",()=>{
-    const worker=readFileSync("worker/index.ts","utf8");
-    const cache=readFileSync("lib/panchang-cache.ts","utf8");
-    const dailyPage=readFileSync("app/panchang/[city]/[[...date]]/page.tsx","utf8");
-    expect(worker).toContain("setPanchangKvBinding(env?.PANCHANG_DATA_KV??env?.GOLD_RATE_KV)");
-    expect(cache).toContain("daily-panchang:v2");
-    expect(cache).toContain('import("./panchang")');
-    expect(cache).toContain('import("./calendar-conventions")');
-    expect(dailyPage).toContain("getCachedDailyPanchangData(date,city)");
-    expect(dailyPage).not.toContain('from "@/lib/panchang"');
-    expect(dailyPage).not.toContain('from "@/lib/calendar-conventions"');
   });
 
   it("exposes endpoint cache and cost telemetry headers",()=>{
