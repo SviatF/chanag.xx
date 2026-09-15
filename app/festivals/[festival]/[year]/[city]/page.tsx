@@ -5,6 +5,7 @@ import Header from "@/components/Header";
 import MethodologyNote from "@/components/MethodologyNote";
 import TopicalGraph from "@/components/TopicalGraph";
 import {findCityBySlug} from "@/lib/cities";
+import {buildFestivalCityNarrative} from "@/lib/content-uniqueness";
 import {festivalBySlugYear} from "@/lib/festivals";
 import {getFestivalSemantics} from "@/lib/festival-conventions";
 import {getLunarMonthConventions} from "@/lib/calendar-conventions";
@@ -66,6 +67,8 @@ export default async function Page({params}:{params:Promise<{festival:string;yea
   const moonrise=formatPanchangTime(data.moonrise,data.moonriseDate,data.date);
   const isGaneshAhmedabad=f.slug==="ganesh-chaturthi"&&year===2026&&city.slug==="ahmedabad";
   const isDussehraHyderabad=f.slug==="dussehra"&&year===2026&&city.slug==="hyderabad";
+  const isSeoExperiment=isGaneshAhmedabad||isDussehraHyderabad;
+  const localNarrative=isSeoExperiment?null:buildFestivalCityNarrative(f,data,city,localReference);
   const ganeshPeerCities=f.slug==="ganesh-chaturthi"&&year===2026
     ? [
         {slug:"ahmedabad",name:"Ahmedabad"},
@@ -115,6 +118,11 @@ export default async function Page({params}:{params:Promise<{festival:string;yea
       <h2>Dasara 2026 date in Telangana</h2>
       <p>For Hyderabad and Telangana, Panchvani&apos;s maintained 2026 festival calendar places {f.name} on {f.date}. This Hyderabad page then applies local Panchang values such as sunrise at {data.sunrise}, {data.tithi} until {tithiEnd}, and the local lunar-month context shown above.</p>
       <p>Use this section for the Telangana date answer, and the city-level Panchang cards above for the local timing context.</p>
+    </div>:null}
+
+    {localNarrative?<div className="seo-copy">
+      <h2>{localNarrative.heading}</h2>
+      {localNarrative.paragraphs.map((paragraph,index)=><p key={index}>{paragraph}</p>)}
     </div>:null}
 
     <div className="pill-links">
