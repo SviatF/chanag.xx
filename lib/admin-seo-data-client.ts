@@ -2,6 +2,7 @@
 
 import type {GscSeoOsDataset} from "./gsc-seo-os";
 import type {SeoTaskMap} from "./seo-task-store";
+import {buildSeoCommandLearningLibrary,type SeoCommandLearningLibrary} from "./seo-command-learning";
 
 export type SeoRuntimeTelemetry={
   cache:"HIT"|"MISS"|"COALESCED";
@@ -13,12 +14,13 @@ export type SeoRuntimeTelemetry={
 export type SeoOsClientPayload={
   dataset:GscSeoOsDataset;
   tasks:SeoTaskMap;
+  learning:SeoCommandLearningLibrary;
   taskStorage:{configured:boolean;required:Record<string,boolean>;storageKey:string};
   telemetry?:SeoRuntimeTelemetry;
 };
 
 type CacheEntry={expiresAt:number;payload:SeoOsClientPayload};
-const CACHE_KEY="panchvani:admin:seo-os:v3";
+const CACHE_KEY="panchvani:admin:seo-os:v4";
 export const SEO_CLIENT_TTL_MS=5*60*1000;
 let memory:CacheEntry|null=null;
 let inflight:Promise<SeoOsClientPayload>|null=null;
@@ -28,7 +30,7 @@ function readSession(){
   try{
     const raw=sessionStorage.getItem(CACHE_KEY);if(!raw)return null;
     const parsed=JSON.parse(raw) as CacheEntry;
-    if(!parsed?.payload||parsed.expiresAt<=Date.now()){sessionStorage.removeItem(CACHE_KEY);return null;}
+    if(!parsed?.payload||!parsed.payload.learning||parsed.expiresAt<=Date.now()){sessionStorage.removeItem(CACHE_KEY);return null;}
     return parsed;
   }catch{return null;}
 }
@@ -65,7 +67,8 @@ export async function loadSeoOperatingData(force=false):Promise<SeoOsClientPaylo
 
 export function patchSeoTask(task:SeoTaskMap[string]){
   if(!memory)return;
-  const payload={...memory.payload,tasks:{...memory.payload.tasks,[task.id]:task}};
+  const tasks={...memory.payload.tasks,[task.id]:task};
+  const payload={...memory.payload,tasks,learning:buildSeoCommandLearningLibrary(tasks)};
   write({payload,expiresAt:memory.expiresAt});
 }
 
