@@ -8,10 +8,16 @@ import {findCityBySlug} from "@/lib/cities";
 import {buildVratCityNarrative} from "@/lib/content-uniqueness";
 import {parseRouteYear} from "@/lib/route-validation";
 import {isVratIndexable,robotsFor} from "@/lib/seo-policy";
+import {vratCitySsgPriority} from "@/lib/static-seo-routes";
 import {calculateVratCalendar,findVratBySlug,vratCalendarSummary} from "@/lib/vrat";
 import {buildVratTopicalGraph} from "@/lib/vrat-topical-links";
 
+export const dynamicParams=true;
 export const revalidate=604800;
+
+export function generateStaticParams(){
+  return vratCitySsgPriority;
+}
 
 function endLabel(date:string,time:string,endDate:string){return date===endDate?time:`${time} · ${endDate}`;}
 
