@@ -1,6 +1,8 @@
 import {createHash} from "node:crypto";
-import {mkdir,readFile,writeFile} from "node:fs/promises";
-import {dirname,resolve} from "node:path";
+import {mkdir,readFile,readdir,unlink,writeFile} from "node:fs/promises";
+import {resolve} from "node:path";
+import {gzipSync,gunzipSync} from "node:zlib";
+import {MUHURAT_PANCHANG_GZIP_BASE64} from "../generated/muhurat-panchang-data";
 import {findCityBySlug,type City} from "../lib/cities";
 import {
   MUHURAT_BUILD_DATA_MAX_BYTES,
@@ -13,9 +15,11 @@ import {clearMuhuratPanchangMonthCache,getMuhuratPanchangMonth} from "../lib/muh
 import {muhuratCityMonthSsgPilot,muhuratMonthSsgPilot} from "../lib/static-seo-routes";
 
 const root=resolve(process.cwd());
-const outputPath=resolve(root,"generated/muhurat-panchang.json");
+const generatedDir=resolve(root,"generated");
+const indexPath=resolve(generatedDir,"muhurat-panchang-data.ts");
+const chunkPrefix="muhurat-panchang-chunk-";
+const chunkSize=6000;
 const verifyOnly=process.argv.includes("--verify");
-const printManifest=process.argv.includes("--print");
 
 type Target={city:City;year:number;month:number;key:string};
 
@@ -46,43 +50,57 @@ async function expectedSignature(targets:Target[]){
     .digest("hex");
 }
 
-async function readExisting():Promise<MuhuratBuildDataManifest|null>{
+function readCommittedManifest():MuhuratBuildDataManifest|null{
   try{
-    return JSON.parse(await readFile(outputPath,"utf8")) as MuhuratBuildDataManifest;
+    const json=gunzipSync(Buffer.from(MUHURAT_PANCHANG_GZIP_BASE64,"base64")).toString("utf8");
+    return JSON.parse(json) as MuhuratBuildDataManifest;
   }catch{return null;}
 }
 
 function isFresh(manifest:MuhuratBuildDataManifest|null,signature:string,targets:Target[]){
   if(!manifest||manifest.version!==MUHURAT_BUILD_DATA_VERSION||manifest.signature!==signature)return false;
-  if(manifest.targets.length!==targets.length)return false;
+  const keys=targets.map(target=>target.key);
+  if(manifest.targets.length!==keys.length||manifest.targets.some((key,index)=>key!==keys[index]))return false;
+  if(Object.keys(manifest.entries).length!==keys.length)return false;
   for(const target of targets){
-    if(!manifest.targets.includes(target.key))return false;
     const rows=manifest.entries[target.key];
     const expectedDays=new Date(Date.UTC(target.year,target.month,0)).getUTCDate();
     if(!rows||rows.length!==expectedDays)return false;
+    if(rows.some(row=>!row.date||!row.tithi||!row.nakshatra||!row.rahu||!row.yamaganda||!row.gulika||!Array.isArray(row.dayChoghadiya)))return false;
   }
   return true;
 }
 
-function print(manifest:MuhuratBuildDataManifest){
-  if(!printManifest)return;
-  console.log("MUHURAT_BUILD_DATA_BEGIN");
-  console.log(JSON.stringify(manifest));
-  console.log("MUHURAT_BUILD_DATA_END");
+async function writeCompressedPayload(encoded:string){
+  await mkdir(generatedDir,{recursive:true});
+  const compressed=gzipSync(Buffer.from(encoded,"utf8"),{level:9});
+  const base64=compressed.toString("base64");
+  const chunks:string[]=[];
+  for(let offset=0;offset<base64.length;offset+=chunkSize)chunks.push(base64.slice(offset,offset+chunkSize));
+
+  for(const file of await readdir(generatedDir)){
+    if(new RegExp(`^${chunkPrefix}\\d+\\.ts$`).test(file))await unlink(resolve(generatedDir,file));
+  }
+  for(const [index,chunk] of chunks.entries()){
+    await writeFile(resolve(generatedDir,`${chunkPrefix}${index}.ts`),`export default ${JSON.stringify(chunk)};\n`,"utf8");
+  }
+  const imports=chunks.map((_,index)=>`import chunk${index} from "./${chunkPrefix}${index}";`).join("\n");
+  const expression=chunks.map((_,index)=>`chunk${index}`).join("+");
+  await writeFile(indexPath,`${imports}\n\nexport const MUHURAT_PANCHANG_GZIP_BASE64=${expression};\n`,"utf8");
+  return {compressedBytes:compressed.byteLength,base64Chars:base64.length,chunks:chunks.length};
 }
 
 const targets=collectTargets();
 const signature=await expectedSignature(targets);
-const existing=await readExisting();
+const existing=readCommittedManifest();
 
 if(isFresh(existing,signature,targets)){
-  console.log(`[muhurat-precompute] fresh ${targets.length} month datasets; no Swiss Ephemeris work needed`);
-  print(existing!);
+  console.log(`[muhurat-precompute] verified ${targets.length} committed month datasets; no Swiss Ephemeris work needed`);
   process.exit(0);
 }
 
 if(verifyOnly){
-  throw new Error(`Muhurat build data is stale. Run npm run precompute:muhurat and commit generated/muhurat-panchang.json (${targets.length} month datasets expected).`);
+  throw new Error(`Muhurat build data is stale. Run npm run precompute:muhurat and commit generated/muhurat-panchang-data.ts plus its chunk files (${targets.length} month datasets expected).`);
 }
 
 clearMuhuratPanchangMonthCache();
@@ -105,7 +123,5 @@ const bytes=Buffer.byteLength(encoded);
 if(bytes>MUHURAT_BUILD_DATA_MAX_BYTES){
   throw new Error(`Muhurat build data is ${bytes} bytes, above the ${MUHURAT_BUILD_DATA_MAX_BYTES} byte safety cap. Shard or reduce the static matrix before shipping.`);
 }
-await mkdir(dirname(outputPath),{recursive:true});
-await writeFile(outputPath,encoded,"utf8");
-console.log(`[muhurat-precompute] wrote ${targets.length} month datasets (${bytes} bytes)`);
-print(manifest);
+const packed=await writeCompressedPayload(encoded);
+console.log(`[muhurat-precompute] wrote ${targets.length} month datasets: ${bytes} raw bytes -> ${packed.compressedBytes} gzip bytes -> ${packed.base64Chars} base64 chars across ${packed.chunks} chunks`);
