@@ -4,9 +4,9 @@ import {findCityBySlug} from "../lib/cities";
 import {getPrecomputedMuhuratPanchangMonth,loadMuhuratPrecomputedShard} from "../lib/muhurat-precomputed";
 
 describe("Muhurat precomputed shard runtime",()=>{
-  it("dynamically imports and decompresses one committed month shard",async()=>{
-    const shardId=MUHURAT_PANCHANG_SHARD_IDS[0];
-    expect(shardId).toMatch(/^\d{4}-\d{2}$/);
+  it("dynamically imports and decompresses a committed 20-city monthly shard",async()=>{
+    const shardId="2026-09";
+    expect(MUHURAT_PANCHANG_SHARD_IDS).toContain(shardId);
     const [year,month]=shardId.split("-").map(Number);
     const shard=await loadMuhuratPrecomputedShard(shardId);
     expect(shard).not.toBeNull();
@@ -18,6 +18,21 @@ describe("Muhurat precomputed shard runtime",()=>{
     const rows=await getPrecomputedMuhuratPanchangMonth(year,month,mumbai!);
     expect(rows).toHaveLength(new Date(Date.UTC(year,month,0)).getUTCDate());
     expect(rows?.[0]?.date).toMatch(/^\d{4}-\d{2}-\d{2}$/);
+  });
+
+  it("dynamically imports a single-city yearly baseline shard",async()=>{
+    const shardId="2025-01";
+    expect(MUHURAT_PANCHANG_SHARD_IDS).toContain(shardId);
+    const shard=await loadMuhuratPrecomputedShard(shardId);
+    expect(shard).not.toBeNull();
+    expect(shard?.shardId).toBe(shardId);
+    expect(shard?.targets).toHaveLength(1);
+    expect(shard?.targets[0].startsWith("mumbai|")).toBe(true);
+
+    const mumbai=findCityBySlug("mumbai");
+    expect(mumbai).toBeTruthy();
+    const rows=await getPrecomputedMuhuratPanchangMonth(2025,1,mumbai!);
+    expect(rows).toHaveLength(31);
   });
 
   it("returns null for a month outside the generated registry so live fallback can run",async()=>{
