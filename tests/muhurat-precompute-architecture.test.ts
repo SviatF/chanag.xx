@@ -6,7 +6,7 @@ import {muhuratMonthSsgPriority} from "../lib/static-seo-routes";
 
 function decodeShard(path:string){
   const source=readFileSync(path,"utf8");
-  const match=source.match(/^export default (.+);\s*$/s);
+  const match=source.match(/^export default (.+);\s*$/);
   if(!match)throw new Error(`Invalid generated shard module: ${path}`);
   const base64=JSON.parse(match[1]) as string;
   return {
