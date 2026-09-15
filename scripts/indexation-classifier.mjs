@@ -43,8 +43,6 @@ export function classifyOutsideUrl(rawUrl,referenceIso){
   let url;
   try{url=new URL(rawUrl);}catch{return result("needs_review","INVALID_URL","unknown");}
   const parts=url.pathname.split("/").filter(Boolean);
-  const currentYear=Number(referenceIso.slice(0,4));
-  const yearlyMuhuratYears=new Set([currentYear-1,currentYear,currentYear+1,currentYear+2]);
 
   if(parts[0]==="panchang"&&parts.length===2){
     return result("intentional_exclusion","TODAY_ALIAS_CANONICALIZES_TO_DATED_PAGE","panchang-today-alias");
@@ -52,18 +50,18 @@ export function classifyOutsideUrl(rawUrl,referenceIso){
 
   if(parts[0]==="panchang"&&parts.length===3&&priorityCities.has(parts[1])&&validIsoDate(parts[2])){
     const delta=dayDistance(parts[2],referenceIso);
-    if(Math.abs(delta)<=45){
-      return result("indexable_candidate","DAILY_METADATA_INDEXABLE_OUTSIDE_SITEMAP","panchang-daily",`dayOffset=${delta}`);
+    if(delta>=-14&&delta<=45){
+      return result("indexable_candidate","DAILY_INDEXABLE_URL_MISSING_FROM_SITEMAP","panchang-daily",`dayOffset=${delta}`);
     }
-    return result("intentional_exclusion","DAILY_OUTSIDE_45_DAY_INDEX_WINDOW","panchang-daily",`dayOffset=${delta}`);
+    return result("intentional_exclusion","DAILY_OUTSIDE_SITEMAP_INDEX_WINDOW","panchang-daily",`dayOffset=${delta}`);
   }
 
   if(parts[0]==="calendar"&&parts.length===4&&priorityCities.has(parts[1])&&validYear(parts[2])&&validMonth(parts[3])){
     const distance=monthDistance(Number(parts[2]),Number(parts[3]),referenceIso);
-    if(distance>=-3&&distance<=12){
-      return result("indexable_candidate","MONTHLY_METADATA_INDEXABLE_OUTSIDE_SITEMAP","calendar-month",`monthOffset=${distance}`);
+    if(distance>=-2&&distance<=12){
+      return result("indexable_candidate","MONTHLY_INDEXABLE_URL_MISSING_FROM_SITEMAP","calendar-month",`monthOffset=${distance}`);
     }
-    return result("intentional_exclusion","MONTHLY_OUTSIDE_INDEX_WINDOW","calendar-month",`monthOffset=${distance}`);
+    return result("intentional_exclusion","MONTHLY_OUTSIDE_SITEMAP_INDEX_WINDOW","calendar-month",`monthOffset=${distance}`);
   }
 
   if(parts[0]==="festivals"&&(parts.length===3||parts.length===4)){
@@ -73,12 +71,14 @@ export function classifyOutsideUrl(rawUrl,referenceIso){
   if(parts[0]==="muhurat"&&(parts.length===4||parts.length===5)&&validYear(parts[2])&&validMonth(parts[3])){
     const event=parts[1];
     const year=Number(parts[2]);
+    const month=Number(parts[3]);
     const city=parts.length===5?parts[4]:null;
-    const metadataIndexable=primaryMuhuratEvents.has(event)&&yearlyMuhuratYears.has(year)&&(!city||priorityCities.has(city));
-    if(metadataIndexable){
-      return result("indexable_candidate","MUHURAT_METADATA_INDEXABLE_OUTSIDE_ROLLING_SITEMAP",city?"muhurat-city-month":"muhurat-month");
+    const distance=monthDistance(year,month,referenceIso);
+    const monthlyIndexable=primaryMuhuratEvents.has(event)&&distance>=0&&distance<=12&&(!city||priorityCities.has(city));
+    if(monthlyIndexable){
+      return result("indexable_candidate","MUHURAT_INDEXABLE_URL_MISSING_FROM_SITEMAP",city?"muhurat-city-month":"muhurat-month",`monthOffset=${distance}`);
     }
-    return result("intentional_exclusion","MUHURAT_EVENT_YEAR_OR_CITY_POLICY_EXCLUSION",city?"muhurat-city-month":"muhurat-month");
+    return result("intentional_exclusion","MUHURAT_OUTSIDE_ROLLING_INDEX_POLICY",city?"muhurat-city-month":"muhurat-month",`monthOffset=${distance}`);
   }
 
   if((parts[0]==="gold-rate")||(parts[0]==="tools"&&parts[1]==="gold-value-calculator")){
@@ -164,7 +164,7 @@ export async function classifyReport(report,{fetchImpl=fetch}={}){
 
   report.warnings=(report.warnings||[]).filter(item=>item.code!=="LINKED_OUTSIDE_SITEMAP"&&item.code!=="INDEXABLE_OUTSIDE_SITEMAP"&&item.code!=="OUTSIDE_SITEMAP_NEEDS_REVIEW");
   if(summary.indexableCandidates){
-    report.warnings.push({code:"INDEXABLE_OUTSIDE_SITEMAP",message:`${summary.indexableCandidates} internally linked URLs are metadata-indexable but absent from the audited sitemap set.`,sample:summary.candidateSample});
+    report.warnings.push({code:"INDEXABLE_OUTSIDE_SITEMAP",message:`${summary.indexableCandidates} internally linked URLs are indexable but absent from the audited sitemap set.`,sample:summary.candidateSample});
   }
   if(summary.needsReview){
     report.warnings.push({code:"OUTSIDE_SITEMAP_NEEDS_REVIEW",message:`${summary.needsReview} internally linked URLs could not be safely classified from current indexation policy.`,sample:summary.needsReviewSample});
