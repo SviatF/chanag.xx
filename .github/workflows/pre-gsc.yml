@@ -9,6 +9,7 @@ on:
     paths:
       - ".github/workflows/pre-gsc.yml"
       - "scripts/pre-gsc-audit.mjs"
+      - "scripts/indexation-classifier.mjs"
       - "app/robots.ts"
       - "app/sitemap.xml/**"
       - "app/sitemap-*.xml/**"
@@ -56,6 +57,10 @@ jobs:
           AUDIT_CONCURRENCY: "6"
           AUDIT_TIMEOUT_MS: "15000"
         run: node scripts/pre-gsc-audit.mjs
+
+      - name: Classify linked URLs outside sitemap
+        if: always()
+        run: node scripts/indexation-classifier.mjs
 
       - name: Upload pre-GSC audit report
         if: always()
