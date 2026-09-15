@@ -64,7 +64,7 @@ async function accessToken(counter:Counter){
     const key=await crypto.subtle.importKey("pkcs8",pemToArrayBuffer(privateKey),{name:"RSASSA-PKCS1-v1_5",hash:"SHA-256"},false,["sign"]);
     const signature=await crypto.subtle.sign("RSASSA-PKCS1-v1_5",key,new TextEncoder().encode(unsigned));
     const assertion=`${unsigned}.${base64Url(new Uint8Array(signature))}`;
-    const response=await countedFetch(counter,GOOGLE_TOKEN_URL,{method:"POST",headers:{"content-type":"application/x-www-form-urlencoded"},body:new URLSearchParams({grant_type:"urn:ietf:params:oauth-type:jwt-bearer",assertion}),cache:"no-store"});
+    const response=await countedFetch(counter,GOOGLE_TOKEN_URL,{method:"POST",headers:{"content-type":"application/x-www-form-urlencoded"},body:new URLSearchParams({grant_type:"urn:ietf:params:oauth:grant-type:jwt-bearer",assertion}),cache:"no-store"});
     if(!response.ok){const text=await response.text();throw new Error(`Google service-account auth failed (${response.status}): ${text.slice(0,240)}`);}
     const json=await response.json() as {access_token?:string};
     if(!json.access_token)throw new Error("Google service-account auth returned no access token.");
