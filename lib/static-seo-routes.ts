@@ -7,6 +7,8 @@ export type VratYearStaticParam={vrat:string;year:string};
 export type VratCityStaticParam=VratYearStaticParam&{city:string};
 export type DatedPanchangStaticParam={city:string;date:string[]};
 export type CalendarMonthStaticParam={city:string;year:string;month:string};
+export type HinduCalendarYearStaticParam={year:string};
+export type CityCalendarYearStaticParam={city:string;year:string};
 
 /**
  * Deterministic festival/city pages for the maintained 2026 festival calendar
@@ -23,9 +25,9 @@ export const festivalCitySsgPilot=festivalCitySsgPriority;
  * Vrat routes are deterministic for a fixed vrat/year/city. Keep the build-time
  * matrix aligned with the exact SEO indexation policy.
  */
-const vratStaticYears=yearlyIndexYears();
+const yearlyStaticYears=yearlyIndexYears();
 export const vratYearSsgPriority:VratYearStaticParam[]=primaryVratTypes.flatMap(vrat=>
-  vratStaticYears.map(year=>({vrat,year:String(year)}))
+  yearlyStaticYears.map(year=>({vrat,year:String(year)}))
 );
 export const vratCitySsgPriority:VratCityStaticParam[]=vratYearSsgPriority.flatMap(item=>
   phase1PriorityCities.map(city=>({...item,city}))
@@ -47,6 +49,16 @@ export const calendarMonthSsgPriority:CalendarMonthStaticParam[]=sitemapPriority
   monthlyStaticMonths.map(item=>({city:city.slug,year:String(item.year),month:item.slug}))
 );
 
+/**
+ * Yearly calendar hubs are deterministic inside the same four-year SEO policy
+ * used by the yearly sitemap. Keep Muhurat yearly hubs out of this registry for
+ * now because each one performs a full 12-month Panchang calculation pass.
+ */
+export const hinduCalendarYearSsgPriority:HinduCalendarYearStaticParam[]=yearlyStaticYears.map(year=>({year:String(year)}));
+export const cityCalendarYearSsgPriority:CityCalendarYearStaticParam[]=sitemapPriorityCities.flatMap(city=>
+  yearlyStaticYears.map(year=>({city:city.slug,year:String(year)}))
+);
+
 export function festivalCityStaticKey(item:FestivalCityStaticParam){
   return `${item.festival}/${item.year}/${item.city}`;
 }
@@ -61,4 +73,10 @@ export function datedPanchangStaticKey(item:DatedPanchangStaticParam){
 }
 export function calendarMonthStaticKey(item:CalendarMonthStaticParam){
   return `${item.city}/${item.year}/${item.month}`;
+}
+export function hinduCalendarYearStaticKey(item:HinduCalendarYearStaticParam){
+  return item.year;
+}
+export function cityCalendarYearStaticKey(item:CityCalendarYearStaticParam){
+  return `${item.city}/${item.year}`;
 }
