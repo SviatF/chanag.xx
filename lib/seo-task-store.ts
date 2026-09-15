@@ -10,6 +10,17 @@ export type SeoTaskBaseline={
   position:number;
 };
 
+export type SeoTaskOutcome={
+  measuredAt:string;
+  measurementSnapshotAt:string;
+  metric:SeoTaskBaseline;
+  impressionsChangePct:number|null;
+  clicksChangePct:number|null;
+  ctrDeltaPoints:number;
+  positionImprovement:number|null;
+  score:number;
+};
+
 export type SeoCommandTask={
   id:string;
   url:string;
@@ -25,6 +36,9 @@ export type SeoCommandTask={
   commitSha:string|null;
   revalidatedAt?:string;
   revalidatedPath?:string;
+  measuredAt?:string;
+  measurementSnapshotAt?:string;
+  outcome?:SeoTaskOutcome;
   closedAt?:string;
   snoozedUntil?:string;
   updatedAt:string;
