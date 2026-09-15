@@ -1,5 +1,6 @@
 import {describe,expect,it} from "vitest";
 import {phase1PriorityCities,primaryMuhuratEvents} from "../lib/seo-policy";
+// @ts-ignore Audit runtime is intentionally a plain Node ESM module.
 import {
   AUDIT_PRIORITY_CITIES,
   AUDIT_PRIMARY_MUHURAT_EVENTS,
