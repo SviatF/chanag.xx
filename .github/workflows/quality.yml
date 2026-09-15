@@ -39,18 +39,3 @@ jobs:
 
       - name: Build Cloudflare vinext bundle
         run: npm run build
-
-      - name: Smoke Muhurat shard and live fallback on Cloudflare preview
-        if: github.event_name == 'pull_request' && github.head_ref == 'feat/muhurat-sharded-precompute'
-        run: |
-          base="https://feat-muhurat-sharded-precompute-chanag-xx.oleg22777.workers.dev"
-          for path in \
-            "/muhurat/wedding/2026/09/varanasi" \
-            "/muhurat/griha-pravesh/2027/01/patna" \
-            "/muhurat/wedding/2027/02/delhi"
-          do
-            echo "smoke: $path"
-            curl --fail --silent --show-error --location \
-              --retry 12 --retry-delay 10 --retry-all-errors --max-time 60 \
-              --output /dev/null "$base$path"
-          done
