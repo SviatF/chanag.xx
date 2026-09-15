@@ -14,7 +14,14 @@ describe("public Cloudflare edge cache shield",()=>{
     expect(decision.cacheUrl).not.toContain("fbclid");
   });
 
-  it("never caches admin, APIs, RSC payloads or functional query pages",()=>{
+  it("collapses arbitrary query noise on deterministic SEO content to its canonical pathname",()=>{
+    const decision=publicEdgeCacheDecision(htmlRequest("https://panchvani.com/panchang/mumbai/2026-09-15?foo=1&utm_source=bot&ref=random"),"v1");
+    expect(decision.eligible).toBe(true);
+    expect(decision.reason).toBe("public-html");
+    expect(decision.cacheUrl).toBe("https://panchvani.com/panchang/mumbai/2026-09-15?__pv_edge_v=v1");
+  });
+
+  it("never caches admin, APIs, RSC payloads or genuinely functional query pages",()=>{
     expect(publicEdgeCacheDecision(htmlRequest("https://panchvani.com/admin"),"v").eligible).toBe(false);
     expect(publicEdgeCacheDecision(htmlRequest("https://panchvani.com/api/admin/seo-data"),"v").eligible).toBe(false);
     expect(publicEdgeCacheDecision(htmlRequest("https://panchvani.com/panchang/mumbai",{"rsc":"1"}),"v").eligible).toBe(false);
