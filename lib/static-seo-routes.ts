@@ -62,13 +62,13 @@ export const cityCalendarYearSsgPriority:CityCalendarYearStaticParam[]=sitemapPr
 );
 
 /**
- * Phase 7B Muhurat priority batch: current + four forward months, three primary
- * events, India/Mumbai baseline pages, and the first ten SEO-priority city pages.
+ * Phase 7C Muhurat priority batch: current + four forward months, three primary
+ * events, India/Mumbai baseline pages, and all twenty SEO-priority city pages.
  * Mumbai is intentionally included in the city matrix; the precompute generator
- * deduplicates it against the baseline so 165 pages require only 50 month datasets.
+ * deduplicates it against the baseline so 315 pages require only 100 month datasets.
  */
 const muhuratPriorityMonths=rollingMonths(0,4);
-export const muhuratSsgPriorityCitySlugs=phase1PriorityCities.slice(0,10);
+export const muhuratSsgPriorityCitySlugs=phase1PriorityCities;
 export const muhuratMonthSsgPriority:MuhuratMonthStaticParam[]=muhuratPriorityMonths.flatMap(item=>
   primaryMuhuratEvents.map(event=>({event,year:String(item.year),month:item.slug}))
 );

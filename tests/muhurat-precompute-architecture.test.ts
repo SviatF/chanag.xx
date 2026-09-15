@@ -9,12 +9,12 @@ function manifest(){
 }
 
 describe("Muhurat precomputed build-data architecture",()=>{
-  it("ships a compact, complete 50-month-context priority artifact",()=>{
+  it("ships a compact, complete 100-month-context priority artifact",()=>{
     const data=manifest();
     expect(data.version).toBe(1);
     expect(data.signature).toMatch(/^[a-f0-9]{64}$/);
-    expect(data.targets).toHaveLength(50);
-    expect(Object.keys(data.entries)).toHaveLength(50);
+    expect(data.targets).toHaveLength(100);
+    expect(Object.keys(data.entries)).toHaveLength(100);
     expect(Buffer.byteLength(JSON.stringify(data))).toBeLessThan(MUHURAT_BUILD_DATA_MAX_BYTES);
 
     for(const target of data.targets){

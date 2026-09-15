@@ -104,17 +104,15 @@ describe("SSG/ISR SEO architecture",()=>{
     }
   });
 
-  it("pre-renders the Phase 7B Muhurat priority batch at exactly 165 pages",()=>{
+  it("pre-renders the Phase 7C Muhurat priority batch at exactly 315 pages",()=>{
     const priorityMonths=rollingMonths(0,4);
     expect(primaryMuhuratEvents).toHaveLength(3);
     expect(priorityMonths).toHaveLength(5);
-    expect(muhuratSsgPriorityCitySlugs).toEqual([
-      "mumbai","delhi","bengaluru","hyderabad","ahmedabad",
-      "chennai","kolkata","surat","pune","jaipur",
-    ]);
+    expect(phase1PriorityCities).toHaveLength(20);
+    expect(muhuratSsgPriorityCitySlugs).toEqual(phase1PriorityCities);
     expect(muhuratMonthSsgPriority).toHaveLength(15);
-    expect(muhuratCityMonthSsgPriority).toHaveLength(150);
-    expect(muhuratMonthSsgPriority.length+muhuratCityMonthSsgPriority.length).toBe(165);
+    expect(muhuratCityMonthSsgPriority).toHaveLength(300);
+    expect(muhuratMonthSsgPriority.length+muhuratCityMonthSsgPriority.length).toBe(315);
 
     const baselineKeys=muhuratMonthSsgPriority.map(muhuratMonthStaticKey);
     const cityKeys=muhuratCityMonthSsgPriority.map(muhuratCityMonthStaticKey);
