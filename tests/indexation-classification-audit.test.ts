@@ -16,11 +16,11 @@ describe("outside-sitemap indexation classification",()=>{
     expect(AUDIT_PRIMARY_MUHURAT_EVENTS).toEqual([...primaryMuhuratEvents]);
   });
 
-  it("separates daily and monthly metadata-indexable gaps from intentional windows",()=>{
-    expect(classifyOutsideUrl("https://panchvani.com/panchang/mumbai/2026-08-02",REFERENCE).classification).toBe("indexable_candidate");
-    expect(classifyOutsideUrl("https://panchvani.com/panchang/mumbai/2026-08-01",REFERENCE).classification).toBe("intentional_exclusion");
-    expect(classifyOutsideUrl("https://panchvani.com/calendar/delhi/2026/06",REFERENCE).classification).toBe("indexable_candidate");
-    expect(classifyOutsideUrl("https://panchvani.com/calendar/delhi/2026/05",REFERENCE).classification).toBe("intentional_exclusion");
+  it("uses the exact daily and monthly sitemap index windows",()=>{
+    expect(classifyOutsideUrl("https://panchvani.com/panchang/mumbai/2026-09-02",REFERENCE).classification).toBe("indexable_candidate");
+    expect(classifyOutsideUrl("https://panchvani.com/panchang/mumbai/2026-09-01",REFERENCE)).toMatchObject({classification:"intentional_exclusion",reason:"DAILY_OUTSIDE_SITEMAP_INDEX_WINDOW"});
+    expect(classifyOutsideUrl("https://panchvani.com/calendar/delhi/2026/07",REFERENCE).classification).toBe("indexable_candidate");
+    expect(classifyOutsideUrl("https://panchvani.com/calendar/delhi/2026/06",REFERENCE)).toMatchObject({classification:"intentional_exclusion",reason:"MONTHLY_OUTSIDE_SITEMAP_INDEX_WINDOW"});
   });
 
   it("treats undated Panchang aliases and unvalidated festival pages as intentional exclusions",()=>{
@@ -29,9 +29,10 @@ describe("outside-sitemap indexation classification",()=>{
     expect(classifyOutsideUrl("https://panchvani.com/festivals/diwali/2027/mumbai",REFERENCE)).toMatchObject({classification:"intentional_exclusion",family:"festival-city"});
   });
 
-  it("detects Muhurat metadata versus rolling-sitemap drift",()=>{
-    expect(classifyOutsideUrl("https://panchvani.com/muhurat/wedding/2025/01",REFERENCE).classification).toBe("indexable_candidate");
-    expect(classifyOutsideUrl("https://panchvani.com/muhurat/wedding/2026/08/mumbai",REFERENCE).classification).toBe("indexable_candidate");
+  it("bounds monthly Muhurat to the same current-through-12-month sitemap horizon",()=>{
+    expect(classifyOutsideUrl("https://panchvani.com/muhurat/wedding/2026/09",REFERENCE).classification).toBe("indexable_candidate");
+    expect(classifyOutsideUrl("https://panchvani.com/muhurat/wedding/2026/08/mumbai",REFERENCE)).toMatchObject({classification:"intentional_exclusion",reason:"MUHURAT_OUTSIDE_ROLLING_INDEX_POLICY"});
+    expect(classifyOutsideUrl("https://panchvani.com/muhurat/wedding/2027/10",REFERENCE)).toMatchObject({classification:"intentional_exclusion",reason:"MUHURAT_OUTSIDE_ROLLING_INDEX_POLICY"});
     expect(classifyOutsideUrl("https://panchvani.com/muhurat/gold-purchase/2026/09",REFERENCE).classification).toBe("intentional_exclusion");
   });
 
