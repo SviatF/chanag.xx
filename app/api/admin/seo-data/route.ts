@@ -22,11 +22,11 @@ export async function GET(request:Request){
   if(!(await isAdminAuthenticated()))return NextResponse.json({error:"Unauthorized"},{status:401,headers:{"cache-control":"private, no-store"}});
   const url=new URL(request.url);
   const force=url.searchParams.get("refresh")==="1";
-  const taskStorage=getSeoTaskStoreStatus();
   try{
-    // Resolve the binding from the actual Cloudflare route runtime. This avoids
-    // depending on module-local state from the custom Worker entrypoint.
+    // Resolve Cloudflare bindings first. SEO tasks can reuse the same native KV
+    // namespace as the daily GSC snapshot, under a separate storage key.
     await bindGscStoreFromCloudflareEnv();
+    const taskStorage=getSeoTaskStoreStatus();
     const [gsc,tasks]=await Promise.all([
       getGscSeoOsDatasetWithMeta(force),
       taskStorage.configured?readSeoTaskMap():Promise.resolve({}),
@@ -38,6 +38,6 @@ export async function GET(request:Request){
     return NextResponse.json({dataset:gsc.dataset,tasks,taskStorage,telemetry},{headers:telemetryHeaders(telemetry.cache,telemetry.apiCalls,telemetry.upstreamSubrequests,latencyMs)});
   }catch(error){
     const latencyMs=Math.round((performance.now()-started)*10)/10;
-    return NextResponse.json({error:error instanceof Error?error.message:"Unable to load SEO operating data.",taskStorage},{status:502,headers:telemetryHeaders("MISS",0,0,latencyMs)});
+    return NextResponse.json({error:error instanceof Error?error.message:"Unable to load SEO operating data."},{status:502,headers:telemetryHeaders("MISS",0,0,latencyMs)});
   }
 }
