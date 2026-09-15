@@ -1,5 +1,25 @@
 import chunk0 from "./muhurat-panchang-chunk-0";
 import chunk1 from "./muhurat-panchang-chunk-1";
 import chunk2 from "./muhurat-panchang-chunk-2";
+import chunk3 from "./muhurat-panchang-chunk-3";
+import chunk4 from "./muhurat-panchang-chunk-4";
+import chunk5 from "./muhurat-panchang-chunk-5";
+import chunk6 from "./muhurat-panchang-chunk-6";
+import chunk7 from "./muhurat-panchang-chunk-7";
+import chunk8 from "./muhurat-panchang-chunk-8";
+import chunk9 from "./muhurat-panchang-chunk-9";
+import chunk10 from "./muhurat-panchang-chunk-10";
+import chunk11 from "./muhurat-panchang-chunk-11";
+import chunk12 from "./muhurat-panchang-chunk-12";
+import chunk13 from "./muhurat-panchang-chunk-13";
+import chunk14 from "./muhurat-panchang-chunk-14";
+import chunk15 from "./muhurat-panchang-chunk-15";
+import chunk16 from "./muhurat-panchang-chunk-16";
+import chunk17 from "./muhurat-panchang-chunk-17";
+import chunk18 from "./muhurat-panchang-chunk-18";
+import chunk19 from "./muhurat-panchang-chunk-19";
+import chunk20 from "./muhurat-panchang-chunk-20";
+import chunk21 from "./muhurat-panchang-chunk-21";
+import chunk22 from "./muhurat-panchang-chunk-22";
 
-export const MUHURAT_PANCHANG_GZIP_BASE64=chunk0+chunk1+chunk2;
+export const MUHURAT_PANCHANG_GZIP_BASE64=chunk0+chunk1+chunk2+chunk3+chunk4+chunk5+chunk6+chunk7+chunk8+chunk9+chunk10+chunk11+chunk12+chunk13+chunk14+chunk15+chunk16+chunk17+chunk18+chunk19+chunk20+chunk21+chunk22;
