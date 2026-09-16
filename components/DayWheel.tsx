@@ -1,7 +1,11 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import { minutesToDialAngle } from "@/lib/day-wheel-geometry";
+import {
+  clockwiseWedgeForTimeInterval,
+  minutesToDialAngle,
+  parseClockMinutes,
+} from "@/lib/day-wheel-geometry";
 import type { Panchang, TimeWindow } from "@/lib/panchang";
 import styles from "./DayWheel.module.css";
 
@@ -16,6 +20,7 @@ const CENTER_R=112;
 const GOLD_RING_R=266;
 const GOLD_RING_INNER_R=257;
 const TICK_OUTER_R=255;
+const TIME_RING_R=249;
 
 const SECTOR_SPAN=45;
 const SECTOR_HALF=SECTOR_SPAN/2;
@@ -40,6 +45,13 @@ type Sector={
   muted?:boolean;
 };
 
+type TimingArc={
+  key:Extract<Tone,"rahu"|"gulika"|"abhijit"|"yamaganda">;
+  start:number;
+  end:number;
+  color:string;
+};
+
 const labelColors:Record<Tone,string>={
   night:"#f5ebd8",
   rahu:"#ffe0d5",
@@ -49,6 +61,13 @@ const labelColors:Record<Tone,string>={
   sunrise:"#fff0c8",
   yamaganda:"#efdbc8",
   gulika:"#ead9bd",
+};
+
+const timingColors:Record<TimingArc["key"],string>={
+  rahu:"#ef7766",
+  gulika:"#d8b56d",
+  abhijit:"#a8ba56",
+  yamaganda:"#c88467",
 };
 
 function formatWindow(value:TimeWindow|null){
@@ -110,6 +129,13 @@ function sectorPath(start:number,end:number){
   ].join(" ");
 }
 
+function ringArcPath(radius:number,start:number,end:number){
+  const a=polar(radius,start);
+  const b=polar(radius,end);
+  const large=end-start>180?1:0;
+  return `M ${a.x} ${a.y} A ${radius} ${radius} 0 ${large} 1 ${b.x} ${b.y}`;
+}
+
 function equalSector(
   key:Tone,
   label:string,
@@ -130,9 +156,6 @@ function equalSector(
 }
 
 function sectors(data:Panchang):Sector[]{
-  // Visual model: eight equal 45° wedges around the full wheel.
-  // Exact times stay truthful in the labels and on the outer 24h/NOW scale;
-  // wedge width is intentionally aesthetic rather than duration-proportional.
   return [
     equalSector("night","Night",0,`${data.sunset} – ${data.sunrise}`,"☾"),
     equalSector("sunset","Sunset",45,data.sunset,"☀"),
@@ -143,6 +166,36 @@ function sectors(data:Panchang):Sector[]{
     equalSector("yamaganda","Yamaganda",270,formatWindow(data.yamaganda)),
     equalSector("sunrise","Sunrise",315,data.sunrise,"☀"),
   ];
+}
+
+function timingArc(
+  key:TimingArc["key"],
+  value:TimeWindow|null,
+):TimingArc|null{
+  const startMinutes=parseClockMinutes(value?.start);
+  const endMinutes=parseClockMinutes(value?.end);
+  if(startMinutes===null||endMinutes===null)return null;
+  const wedge=clockwiseWedgeForTimeInterval(startMinutes,endMinutes);
+  return {
+    key,
+    start:wedge.start,
+    end:wedge.end,
+    color:timingColors[key],
+  };
+}
+
+function timingArcs(data:Panchang):TimingArc[]{
+  return [
+    timingArc("rahu",data.rahu),
+    timingArc("gulika",data.gulika),
+    timingArc("abhijit",data.abhijit),
+    timingArc("yamaganda",data.yamaganda),
+  ].filter((arc):arc is TimingArc=>arc!==null);
+}
+
+function instantPoint(value:string){
+  const minutes=parseClockMinutes(value);
+  return minutes===null?null:polar(TIME_RING_R,minutesToDialAngle(minutes));
 }
 
 function labelPoint(start:number,end:number,key:Tone){
@@ -168,6 +221,9 @@ function sectorFill(key:Tone,muted?:boolean){
 
 export default function DayWheel({data,placement="content"}:{data:Panchang;placement?:"hero"|"content"}){
   const wheelSectors=useMemo(()=>sectors(data),[data]);
+  const exactTimingArcs=useMemo(()=>timingArcs(data),[data]);
+  const sunrisePoint=useMemo(()=>instantPoint(data.sunrise),[data.sunrise]);
+  const sunsetPoint=useMemo(()=>instantPoint(data.sunset),[data.sunset]);
   const [clock,setClock]=useState<{minutes:number;label:string}|null>(null);
 
   useEffect(()=>{
@@ -364,6 +420,27 @@ export default function DayWheel({data,placement="content"}:{data:Panchang;place
           stroke="rgba(191,143,52,.52)"
           strokeWidth="1.15"
         />)}
+      </g>
+
+      {/* Exact timing layer on the real 24-hour outer clock. */}
+      <g aria-hidden="true">
+        {exactTimingArcs.map(arc=><path
+          key={`timing-${arc.key}`}
+          d={ringArcPath(TIME_RING_R,arc.start,arc.end)}
+          fill="none"
+          stroke={arc.color}
+          strokeWidth="4.6"
+          strokeLinecap="round"
+          opacity=".96"
+        />)}
+        {sunrisePoint?<>
+          <circle cx={sunrisePoint.x} cy={sunrisePoint.y} r="6.2" fill="#ffd77f" stroke="#39270c" strokeWidth="1.2"/>
+          <circle cx={sunrisePoint.x} cy={sunrisePoint.y} r="9.5" fill="none" stroke="rgba(255,215,127,.26)" strokeWidth="2"/>
+        </>:null}
+        {sunsetPoint?<>
+          <circle cx={sunsetPoint.x} cy={sunsetPoint.y} r="6.2" fill="#f0bd62" stroke="#39270c" strokeWidth="1.2"/>
+          <circle cx={sunsetPoint.x} cy={sunsetPoint.y} r="9.5" fill="none" stroke="rgba(240,189,98,.26)" strokeWidth="2"/>
+        </>:null}
       </g>
 
       <circle
