@@ -20,12 +20,12 @@ export function parseClockMinutes(value:string|null|undefined){
 }
 
 /**
- * Approved DayWheel orientation:
- * 24:00 top, 06:00 left, 12:00 bottom, 18:00 right.
- * Time therefore advances counter-clockwise around the dial.
+ * DayWheel real-time orientation:
+ * 12 AM top, 6 AM right, 12 PM bottom, 6 PM left.
+ * Time advances clockwise, matching a familiar clock face.
  */
 export function minutesToDialAngle(minutes:number){
-  return (360-(normalizeDayMinutes(minutes)/MINUTES_PER_DAY)*360)%360;
+  return (normalizeDayMinutes(minutes)/MINUTES_PER_DAY)*360;
 }
 
 export function forwardSpanMinutes(start:number,end:number){
@@ -39,18 +39,17 @@ export function forwardMidpointMinutes(start:number,end:number){
 }
 
 /**
- * sectorPath() draws clockwise, while time advances counter-clockwise.
- * So an exact time interval is rendered clockwise from the end-time angle
- * back to the start-time angle.
+ * sectorPath() draws clockwise and time now advances clockwise too.
+ * Render an exact time interval directly from its start-time angle to end-time angle.
  */
 export function clockwiseWedgeForTimeInterval(startMinutes:number,endMinutes:number):DialWedge{
-  const start=minutesToDialAngle(endMinutes);
-  let end=minutesToDialAngle(startMinutes);
+  const start=minutesToDialAngle(startMinutes);
+  let end=minutesToDialAngle(endMinutes);
   while(end<=start)end+=360;
   return {start,end};
 }
 
-/** Keep the approved decorative wedge width but center it on an exact instant. */
+/** Keep a decorative wedge width while centering it on an exact instant. */
 export function centeredClockwiseWedge(minutes:number,widthDegrees:number):DialWedge{
   const center=minutesToDialAngle(minutes);
   let start=center-widthDegrees/2;
