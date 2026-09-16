@@ -20,7 +20,7 @@ const CENTER_R=112;
 const GOLD_RING_R=266;
 const GOLD_RING_INNER_R=257;
 const TICK_OUTER_R=255;
-const TIME_RING_R=248;
+const TIME_RING_R=250;
 
 const SECTOR_SPAN=45;
 const SECTOR_HALF=SECTOR_SPAN/2;
@@ -50,6 +50,12 @@ type TimingArc={
   start:number;
   end:number;
   color:string;
+};
+
+type InstantMarker={
+  point:{x:number;y:number};
+  inner:{x:number;y:number};
+  outer:{x:number;y:number};
 };
 
 const labelColors:Record<Tone,string>={
@@ -193,9 +199,15 @@ function timingArcs(data:Panchang):TimingArc[]{
   ].filter((arc):arc is TimingArc=>arc!==null);
 }
 
-function instantPoint(value:string){
+function instantMarker(value:string):InstantMarker|null{
   const minutes=parseClockMinutes(value);
-  return minutes===null?null:polar(TIME_RING_R,minutesToDialAngle(minutes));
+  if(minutes===null)return null;
+  const angle=minutesToDialAngle(minutes);
+  return {
+    point:polar(TIME_RING_R,angle),
+    inner:polar(TIME_RING_R-6,angle),
+    outer:polar(TIME_RING_R+6,angle),
+  };
 }
 
 function labelPoint(start:number,end:number,key:Tone){
@@ -222,8 +234,8 @@ function sectorFill(key:Tone,muted?:boolean){
 export default function DayWheel({data,placement="content"}:{data:Panchang;placement?:"hero"|"content"}){
   const wheelSectors=useMemo(()=>sectors(data),[data]);
   const exactTimingArcs=useMemo(()=>timingArcs(data),[data]);
-  const sunrisePoint=useMemo(()=>instantPoint(data.sunrise),[data.sunrise]);
-  const sunsetPoint=useMemo(()=>instantPoint(data.sunset),[data.sunset]);
+  const sunriseMarker=useMemo(()=>instantMarker(data.sunrise),[data.sunrise]);
+  const sunsetMarker=useMemo(()=>instantMarker(data.sunset),[data.sunset]);
   const [clock,setClock]=useState<{minutes:number;label:string}|null>(null);
 
   useEffect(()=>{
@@ -235,7 +247,8 @@ export default function DayWheel({data,placement="content"}:{data:Panchang;place
 
   const isToday=data.date===indiaDateKey();
   const handAngle=clock&&isToday?minutesToDialAngle(clock.minutes):null;
-  const handTip=handAngle===null?null:polar(GOLD_RING_INNER_R-13,handAngle);
+  const handStart=handAngle===null?null:polar(CENTER_R+14,handAngle);
+  const handTip=handAngle===null?null:polar(GOLD_RING_INNER_R-18,handAngle);
   const handGlow=handAngle===null?null:polar(GOLD_RING_R-2,handAngle);
   const handLabel=handAngle===null?null:polar(GOLD_RING_R+20,handAngle);
 
@@ -428,17 +441,19 @@ export default function DayWheel({data,placement="content"}:{data:Panchang;place
           d={ringArcPath(TIME_RING_R,arc.start,arc.end)}
           fill="none"
           stroke={arc.color}
-          strokeWidth="5.2"
+          strokeWidth="3.4"
           strokeLinecap="round"
-          opacity=".98"
+          opacity=".88"
         />)}
-        {sunrisePoint?<>
-          <circle cx={sunrisePoint.x} cy={sunrisePoint.y} r="6.5" fill="#ffd77f" stroke="#39270c" strokeWidth="1.2"/>
-          <circle cx={sunrisePoint.x} cy={sunrisePoint.y} r="10" fill="none" stroke="rgba(255,215,127,.32)" strokeWidth="2"/>
+        {sunriseMarker?<>
+          <line x1={sunriseMarker.inner.x} y1={sunriseMarker.inner.y} x2={sunriseMarker.outer.x} y2={sunriseMarker.outer.y} stroke="#ffd77f" strokeWidth="1.4" opacity=".78"/>
+          <circle cx={sunriseMarker.point.x} cy={sunriseMarker.point.y} r="4.3" fill="#ffd77f" stroke="#39270c" strokeWidth="1"/>
+          <circle cx={sunriseMarker.point.x} cy={sunriseMarker.point.y} r="6.8" fill="none" stroke="rgba(255,215,127,.24)" strokeWidth="1.2"/>
         </>:null}
-        {sunsetPoint?<>
-          <circle cx={sunsetPoint.x} cy={sunsetPoint.y} r="6.5" fill="#f0bd62" stroke="#39270c" strokeWidth="1.2"/>
-          <circle cx={sunsetPoint.x} cy={sunsetPoint.y} r="10" fill="none" stroke="rgba(240,189,98,.32)" strokeWidth="2"/>
+        {sunsetMarker?<>
+          <line x1={sunsetMarker.inner.x} y1={sunsetMarker.inner.y} x2={sunsetMarker.outer.x} y2={sunsetMarker.outer.y} stroke="#f0bd62" strokeWidth="1.4" opacity=".78"/>
+          <circle cx={sunsetMarker.point.x} cy={sunsetMarker.point.y} r="4.3" fill="#f0bd62" stroke="#39270c" strokeWidth="1"/>
+          <circle cx={sunsetMarker.point.x} cy={sunsetMarker.point.y} r="6.8" fill="none" stroke="rgba(240,189,98,.24)" strokeWidth="1.2"/>
         </>:null}
       </g>
 
@@ -455,10 +470,10 @@ export default function DayWheel({data,placement="content"}:{data:Panchang;place
         strokeWidth="1"
       />
 
-      {handAngle!==null&&handTip&&handGlow?<>
+      {handAngle!==null&&handStart&&handTip&&handGlow?<>
         <line
-          x1={CX}
-          y1={CY}
+          x1={handStart.x}
+          y1={handStart.y}
           x2={handTip.x}
           y2={handTip.y}
           stroke="url(#hand-gold)"
