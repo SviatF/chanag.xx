@@ -1,6 +1,6 @@
 import {supportedCities} from "./cities";
 import {todayInIndia} from "./dates";
-import {isPriorityCity} from "./seo-policy";
+import {dailyIndexWindow,isPriorityCity,monthlyIndexWindow,muhuratMonthIndexWindow} from "./seo-policy";
 
 export const sitemapPriorityCities=supportedCities.filter(city=>isPriorityCity(city.slug));
 
@@ -13,6 +13,10 @@ export function rollingDailyDates(pastDays=14,futureDays=45){
     dates.push(date.toISOString().slice(0,10));
   }
   return dates;
+}
+
+export function indexableDailyDates(){
+  return rollingDailyDates(dailyIndexWindow.pastDays,dailyIndexWindow.futureDays);
 }
 
 export type SitemapMonth={year:number;month:number;slug:string};
@@ -28,4 +32,12 @@ export function rollingMonths(backMonths=2,forwardMonths=12):SitemapMonth[]{
     rows.push({year:date.getUTCFullYear(),month,slug:String(month).padStart(2,"0")});
   }
   return rows;
+}
+
+export function indexableCalendarMonths(){
+  return rollingMonths(monthlyIndexWindow.backMonths,monthlyIndexWindow.forwardMonths);
+}
+
+export function indexableMuhuratMonths(){
+  return rollingMonths(muhuratMonthIndexWindow.backMonths,muhuratMonthIndexWindow.forwardMonths);
 }

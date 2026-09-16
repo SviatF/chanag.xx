@@ -1,6 +1,6 @@
 import {festivals2026} from "./festivals";
 import {phase1PriorityCities,primaryMuhuratEvents,primaryVratTypes,yearlyIndexYears} from "./seo-policy";
-import {rollingDailyDates,rollingMonths,sitemapPriorityCities} from "./seo-sitemap";
+import {indexableCalendarMonths,indexableDailyDates,indexableMuhuratMonths,sitemapPriorityCities} from "./seo-sitemap";
 
 export type FestivalCityStaticParam={festival:string;year:string;city:string};
 export type VratYearStaticParam={vrat:string;year:string};
@@ -42,12 +42,12 @@ export const vratCitySsgPriority:VratCityStaticParam[]=vratYearSsgPriority.flatM
  * live SEO sitemaps. The undated `/panchang/[city]` route is intentionally not
  * included so its "today" semantics stay on hourly ISR.
  */
-const dailyStaticDates=rollingDailyDates(14,45);
+const dailyStaticDates=indexableDailyDates();
 export const datedPanchangSsgPriority:DatedPanchangStaticParam[]=sitemapPriorityCities.flatMap(city=>
   dailyStaticDates.map(date=>({city:city.slug,date:[date]}))
 );
 
-const monthlyStaticMonths=rollingMonths(2,12);
+const monthlyStaticMonths=indexableCalendarMonths();
 export const calendarMonthSsgPriority:CalendarMonthStaticParam[]=sitemapPriorityCities.flatMap(city=>
   monthlyStaticMonths.map(item=>({city:city.slug,year:String(item.year),month:item.slug}))
 );
@@ -67,14 +67,12 @@ export const muhuratYearSsgPriority:MuhuratYearStaticParam[]=primaryMuhuratEvent
 );
 
 /**
- * Phase 7E Muhurat full monthly sitemap matrix: current + twelve forward months,
- * three primary events, India/Mumbai baseline pages, and all twenty SEO-priority
- * city pages. This mirrors `/sitemap-muhurat.xml` exactly: 13 months × 3 events ×
- * (1 baseline + 20 cities) = 819 SSG URLs. Mumbai is intentionally included in
- * the city matrix; the precompute generator deduplicates it against the baseline,
- * so the complete monthly matrix needs only 260 month/city datasets.
+ * Muhurat monthly priority matrix: the exact launch index window, three primary
+ * events, India/Mumbai baseline pages, and all twenty SEO-priority city pages.
+ * This mirrors `/sitemap-muhurat.xml` exactly. Mumbai is intentionally included
+ * in the city matrix; the precompute generator deduplicates it against baseline.
  */
-const muhuratPriorityMonths=rollingMonths(0,12);
+const muhuratPriorityMonths=indexableMuhuratMonths();
 export const muhuratSsgPriorityCitySlugs=phase1PriorityCities;
 export const muhuratMonthSsgPriority:MuhuratMonthStaticParam[]=muhuratPriorityMonths.flatMap(item=>
   primaryMuhuratEvents.map(event=>({event,year:String(item.year),month:item.slug}))
