@@ -8,22 +8,22 @@ import {
 } from "../lib/day-wheel-geometry";
 
 describe("DayWheel geometry",()=>{
-  it("keeps the approved cardinal orientation",()=>{
+  it("uses familiar clockwise cardinal orientation",()=>{
     expect(minutesToDialAngle(0)).toBe(0);
-    expect(minutesToDialAngle(6*60)).toBe(270);
+    expect(minutesToDialAngle(6*60)).toBe(90);
     expect(minutesToDialAngle(12*60)).toBe(180);
-    expect(minutesToDialAngle(18*60)).toBe(90);
+    expect(minutesToDialAngle(18*60)).toBe(270);
   });
 
-  it("maps the reported Rahu window to its exact visual span",()=>{
+  it("maps the reported Rahu window to its exact clockwise visual span",()=>{
     const start=parseClockMinutes("15:37")!;
     const end=parseClockMinutes("17:09")!;
     const wedge=clockwiseWedgeForTimeInterval(start,end);
 
-    expect(minutesToDialAngle(start)).toBeCloseTo(125.75,6);
-    expect(minutesToDialAngle(end)).toBeCloseTo(102.75,6);
-    expect(wedge.start).toBeCloseTo(102.75,6);
-    expect(wedge.end).toBeCloseTo(125.75,6);
+    expect(minutesToDialAngle(start)).toBeCloseTo(234.25,6);
+    expect(minutesToDialAngle(end)).toBeCloseTo(257.25,6);
+    expect(wedge.start).toBeCloseTo(234.25,6);
+    expect(wedge.end).toBeCloseTo(257.25,6);
     expect(wedge.end-wedge.start).toBeCloseTo(23,6);
   });
 
@@ -37,8 +37,8 @@ describe("DayWheel geometry",()=>{
   it("centers Sunrise 06:26 exactly while preserving a decorative width",()=>{
     const sunrise=parseClockMinutes("06:26")!;
     const wedge=centeredClockwiseWedge(sunrise,40);
-    expect(minutesToDialAngle(sunrise)).toBeCloseTo(263.5,6);
-    expect((wedge.start+wedge.end)/2).toBeCloseTo(263.5,6);
+    expect(minutesToDialAngle(sunrise)).toBeCloseTo(96.5,6);
+    expect((wedge.start+wedge.end)/2).toBeCloseTo(96.5,6);
     expect(wedge.end-wedge.start).toBeCloseTo(40,6);
   });
 
@@ -46,6 +46,8 @@ describe("DayWheel geometry",()=>{
     const start=parseClockMinutes("23:30")!;
     const end=parseClockMinutes("00:45")!;
     const wedge=clockwiseWedgeForTimeInterval(start,end);
+    expect(wedge.start).toBeCloseTo(352.5,6);
+    expect(wedge.end).toBeCloseTo(371.25,6);
     expect(wedge.end-wedge.start).toBeCloseTo(18.75,6);
   });
 
