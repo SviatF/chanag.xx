@@ -168,11 +168,18 @@ function wheelGeometry(data:Panchang){
       {key:"day",label:"",start:day.start,end:day.end},
       {key:"night",label:"",start:night.start,end:night.end},
     );
+  }else{
+    baseSectors.push(
+      {key:"day",label:"",start:90,end:270},
+      {key:"night",label:"",start:270,end:450},
+    );
   }
 
+  // Day/Night are balanced visual accents, not duration wedges. Exact day/night
+  // boundaries remain encoded in the neutral base ring above.
   const sectors:Sector[]=[
-    {key:"night",label:"Night",start:330,end:390,icon:"☾"},
-    {key:"day",label:"Day",start:112,end:150,icon:"☀"},
+    {key:"night",label:"Night",start:337,end:383,icon:"☾"},
+    {key:"day",label:"Day",start:108,end:154,icon:"☀"},
     instantSector("sunset","Sunset",data.sunset,{start:72,end:112}),
     exactWindowSector(
       "abhijit",
@@ -402,13 +409,13 @@ export default function DayWheel({data,placement="content"}:{data:Panchang;place
         />;
       })}
 
-      <g opacity=".22">
+      <g>
         {wheel.baseSectors.map(sector=><path
           key={`base-${sector.key}`}
           d={sectorPath(sector.start,sector.end)}
-          fill={sectorFill(sector.key)}
-          stroke="rgba(191,143,52,.14)"
-          strokeWidth=".6"
+          fill="rgba(8,10,9,.62)"
+          stroke="rgba(191,143,52,.18)"
+          strokeWidth=".7"
         />)}
       </g>
 
