@@ -19,7 +19,6 @@ describe("DayWheel equal-width visual model",()=>{
     expect(source).toContain('equalSector("abhijit"');
     expect(source).toContain('equalSector("yamaganda"');
     expect(source).toContain('equalSector("sunrise"');
-    expect(source).not.toContain("exactWindowSector(");
   });
 
   it("keeps exact timing copy inside the aesthetic sectors",()=>{
@@ -29,6 +28,18 @@ describe("DayWheel equal-width visual model",()=>{
     expect(source).toContain("formatWindow(data.abhijit)");
     expect(source).toContain('`${data.sunrise} – ${data.sunset}`');
     expect(source).toContain('`${data.sunset} – ${data.sunrise}`');
+  });
+
+  it("adds a truthful timing layer on the real 24-hour outer ring",()=>{
+    expect(source).toContain("clockwiseWedgeForTimeInterval");
+    expect(source).toContain("parseClockMinutes");
+    expect(source).toContain('timingArc("rahu",data.rahu)');
+    expect(source).toContain('timingArc("gulika",data.gulika)');
+    expect(source).toContain('timingArc("abhijit",data.abhijit)');
+    expect(source).toContain('timingArc("yamaganda",data.yamaganda)');
+    expect(source).toContain("const sunrisePoint=useMemo(()=>instantPoint(data.sunrise)");
+    expect(source).toContain("const sunsetPoint=useMemo(()=>instantPoint(data.sunset)");
+    expect(source).toContain("ringArcPath(TIME_RING_R,arc.start,arc.end)");
   });
 
   it("keeps the approved SVG/CSS styling contract",()=>{
