@@ -16,6 +16,13 @@ export const primaryMuhuratEvents = [
 
 export const primaryVratTypes=["ekadashi","purnima","amavasya"] as const;
 
+// Keep robots/indexability policy and sitemap discovery windows on one source of truth.
+// Pages outside these launch windows remain followable, but are intentionally noindex
+// until demand/coverage signals justify expanding the crawl surface.
+export const dailyIndexWindow={pastDays:14,futureDays:45} as const;
+export const monthlyIndexWindow={backMonths:2,forwardMonths:12} as const;
+export const muhuratMonthIndexWindow={backMonths:0,forwardMonths:12} as const;
+
 const baselinePriorityCitySet=new Set<string>(phase1PriorityCities);
 const supportedCitySlugSet=new Set(supportedCities.map(city=>city.slug));
 const primaryMuhuratSet=new Set<string>(primaryMuhuratEvents);
@@ -67,17 +74,16 @@ export function isDailyIndexable(citySlug:string,dateIso:string){
 
   const now=todayInIndia();
   const target=new Date(dateIso+"T00:00:00Z");
-  const deltaDays=Math.abs((target.getTime()-Date.UTC(now.getUTCFullYear(),now.getUTCMonth(),now.getUTCDate()))/86400000);
+  const today=Date.UTC(now.getUTCFullYear(),now.getUTCMonth(),now.getUTCDate());
+  const deltaDays=(target.getTime()-today)/86400000;
 
-  // Launch policy: index current/recent/near-future dated pages only.
-  // Wider historical coverage will be enabled by Traffic/Demand Monitor signals.
-  return deltaDays<=45;
+  return deltaDays>=-dailyIndexWindow.pastDays&&deltaDays<=dailyIndexWindow.futureDays;
 }
 
 export function isMonthlyIndexable(citySlug:string,year:number,month:number){
   if(!isPriorityCity(citySlug)) return false;
   const distance=monthDistance(year,month);
-  return distance>=-3&&distance<=12;
+  return distance>=-monthlyIndexWindow.backMonths&&distance<=monthlyIndexWindow.forwardMonths;
 }
 
 export function isYearlyCalendarIndexable(year:number,citySlug?:string){
@@ -88,6 +94,12 @@ export function isYearlyCalendarIndexable(year:number,citySlug?:string){
 export function isMuhuratIndexable(event:string,citySlug?:string){
   if(!primaryMuhuratSet.has(event)) return false;
   return citySlug ? isPriorityCity(citySlug) : true;
+}
+
+export function isMuhuratMonthIndexable(event:string,year:number,month:number,citySlug?:string){
+  if(!isMuhuratIndexable(event,citySlug))return false;
+  const distance=monthDistance(year,month);
+  return distance>=-muhuratMonthIndexWindow.backMonths&&distance<=muhuratMonthIndexWindow.forwardMonths;
 }
 
 export function isYearlyMuhuratIndexable(event:string,year:number,citySlug?:string){
