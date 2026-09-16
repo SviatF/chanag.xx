@@ -30,18 +30,24 @@ describe("DayWheel equal-width visual model",()=>{
     expect(source).toContain('`${data.sunset} – ${data.sunrise}`');
   });
 
-  it("adds a truthful timing layer on the real 24-hour outer ring",()=>{
-    expect(source).toContain("const TIME_RING_R=248");
+  it("keeps a subtle truthful timing layer on the real 24-hour outer ring",()=>{
+    expect(source).toContain("const TIME_RING_R=250");
     expect(source).toContain("clockwiseWedgeForTimeInterval");
     expect(source).toContain("parseClockMinutes");
     expect(source).toContain('timingArc("rahu",data.rahu)');
     expect(source).toContain('timingArc("gulika",data.gulika)');
     expect(source).toContain('timingArc("abhijit",data.abhijit)');
     expect(source).toContain('timingArc("yamaganda",data.yamaganda)');
-    expect(source).toContain("const sunrisePoint=useMemo(()=>instantPoint(data.sunrise)");
-    expect(source).toContain("const sunsetPoint=useMemo(()=>instantPoint(data.sunset)");
+    expect(source).toContain("const sunriseMarker=useMemo(()=>instantMarker(data.sunrise)");
+    expect(source).toContain("const sunsetMarker=useMemo(()=>instantMarker(data.sunset)");
     expect(source).toContain("ringArcPath(TIME_RING_R,arc.start,arc.end)");
-    expect(source).toContain('strokeWidth="5.2"');
+    expect(source).toContain('strokeWidth="3.4"');
+  });
+
+  it("starts the NOW pointer outside the center disc instead of through it",()=>{
+    expect(source).toContain("const handStart=handAngle===null?null:polar(CENTER_R+14,handAngle)");
+    expect(source).toContain("x1={handStart.x}");
+    expect(source).toContain("y1={handStart.y}");
   });
 
   it("keeps the approved SVG/CSS styling contract",()=>{
