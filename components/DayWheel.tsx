@@ -1,6 +1,11 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
+import {
+  clockwiseWedgeForTimeInterval,
+  minutesToDialAngle,
+  parseClockMinutes,
+} from "@/lib/day-wheel-geometry";
 import type { Panchang, TimeWindow } from "@/lib/panchang";
 import styles from "./DayWheel.module.css";
 
@@ -15,6 +20,10 @@ const CENTER_R=112;
 const GOLD_RING_R=266;
 const GOLD_RING_INNER_R=257;
 const TICK_OUTER_R=255;
+const TIME_RING_R=250;
+
+const SECTOR_SPAN=45;
+const SECTOR_HALF=SECTOR_SPAN/2;
 
 type Tone=
   | "night"
@@ -36,6 +45,19 @@ type Sector={
   muted?:boolean;
 };
 
+type TimingArc={
+  key:Extract<Tone,"rahu"|"gulika"|"abhijit"|"yamaganda">;
+  start:number;
+  end:number;
+  color:string;
+};
+
+type InstantMarker={
+  point:{x:number;y:number};
+  inner:{x:number;y:number};
+  outer:{x:number;y:number};
+};
+
 const labelColors:Record<Tone,string>={
   night:"#f5ebd8",
   rahu:"#ffe0d5",
@@ -47,8 +69,25 @@ const labelColors:Record<Tone,string>={
   gulika:"#ead9bd",
 };
 
+const timingColors:Record<TimingArc["key"],string>={
+  rahu:"#ff8a78",
+  gulika:"#e8c880",
+  abhijit:"#b7ca66",
+  yamaganda:"#db9276",
+};
+
+function formatClock12(value:string){
+  const minutes=parseClockMinutes(value);
+  if(minutes===null)return value;
+  const hour24=Math.floor(minutes/60);
+  const minute=minutes%60;
+  const hour12=hour24%12||12;
+  const suffix=hour24<12?"AM":"PM";
+  return `${hour12}:${String(minute).padStart(2,"0")} ${suffix}`;
+}
+
 function formatWindow(value:TimeWindow|null){
-  return value ? `${value.start} – ${value.end}` : "Not available today";
+  return value ? `${formatClock12(value.start)} – ${formatClock12(value.end)}` : "Not available today";
 }
 
 function indiaNow(){
@@ -61,10 +100,11 @@ function indiaNow(){
 
   const hour=Number(parts.find(part=>part.type==="hour")?.value||0);
   const minute=Number(parts.find(part=>part.type==="minute")?.value||0);
+  const minutes=hour*60+minute;
 
   return {
-    minutes:hour*60+minute,
-    label:`${String(hour).padStart(2,"0")}:${String(minute).padStart(2,"0")}`,
+    minutes,
+    label:formatClock12(`${String(hour).padStart(2,"0")}:${String(minute).padStart(2,"0")}`),
   };
 }
 
@@ -80,12 +120,6 @@ function indiaDateKey(){
   const month=parts.find(part=>part.type==="month")?.value??"";
   const day=parts.find(part=>part.type==="day")?.value??"";
   return `${year}-${month}-${day}`;
-}
-
-function liveAngle(minutes:number){
-  // The approved concept runs counter-clockwise:
-  // 24:00 top, 06:00 left, 12:00 bottom, 18:00 right.
-  return (360-(minutes/1440)*360)%360;
 }
 
 function polar(radius:number,angle:number){
@@ -112,39 +146,95 @@ function sectorPath(start:number,end:number){
   ].join(" ");
 }
 
+function ringArcPath(radius:number,start:number,end:number){
+  const a=polar(radius,start);
+  const b=polar(radius,end);
+  const large=end-start>180?1:0;
+  return `M ${a.x} ${a.y} A ${radius} ${radius} 0 ${large} 1 ${b.x} ${b.y}`;
+}
+
+function equalSector(
+  key:Tone,
+  label:string,
+  center:number,
+  value?:string,
+  icon?:string,
+  muted=false,
+):Sector{
+  return {
+    key,
+    label,
+    value,
+    start:center-SECTOR_HALF,
+    end:center+SECTOR_HALF,
+    icon,
+    muted,
+  };
+}
+
 function sectors(data:Panchang):Sector[]{
   return [
-    {key:"night",label:"Night",start:330,end:390,icon:"☾"},
-    {key:"rahu",label:"Rahu Kalam",value:formatWindow(data.rahu),start:30,end:72},
-    {key:"sunset",label:"Sunset",value:data.sunset,start:72,end:112,icon:"☀"},
-    {key:"day",label:"Day",start:112,end:150,icon:"☀"},
-    {
-      key:"abhijit",
-      label:"Abhijit Muhurat",
-      value:formatWindow(data.abhijit),
-      start:150,
-      end:210,
-      muted:!data.abhijit,
-    },
-    {key:"sunrise",label:"Sunrise",value:data.sunrise,start:210,end:250,icon:"☀"},
-    {key:"yamaganda",label:"Yamaganda",value:formatWindow(data.yamaganda),start:250,end:290},
-    {key:"gulika",label:"Gulika",value:formatWindow(data.gulika),start:290,end:330},
+    equalSector("night","Night",0,`${formatClock12(data.sunset)} – ${formatClock12(data.sunrise)}`,"☾"),
+    equalSector("sunset","Sunset",45,formatClock12(data.sunset),"☀"),
+    equalSector("day","Day",90,`${formatClock12(data.sunrise)} – ${formatClock12(data.sunset)}`,"☀"),
+    equalSector("rahu","Rahu Kalam",135,formatWindow(data.rahu)),
+    equalSector("gulika","Gulika",180,formatWindow(data.gulika)),
+    equalSector("abhijit","Abhijit Muhurat",225,formatWindow(data.abhijit),undefined,!data.abhijit),
+    equalSector("yamaganda","Yamaganda",270,formatWindow(data.yamaganda)),
+    equalSector("sunrise","Sunrise",315,formatClock12(data.sunrise),"☀"),
   ];
+}
+
+function timingArc(
+  key:TimingArc["key"],
+  value:TimeWindow|null,
+):TimingArc|null{
+  const startMinutes=parseClockMinutes(value?.start);
+  const endMinutes=parseClockMinutes(value?.end);
+  if(startMinutes===null||endMinutes===null)return null;
+  const wedge=clockwiseWedgeForTimeInterval(startMinutes,endMinutes);
+  return {
+    key,
+    start:wedge.start,
+    end:wedge.end,
+    color:timingColors[key],
+  };
+}
+
+function timingArcs(data:Panchang):TimingArc[]{
+  return [
+    timingArc("rahu",data.rahu),
+    timingArc("gulika",data.gulika),
+    timingArc("abhijit",data.abhijit),
+    timingArc("yamaganda",data.yamaganda),
+  ].filter((arc):arc is TimingArc=>arc!==null);
+}
+
+function instantMarker(value:string):InstantMarker|null{
+  const minutes=parseClockMinutes(value);
+  if(minutes===null)return null;
+  const angle=minutesToDialAngle(minutes);
+  return {
+    point:polar(TIME_RING_R,angle),
+    inner:polar(TIME_RING_R-6,angle),
+    outer:polar(TIME_RING_R+6,angle),
+  };
 }
 
 function labelPoint(start:number,end:number,key:Tone){
   const mid=(start+end)/2;
   const radius:Partial<Record<Tone,number>>={
-    night:186,
-    rahu:187,
-    sunset:185,
-    day:183,
+    night:184,
+    sunset:184,
+    day:184,
+    rahu:188,
+    gulika:190,
     abhijit:184,
-    sunrise:185,
-    yamaganda:186,
-    gulika:186,
+    yamaganda:188,
+    sunrise:184,
   };
-  return polar(radius[key]??185,mid);
+
+  return polar(radius[key]??184,mid);
 }
 
 function sectorFill(key:Tone,muted?:boolean){
@@ -154,6 +244,9 @@ function sectorFill(key:Tone,muted?:boolean){
 
 export default function DayWheel({data,placement="content"}:{data:Panchang;placement?:"hero"|"content"}){
   const wheelSectors=useMemo(()=>sectors(data),[data]);
+  const exactTimingArcs=useMemo(()=>timingArcs(data),[data]);
+  const sunriseMarker=useMemo(()=>instantMarker(data.sunrise),[data.sunrise]);
+  const sunsetMarker=useMemo(()=>instantMarker(data.sunset),[data.sunset]);
   const [clock,setClock]=useState<{minutes:number;label:string}|null>(null);
 
   useEffect(()=>{
@@ -164,8 +257,9 @@ export default function DayWheel({data,placement="content"}:{data:Panchang;place
   },[]);
 
   const isToday=data.date===indiaDateKey();
-  const handAngle=clock&&isToday?liveAngle(clock.minutes):null;
-  const handTip=handAngle===null?null:polar(GOLD_RING_INNER_R-13,handAngle);
+  const handAngle=clock&&isToday?minutesToDialAngle(clock.minutes):null;
+  const handStart=handAngle===null?null:polar(CENTER_R+14,handAngle);
+  const handTip=handAngle===null?null:polar(GOLD_RING_INNER_R-18,handAngle);
   const handGlow=handAngle===null?null:polar(GOLD_RING_R-2,handAngle);
   const handLabel=handAngle===null?null:polar(GOLD_RING_R+20,handAngle);
 
@@ -299,7 +393,6 @@ export default function DayWheel({data,placement="content"}:{data:Panchang;place
 
       <circle cx={CX} cy={CY} r="282" fill="url(#outer-halo)"/>
 
-      {/* full premium golden outer ring */}
       <circle
         cx={CX} cy={CY} r={GOLD_RING_R+4}
         fill="none"
@@ -326,7 +419,6 @@ export default function DayWheel({data,placement="content"}:{data:Panchang;place
         strokeWidth=".8"
       />
 
-      {/* gold ticks sit inside the complete ring */}
       {Array.from({length:72},(_,index)=>{
         const angle=index*5;
         const major=index%6===0;
@@ -344,7 +436,6 @@ export default function DayWheel({data,placement="content"}:{data:Panchang;place
         />;
       })}
 
-      {/* deep gradient sectors */}
       <g filter="url(#soft-shadow)">
         {wheelSectors.map(sector=><path
           key={sector.key}
@@ -355,7 +446,28 @@ export default function DayWheel({data,placement="content"}:{data:Panchang;place
         />)}
       </g>
 
-      {/* subtle depth lines */}
+      <g aria-hidden="true">
+        {exactTimingArcs.map(arc=><path
+          key={`timing-${arc.key}`}
+          d={ringArcPath(TIME_RING_R,arc.start,arc.end)}
+          fill="none"
+          stroke={arc.color}
+          strokeWidth="3.4"
+          strokeLinecap="round"
+          opacity=".88"
+        />)}
+        {sunriseMarker?<>
+          <line x1={sunriseMarker.inner.x} y1={sunriseMarker.inner.y} x2={sunriseMarker.outer.x} y2={sunriseMarker.outer.y} stroke="#ffd77f" strokeWidth="1.4" opacity=".78"/>
+          <circle cx={sunriseMarker.point.x} cy={sunriseMarker.point.y} r="4.3" fill="#ffd77f" stroke="#39270c" strokeWidth="1"/>
+          <circle cx={sunriseMarker.point.x} cy={sunriseMarker.point.y} r="6.8" fill="none" stroke="rgba(255,215,127,.24)" strokeWidth="1.2"/>
+        </>:null}
+        {sunsetMarker?<>
+          <line x1={sunsetMarker.inner.x} y1={sunsetMarker.inner.y} x2={sunsetMarker.outer.x} y2={sunsetMarker.outer.y} stroke="#f0bd62" strokeWidth="1.4" opacity=".78"/>
+          <circle cx={sunsetMarker.point.x} cy={sunsetMarker.point.y} r="4.3" fill="#f0bd62" stroke="#39270c" strokeWidth="1"/>
+          <circle cx={sunsetMarker.point.x} cy={sunsetMarker.point.y} r="6.8" fill="none" stroke="rgba(240,189,98,.24)" strokeWidth="1.2"/>
+        </>:null}
+      </g>
+
       <circle
         cx={CX} cy={CY} r={OUTER_R-8}
         fill="none"
@@ -369,11 +481,10 @@ export default function DayWheel({data,placement="content"}:{data:Panchang;place
         strokeWidth="1"
       />
 
-      {/* live IST hand — visible only for today's Panchang */}
-      {handAngle!==null&&handTip&&handGlow?<>
+      {handAngle!==null&&handStart&&handTip&&handGlow?<>
         <line
-          x1={CX}
-          y1={CY}
+          x1={handStart.x}
+          y1={handStart.y}
           x2={handTip.x}
           y2={handTip.y}
           stroke="url(#hand-gold)"
@@ -399,7 +510,6 @@ export default function DayWheel({data,placement="content"}:{data:Panchang;place
         />
       </>:null}
 
-      {/* center */}
       <circle
         cx={CX} cy={CY} r={CENTER_R+3}
         fill="rgba(5,7,6,.86)"
@@ -419,7 +529,6 @@ export default function DayWheel({data,placement="content"}:{data:Panchang;place
         strokeWidth="1"
       />
 
-      {/* sector labels */}
       {wheelSectors.map(sector=>{
         const p=labelPoint(sector.start,sector.end,sector.key);
         const color=labelColors[sector.key];
@@ -443,7 +552,6 @@ export default function DayWheel({data,placement="content"}:{data:Panchang;place
         </g>;
       })}
 
-      {/* center content */}
       <text x={CX} y={CY-54} className={styles.centerSun}>☀</text>
       <text x={CX} y={CY-13} className={styles.centerDay}>{data.weekday}</text>
       <text x={CX} y={CY+18} className={styles.centerDate}>{displayDate}</text>
@@ -459,12 +567,11 @@ export default function DayWheel({data,placement="content"}:{data:Panchang;place
         NOW · {clock.label}
       </text>:null}
 
-      {/* cardinal clock labels */}
       {[
-        ["24:00",0],
-        ["18:00",90],
-        ["12:00",180],
-        ["06:00",270],
+        ["12 AM",0],
+        ["6 AM",90],
+        ["12 PM",180],
+        ["6 PM",270],
       ].map(([label,angle])=>{
         const p=polar(287,Number(angle));
         return <text
