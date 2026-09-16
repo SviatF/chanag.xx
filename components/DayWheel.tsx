@@ -76,8 +76,18 @@ const timingColors:Record<TimingArc["key"],string>={
   yamaganda:"#db9276",
 };
 
+function formatClock12(value:string){
+  const minutes=parseClockMinutes(value);
+  if(minutes===null)return value;
+  const hour24=Math.floor(minutes/60);
+  const minute=minutes%60;
+  const hour12=hour24%12||12;
+  const suffix=hour24<12?"AM":"PM";
+  return `${hour12}:${String(minute).padStart(2,"0")} ${suffix}`;
+}
+
 function formatWindow(value:TimeWindow|null){
-  return value ? `${value.start} – ${value.end}` : "Not available today";
+  return value ? `${formatClock12(value.start)} – ${formatClock12(value.end)}` : "Not available today";
 }
 
 function indiaNow(){
@@ -90,10 +100,11 @@ function indiaNow(){
 
   const hour=Number(parts.find(part=>part.type==="hour")?.value||0);
   const minute=Number(parts.find(part=>part.type==="minute")?.value||0);
+  const minutes=hour*60+minute;
 
   return {
-    minutes:hour*60+minute,
-    label:`${String(hour).padStart(2,"0")}:${String(minute).padStart(2,"0")}`,
+    minutes,
+    label:formatClock12(`${String(hour).padStart(2,"0")}:${String(minute).padStart(2,"0")}`),
   };
 }
 
@@ -163,14 +174,14 @@ function equalSector(
 
 function sectors(data:Panchang):Sector[]{
   return [
-    equalSector("night","Night",0,`${data.sunset} – ${data.sunrise}`,"☾"),
-    equalSector("sunset","Sunset",45,data.sunset,"☀"),
-    equalSector("day","Day",90,`${data.sunrise} – ${data.sunset}`,"☀"),
+    equalSector("night","Night",0,`${formatClock12(data.sunset)} – ${formatClock12(data.sunrise)}`,"☾"),
+    equalSector("sunset","Sunset",45,formatClock12(data.sunset),"☀"),
+    equalSector("day","Day",90,`${formatClock12(data.sunrise)} – ${formatClock12(data.sunset)}`,"☀"),
     equalSector("rahu","Rahu Kalam",135,formatWindow(data.rahu)),
     equalSector("gulika","Gulika",180,formatWindow(data.gulika)),
     equalSector("abhijit","Abhijit Muhurat",225,formatWindow(data.abhijit),undefined,!data.abhijit),
     equalSector("yamaganda","Yamaganda",270,formatWindow(data.yamaganda)),
-    equalSector("sunrise","Sunrise",315,data.sunrise,"☀"),
+    equalSector("sunrise","Sunrise",315,formatClock12(data.sunrise),"☀"),
   ];
 }
 
@@ -557,10 +568,10 @@ export default function DayWheel({data,placement="content"}:{data:Panchang;place
       </text>:null}
 
       {[
-        ["24:00",0],
-        ["18:00",90],
-        ["12:00",180],
-        ["06:00",270],
+        ["12 AM",0],
+        ["6 AM",90],
+        ["12 PM",180],
+        ["6 PM",270],
       ].map(([label,angle])=>{
         const p=polar(287,Number(angle));
         return <text
