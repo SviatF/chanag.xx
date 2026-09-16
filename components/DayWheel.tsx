@@ -1,12 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import {
-  centeredClockwiseWedge,
-  clockwiseWedgeForTimeInterval,
-  minutesToDialAngle,
-  parseClockMinutes,
-} from "@/lib/day-wheel-geometry";
+import { minutesToDialAngle } from "@/lib/day-wheel-geometry";
 import type { Panchang, TimeWindow } from "@/lib/panchang";
 import styles from "./DayWheel.module.css";
 
@@ -21,6 +16,9 @@ const CENTER_R=112;
 const GOLD_RING_R=266;
 const GOLD_RING_INNER_R=257;
 const TICK_OUTER_R=255;
+
+const SECTOR_SPAN=45;
+const SECTOR_HALF=SECTOR_SPAN/2;
 
 type Tone=
   | "night"
@@ -112,106 +110,55 @@ function sectorPath(start:number,end:number){
   ].join(" ");
 }
 
-function exactWindowSector(
-  key:Extract<Tone,"rahu"|"abhijit"|"yamaganda"|"gulika">,
+function equalSector(
+  key:Tone,
   label:string,
-  value:TimeWindow|null,
-  fallback:{start:number;end:number},
+  center:number,
+  value?:string,
+  icon?:string,
   muted=false,
 ):Sector{
-  const startMinutes=parseClockMinutes(value?.start);
-  const endMinutes=parseClockMinutes(value?.end);
-  const wedge=startMinutes===null||endMinutes===null
-    ? fallback
-    : clockwiseWedgeForTimeInterval(startMinutes,endMinutes);
-
-  return {
-    key,
-    label,
-    value:formatWindow(value),
-    start:wedge.start,
-    end:wedge.end,
-    muted,
-  };
-}
-
-function instantSector(
-  key:Extract<Tone,"sunrise"|"sunset">,
-  label:string,
-  value:string,
-  fallback:{start:number;end:number},
-):Sector{
-  const minutes=parseClockMinutes(value);
-  const wedge=minutes===null
-    ? fallback
-    : centeredClockwiseWedge(minutes,fallback.end-fallback.start);
-
   return {
     key,
     label,
     value,
-    start:wedge.start,
-    end:wedge.end,
-    icon:"☀",
+    start:center-SECTOR_HALF,
+    end:center+SECTOR_HALF,
+    icon,
+    muted,
   };
 }
 
-function wheelGeometry(data:Panchang){
-  const sunriseMinutes=parseClockMinutes(data.sunrise);
-  const sunsetMinutes=parseClockMinutes(data.sunset);
-
-  const baseSectors:Sector[]=[];
-  if(sunriseMinutes!==null&&sunsetMinutes!==null){
-    const day=clockwiseWedgeForTimeInterval(sunriseMinutes,sunsetMinutes);
-    const night=clockwiseWedgeForTimeInterval(sunsetMinutes,sunriseMinutes);
-    baseSectors.push(
-      {key:"day",label:"",start:day.start,end:day.end},
-      {key:"night",label:"",start:night.start,end:night.end},
-    );
-  }else{
-    baseSectors.push(
-      {key:"day",label:"",start:90,end:270},
-      {key:"night",label:"",start:270,end:450},
-    );
-  }
-
-  // Day/Night are balanced visual accents, not duration wedges. Exact day/night
-  // boundaries remain encoded in the neutral base ring above.
-  const sectors:Sector[]=[
-    {key:"night",label:"Night",start:337,end:383,icon:"☾"},
-    {key:"day",label:"Day",start:108,end:154,icon:"☀"},
-    instantSector("sunset","Sunset",data.sunset,{start:72,end:112}),
-    exactWindowSector(
-      "abhijit",
-      "Abhijit Muhurat",
-      data.abhijit,
-      {start:150,end:210},
-      !data.abhijit,
-    ),
-    instantSector("sunrise","Sunrise",data.sunrise,{start:210,end:250}),
-    exactWindowSector("yamaganda","Yamaganda",data.yamaganda,{start:250,end:290}),
-    exactWindowSector("gulika","Gulika",data.gulika,{start:290,end:330}),
-    exactWindowSector("rahu","Rahu Kalam",data.rahu,{start:30,end:72}),
+function sectors(data:Panchang):Sector[]{
+  // Visual model: eight equal 45° wedges around the full wheel.
+  // Exact times stay truthful in the labels and on the outer 24h/NOW scale;
+  // wedge width is intentionally aesthetic rather than duration-proportional.
+  return [
+    equalSector("night","Night",0,`${data.sunset} – ${data.sunrise}`,"☾"),
+    equalSector("sunset","Sunset",45,data.sunset,"☀"),
+    equalSector("day","Day",90,`${data.sunrise} – ${data.sunset}`,"☀"),
+    equalSector("rahu","Rahu Kalam",135,formatWindow(data.rahu)),
+    equalSector("gulika","Gulika",180,formatWindow(data.gulika)),
+    equalSector("abhijit","Abhijit Muhurat",225,formatWindow(data.abhijit),undefined,!data.abhijit),
+    equalSector("yamaganda","Yamaganda",270,formatWindow(data.yamaganda)),
+    equalSector("sunrise","Sunrise",315,data.sunrise,"☀"),
   ];
-
-  return {baseSectors,sectors};
 }
 
-function labelPoint(start:number,end:number,key:Tone,muted=false){
+function labelPoint(start:number,end:number,key:Tone){
   const mid=(start+end)/2;
-
   const radius:Partial<Record<Tone,number>>={
-    night:186,
-    rahu:207,
-    sunset:185,
-    day:183,
-    abhijit:muted?140:154,
-    sunrise:185,
-    yamaganda:196,
-    gulika:216,
+    night:184,
+    sunset:184,
+    day:184,
+    rahu:188,
+    gulika:190,
+    abhijit:184,
+    yamaganda:188,
+    sunrise:184,
   };
 
-  return polar(radius[key]??185,mid);
+  return polar(radius[key]??184,mid);
 }
 
 function sectorFill(key:Tone,muted?:boolean){
@@ -220,7 +167,7 @@ function sectorFill(key:Tone,muted?:boolean){
 }
 
 export default function DayWheel({data,placement="content"}:{data:Panchang;placement?:"hero"|"content"}){
-  const wheel=useMemo(()=>wheelGeometry(data),[data]);
+  const wheelSectors=useMemo(()=>sectors(data),[data]);
   const [clock,setClock]=useState<{minutes:number;label:string}|null>(null);
 
   useEffect(()=>{
@@ -409,18 +356,8 @@ export default function DayWheel({data,placement="content"}:{data:Panchang;place
         />;
       })}
 
-      <g>
-        {wheel.baseSectors.map(sector=><path
-          key={`base-${sector.key}`}
-          d={sectorPath(sector.start,sector.end)}
-          fill="rgba(8,10,9,.62)"
-          stroke="rgba(191,143,52,.18)"
-          strokeWidth=".7"
-        />)}
-      </g>
-
       <g filter="url(#soft-shadow)">
-        {wheel.sectors.map(sector=><path
+        {wheelSectors.map(sector=><path
           key={sector.key}
           d={sectorPath(sector.start,sector.end)}
           fill={sectorFill(sector.key,sector.muted)}
@@ -490,8 +427,8 @@ export default function DayWheel({data,placement="content"}:{data:Panchang;place
         strokeWidth="1"
       />
 
-      {wheel.sectors.map(sector=>{
-        const p=labelPoint(sector.start,sector.end,sector.key,Boolean(sector.muted));
+      {wheelSectors.map(sector=>{
+        const p=labelPoint(sector.start,sector.end,sector.key);
         const color=labelColors[sector.key];
 
         return <g key={"label-"+sector.key} transform={`translate(${p.x} ${p.y})`}>
