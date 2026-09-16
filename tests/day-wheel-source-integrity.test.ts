@@ -21,13 +21,16 @@ describe("DayWheel equal-width visual model",()=>{
     expect(source).toContain('equalSector("sunrise"');
   });
 
-  it("keeps exact timing copy inside the aesthetic sectors",()=>{
-    expect(source).toContain("formatWindow(data.rahu)");
-    expect(source).toContain("formatWindow(data.gulika)");
-    expect(source).toContain("formatWindow(data.yamaganda)");
-    expect(source).toContain("formatWindow(data.abhijit)");
-    expect(source).toContain('`${data.sunrise} – ${data.sunset}`');
-    expect(source).toContain('`${data.sunset} – ${data.sunrise}`');
+  it("formats user-facing timing copy in 12-hour AM/PM notation",()=>{
+    expect(source).toContain("function formatClock12");
+    expect(source).toContain("formatClock12(value.start)");
+    expect(source).toContain("formatClock12(value.end)");
+    expect(source).toContain('formatClock12(data.sunrise)');
+    expect(source).toContain('formatClock12(data.sunset)');
+    expect(source).toContain('["12 AM",0]');
+    expect(source).toContain('["6 AM",90]');
+    expect(source).toContain('["12 PM",180]');
+    expect(source).toContain('["6 PM",270]');
   });
 
   it("keeps a subtle truthful timing layer on the real 24-hour outer ring",()=>{
