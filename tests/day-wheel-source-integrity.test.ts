@@ -31,6 +31,7 @@ describe("DayWheel equal-width visual model",()=>{
   });
 
   it("adds a truthful timing layer on the real 24-hour outer ring",()=>{
+    expect(source).toContain("const TIME_RING_R=248");
     expect(source).toContain("clockwiseWedgeForTimeInterval");
     expect(source).toContain("parseClockMinutes");
     expect(source).toContain('timingArc("rahu",data.rahu)');
@@ -40,6 +41,7 @@ describe("DayWheel equal-width visual model",()=>{
     expect(source).toContain("const sunrisePoint=useMemo(()=>instantPoint(data.sunrise)");
     expect(source).toContain("const sunsetPoint=useMemo(()=>instantPoint(data.sunset)");
     expect(source).toContain("ringArcPath(TIME_RING_R,arc.start,arc.end)");
+    expect(source).toContain('strokeWidth="5.2"');
   });
 
   it("keeps the approved SVG/CSS styling contract",()=>{
