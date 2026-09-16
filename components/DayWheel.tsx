@@ -20,7 +20,7 @@ const CENTER_R=112;
 const GOLD_RING_R=266;
 const GOLD_RING_INNER_R=257;
 const TICK_OUTER_R=255;
-const TIME_RING_R=249;
+const TIME_RING_R=248;
 
 const SECTOR_SPAN=45;
 const SECTOR_HALF=SECTOR_SPAN/2;
@@ -64,10 +64,10 @@ const labelColors:Record<Tone,string>={
 };
 
 const timingColors:Record<TimingArc["key"],string>={
-  rahu:"#ef7766",
-  gulika:"#d8b56d",
-  abhijit:"#a8ba56",
-  yamaganda:"#c88467",
+  rahu:"#ff8a78",
+  gulika:"#e8c880",
+  abhijit:"#b7ca66",
+  yamaganda:"#db9276",
 };
 
 function formatWindow(value:TimeWindow|null){
@@ -422,24 +422,23 @@ export default function DayWheel({data,placement="content"}:{data:Panchang;place
         />)}
       </g>
 
-      {/* Exact timing layer on the real 24-hour outer clock. */}
       <g aria-hidden="true">
         {exactTimingArcs.map(arc=><path
           key={`timing-${arc.key}`}
           d={ringArcPath(TIME_RING_R,arc.start,arc.end)}
           fill="none"
           stroke={arc.color}
-          strokeWidth="4.6"
+          strokeWidth="5.2"
           strokeLinecap="round"
-          opacity=".96"
+          opacity=".98"
         />)}
         {sunrisePoint?<>
-          <circle cx={sunrisePoint.x} cy={sunrisePoint.y} r="6.2" fill="#ffd77f" stroke="#39270c" strokeWidth="1.2"/>
-          <circle cx={sunrisePoint.x} cy={sunrisePoint.y} r="9.5" fill="none" stroke="rgba(255,215,127,.26)" strokeWidth="2"/>
+          <circle cx={sunrisePoint.x} cy={sunrisePoint.y} r="6.5" fill="#ffd77f" stroke="#39270c" strokeWidth="1.2"/>
+          <circle cx={sunrisePoint.x} cy={sunrisePoint.y} r="10" fill="none" stroke="rgba(255,215,127,.32)" strokeWidth="2"/>
         </>:null}
         {sunsetPoint?<>
-          <circle cx={sunsetPoint.x} cy={sunsetPoint.y} r="6.2" fill="#f0bd62" stroke="#39270c" strokeWidth="1.2"/>
-          <circle cx={sunsetPoint.x} cy={sunsetPoint.y} r="9.5" fill="none" stroke="rgba(240,189,98,.26)" strokeWidth="2"/>
+          <circle cx={sunsetPoint.x} cy={sunsetPoint.y} r="6.5" fill="#f0bd62" stroke="#39270c" strokeWidth="1.2"/>
+          <circle cx={sunsetPoint.x} cy={sunsetPoint.y} r="10" fill="none" stroke="rgba(240,189,98,.32)" strokeWidth="2"/>
         </>:null}
       </g>
 
