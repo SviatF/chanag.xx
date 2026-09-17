@@ -1,6 +1,6 @@
 import {afterEach,describe,expect,it} from "vitest";
 import {coreCities,supportedCities} from "../lib/cities";
-import {activeIndexCitySlugs,isDailyIndexable,isMonthlyIndexable,isPriorityCity,phase1PriorityCities,robotsFor} from "../lib/seo-policy";
+import {activeIndexCitySlugs,isDailyIndexable,isMonthlyIndexable,isMonthlyMuhuratIndexable,isPriorityCity,phase1PriorityCities,robotsFor} from "../lib/seo-policy";
 import {rollingDailyDates,rollingMonths} from "../lib/seo-sitemap";
 
 const originalExtra=process.env.SEO_EXTRA_INDEX_CITIES;
@@ -49,5 +49,34 @@ describe("SEO launch guardrails",()=>{
 
     for(const date of dates)expect(isDailyIndexable(city,date)).toBe(true);
     for(const item of months)expect(isMonthlyIndexable(city,item.year,item.month)).toBe(true);
+  });
+
+  it("keeps daily robots aligned to the -14/+45 day sitemap window",()=>{
+    const city=phase1PriorityCities[0];
+    const inWindow=rollingDailyDates(14,45);
+    const first=new Date(`${inWindow[0]}T00:00:00Z`);
+    const last=new Date(`${inWindow[inWindow.length-1]}T00:00:00Z`);
+    const tooOld=new Date(first.getTime()-86400000).toISOString().slice(0,10);
+    const tooFuture=new Date(last.getTime()+86400000).toISOString().slice(0,10);
+
+    expect(isDailyIndexable(city,tooOld)).toBe(false);
+    expect(isDailyIndexable(city,tooFuture)).toBe(false);
+  });
+
+  it("keeps month-level Muhurat robots aligned to the current/+12 month sitemap window",()=>{
+    const city=phase1PriorityCities[0];
+    const months=rollingMonths(0,12);
+    for(const item of months){
+      expect(isMonthlyMuhuratIndexable("wedding",item.year,item.month)).toBe(true);
+      expect(isMonthlyMuhuratIndexable("griha-pravesh",item.year,item.month,city)).toBe(true);
+    }
+
+    const first=months[0];
+    const previousMonth=new Date(Date.UTC(first.year,first.month-2,1));
+    expect(isMonthlyMuhuratIndexable("wedding",previousMonth.getUTCFullYear(),previousMonth.getUTCMonth()+1)).toBe(false);
+
+    const last=months[months.length-1];
+    const afterWindow=new Date(Date.UTC(last.year,last.month,1));
+    expect(isMonthlyMuhuratIndexable("wedding",afterWindow.getUTCFullYear(),afterWindow.getUTCMonth()+1)).toBe(false);
   });
 });
