@@ -67,11 +67,12 @@ export function isDailyIndexable(citySlug:string,dateIso:string){
 
   const now=todayInIndia();
   const target=new Date(dateIso+"T00:00:00Z");
-  const deltaDays=Math.abs((target.getTime()-Date.UTC(now.getUTCFullYear(),now.getUTCMonth(),now.getUTCDate()))/86400000);
+  const todayUtc=Date.UTC(now.getUTCFullYear(),now.getUTCMonth(),now.getUTCDate());
+  const deltaDays=(target.getTime()-todayUtc)/86400000;
 
-  // Launch policy: index current/recent/near-future dated pages only.
-  // Wider historical coverage will be enabled by Traffic/Demand Monitor signals.
-  return deltaDays<=45;
+  // Keep robots indexability aligned with sitemap-panchang-daily.xml:
+  // 14 days of recent history + today + 45 days of near-future coverage.
+  return deltaDays>=-14&&deltaDays<=45;
 }
 
 export function isMonthlyIndexable(citySlug:string,year:number,month:number){
@@ -88,6 +89,13 @@ export function isYearlyCalendarIndexable(year:number,citySlug?:string){
 export function isMuhuratIndexable(event:string,citySlug?:string){
   if(!primaryMuhuratSet.has(event)) return false;
   return citySlug ? isPriorityCity(citySlug) : true;
+}
+
+export function isMonthlyMuhuratIndexable(event:string,year:number,month:number,citySlug?:string){
+  if(!isMuhuratIndexable(event,citySlug))return false;
+  const distance=monthDistance(year,month);
+  // Keep month-level Muhurat robots aligned with sitemap-muhurat.xml.
+  return distance>=0&&distance<=12;
 }
 
 export function isYearlyMuhuratIndexable(event:string,year:number,citySlug?:string){
