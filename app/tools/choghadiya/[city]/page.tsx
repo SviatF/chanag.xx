@@ -13,7 +13,8 @@ import {isPriorityCity,robotsFor} from "@/lib/seo-policy";
 import {regionalAlternates} from "@/lib/regional-seo";
 import {buildChoghadiyaTopicalGraph} from "@/lib/topical-links";
 
-export const revalidate=3600;
+// “Today” must roll over on India time without waiting for an ISR cache window.
+export const dynamic="force-dynamic";
 
 export async function generateMetadata({params}:{params:Promise<{city:string}>}):Promise<Metadata>{
   const p=await params;

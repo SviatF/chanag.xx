@@ -66,10 +66,14 @@ export default async function Page({params}:{params:Promise<{festival:string;yea
   const nakshatraEnd=formatPanchangTime(data.nakshatraEnd,data.nakshatraEndDate,data.date);
   const moonrise=formatPanchangTime(data.moonrise,data.moonriseDate,data.date);
   const isGaneshAhmedabad=f.slug==="ganesh-chaturthi"&&year===2026&&city.slug==="ahmedabad";
+  const isGaneshDelhi=f.slug==="ganesh-chaturthi"&&year===2026&&city.slug==="delhi";
   const isDussehraHyderabad=f.slug==="dussehra"&&year===2026&&city.slug==="hyderabad";
   const isDussehraKolkata=f.slug==="dussehra"&&year===2026&&city.slug==="kolkata";
+  const isDussehraChennai=f.slug==="dussehra"&&year===2026&&city.slug==="chennai";
   const isShardiyaNavratriKolkata=f.slug==="shardiya-navratri"&&year===2026&&city.slug==="kolkata";
+  const isShardiyaNavratriHyderabad=f.slug==="shardiya-navratri"&&year===2026&&city.slug==="hyderabad";
   const isGaneshHyderabad=f.slug==="ganesh-chaturthi"&&year===2026&&city.slug==="hyderabad";
+  const isHanumanJayantiChennai=f.slug==="hanuman-jayanti"&&year===2026&&city.slug==="chennai";
   const isSeoExperiment=isGaneshAhmedabad||isDussehraHyderabad;
   const localNarrative=isSeoExperiment?null:buildFestivalCityNarrative(f,data,city,localReference);
   const ganeshPeerCities=f.slug==="ganesh-chaturthi"&&year===2026
@@ -117,6 +121,12 @@ export default async function Page({params}:{params:Promise<{festival:string;yea
       <p>The same festival date can have different local Panchang timing inputs by city, so compare the corresponding <Link href={`/festivals/ganesh-chaturthi/${year}/delhi`}>Delhi</Link> and <Link href={`/festivals/ganesh-chaturthi/${year}/hyderabad`}>Hyderabad</Link> pages rather than copying Ahmedabad timings across locations.</p>
     </div>:null}
 
+    {isGaneshDelhi?<div className="seo-copy">
+      <h2>Ganesh Chaturthi 2026 in Delhi: local Panchang context</h2>
+      <p>This Delhi page is the location-specific reference for {f.name} {year}: it uses Delhi sunrise, sunset and Panchang transitions rather than a national timing template. For the shared India-wide festival date, meaning and observance context, use the <Link href={`/festivals/ganesh-chaturthi/${year}`}>Ganesh Chaturthi {year} overview</Link>.</p>
+      <p>Keeping the Delhi-local timing intent separate from the year overview helps readers choose the right page instead of treating city timings as interchangeable.</p>
+    </div>:null}
+
     {isDussehraHyderabad?<div className="seo-copy">
       <h2>Dasara 2026 date in Telangana</h2>
       <p>For Hyderabad and Telangana, Panchvani&apos;s maintained 2026 festival calendar places {f.name} on {f.date}. This Hyderabad page then applies local Panchang values such as sunrise at {data.sunrise}, {data.tithi} until {tithiEnd}, and the local lunar-month context shown above.</p>
@@ -129,16 +139,34 @@ export default async function Page({params}:{params:Promise<{festival:string;yea
       <p>For the query Dussehra 2026 West Bengal, this page provides the Kolkata-specific date and Panchang context; use the festival overview for the broader year-level reference.</p>
     </div>:null}
 
+    {isDussehraChennai?<div className="seo-copy">
+      <h2>Dussehra 2026 in Tamil Nadu: Chennai local Panchang</h2>
+      <p>For Chennai, Tamil Nadu, Panchvani&apos;s maintained 2026 festival calendar places {f.name} on {f.date}. This page adds the Chennai-local Panchang context, including {data.tithi} until {tithiEnd}, sunrise at {data.sunrise}, sunset at {data.sunset}, and the lunar-month conventions calculated for the city.</p>
+      <p>If you are comparing regional timing context, see the <Link href={`/festivals/dussehra/${year}/hyderabad`}>Dussehra {year} Hyderabad page</Link>; the city pages use their own local solar and Panchang values rather than copying one timing set across regions.</p>
+    </div>:null}
+
     {isShardiyaNavratriKolkata?<div className="seo-copy">
       <h2>Kolkata Navratri 2026: local Panchang reference</h2>
       <p>For Kolkata, {city.state}, {f.name} {year} is listed on {f.date}. The local reference on this page includes {data.tithi} until {tithiEnd}, sunrise at {data.sunrise}, sunset at {data.sunset}, Nakshatra until {nakshatraEnd}, and the lunar-month conventions shown above.</p>
       <p>Use these Kolkata-local values when comparing Navratri 2026 timing with another city, because solar timings and Panchang transition times are calculated for the selected location.</p>
     </div>:null}
 
+    {isShardiyaNavratriHyderabad?<div className="seo-copy">
+      <h2>Navratri 2026 in Hyderabad: local Panchang reference</h2>
+      <p>For Hyderabad, Telangana, {f.name} {year} is listed on {f.date}. The Hyderabad-local reference on this page includes {data.tithi} until {tithiEnd}, Nakshatra until {nakshatraEnd}, sunrise at {data.sunrise}, sunset at {data.sunset}, and the lunar-month context calculated for this location.</p>
+      <p>Use the city-level values here for Hyderabad-specific Navratri 2026 timing context, while the festival overview remains the broader year-level reference.</p>
+    </div>:null}
+
     {isGaneshHyderabad?<div className="seo-copy">
       <h2>Ganesh Chaturthi 2026 in Hyderabad, Telangana</h2>
       <p>For Hyderabad, {city.state}, {f.name} falls on {f.date}. The Hyderabad-local Panchang on this page shows {data.tithi} until {tithiEnd}, sunrise at {data.sunrise}{localReference?`, and ${localReference.label.toLowerCase()} ${localReference.value}`:""}, giving the local timing context behind Ganesh Chaturthi 2026 searches for Hyderabad and Telangana.</p>
       <p>For a city comparison, see <Link href={`/festivals/ganesh-chaturthi/${year}/ahmedabad`}>Ganesh Chaturthi {year} in Ahmedabad</Link> and <Link href={`/festivals/ganesh-chaturthi/${year}/delhi`}>Ganesh Chaturthi {year} in Delhi</Link>. Each page recalculates the local Panchang values rather than reusing Hyderabad timings.</p>
+    </div>:null}
+
+    {isHanumanJayantiChennai?<div className="seo-copy">
+      <h2>Hanuman Jayanti 2026 in Tamil Nadu: Chennai reference</h2>
+      <p>For Chennai, Tamil Nadu, Panchvani&apos;s maintained 2026 festival calendar places {f.name} on {f.date}. This page provides the Chennai-local Panchang values around that date, including {data.tithi} until {tithiEnd}, Nakshatra until {nakshatraEnd}, sunrise at {data.sunrise}, sunset at {data.sunset}, and the local lunar-month context.</p>
+      <p>Use this page for Chennai and Tamil Nadu location context; the year-level festival overview remains the broader reference for the shared 2026 observance date and meaning.</p>
     </div>:null}
 
     {localNarrative?<div className="seo-copy">
