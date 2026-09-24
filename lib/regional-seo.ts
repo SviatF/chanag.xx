@@ -1,5 +1,6 @@
 import type {City} from "./cities";
 import {supportedCities} from "./cities";
+import {todayInIndia} from "./dates";
 import {isRegionalIndexable} from "./seo-policy";
 
 export const regionalLanguageSlugs=["bengali","tamil","malayalam","gujarati","marathi"] as const;
@@ -123,16 +124,39 @@ export function regionalIntentLinksForCity(language:string,city:City){
     .map(intent=>({intent,href:regionalIntentPath(language,city,intent),label:regionalIntentSeo[intent].nativeLabels[language]??regionalIntentSeo[intent].label}));
 }
 
+function indiaTodayIso(){return todayInIndia().toISOString().slice(0,10);}
+
+/** All language directory equivalents. Each localized hub stays self-canonical. */
+export function regionalLanguageHubAlternates(){
+  const languages:Record<string,string>={"x-default":"/regional"};
+  for(const language of regionalLanguageSlugs){
+    if(regionalCitiesForLanguage(language).length)languages[regionalLanguageSeo[language].hreflang]=regionalLanguageHubPath(language);
+  }
+  return languages;
+}
+
+/**
+ * Equivalent language URLs for the current city surface.
+ * Historical/future English daily pages intentionally do not point at the
+ * regional city hubs because those hubs represent today's Panchang only.
+ */
 export function regionalAlternates(city:City,intent?:RegionalIntentSlug,date?:string){
   const languages:Record<string,string>={};
+  const today=indiaTodayIso();
   if(intent==="choghadiya"){
     const english=`/tools/choghadiya/${city.slug}`;
     languages["en-IN"]=english;
     languages["x-default"]=english;
-  }else if(!intent&&date){
-    const english=`/panchang/${city.slug}/${date}`;
+  }else if(intent==="rahu-kalam"){
+    const english=`/panchang/${city.slug}/${today}`;
     languages["en-IN"]=english;
     languages["x-default"]=english;
+  }else{
+    const exactDate=date??today;
+    const english=`/panchang/${city.slug}/${exactDate}`;
+    languages["en-IN"]=english;
+    languages["x-default"]=english;
+    if(exactDate!==today)return languages;
   }
   for(const language of regionalLanguageSlugs){
     if(intent){
