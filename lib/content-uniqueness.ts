@@ -1,5 +1,4 @@
 import type {City} from "./cities";
-import type {Festival} from "./festivals";
 import type {Panchang} from "./panchang";
 import type {VratDefinition,VratOccurrence} from "./vrat";
 
@@ -52,57 +51,6 @@ export function buildChoghadiyaNarrative(data:Panchang,city:City){
       ? `The western longitude of ${city.name} shifts the local solar clock later than many eastern-city examples, so copied national clock times would be misleading.`
       : `For ${city.name}, the useful distinction is the local sunrise/sunset span rather than a generic India-wide clock schedule.`;
   return `${data.weekday}'s daytime sequence in ${city.name} begins with ${opening?.name??"the first calculated period"} and contains ${favorable.length} favorable periods: ${sequence}. ${daylightBand(daylight)} of about ${daylight} minutes means each daytime Choghadiya lasts roughly ${Math.round(daylight/8)} minutes. Rahu Kalam falls in the ${rahuPosition} of the solar day at ${data.rahu.start}–${data.rahu.end}; ${firstGood&&lastGood?`the favorable run stretches from ${firstGood.name} at ${firstGood.start} to ${lastGood.name} ending ${lastGood.end}`:"use the table for the complete sequence"}. ${locationLine}`;
-}
-
-export type FestivalLocalReferenceCopy={label:string;value:string}|null|undefined;
-export type FestivalCityNarrative={heading:string;paragraphs:string[]};
-
-function longitudeSolarOffset(city:City){
-  return Math.round((city.lng-82.5)*4);
-}
-
-function festivalGeographySentence(city:City,daylight:number){
-  const offset=longitudeSolarOffset(city);
-  const direction=offset<0?"behind":offset>0?"ahead of":"aligned with";
-  const magnitude=Math.abs(offset);
-  const offsetText=offset===0
-    ? "almost aligned with the 82.5°E reference longitude"
-    : `about ${magnitude} minutes ${direction} a longitude-only solar-clock comparison with 82.5°E`;
-
-  if(city.lng<=74.5){
-    return `${city.name} has a western longitude profile at ${city.lng.toFixed(2)}°E: it is ${offsetText}. That helps explain why copying an eastern-city festival clock time into ${city.name} can be misleading; the page uses the actual ${city.name} sunrise and sunset instead.`;
-  }
-  if(city.lng>=82){
-    return `${city.name} sits on an eastern longitude profile at ${city.lng.toFixed(2)}°E and is ${offsetText}. Its city calculation therefore keeps the local solar-day boundary explicit rather than borrowing a western-city timing example.`;
-  }
-  if(city.lat<=16){
-    return `At ${city.lat.toFixed(2)}°N, ${city.name} has a southern latitude profile. For this festival date the measured daylight span is about ${daylight} minutes, so the city page anchors its timing context to those local solar values instead of a generic India-wide day length.`;
-  }
-  if(city.lat>=27){
-    return `${city.name}'s ${city.lat.toFixed(2)}°N northern latitude makes seasonal daylight geometry an important part of the city context. The current festival date produces about ${daylight} minutes from sunrise to sunset, which is the local frame used by the timing cards above.`;
-  }
-  return `${city.name} sits in a central-India latitude/longitude band at ${city.lat.toFixed(2)}°N, ${city.lng.toFixed(2)}°E. Its approximately ${daylight}-minute daylight span and calculated local sunrise provide a more precise city reference than substituting a national clock-time template.`;
-}
-
-export function buildFestivalCityNarrative(
-  festival:Pick<Festival,"name"|"year"|"date">,
-  data:Panchang,
-  city:City,
-  localReference?:FestivalLocalReferenceCopy,
-):FestivalCityNarrative{
-  const daylight=spanMinutes(data.sunrise,data.sunset);
-  const referenceSentence=localReference
-    ? `The page's festival-specific ${localReference.label.toLowerCase()} is ${localReference.value}, calculated inside the same local Panchang context.`
-    : `No single festival-specific clock window is asserted here; the local Panchang factors remain the reference context.`;
-  const lunar=data.moonIllumination>=70?"bright lunar phase":data.moonIllumination<=30?"darker lunar phase":"mid-range lunar illumination";
-
-  return {
-    heading:`${festival.name} ${festival.year} in ${city.name}: local timing context`,
-    paragraphs:[
-      `For ${city.name}, ${city.state}, ${festival.name} falls on ${festival.date}. The calculated local day runs from sunrise at ${data.sunrise} to sunset at ${data.sunset}, about ${daylight} minutes, with ${data.tithi} Tithi in ${data.paksha} Paksha and ${data.nakshatra} Nakshatra. ${referenceSentence}`,
-      `${festivalGeographySentence(city,daylight)} The Moon is in a ${lunar} on this calculation date, adding another data point that can differ from a city page built from another date or location.`,
-    ],
-  };
 }
 
 function weekdayLeader(rows:VratOccurrence[]){
