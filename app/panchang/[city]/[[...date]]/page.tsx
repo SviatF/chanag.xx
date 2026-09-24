@@ -7,7 +7,7 @@ import ChoghadiyaTable from "@/components/ChoghadiyaTable";
 import LanguageLinks from "@/components/LanguageLinks";
 import TopicalGraph from "@/components/TopicalGraph";
 import {findCityBySlug} from "@/lib/cities";
-import {buildDailyPanchangQualityContent} from "@/lib/calendar-content-engine";
+import {buildDailyPanchangQualityContent} from "@/lib/daily-content-engine";
 import {formatPanchangTime,formatWindow,getPanchang} from "@/lib/panchang";
 import {getLunarMonthConventions} from "@/lib/calendar-conventions";
 import {isDailyIndexable,robotsFor} from "@/lib/seo-policy";
