@@ -126,7 +126,6 @@ export function regionalIntentLinksForCity(language:string,city:City){
 
 function indiaTodayIso(){return todayInIndia().toISOString().slice(0,10);}
 
-/** All language directory equivalents. Each localized hub stays self-canonical. */
 export function regionalLanguageHubAlternates(){
   const languages:Record<string,string>={"x-default":"/regional"};
   for(const language of regionalLanguageSlugs){
@@ -136,9 +135,10 @@ export function regionalLanguageHubAlternates(){
 }
 
 /**
- * Equivalent language URLs for the current city surface.
- * Historical/future English daily pages intentionally do not point at the
- * regional city hubs because those hubs represent today's Panchang only.
+ * Builds only true language equivalents. Regional city hubs represent today,
+ * so historical/future English daily URLs never point at those hubs. Rahu Kalam
+ * has no dedicated English city URL yet, therefore that cluster remains native-
+ * language only until an exact English equivalent exists.
  */
 export function regionalAlternates(city:City,intent?:RegionalIntentSlug,date?:string){
   const languages:Record<string,string>={};
@@ -147,11 +147,7 @@ export function regionalAlternates(city:City,intent?:RegionalIntentSlug,date?:st
     const english=`/tools/choghadiya/${city.slug}`;
     languages["en-IN"]=english;
     languages["x-default"]=english;
-  }else if(intent==="rahu-kalam"){
-    const english=`/panchang/${city.slug}/${today}`;
-    languages["en-IN"]=english;
-    languages["x-default"]=english;
-  }else{
+  }else if(!intent){
     const exactDate=date??today;
     const english=`/panchang/${city.slug}/${exactDate}`;
     languages["en-IN"]=english;
