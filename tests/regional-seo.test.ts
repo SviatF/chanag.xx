@@ -1,5 +1,6 @@
 import {afterEach,describe,expect,it} from "vitest";
 import {findCityBySlug} from "../lib/cities";
+import {todayInIndia} from "../lib/dates";
 import {
   detectRegionalSearchQuery,
   isRegionalIntentIndexable,
@@ -59,9 +60,10 @@ describe("Regional SEO Scale Engine",()=>{
 
   it("uses the dated canonical English Panchang for today's regional city cluster",()=>{
     const city=findCityBySlug("chennai")!;
-    const alternates=regionalAlternates(city,undefined,"2026-09-11");
-    expect(alternates["en-IN"]).toBe("/panchang/chennai/2026-09-11");
-    expect(alternates["x-default"]).toBe("/panchang/chennai/2026-09-11");
+    const today=todayInIndia().toISOString().slice(0,10);
+    const alternates=regionalAlternates(city,undefined,today);
+    expect(alternates["en-IN"]).toBe(`/panchang/chennai/${today}`);
+    expect(alternates["x-default"]).toBe(`/panchang/chennai/${today}`);
     expect(alternates["ta-IN"]).toBe("/regional/tamil/chennai");
   });
 
