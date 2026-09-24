@@ -15,10 +15,13 @@ describe("SEO opportunity evidence thresholds",()=>{
     expect(source).toContain("if(impressions<DO_NOW_MIN_IMPRESSIONS)return \"WAIT\"");
   });
 
-  it("contains targeted festival support without changing title or H1",()=>{
-    const source=readFileSync("app/festivals/[festival]/[year]/[city]/page.tsx","utf8");
-    expect(source).toContain("Ganesh Chaturthi 2026 timing in Ahmedabad");
-    expect(source).toContain("Dasara 2026 date in Telangana");
-    expect(source).toContain("/festivals/ganesh-chaturthi/${year}/${item.slug}");
+  it("keeps festival support inside the generalized semantic content engine",()=>{
+    const page=readFileSync("app/festivals/[festival]/[year]/[city]/page.tsx","utf8");
+    const engine=readFileSync("lib/festival-content-engine.ts","utf8");
+    expect(page).toContain("buildFestivalCityQualityContent");
+    expect(page).toContain("content.directAnswer");
+    expect(engine).toContain("regionalContext");
+    expect(page).not.toContain("isGaneshAhmedabad");
+    expect(page).not.toContain("Ganesh Chaturthi 2026 timing in Ahmedabad");
   });
 });
