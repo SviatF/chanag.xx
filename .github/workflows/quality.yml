@@ -9,7 +9,7 @@ on:
 jobs:
   test-and-build:
     runs-on: ubuntu-latest
-    timeout-minutes: 15
+    timeout-minutes: 20
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -36,6 +36,34 @@ jobs:
 
       - name: Build Next.js reference
         run: npm run build:next
+
+      - name: Audit rendered content quality
+        shell: bash
+        run: |
+          npm run start -- -p 3000 > /tmp/panchvani-next.log 2>&1 &
+          SERVER_PID=$!
+          trap 'kill $SERVER_PID 2>/dev/null || true' EXIT
+          READY=0
+          for i in {1..60}; do
+            if curl -fsS http://127.0.0.1:3000/ >/dev/null; then
+              READY=1
+              break
+            fi
+            sleep 1
+          done
+          if [ "$READY" != "1" ]; then
+            cat /tmp/panchvani-next.log
+            exit 1
+          fi
+          npm run audit:content -- --base-url=http://127.0.0.1:3000 --report=content-quality-report.json --concurrency=10
+
+      - name: Upload content quality report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: content-quality-report
+          path: content-quality-report.json
+          if-no-files-found: warn
 
       - name: Build Cloudflare vinext bundle
         run: npm run build
