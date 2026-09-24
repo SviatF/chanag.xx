@@ -3,7 +3,7 @@ import Link from "next/link";
 import {notFound} from "next/navigation";
 import Header from "@/components/Header";
 import ChoghadiyaTable from "@/components/ChoghadiyaTable";
-import MethodologyNote from "@/components/MethodologyNote";
+import LanguageLinks from "@/components/LanguageLinks";
 import TopicalGraph from "@/components/TopicalGraph";
 import {findCityBySlug} from "@/lib/cities";
 import {formatPanchangTime,getPanchang,formatWindow} from "@/lib/panchang";
@@ -48,6 +48,7 @@ export default async function RegionalPage({params}:{params:Promise<{language:st
   const stateName=nativeStateName(language,city.state);
   const date=todayInIndia();
   const data=await getPanchang(date,city);
+  const languageAlternates=regionalAlternates(city,undefined,data.date);
   const lunarConventions=getLunarMonthConventions(date,city,data);
   const regionalConventions=getRegionalCalendarConventions(date,city,data);
   const profile=getRegionalCalendarProfile(language,data,lunarConventions,regionalConventions);
@@ -121,9 +122,9 @@ export default async function RegionalPage({params}:{params:Promise<{language:st
       <ChoghadiyaTable day={data.dayChoghadiya} night={data.nightChoghadiya} locale={{dayTitle:copy.dayChoghadiya,nightTitle:copy.nightChoghadiya,daySubtitle:copy.sunriseToSunset,nightSubtitle:copy.sunsetToNextSunrise,goodLabel:copy.goodPeriods,neutralLabel:copy.neutralPeriod,badLabel:copy.difficultPeriods,names:choghadiyaNativeNames[language]}}/>
     </div>
 
+    <LanguageLinks languages={languageAlternates}/>
     <div className="pill-links"><Link href={`/regional/${language}`}>{copy.allCities}</Link><Link href="/regional">{copy.allLanguages}</Link></div>
     <TopicalGraph title={`${copy.regionalContext} · ${cityName}`} groupEyebrow={copy.nativeLanguage} groups={topical}/>
-    <MethodologyNote title={copy.calendarExplanationTitle} lang={copy.hreflang}><p>{copy.methodologyText}</p><p>{copy.afterMidnightNote}</p></MethodologyNote>
     <script type="application/ld+json" dangerouslySetInnerHTML={{__html:JSON.stringify(ld)}}/>
   </div></main>;
 }
