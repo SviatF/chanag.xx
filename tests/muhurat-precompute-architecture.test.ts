@@ -1,78 +1,91 @@
-import {describe,expect,it} from "vitest";
 import {existsSync,readFileSync,readdirSync} from "node:fs";
-import {getPrecomputedMonthlyRows,precomputedDatasetKey} from "../lib/muhurat-precomputed";
-import {muhuratRules} from "../lib/muhurat";
-import {
-  calendarMonthSsgPriority,
-  muhuratCityMonthSsgPriority,
-  muhuratMonthSsgPriority,
-  muhuratYearSsgPriority,
-} from "../lib/static-seo-routes";
+import {gunzipSync} from "node:zlib";
+import {describe,expect,it} from "vitest";
+import {MUHURAT_BUILD_DATA_SHARD_MAX_BYTES,type MuhuratBuildDataShard} from "../lib/muhurat-build-data-schema";
+import {calendarMonthSsgPriority,muhuratMonthSsgPriority,muhuratYearSsgPriority} from "../lib/static-seo-routes";
 
-function shardFile(year:string,month:string){return `generated/muhurat-build-data/${year}-${month}.json`;}
-
-function shardSources(){
-  return readdirSync("generated/muhurat-build-data").filter(name=>/^\d{4}-\d{2}\.json$/.test(name));
-}
-
-function shardKeys(path:string){
-  const artifact=JSON.parse(readFileSync(path,"utf8")) as {rows?:Record<string,unknown>};
-  return new Set(Object.keys(artifact.rows??{}));
+function decodeShard(path:string){
+  const source=readFileSync(path,"utf8");
+  const match=source.match(/^export default (.+);\s*$/);
+  if(!match)throw new Error(`Invalid generated shard module: ${path}`);
+  const base64=JSON.parse(match[1]) as string;
+  return {
+    base64Length:base64.length,
+    data:JSON.parse(gunzipSync(Buffer.from(base64,"base64")).toString("utf8")) as MuhuratBuildDataShard,
+  };
 }
 
 describe("Muhurat precomputed build-data architecture",()=>{
   it("ships bounded month shards covering monthly calendar and Muhurat SSG plus yearly Mumbai baselines",()=>{
-    const calendarMonths=new Set(calendarMonthSsgPriority.map(item=>`${item.year}-${item.month}`));
-    const muhuratMonths=new Set(muhuratMonthSsgPriority.map(item=>`${item.year}-${item.month}`));
-    const yearlyMonths=new Set(muhuratYearSsgPriority.flatMap(item=>Array.from({length:12},(_,index)=>`${item.year}-${String(index+1).padStart(2,"0")}`)));
-    const expectedMonths=new Set([...calendarMonths,...muhuratMonths,...yearlyMonths]);
-    expect(expectedMonths.size).toBeGreaterThanOrEqual(48);
+    const muhuratMonthlyShardIds=new Set(muhuratMonthSsgPriority.map(item=>`${item.year}-${item.month}`));
+    const calendarMonthlyShardIds=new Set(calendarMonthSsgPriority.map(item=>`${item.year}-${item.month}`));
+    const yearlyShardIds=new Set(muhuratYearSsgPriority.flatMap(item=>
+      Array.from({length:12},(_,index)=>`${item.year}-${String(index+1).padStart(2,"0")}`)
+    ));
+    const expectedShardIds=[...new Set([...muhuratMonthlyShardIds,...calendarMonthlyShardIds,...yearlyShardIds])].sort();
+    expect(muhuratMonthlyShardIds.size).toBe(13);
+    expect(calendarMonthlyShardIds.size).toBe(15);
+    expect(yearlyShardIds.size).toBe(48);
+    expect(expectedShardIds).toHaveLength(48);
 
-    const sources=shardSources();
-    expect(new Set(sources.map(name=>name.replace(/\.json$/,"")))).toEqual(expectedMonths);
+    const shardFiles=readdirSync("generated")
+      .filter(file=>/^muhurat-panchang-shard-\d{4}-\d{2}\.ts$/.test(file))
+      .sort();
+    expect(shardFiles).toHaveLength(expectedShardIds.length);
 
-    const expectedKeysByMonth=new Map<string,Set<string>>();
-    const add=(year:string,month:string,event:string,city:string)=>{
-      const monthKey=`${year}-${month}`;
-      const keys=expectedKeysByMonth.get(monthKey)??new Set<string>();
-      keys.add(precomputedDatasetKey(event,Number(year),Number(month),city));
-      expectedKeysByMonth.set(monthKey,keys);
-    };
+    let totalTargets=0;
+    for(const [index,file] of shardFiles.entries()){
+      const {data,base64Length}=decodeShard(`generated/${file}`);
+      expect(data.version).toBe(2);
+      expect(data.shardId).toBe(expectedShardIds[index]);
+      expect(data.signature).toMatch(/^[a-f0-9]{64}$/);
+      const expectedTargets=calendarMonthlyShardIds.has(data.shardId)?20:1;
+      expect(data.targets).toHaveLength(expectedTargets);
+      expect(Object.keys(data.entries)).toHaveLength(expectedTargets);
+      if(expectedTargets===1)expect(data.targets[0].startsWith("mumbai|")).toBe(true);
+      expect(Buffer.byteLength(JSON.stringify(data))).toBeLessThan(MUHURAT_BUILD_DATA_SHARD_MAX_BYTES);
+      expect(base64Length).toBeLessThan(100_000);
+      totalTargets+=data.targets.length;
 
-    for(const item of muhuratCityMonthSsgPriority)add(item.year,item.month,item.event,item.city);
-    for(const item of muhuratMonthSsgPriority)add(item.year,item.month,item.event,"mumbai");
-    for(const item of muhuratYearSsgPriority){
-      for(let month=1;month<=12;month++)add(item.year,String(month).padStart(2,"0"),item.event,"mumbai");
+      for(const target of data.targets){
+        const rows=data.entries[target];
+        expect(rows.length===28||rows.length===29||rows.length===30||rows.length===31).toBe(true);
+        for(const row of rows){
+          expect(Object.keys(row).sort()).toEqual([
+            "abhijit","date","dayChoghadiya","gulika","nakshatra","rahu","tithi","yamaganda",
+          ]);
+        }
+      }
     }
-    for(const item of calendarMonthSsgPriority){
-      for(const event of Object.keys(muhuratRules))add(item.year,item.month,event,item.city);
-    }
-
-    for(const [monthKey,expectedKeys] of expectedKeysByMonth){
-      const [year,month]=monthKey.split("-");
-      const keys=shardKeys(shardFile(year,month));
-      for(const key of expectedKeys)expect(keys.has(key),`${monthKey} missing ${key}`).toBe(true);
-    }
+    expect(totalTargets).toBe(333);
   });
 
   it("uses a generated lazy-loader registry and removes the monolithic artifact",()=>{
-    const loader=readFileSync("lib/muhurat-build-shards.generated.ts","utf8");
-    expect(loader).toContain("MUHURAT_BUILD_SHARD_LOADERS");
-    expect(loader).toContain('import("@/generated/muhurat-build-data/');
-    expect(existsSync("generated/muhurat-build-data.json")).toBe(false);
+    const registry=readFileSync("generated/muhurat-panchang-shards.ts","utf8");
+    expect(registry).toContain("MUHURAT_PANCHANG_SHARD_IDS");
+    expect(registry).toContain("MUHURAT_PANCHANG_SHARD_LOADERS");
+    expect(registry).toContain('()=>import("./muhurat-panchang-shard-');
+    expect(existsSync("generated/muhurat-panchang-data.ts")).toBe(false);
+    expect(readdirSync("generated").some(file=>/^muhurat-panchang-chunk-\d+\.ts$/.test(file))).toBe(false);
   });
 
   it("derives per-shard freshness from calendar, monthly and yearly targets, Panchang engine and snapshot schema",()=>{
-    const script=readFileSync("scripts/precompute-muhurat.ts","utf8");
-    expect(script).toContain("calendarMonthSsgPriority");
-    expect(script).toContain("muhuratCityMonthSsgPriority");
-    expect(script).toContain("muhuratMonthSsgPriority");
-    expect(script).toContain("muhuratYearSsgPriority");
-    expect(script).toContain("PANCHANG_ENGINE_VERSION");
-    expect(script).toContain("CALENDAR_CONVENTIONS_VERSION");
-    expect(script).toContain("MUHURAT_BUILD_SNAPSHOT_VERSION");
-    expect(script).toContain("sourceFingerprint");
-    expect(script).not.toContain("Promise.all");
+    const source=readFileSync("scripts/precompute-muhurat.ts","utf8");
+    expect(source).toContain("calendarMonthSsgPriority");
+    expect(source).toContain("muhuratMonthSsgPriority");
+    expect(source).toContain("muhuratCityMonthSsgPriority");
+    expect(source).toContain("muhuratYearSsgPriority");
+    expect(source).toContain('readFile(resolve(root,"lib/panchang.ts"');
+    expect(source).toContain('readFile(resolve(root,"lib/muhurat-build-data-schema.ts"');
+    expect(source).toContain("muhuratBuildDataShardId");
+    expect(source).toContain("groupTargets");
+    expect(source).toContain("isFreshShard");
+
+    const calculation=source.slice(source.indexOf("clearMuhuratPanchangMonthCache()"));
+    expect(calculation).toContain("for(const [shardId,shardTargets] of grouped)");
+    expect(calculation).toContain("for(const target of shardTargets)");
+    expect(calculation).toContain("await getMuhuratPanchangMonth");
+    expect(calculation).not.toContain("Promise.all");
   });
 
   it("keeps normal CI and production builds verify-only",()=>{
@@ -86,20 +99,22 @@ describe("Muhurat precomputed build-data architecture",()=>{
     expect(workflow).toContain("Verify committed Muhurat build data");
     expect(workflow).not.toContain("Generate Muhurat pilot build data");
     expect(workflow).not.toContain("Upload Muhurat build data");
-    // Other diagnostics (for example the rendered content-quality report) may
-    // use generic artifacts; only generated Muhurat build-data artifacts are forbidden.
-    expect(workflow).not.toMatch(/artifact[^\n]*muhurat|muhurat[^\n]*artifact/i);
+    // Diagnostic artifacts such as the rendered content-quality report are allowed;
+    // generated Muhurat build data itself must never be uploaded by CI.
+    expect(workflow).not.toMatch(/(?:artifact[^\n]*muhurat|muhurat[^\n]*artifact)/i);
   });
 
   it("lazy-loads only the requested month shard and preserves live fallback",()=>{
     const loader=readFileSync("lib/muhurat-precomputed.ts","utf8");
     const muhurat=readFileSync("lib/muhurat.ts","utf8");
     const calendar=readFileSync("app/calendar/[city]/[year]/[month]/page.tsx","utf8");
-    expect(loader).toContain("loadMuhuratBuildShard");
-    expect(loader).toContain("getPrecomputedMonthlyRows");
-    expect(muhurat).toContain("getPrecomputedMonthlyRows");
-    expect(muhurat).toContain("getMonthlyMuhuratLive");
-    expect(calendar).toContain("getMonthlyMuhurat");
-    expect(typeof getPrecomputedMonthlyRows).toBe("function");
+    expect(loader).toContain('new DecompressionStream("gzip")');
+    expect(loader).toContain("MUHURAT_PANCHANG_SHARD_LOADERS[shardId]");
+    expect(loader).toContain("shardPromises.get(shardId)");
+    expect(loader).toContain("muhuratBuildDataShardId(year,month)");
+    expect(muhurat).toContain("await getPrecomputedMuhuratPanchangMonth(year,month,city)");
+    expect(muhurat).toContain("precomputed??await getMuhuratPanchangMonth(year,month,city)");
+    expect(calendar).toContain("await getPrecomputedMuhuratPanchangMonth(y,m,city)");
+    expect(calendar).toContain("precomputed??await Promise.all");
   });
 });
