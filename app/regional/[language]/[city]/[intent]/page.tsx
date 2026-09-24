@@ -3,7 +3,7 @@ import Link from "next/link";
 import {notFound} from "next/navigation";
 import Header from "@/components/Header";
 import ChoghadiyaTable from "@/components/ChoghadiyaTable";
-import MethodologyNote from "@/components/MethodologyNote";
+import LanguageLinks from "@/components/LanguageLinks";
 import TopicalGraph from "@/components/TopicalGraph";
 import {findCityBySlug} from "@/lib/cities";
 import {todayInIndia} from "@/lib/dates";
@@ -61,6 +61,7 @@ export default async function RegionalIntentPage({params}:{params:Promise<{langu
   const cityName=nativeCityName(language,city);
   const date=todayInIndia();
   const data=await getPanchang(date,city);
+  const languageAlternates=regionalAlternates(city,intent);
   const lunar=getLunarMonthConventions(date,city,data);
   const regionalConventions=getRegionalCalendarConventions(date,city,data);
   const lang=regional[language as RegionalKey];
@@ -120,8 +121,8 @@ export default async function RegionalIntentPage({params}:{params:Promise<{langu
       <section className="wide-panel"><h2 className="page-title" style={{fontSize:32}}>{native}</h2><p className="page-subtitle">{copy.choghadiyaExplanation(cityName)}</p><ChoghadiyaTable day={data.dayChoghadiya} night={data.nightChoghadiya} locale={{dayTitle:copy.dayChoghadiya,nightTitle:copy.nightChoghadiya,daySubtitle:copy.sunriseToSunset,nightSubtitle:copy.sunsetToNextSunrise,goodLabel:copy.goodPeriods,neutralLabel:copy.neutralPeriod,badLabel:copy.difficultPeriods,names:choghadiyaNativeNames[language]}}/></section>
     </>}
 
+    <LanguageLinks languages={languageAlternates}/>
     <TopicalGraph title={`${copy.regionalContext} · ${cityName}`} groupEyebrow={copy.nativeLanguage} groups={topical}/>
-    <MethodologyNote title={copy.calendarExplanationTitle} lang={copy.hreflang}><p>{copy.methodologyText}</p></MethodologyNote>
     <script type="application/ld+json" dangerouslySetInnerHTML={{__html:JSON.stringify(ld)}}/>
   </div></main>;
 }
