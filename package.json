@@ -16,7 +16,9 @@
     "cf-typegen": "wrangler types",
     "build:next": "npm run verify:muhurat-precompute && next build",
     "precompute:muhurat": "npx --yes tsx@4.23.13 scripts/precompute-muhurat.ts",
-    "verify:muhurat-precompute": "npx --yes tsx@4.23.13 scripts/precompute-muhurat.ts --verify"
+    "verify:muhurat-precompute": "npx --yes tsx@4.23.13 scripts/precompute-muhurat.ts --verify",
+    "audit:content": "node scripts/content-quality-audit.mjs",
+    "audit:content:strict": "node scripts/content-quality-audit.mjs --enforce-similarity"
   },
   "dependencies": {
     "@types/node": "^22.10.0",
