@@ -17,7 +17,7 @@ export default function KnowledgeHub(){
     <div className="breadcrumbs"><Link href="/">Home</Link> / Panchang Guide</div>
     <p className="page-kicker">LEARN PANCHANG</p>
     <h1 className="page-title">Understand the calendar<br/>behind today’s Panchang</h1>
-    <p className="page-subtitle">Learn what each Panchang value means, how it is calculated and where regional calendar conventions or personal astrology can change the interpretation.</p>
+    <p className="page-subtitle">Learn what each Panchang value means, how it is calculated and how regional calendar conventions or exact-time birth calculations use different inputs.</p>
 
     <section className="wide-panel">
       <div className="data-grid">
@@ -39,7 +39,7 @@ export default function KnowledgeHub(){
       <p>Where Hindu calendar practice differs by region or tradition, Panchvani states the convention being used instead of presenting one regional system as universal.</p>
     </div>
 
-    <div className="pill-links"><Link href={`/panchang/${city.slug}`}>See today’s Panchang</Link><Link href="/methodology">Calculation methodology</Link><Link href="/accuracy">Accuracy & limitations</Link></div>
+    <div className="pill-links"><Link href={`/panchang/${city.slug}`}>See today’s Panchang</Link><Link href="/methodology">Calculation methodology</Link><Link href="/accuracy">Accuracy &amp; validation</Link></div>
     <script type="application/ld+json" dangerouslySetInnerHTML={{__html:JSON.stringify(ld)}}/>
   </div></main>;
 }
