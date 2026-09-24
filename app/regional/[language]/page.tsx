@@ -2,7 +2,7 @@ import type {Metadata} from "next";
 import Link from "next/link";
 import {notFound} from "next/navigation";
 import Header from "@/components/Header";
-import MethodologyNote from "@/components/MethodologyNote";
+import LanguageLinks from "@/components/LanguageLinks";
 import {cities} from "@/lib/cities";
 import {nativeCityName} from "@/lib/regional-i18n";
 import {regionalPureLocale} from "@/lib/regional-pure-copy";
@@ -11,6 +11,7 @@ import {
   isRegionalLanguageSlug,
   regionalCitiesForLanguage,
   regionalIntentLinksForCity,
+  regionalLanguageHubAlternates,
 } from "@/lib/regional-seo";
 import {robotsFor} from "@/lib/seo-policy";
 
@@ -24,7 +25,7 @@ export async function generateMetadata({params}:{params:Promise<{language:string
   return {
     title:copy.hubTitle,
     description:copy.hubDescription,
-    alternates:{canonical:`/regional/${language}`},
+    alternates:{canonical:`/regional/${language}`,languages:regionalLanguageHubAlternates()},
     robots:robotsFor(availableCities.length>0),
   };
 }
@@ -35,6 +36,7 @@ export default async function RegionalLanguageHub({params}:{params:Promise<{lang
   const copy=regionalPureLocale(language);
   const availableCities=regionalCitiesForLanguage(language);
   const headerCity=availableCities[0]??cities[0];
+  const languageAlternates=regionalLanguageHubAlternates();
 
   const ld={"@context":"https://schema.org","@type":"CollectionPage","name":copy.hubTitle,"url":`https://panchvani.com/regional/${language}`,"description":copy.hubDescription,"inLanguage":copy.hreflang};
 
@@ -56,8 +58,8 @@ export default async function RegionalLanguageHub({params}:{params:Promise<{lang
       })}</div>
     </section>:<section className="wide-panel"><div className="seo-copy"><h2>{copy.noCoverageTitle}</h2><p>{copy.noCoverageText}</p></div></section>}
 
+    <LanguageLinks languages={languageAlternates}/>
     <div className="pill-links"><Link href="/regional">{copy.allLanguages}</Link></div>
-    <MethodologyNote title={copy.methodologyTitle} lang={copy.hreflang}><p>{copy.methodologyText}</p></MethodologyNote>
     <script type="application/ld+json" dangerouslySetInnerHTML={{__html:JSON.stringify(ld)}}/>
   </div></main>;
 }
