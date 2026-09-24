@@ -8,14 +8,15 @@ import {regionalAlternates,regionalLanguageHubAlternates} from "../lib/regional-
 function source(relative:string){return readFileSync(path.join(process.cwd(),relative),"utf8");}
 
 describe("international SEO alternate integrity",()=>{
-  it("builds a complete regional language hub cluster with x-default",()=>{
+  it("builds the active regional language hub cluster with x-default",()=>{
     const alternates=regionalLanguageHubAlternates();
     expect(alternates["x-default"]).toBe("/regional");
     expect(alternates["bn-IN"]).toBe("/regional/bengali");
     expect(alternates["ta-IN"]).toBe("/regional/tamil");
-    expect(alternates["ml-IN"]).toBe("/regional/malayalam");
     expect(alternates["gu-IN"]).toBe("/regional/gujarati");
     expect(alternates["mr-IN"]).toBe("/regional/marathi");
+    // Malayalam stays out until an approved Malayalam city is indexable.
+    expect(alternates["ml-IN"]).toBeUndefined();
   });
 
   it("only links dated English Panchang to regional today pages when the date is actually today",()=>{
