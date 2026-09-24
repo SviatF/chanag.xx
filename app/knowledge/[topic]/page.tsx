@@ -3,11 +3,51 @@ import Link from "next/link";
 import {notFound} from "next/navigation";
 import Header from "@/components/Header";
 import {cities} from "@/lib/cities";
-import {knowledgePagePath,knowledgeTopicBySlug,knowledgeTopics,knowledgeTopicSlugs} from "@/lib/panchang-knowledge";
+import {knowledgePagePath,knowledgeTopicBySlug,knowledgeTopics,knowledgeTopicSlugs,type KnowledgeFact,type KnowledgeSection,type KnowledgeTopic} from "@/lib/panchang-knowledge";
 
 export const revalidate=604800;
 
 export function generateStaticParams(){return knowledgeTopicSlugs.map(topic=>({topic}));}
+
+function publicKnowledgeCopy(topic:KnowledgeTopic){
+  let description=topic.description;
+  let engineNote=topic.engineNote;
+  let facts:KnowledgeFact[]=topic.facts;
+  let sections:KnowledgeSection[]=topic.sections;
+
+  if(topic.slug==="panchang"){
+    description="Learn what a Hindu Panchang is, the five traditional limbs it combines, how Panchvani calculates them, and how daily Panchang differs from exact-time birth-chart calculations.";
+    engineNote="Panchvani derives the lunar factors from Sun and Moon positions and calculates sunrise-dependent timings from the selected city coordinates. The result is a reproducible daily date-and-location reference; birth-chart calculations add an exact birth instant and a separate calculation model.";
+    sections=topic.sections.map(section=>section.title==="Panchang versus personalized astrology"?{
+      title:"Panchang and birth-chart calculations",
+      paragraphs:["A city-and-date Panchang describes shared calendar factors such as Tithi, Nakshatra and local solar timing. Birth-chart calculations add an exact birth instant and derive Lagna, houses and birth-specific planetary placements, so the two page types use different input models."],
+    }:section);
+  }
+
+  if(topic.slug==="tithi"){
+    sections=topic.sections.map(section=>section.title==="Why Tithi matters in Panchang"?{
+      ...section,
+      paragraphs:["Tithi is used as a calendar marker for fasting observances, festivals and many Muhurat rule sets. Panchvani's Vrat layer uses sunrise-based date logic for selected observances, while Muhurat rules use Tithi as one explicit eligibility signal alongside the remaining event-specific rule layers."],
+    }:section);
+  }
+
+  if(topic.slug==="nakshatra"){
+    sections=topic.sections.map(section=>section.title==="How Nakshatra is used"?{
+      ...section,
+      paragraphs:["Nakshatra appears in daily Panchang, naming traditions, festival interpretation and many Muhurat systems. Panchvani uses selected Nakshatra lists as one explicit eligibility layer alongside the other event-specific factors used by the relevant planning screen."],
+    }:section);
+  }
+
+  if(topic.slug==="yoga"){
+    facts=topic.facts.map(fact=>fact.label==="Purpose here"?{...fact,note:"A Panchang limb derived from the combined sidereal longitudes"}:fact);
+    sections=topic.sections.map(section=>section.title==="What the daily Yoga value does and does not mean"?{
+      title:"How the daily Yoga value is used",
+      paragraphs:["Yoga is one limb of Panchang and can be interpreted differently across traditions. Panchvani exposes the calculated sector beside Tithi, Nakshatra and Karana so the calendar state can be read as a set of independent astronomical factors."],
+    }:section);
+  }
+
+  return {description,engineNote,facts,sections};
+}
 
 export async function generateMetadata({params}:{params:Promise<{topic:string}>}):Promise<Metadata>{
   const p=await params;const topic=knowledgeTopicBySlug(p.topic);if(!topic)notFound();
@@ -16,12 +56,14 @@ export async function generateMetadata({params}:{params:Promise<{topic:string}>}
     description:"Understand the 12 Hindu lunar months, the difference between Amanta and Purnimanta month names, Adhika Maas and why regional calendars can label the same day differently.",
     alternates:{canonical:knowledgePagePath(topic.slug)}
   };
-  return {title:topic.metaTitle,description:topic.description,alternates:{canonical:knowledgePagePath(topic.slug)}};
+  const copy=publicKnowledgeCopy(topic);
+  return {title:topic.metaTitle,description:copy.description,alternates:{canonical:knowledgePagePath(topic.slug)}};
 }
 
 export default async function KnowledgePage({params}:{params:Promise<{topic:string}>}){
   const p=await params;const topic=knowledgeTopicBySlug(p.topic);if(!topic)notFound();
   const city=cities[0];
+  const copy=publicKnowledgeCopy(topic);
   const related=topic.related.map(slug=>knowledgeTopics[slug]);
   const isHinduMonths=topic.slug==="hindu-months";
   const headline=isHinduMonths?"Hindu calendar months: Amanta, Purnimanta & Adhika Maas":topic.title;
@@ -30,7 +72,7 @@ export default async function KnowledgePage({params}:{params:Promise<{topic:stri
     :topic.intro;
   const ld={"@context":"https://schema.org","@graph":[
     {"@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"Home","item":"https://panchvani.com/"},{"@type":"ListItem","position":2,"name":"Panchang Knowledge","item":"https://panchvani.com/knowledge"},{"@type":"ListItem","position":3,"name":topic.label,"item":`https://panchvani.com${knowledgePagePath(topic.slug)}`}]},
-    {"@type":"Article","headline":headline,"description":isHinduMonths?"Amanta, Purnimanta and Adhika Maas conventions in the Hindu lunar calendar.":topic.description,"mainEntityOfPage":`https://panchvani.com${knowledgePagePath(topic.slug)}`,"about":{"@type":"Thing","name":topic.label},"author":{"@type":"Organization","name":"Panchvani"},"publisher":{"@type":"Organization","name":"Panchvani"}}
+    {"@type":"Article","headline":headline,"description":isHinduMonths?"Amanta, Purnimanta and Adhika Maas conventions in the Hindu lunar calendar.":copy.description,"mainEntityOfPage":`https://panchvani.com${knowledgePagePath(topic.slug)}`,"about":{"@type":"Thing","name":topic.label},"author":{"@type":"Organization","name":"Panchvani"},"publisher":{"@type":"Organization","name":"Panchvani"}}
   ]};
 
   return <main><Header city={city}/><div className="page-shell internal-visual internal-panchang">
@@ -40,7 +82,7 @@ export default async function KnowledgePage({params}:{params:Promise<{topic:stri
     <p className="page-subtitle">{intro}</p>
 
     <section className="wide-panel">
-      <div className="seo-copy"><small>CALCULATION MODEL</small><h2>{topic.formula}</h2><p>{topic.engineNote}</p></div>
+      <div className="seo-copy"><small>CALCULATION MODEL</small><h2>{topic.formula}</h2><p>{copy.engineNote}</p></div>
     </section>
 
     {isHinduMonths?<section className="wide-panel">
@@ -55,16 +97,16 @@ export default async function KnowledgePage({params}:{params:Promise<{topic:stri
       </div>
     </section>:null}
 
-    <section className="data-grid">{topic.facts.map(fact=><div className="data-card" key={fact.label}><small>{fact.label}</small><strong>{fact.value}</strong><small>{fact.note}</small></div>)}</section>
+    <section className="data-grid">{copy.facts.map(fact=><div className="data-card" key={fact.label}><small>{fact.label}</small><strong>{fact.value}</strong><small>{fact.note}</small></div>)}</section>
 
-    {topic.sections.map(section=><section className="wide-panel" key={section.title}>
+    {copy.sections.map(section=><section className="wide-panel" key={section.title}>
       <div className="seo-copy"><h2>{section.title}</h2>{section.paragraphs.map((paragraph,index)=><p key={index}>{paragraph}</p>)}{section.items?.length?<ul>{section.items.map(item=><li key={item}>{item}</li>)}</ul>:null}</div>
     </section>)}
 
     <section className="wide-panel">
       <h2 className="page-title" style={{fontSize:32}}>See the concept in a live Panchang</h2>
       <p className="page-subtitle">Open today’s calculated city page to see this factor beside the other Panchang limbs and location-sensitive timings.</p>
-      <div className="pill-links"><Link href={`/panchang/${city.slug}`}>Today’s Panchang in {city.name}</Link><Link href="/methodology">Full calculation methodology</Link><Link href="/accuracy">Accuracy & limitations</Link></div>
+      <div className="pill-links"><Link href={`/panchang/${city.slug}`}>Today’s Panchang in {city.name}</Link><Link href="/methodology">Full calculation methodology</Link><Link href="/accuracy">Accuracy &amp; validation</Link></div>
     </section>
 
     <nav className="wide-panel" aria-label={`Related ${topic.label} guides`}>
