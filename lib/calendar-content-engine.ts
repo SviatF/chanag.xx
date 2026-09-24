@@ -5,7 +5,7 @@ import {formatPanchangTime,formatWindow} from "./panchang";
 
 type LunarLabels={amantaLabel:string;purnimantaLabel:string};
 type FestivalSummary=Pick<Festival,"name"|"slug"|"date">;
-
+type MonthlyEntry=Pick<Panchang,"date"|"tithi"|"nakshatra"|"rahu"|"yamaganda"|"gulika"|"abhijit"|"dayChoghadiya">;
 type Fact={label:string;value:string;note?:string};
 
 export type DailyPanchangQualityContent={
@@ -80,21 +80,27 @@ function nextNakshatraLabel(data:Panchang){
   return index>=0?nakshatras[(index+1)%nakshatras.length]:"the next Nakshatra";
 }
 
-function rangeByTime(entries:Panchang[],field:"sunrise"|"sunset"){
+function rangeByTime(entries:ReadonlyArray<Panchang>,field:"sunrise"|"sunset"){
   if(!entries.length)return null;
   let earliest=entries[0],latest=entries[0];
   for(const entry of entries.slice(1)){
     if(clockMinutes(entry[field])<clockMinutes(earliest[field]))earliest=entry;
     if(clockMinutes(entry[field])>clockMinutes(latest[field]))latest=entry;
   }
-  return {
-    earliest,
-    latest,
-    range:clockMinutes(latest[field])-clockMinutes(earliest[field]),
-  };
+  return {earliest,latest,range:clockMinutes(latest[field])-clockMinutes(earliest[field])};
 }
 
-function compactDates(entries:Panchang[],tithi:string){
+function rangeByClock<T extends {date:string}>(entries:ReadonlyArray<T>,value:(entry:T)=>string){
+  if(!entries.length)return null;
+  let earliest=entries[0],latest=entries[0];
+  for(const entry of entries.slice(1)){
+    if(clockMinutes(value(entry))<clockMinutes(value(earliest)))earliest=entry;
+    if(clockMinutes(value(entry))>clockMinutes(value(latest)))latest=entry;
+  }
+  return {earliest,latest,range:clockMinutes(value(latest))-clockMinutes(value(earliest))};
+}
+
+function compactDates(entries:ReadonlyArray<{date:string;tithi:string}>,tithi:string){
   return entries.filter(entry=>entry.tithi===tithi).map(entry=>entry.date);
 }
 
@@ -142,18 +148,19 @@ export function buildDailyPanchangQualityContent(city:City,data:Panchang,lunar:L
   };
 }
 
-export function buildMonthlyCalendarQualityContent(city:City,year:number,month:number,entries:Panchang[],festivals:FestivalSummary[]):MonthlyCalendarQualityContent{
+export function buildMonthlyCalendarQualityContent(city:City,year:number,month:number,entries:ReadonlyArray<MonthlyEntry>,festivals:ReadonlyArray<FestivalSummary>):MonthlyCalendarQualityContent{
   const name=monthName(year,month);
-  const sunrise=rangeByTime(entries,"sunrise");
-  const sunset=rangeByTime(entries,"sunset");
-  const first=entries[0],last=entries[entries.length-1];
   const ekadashi=compactDates(entries,"Ekadashi");
   const purnima=compactDates(entries,"Purnima");
   const amavasya=compactDates(entries,"Amavasya");
   const keyCount=ekadashi.length+purnima.length+amavasya.length;
-  const tithiVariety=new Set(entries.map(entry=>`${entry.paksha}:${entry.tithi}`)).size;
+  const tithiVariety=new Set(entries.map(entry=>entry.tithi)).size;
   const nakshatraVariety=new Set(entries.map(entry=>entry.nakshatra)).size;
-  const firstLastDrift=first&&last?clockMinutes(last.sunrise)-clockMinutes(first.sunrise):0;
+  const abhijitDays=entries.filter(entry=>entry.abhijit!==null).length;
+  const favorablePeriods=entries.reduce((sum,entry)=>sum+entry.dayChoghadiya.filter(period=>period.effect==="good").length,0);
+  const rahuRange=rangeByClock(entries,entry=>entry.rahu.start);
+  const first=entries[0],last=entries[entries.length-1];
+  const firstLastRahuDrift=first&&last?clockMinutes(last.rahu.start)-clockMinutes(first.rahu.start):0;
   const festivalSummary=festivals.length
     ? festivals.map(item=>`${item.name} (${item.date})`).join(" · ")
     : "No maintained festival record falls in this Gregorian month.";
@@ -163,22 +170,22 @@ export function buildMonthlyCalendarQualityContent(city:City,year:number,month:n
     facts:[
       {label:"Calendar days",value:String(entries.length),note:`${name} ${year}`},
       {label:"Lunar marker mornings",value:String(keyCount),note:`Ekadashi ${ekadashi.length} · Purnima ${purnima.length} · Amavasya ${amavasya.length}`},
-      {label:"Sunrise-state Tithis",value:String(tithiVariety),note:"Paksha + Tithi combinations"},
+      {label:"Tithi labels at sunrise",value:String(tithiVariety),note:"Distinct monthly sunrise states"},
       {label:"Nakshatras at sunrise",value:String(nakshatraVariety),note:"Distinct monthly sunrise states"},
-      {label:"Earliest sunrise",value:sunrise?.earliest.sunrise??"—",note:sunrise?.earliest.date},
-      {label:"Latest sunrise",value:sunrise?.latest.sunrise??"—",note:sunrise?.latest.date},
+      {label:"Abhijit available",value:`${abhijitDays} days`,note:`of ${entries.length} local dates`},
+      {label:"Favorable Choghadiya periods",value:String(favorablePeriods),note:"Across the full month"},
     ],
     fingerprintTitle:`${name} ${year} month fingerprint for ${city.name}`,
-    fingerprintBody:`This month is not just a repeated 30/31-day shell: its local sunrise sequence contains ${tithiVariety} distinct Paksha/Tithi states and ${nakshatraVariety} Nakshatras. ${sunrise?`Sunrise spans ${sunrise.range} clock minutes across the month, from ${sunrise.earliest.sunrise} on ${sunrise.earliest.date} to ${sunrise.latest.sunrise} on ${sunrise.latest.date}.`:""}`,
+    fingerprintBody:`The local sunrise sequence contains ${tithiVariety} distinct Tithi labels and ${nakshatraVariety} Nakshatras. ${rahuRange?`Because Rahu Kalam is derived from the local daylight span, its start clock ranges by ${rahuRange.range} minutes across the month, from ${rahuRange.earliest.rahu.start} on ${rahuRange.earliest.date} to ${rahuRange.latest.rahu.start} on ${rahuRange.latest.date}.`:""}`,
     lunarTitle:`Lunar rhythm in ${name}`,
     lunarBody:`Ekadashi appears at local sunrise on ${listDates(ekadashi)}. Purnima appears on ${listDates(purnima)}, and Amavasya appears on ${listDates(amavasya)}. These markers are taken from the ${city.name} sunrise state for each civil date rather than copied from a national placeholder.`,
-    solarTitle:`Sunrise and sunset movement through ${name}`,
-    solarBody:`${sunrise&&sunset?`Across ${name}, sunrise ranges from ${sunrise.earliest.sunrise} to ${sunrise.latest.sunrise}, while sunset ranges from ${sunset.earliest.sunset} to ${sunset.latest.sunset}. From the first day to the last day, sunrise moves ${signedMinutes(firstLastDrift)} on the clock.`:"Solar-range data is unavailable for this month."}`,
+    solarTitle:`Local daylight-derived timing movement through ${name}`,
+    solarBody:`${rahuRange?`Rahu Kalam starts between ${rahuRange.earliest.rahu.start} and ${rahuRange.latest.rahu.start} across the month. From the first listed day to the last, the Rahu start clock moves ${signedMinutes(firstLastRahuDrift)}. Abhijit is available on ${abhijitDays} of ${entries.length} dates, and the full month contains ${favorablePeriods} favorable daytime Choghadiya periods.`:"Local timing-range data is unavailable for this month."}`,
     festivalBody:`Maintained festival signal for ${name}: ${festivalSummary}`,
   };
 }
 
-export function buildYearlyCalendarQualityContent(city:City,year:number,snapshots:Panchang[],festivals:FestivalSummary[]):YearlyCalendarQualityContent{
+export function buildYearlyCalendarQualityContent(city:City,year:number,snapshots:ReadonlyArray<Panchang>,festivals:ReadonlyArray<FestivalSummary>):YearlyCalendarQualityContent{
   const sunrise=rangeByTime(snapshots,"sunrise");
   const tithiVariety=new Set(snapshots.map(entry=>`${entry.paksha}:${entry.tithi}`)).size;
   const nakshatraVariety=new Set(snapshots.map(entry=>entry.nakshatra)).size;
@@ -204,8 +211,8 @@ export function buildYearlyCalendarQualityContent(city:City,year:number,snapshot
       {label:"First-day Tithi states",value:String(tithiVariety),note:"Distinct Paksha + Tithi combinations"},
       {label:"First-day Nakshatras",value:String(nakshatraVariety),note:"Across 12 monthly snapshots"},
       {label:"Maintained festivals",value:String(festivals.length),note:`Validated ${year} dataset`},
-      {label:"Earliest month-start sunrise",value:sunrise?.earliest.sunrise??"—",note:sunrise?monthNameFromIso(sunrise.earliest.date):undefined},
-      {label:"Latest month-start sunrise",value:sunrise?.latest.sunrise??"—",note:sunrise?monthNameFromIso(sunrise.latest.date):undefined},
+      {label:"Earliest month-start sunrise",value:sunrise?.earliest.sunrise??"—",note:sunrise?monthNameFromIso(sunrise.earliest.date):"No snapshot"},
+      {label:"Latest month-start sunrise",value:sunrise?.latest.sunrise??"—",note:sunrise?monthNameFromIso(sunrise.latest.date):"No snapshot"},
     ],
     fingerprintTitle:`${city.name} ${year} calendar fingerprint`,
     fingerprintBody:`The 12 month-start Panchang snapshots vary across ${tithiVariety} Paksha/Tithi states and ${nakshatraVariety} Nakshatras. ${sunrise?`Their sunrise clocks span ${sunrise.range} minutes between the earliest and latest month-start values.`:""} This gives the yearly hub a location-specific solar/lunar signature instead of treating every city as the same annual template.`,
