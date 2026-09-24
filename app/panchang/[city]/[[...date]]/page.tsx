@@ -7,7 +7,7 @@ import ChoghadiyaTable from "@/components/ChoghadiyaTable";
 import LanguageLinks from "@/components/LanguageLinks";
 import TopicalGraph from "@/components/TopicalGraph";
 import {findCityBySlug} from "@/lib/cities";
-import {buildDailyDataNarrative} from "@/lib/content-uniqueness";
+import {buildDailyPanchangQualityContent} from "@/lib/calendar-content-engine";
 import {formatPanchangTime,formatWindow,getPanchang} from "@/lib/panchang";
 import {getLunarMonthConventions} from "@/lib/calendar-conventions";
 import {isDailyIndexable,robotsFor} from "@/lib/seo-policy";
@@ -47,8 +47,8 @@ export default async function PanchangPage({params}:{params:Promise<{city:string
   const data=await getPanchang(date,city);
   const languageAlternates=regionalAlternates(city,undefined,data.date);
   const lunar=getLunarMonthConventions(date,city,data);
+  const qualityContent=buildDailyPanchangQualityContent(city,data,lunar);
   const guidance=getDailyGuidance(data,city);
-  const dataNarrative=buildDailyDataNarrative(data,city);
   const festival=nextValidatedFestival(date);
   const topicalGroups=buildDailyTopicalGraph(city,date,festival);
   const vratLink=vratLinkForTithi(city,date,data.tithi);
@@ -70,7 +70,7 @@ export default async function PanchangPage({params}:{params:Promise<{city:string
   return <main><Header city={city}/><div className="page-shell internal-visual internal-panchang">
     <div className="breadcrumbs"><Link href="/">Home</Link> / {city.name} / {data.date}</div>
     <p className="page-kicker">DAILY PANCHANG · {city.state}</p><h1 className="page-title">{city.name} Panchang<br/>{data.date}</h1>
-    <p className="page-subtitle">Location-specific Panchang for {city.name}, including Tithi, Nakshatra and local solar timings.</p>
+    <p className="page-subtitle">{qualityContent.directAnswer}</p>
     <LanguageLinks languages={languageAlternates}/>
     <div className="wide-panel"><DayWheel data={data}/></div>
     <div className="data-grid">
@@ -106,8 +106,17 @@ export default async function PanchangPage({params}:{params:Promise<{city:string
       </div>
     </div>
     <div className="wide-panel"><h2 className="page-title" style={{fontSize:32}}>Choghadiya</h2><p className="page-subtitle">Eight daytime and eight nighttime periods for {city.name}.</p><ChoghadiyaTable day={data.dayChoghadiya} night={data.nightChoghadiya}/></div>
+
+    <section className="wide-panel"><div className="seo-copy">
+      <small>DAY FINGERPRINT · {city.name.toUpperCase()}</small>
+      <h2>{qualityContent.fingerprintTitle}</h2>
+      <p>{qualityContent.fingerprintBody}</p>
+    </div><div className="data-grid">{qualityContent.facts.map(item=><div className="data-card" key={item.label}><small>{item.label}</small><strong>{item.value}</strong>{item.note?<small>{item.note}</small>:null}</div>)}</div></section>
+
+    <section className="wide-panel"><div className="seo-copy"><h2>{qualityContent.transitionTitle}</h2><p>{qualityContent.transitionBody}</p></div></section>
+    <section className="wide-panel"><div className="seo-copy"><h2>{qualityContent.solarTitle}</h2><p>{qualityContent.solarBody}</p><h2>{qualityContent.lunarTitle}</h2><p>{qualityContent.lunarBody}</p></div></section>
+
     <TopicalGraph title={`Explore ${city.name} Panchang`} groups={topicalGroups}/>
-    <div className="seo-copy"><h2>How to read this day's Panchang</h2><p>{dataNarrative}</p><p>India uses more than one lunar-month convention. Amanta months end at Amavasya and Purnimanta months end at Purnima; both labels above describe the same astronomical day under different month-reckoning conventions.</p></div>
     <div className="wide-panel"><h2>Frequently asked questions</h2>{faq.map(x=><div key={x.q} className="seo-copy"><strong>{x.q}</strong><p>{x.a}</p></div>)}</div>
     <script type="application/ld+json" dangerouslySetInnerHTML={{__html:JSON.stringify(ld)}}/>
   </div></main>
