@@ -6,6 +6,7 @@ import TopicalGraph from "@/components/TopicalGraph";
 import {findCityBySlug} from "@/lib/cities";
 import {getLunarMonthConventions} from "@/lib/calendar-conventions";
 import {buildFestivalCityQualityContent} from "@/lib/festival-content-engine";
+import {buildFestivalCityContext} from "@/lib/festival-city-context";
 import {festivalBySlugYear} from "@/lib/festivals";
 import {getFestivalSemantics} from "@/lib/festival-conventions";
 import {festivalPageIsIndexable,festivalYearSiblings} from "@/lib/festival-expansion";
@@ -58,6 +59,7 @@ export default async function Page({params}:{params:Promise<{festival:string;yea
   const semantics=getFestivalSemantics(festival);
   const localReference=getFestivalLocalReference(festival,data);
   const content=buildFestivalCityQualityContent(festival,city,data,lunar,localReference);
+  const cityContext=buildFestivalCityContext(festival,city,data,localReference);
   const vrat=vratSlugForTithi(data.tithi);
   const siblingYears=festivalYearSiblings(festival.slug,year);
   const moonrise=formatPanchangTime(data.moonrise,data.moonriseDate,data.date);
@@ -85,14 +87,14 @@ export default async function Page({params}:{params:Promise<{festival:string;yea
     </div>
 
     <section className="wide-panel"><div className="seo-copy">
-      <h2>{content.ritualTitle}</h2>
-      <p>{content.ritualBody}</p>
+      <h2>{cityContext.focusTitle}</h2>
+      <p>{cityContext.focusBody}</p>
     </div></section>
 
-    <section className="wide-panel"><div className="seo-copy">
-      <h2>{content.cityTitle}</h2>
-      <p>{content.cityBody}</p>
-    </div></section>
+    <section className="wide-panel">
+      <div className="seo-copy"><small>LOCAL CITY SIGNATURE · {city.state.toUpperCase()}</small><h2>{cityContext.title}</h2><p>{cityContext.body}</p><p>{cityContext.secondaryBody}</p></div>
+      <div className="data-grid">{cityContext.facts.map(item=><div className="data-card" key={item.label}><small>{item.label}</small><strong>{item.value}</strong>{item.note?<small>{item.note}</small>:null}</div>)}</div>
+    </section>
 
     {content.regionalBody?<section className="wide-panel"><div className="seo-copy">
       <h2>{content.regionalTitle}</h2>
