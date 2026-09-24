@@ -1,20 +1,23 @@
 import Header from "@/components/Header";
+import LanguageLinks from "@/components/LanguageLinks";
 import {cities} from "@/lib/cities";
 import Link from "next/link";
-import {regionalLanguageSeo,regionalLanguageSlugs,regionalCitiesForLanguage} from "@/lib/regional-seo";
+import {regionalLanguageSeo,regionalLanguageSlugs,regionalCitiesForLanguage,regionalLanguageHubAlternates} from "@/lib/regional-seo";
 
 export const metadata={
   title:"Panchang in Indian Languages — Bengali, Tamil, Malayalam, Gujarati & Marathi",
   description:"Choose Bengali, Tamil, Malayalam, Gujarati or Marathi Panchang pages with local city calculations and regional calendar conventions.",
-  alternates:{canonical:"/regional"}
+  alternates:{canonical:"/regional",languages:regionalLanguageHubAlternates()}
 };
 
 export default function Regional(){
+  const languageAlternates=regionalLanguageHubAlternates();
   return <main><Header city={cities[0]}/><div className="page-shell internal-visual internal-regional">
     <div className="breadcrumbs"><Link href="/">Home</Link> / Regional Panchang</div>
     <p className="page-kicker">INDIAN LANGUAGE PANCHANG</p>
     <h1 className="page-title">Panchang in your language.</h1>
     <p className="page-subtitle">Choose a language to see location-sensitive Panchang values with the calendar terminology and month system used for that regional tradition.</p>
+    <LanguageLinks languages={languageAlternates} title="Choose a language"/>
     <div className="regional-list">{regionalLanguageSlugs.map(language=>{
       const config=regionalLanguageSeo[language];
       const cityList=regionalCitiesForLanguage(language);
