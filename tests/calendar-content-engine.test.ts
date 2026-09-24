@@ -62,18 +62,19 @@ describe("Panchang and calendar semantic content",()=>{
     expect(content.facts.find(item=>item.label==="Daylight span")?.value).toBe("730 minutes");
   });
 
-  it("derives a month fingerprint from the full local sunrise sequence",()=>{
+  it("derives a month fingerprint from the local sunrise sequence",()=>{
     const entries=[
-      fixture("2026-09-01",{sunrise:"06:12",sunset:"18:36",tithi:"Purnima",paksha:"Shukla",nakshatra:"Rohini"}),
-      fixture("2026-09-02",{sunrise:"06:11",sunset:"18:35",tithi:"Pratipada",paksha:"Krishna",nakshatra:"Mrigashirsha"}),
-      fixture("2026-09-03",{sunrise:"06:09",sunset:"18:34",tithi:"Ekadashi",paksha:"Krishna",nakshatra:"Ardra"}),
-      fixture("2026-09-04",{sunrise:"06:08",sunset:"18:33",tithi:"Amavasya",paksha:"Krishna",nakshatra:"Punarvasu"}),
+      fixture("2026-09-01",{sunrise:"06:12",sunset:"18:36",tithi:"Purnima",paksha:"Shukla",nakshatra:"Rohini",rahu:{start:"13:50",end:"15:20"}}),
+      fixture("2026-09-02",{sunrise:"06:11",sunset:"18:35",tithi:"Pratipada",paksha:"Krishna",nakshatra:"Mrigashirsha",rahu:{start:"13:44",end:"15:15"}}),
+      fixture("2026-09-03",{sunrise:"06:09",sunset:"18:34",tithi:"Ekadashi",paksha:"Krishna",nakshatra:"Ardra",rahu:{start:"13:38",end:"15:09"}}),
+      fixture("2026-09-04",{sunrise:"06:08",sunset:"18:33",tithi:"Amavasya",paksha:"Krishna",nakshatra:"Punarvasu",rahu:{start:"13:32",end:"15:03"}}),
     ];
     const content=buildMonthlyCalendarQualityContent(mumbai,2026,9,entries,[{name:"Ganesh Chaturthi",slug:"ganesh-chaturthi",date:"2026-09-03"}]);
     expect(content.directAnswer).toContain("4 local Panchang days");
     expect(content.lunarBody).toContain("2026-09-03");
     expect(content.festivalBody).toContain("Ganesh Chaturthi");
-    expect(content.fingerprintBody).toContain("4 distinct Paksha/Tithi states");
+    expect(content.fingerprintBody).toContain("4 distinct Tithi labels");
+    expect(content.fingerprintBody).toContain("18 minutes");
   });
 
   it("builds a yearly city fingerprint from month-start states and maintained festivals",()=>{
