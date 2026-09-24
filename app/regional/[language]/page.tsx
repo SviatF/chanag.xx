@@ -58,6 +58,12 @@ export default async function RegionalLanguageHub({params}:{params:Promise<{lang
       })}</div>
     </section>:<section className="wide-panel"><div className="seo-copy"><h2>{copy.noCoverageTitle}</h2><p>{copy.noCoverageText}</p></div></section>}
 
+    <section className="wide-panel"><div className="seo-copy">
+      <h2>{copy.calendarExplanationTitle}</h2>
+      <p>{copy.methodologyText}</p>
+      <p>{copy.afterMidnightNote}</p>
+    </div></section>
+
     <LanguageLinks languages={languageAlternates}/>
     <div className="pill-links"><Link href="/regional">{copy.allLanguages}</Link></div>
     <script type="application/ld+json" dangerouslySetInnerHTML={{__html:JSON.stringify(ld)}}/>
