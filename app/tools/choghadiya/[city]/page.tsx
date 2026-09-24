@@ -3,7 +3,7 @@ import Link from "next/link";
 import {notFound} from "next/navigation";
 import Header from "@/components/Header";
 import ChoghadiyaTable from "@/components/ChoghadiyaTable";
-import MethodologyNote from "@/components/MethodologyNote";
+import LanguageLinks from "@/components/LanguageLinks";
 import TopicalGraph from "@/components/TopicalGraph";
 import {findCityBySlug} from "@/lib/cities";
 import {buildChoghadiyaNarrative} from "@/lib/content-uniqueness";
@@ -34,6 +34,7 @@ export default async function ChoghadiyaCityPage({params}:{params:Promise<{city:
   if(!city)notFound();
   const date=todayInIndia();
   const data=await getPanchang(date,city);
+  const languageAlternates=regionalAlternates(city,"choghadiya");
   const good=data.dayChoghadiya.filter(x=>x.effect==="good");
   const narrative=buildChoghadiyaNarrative(data,city);
 
@@ -51,6 +52,7 @@ export default async function ChoghadiyaCityPage({params}:{params:Promise<{city:
     <p className="page-kicker">LOCAL CHOGHADIYA · {city.state}</p>
     <h1 className="page-title">Today's Choghadiya<br/>{city.name}</h1>
     <p className="page-subtitle">{data.date} · Local day and night Choghadiya for {city.name}.</p>
+    <LanguageLinks languages={languageAlternates}/>
 
     <div className="data-grid">
       <div className="data-card"><small>Sunrise</small><strong>{data.sunrise}</strong></div>
@@ -66,7 +68,6 @@ export default async function ChoghadiyaCityPage({params}:{params:Promise<{city:
 
     <TopicalGraph title={`Explore timing in ${city.name}`} groups={buildChoghadiyaTopicalGraph(city,date)}/>
     <div className="seo-copy"><h2>What today's local sequence shows</h2><p>{narrative}</p></div>
-    <MethodologyNote><p>The daylight interval is divided into eight equal periods and the night interval into eight more; weekday determines the Choghadiya order. The sequence uses this page's local solar span, so clock times vary by city.</p></MethodologyNote>
 
     <script type="application/ld+json" dangerouslySetInnerHTML={{__html:JSON.stringify(ld)}}/>
   </div></main>;
