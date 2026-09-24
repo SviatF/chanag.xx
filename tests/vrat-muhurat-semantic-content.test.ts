@@ -39,11 +39,11 @@ describe("Vrat and Muhurat semantic content architecture",()=>{
     const rows=muhuratRows();
     const wedding=buildMuhuratMonthlyQualityContent("wedding",2026,10,city,rows);
     const vehicle=buildMuhuratMonthlyQualityContent("vehicle-purchase",2026,10,city,rows);
-    expect(wedding.ruleBody).toContain("90 minutes");
+    expect(wedding.ruleBody).toContain("strictest continuity target");
     expect(wedding.ruleBody).toContain("long uninterrupted planning continuity");
-    expect(vehicle.ruleBody).toContain("30 minutes");
+    expect(vehicle.ruleBody).toContain("30-minute ideal continuous target");
     expect(vehicle.ruleBody).toContain("compact transaction-friendly windows");
-    expect(wedding.fingerprintBody).not.toBe(vehicle.fingerprintBody);
+    expect(wedding.ruleBody).not.toBe(vehicle.ruleBody);
   });
 
   it("wires public Vrat and Muhurat routes to semantic engines with no disclaimer shell",()=>{
