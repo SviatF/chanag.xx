@@ -2,23 +2,20 @@ import type {Metadata} from "next";
 import Link from "next/link";
 import {notFound} from "next/navigation";
 import Header from "@/components/Header";
-import MethodologyNote from "@/components/MethodologyNote";
 import TopicalGraph from "@/components/TopicalGraph";
 import {findCityBySlug} from "@/lib/cities";
-import {buildFestivalCityNarrative} from "@/lib/content-uniqueness";
+import {getLunarMonthConventions} from "@/lib/calendar-conventions";
+import {buildFestivalCityQualityContent} from "@/lib/festival-content-engine";
 import {festivalBySlugYear} from "@/lib/festivals";
 import {getFestivalSemantics} from "@/lib/festival-conventions";
-import {getLunarMonthConventions} from "@/lib/calendar-conventions";
 import {festivalPageIsIndexable,festivalYearSiblings} from "@/lib/festival-expansion";
-import {formatPanchangTime,getPanchang,formatWindow} from "@/lib/panchang";
-import {getFestivalLocalReference,getFestivalRuleProfile} from "@/lib/religious-integrity";
+import {formatPanchangTime,getPanchang} from "@/lib/panchang";
+import {getFestivalLocalReference} from "@/lib/religious-integrity";
 import {isPriorityCity,robotsFor} from "@/lib/seo-policy";
 import {parseRouteYear} from "@/lib/route-validation";
 import {buildFestivalTopicalGraph} from "@/lib/topical-links";
 import {festivalCitySsgPilot} from "@/lib/static-seo-routes";
 
-// Phase 1 hybrid model: the demand-priority registry is generated at build time,
-// while every other valid festival/city URL remains available through ISR.
 export const dynamicParams=true;
 export const revalidate=86400;
 
@@ -37,13 +34,14 @@ export async function generateMetadata({params}:{params:Promise<{festival:string
   const p=await params;
   const city=findCityBySlug(p.city);
   const year=parseRouteYear(p.year);
-  const f=year?festivalBySlugYear(p.festival,year):undefined;
-  if(!city||!year||!f)notFound();
+  const festival=year?festivalBySlugYear(p.festival,year):undefined;
+  if(!city||!year||!festival)notFound();
+  const data=await getPanchang(new Date(`${festival.date}T06:00:00Z`),city);
   return {
-    title:`${f.name} ${year} in ${city.name} — Local Panchang & Rule Context`,
-    description:`${f.name} ${year} in ${city.name}: local Tithi, lunar-month conventions, sunrise, sunset and festival-specific rule context without overstating ritual Muhurat accuracy.`,
-    alternates:{canonical:`/festivals/${f.slug}/${year}/${city.slug}`},
-    robots:robotsFor(festivalPageIsIndexable(f.slug,year)&&isPriorityCity(city.slug))
+    title:`${festival.name} ${year} in ${city.name} — ${festival.date} Panchang`,
+    description:`${festival.name} ${year} in ${city.name} falls on ${festival.date}. Local sunrise ${data.sunrise}, sunset ${data.sunset}, ${data.tithi} Tithi and ${data.nakshatra} Nakshatra.`,
+    alternates:{canonical:`/festivals/${festival.slug}/${year}/${city.slug}`},
+    robots:robotsFor(festivalPageIsIndexable(festival.slug,year)&&isPriorityCity(city.slug)),
   };
 }
 
@@ -51,138 +49,70 @@ export default async function Page({params}:{params:Promise<{festival:string;yea
   const p=await params;
   const city=findCityBySlug(p.city);
   const year=parseRouteYear(p.year);
-  const f=year?festivalBySlugYear(p.festival,year):undefined;
-  if(!city||!year||!f)notFound();
+  const festival=year?festivalBySlugYear(p.festival,year):undefined;
+  if(!city||!year||!festival)notFound();
 
-  const date=new Date(f.date+"T06:00:00Z");
+  const date=new Date(`${festival.date}T06:00:00Z`);
   const data=await getPanchang(date,city);
   const lunar=getLunarMonthConventions(date,city,data);
-  const semantics=getFestivalSemantics(f);
-  const ruleProfile=getFestivalRuleProfile(f);
-  const localReference=getFestivalLocalReference(f,data);
+  const semantics=getFestivalSemantics(festival);
+  const localReference=getFestivalLocalReference(festival,data);
+  const content=buildFestivalCityQualityContent(festival,city,data,lunar,localReference);
   const vrat=vratSlugForTithi(data.tithi);
-  const siblingYears=festivalYearSiblings(f.slug,year);
-  const tithiEnd=formatPanchangTime(data.tithiEnd,data.tithiEndDate,data.date);
-  const nakshatraEnd=formatPanchangTime(data.nakshatraEnd,data.nakshatraEndDate,data.date);
+  const siblingYears=festivalYearSiblings(festival.slug,year);
   const moonrise=formatPanchangTime(data.moonrise,data.moonriseDate,data.date);
-  const isGaneshAhmedabad=f.slug==="ganesh-chaturthi"&&year===2026&&city.slug==="ahmedabad";
-  const isGaneshDelhi=f.slug==="ganesh-chaturthi"&&year===2026&&city.slug==="delhi";
-  const isDussehraHyderabad=f.slug==="dussehra"&&year===2026&&city.slug==="hyderabad";
-  const isDussehraKolkata=f.slug==="dussehra"&&year===2026&&city.slug==="kolkata";
-  const isDussehraChennai=f.slug==="dussehra"&&year===2026&&city.slug==="chennai";
-  const isShardiyaNavratriKolkata=f.slug==="shardiya-navratri"&&year===2026&&city.slug==="kolkata";
-  const isShardiyaNavratriHyderabad=f.slug==="shardiya-navratri"&&year===2026&&city.slug==="hyderabad";
-  const isGaneshHyderabad=f.slug==="ganesh-chaturthi"&&year===2026&&city.slug==="hyderabad";
-  const isHanumanJayantiChennai=f.slug==="hanuman-jayanti"&&year===2026&&city.slug==="chennai";
-  const isSeoExperiment=isGaneshAhmedabad||isDussehraHyderabad;
-  const localNarrative=isSeoExperiment?null:buildFestivalCityNarrative(f,data,city,localReference);
-  const ganeshPeerCities=f.slug==="ganesh-chaturthi"&&year===2026
-    ? [
-        {slug:"ahmedabad",name:"Ahmedabad"},
-        {slug:"delhi",name:"Delhi"},
-        {slug:"hyderabad",name:"Hyderabad"},
-      ].filter(item=>item.slug!==city.slug)
-    : [];
 
   const ld={"@context":"https://schema.org","@graph":[
-    {"@type":"WebPage","name":`${f.name} ${year} in ${city.name}`,"url":`https://panchvani.com/festivals/${f.slug}/${year}/${city.slug}`,"description":semantics.displayShort,"about":{"@type":"Thing","name":f.name}},
+    {"@type":"WebPage","name":`${festival.name} ${year} in ${city.name}`,"url":`https://panchvani.com/festivals/${festival.slug}/${year}/${city.slug}`,"description":content.directAnswer,"about":{"@type":"Thing","name":festival.name}},
     {"@type":"BreadcrumbList","itemListElement":[
       {"@type":"ListItem","position":1,"name":"Festivals","item":"https://panchvani.com/festivals/"},
-      {"@type":"ListItem","position":2,"name":`${f.name} ${year}`,"item":`https://panchvani.com/festivals/${f.slug}/${year}`},
-      {"@type":"ListItem","position":3,"name":city.name}
-    ]}
+      {"@type":"ListItem","position":2,"name":`${festival.name} ${year}`,"item":`https://panchvani.com/festivals/${festival.slug}/${year}`},
+      {"@type":"ListItem","position":3,"name":city.name},
+    ]},
   ]};
 
   return <main><Header city={city}/><div className="page-shell internal-visual internal-festival">
-    <div className="breadcrumbs"><Link href="/festivals">Festivals</Link> / <Link href={`/festivals/${f.slug}/${year}`}>{f.name} {year}</Link> / {city.name}</div>
+    <div className="breadcrumbs"><Link href="/festivals">Festivals</Link> / <Link href={`/festivals/${festival.slug}/${year}`}>{festival.name} {year}</Link> / {city.name}</div>
     <p className="page-kicker">LOCAL FESTIVAL PANCHANG · {city.state}</p>
-    <h1 className="page-title">{f.name}<br/>{city.name}</h1>
-    <p className="page-subtitle">{f.date} · {semantics.displayShort}</p>
+    <h1 className="page-title">{festival.name} {year}<br/>in {city.name}</h1>
+    <p className="page-subtitle">{content.directAnswer}</p>
 
     <div className="data-grid">
-      <div className="data-card"><small>Date</small><strong>{f.date}</strong></div>
-      <div className="data-card"><small>Tithi</small><strong>{data.tithi}</strong><small>{data.paksha} Paksha · until {tithiEnd}</small></div>
-      <div className="data-card"><small>Amanta month</small><strong>{lunar.amantaLabel}</strong></div>
-      <div className="data-card"><small>Purnimanta month</small><strong>{lunar.purnimantaLabel}</strong></div>
-      <div className="data-card"><small>Nakshatra</small><strong>{data.nakshatra}</strong><small>until {nakshatraEnd}</small></div>
-      <div className="data-card"><small>Sunrise / Sunset</small><strong>{data.sunrise} / {data.sunset}</strong></div>
-      {localReference?<div className="data-card"><small>{localReference.label}</small><strong>{localReference.value}</strong></div>:<div className="data-card"><small>Festival timing reference</small><strong>Local Panchang context</strong></div>}
-      <div className="data-card"><small>Rahu Kalam</small><strong>{formatWindow(data.rahu)}</strong></div>
+      {content.directFacts.map(item=><div className="data-card" key={item.label}><small>{item.label}</small><strong>{item.value}</strong>{item.note?<small>{item.note}</small>:null}</div>)}
       <div className="data-card"><small>Moonrise</small><strong>{moonrise}</strong></div>
-      {semantics.aliases.length?<div className="data-card"><small>Also known as</small><strong>{semantics.aliases.join(" · ")}</strong></div>:null}
-      {semantics.relatedObservances.length?<div className="data-card"><small>Related regional observances</small><strong>{semantics.relatedObservances.join(" · ")}</strong></div>:null}
+      {semantics.aliases.length?<div className="data-card"><small>Regional names</small><strong>{semantics.aliases.join(" · ")}</strong></div>:null}
+      {semantics.relatedObservances.length?<div className="data-card"><small>Related observances</small><strong>{semantics.relatedObservances.join(" · ")}</strong></div>:null}
     </div>
 
-    <div className="seo-copy"><h2>How to read this festival Panchang</h2><p>{f.meaning}</p>{semantics.lunarConventionNote?<p><strong>Calendar convention:</strong> {semantics.lunarConventionNote}</p>:null}</div>
+    <section className="wide-panel"><div className="seo-copy">
+      <h2>{content.ritualTitle}</h2>
+      <p>{content.ritualBody}</p>
+    </div></section>
 
-    {isGaneshAhmedabad?<div className="seo-copy">
-      <h2>Ganesh Chaturthi 2026 timing in Ahmedabad</h2>
-      <p>For Ahmedabad, {f.name} falls on {f.date}. The local Panchang on this page shows {data.tithi} until {tithiEnd}, sunrise at {data.sunrise}{localReference?`, and ${localReference.label.toLowerCase()} ${localReference.value}`:""}. These are the city-specific timing values relevant when checking Ganesh Chaturthi 2026 muhurat time in Ahmedabad.</p>
-      <p>The same festival date can have different local Panchang timing inputs by city, so compare the corresponding <Link href={`/festivals/ganesh-chaturthi/${year}/delhi`}>Delhi</Link> and <Link href={`/festivals/ganesh-chaturthi/${year}/hyderabad`}>Hyderabad</Link> pages rather than copying Ahmedabad timings across locations.</p>
-    </div>:null}
+    <section className="wide-panel"><div className="seo-copy">
+      <h2>{content.cityTitle}</h2>
+      <p>{content.cityBody}</p>
+    </div></section>
 
-    {isGaneshDelhi?<div className="seo-copy">
-      <h2>Ganesh Chaturthi 2026 in Delhi: local Panchang context</h2>
-      <p>This Delhi page is the location-specific reference for {f.name} {year}: it uses Delhi sunrise, sunset and Panchang transitions rather than a national timing template. For the shared India-wide festival date, meaning and observance context, use the <Link href={`/festivals/ganesh-chaturthi/${year}`}>Ganesh Chaturthi {year} overview</Link>.</p>
-      <p>Keeping the Delhi-local timing intent separate from the year overview helps readers choose the right page instead of treating city timings as interchangeable.</p>
-    </div>:null}
+    {content.regionalBody?<section className="wide-panel"><div className="seo-copy">
+      <h2>{content.regionalTitle}</h2>
+      <p>{content.regionalBody}</p>
+    </div></section>:null}
 
-    {isDussehraHyderabad?<div className="seo-copy">
-      <h2>Dasara 2026 date in Telangana</h2>
-      <p>For Hyderabad and Telangana, Panchvani&apos;s maintained 2026 festival calendar places {f.name} on {f.date}. This Hyderabad page then applies local Panchang values such as sunrise at {data.sunrise}, {data.tithi} until {tithiEnd}, and the local lunar-month context shown above.</p>
-      <p>Use this section for the Telangana date answer, and the city-level Panchang cards above for the local timing context.</p>
-    </div>:null}
-
-    {isDussehraKolkata?<div className="seo-copy">
-      <h2>Dussehra 2026 in West Bengal: Kolkata Panchang context</h2>
-      <p>For Kolkata, {city.state}, Panchvani&apos;s maintained 2026 festival calendar places {f.name} on {f.date}. The Kolkata-local Panchang on this page shows {data.tithi} until {tithiEnd}, sunrise at {data.sunrise}, sunset at {data.sunset}, and the lunar-month context used for this location.</p>
-      <p>For the query Dussehra 2026 West Bengal, this page provides the Kolkata-specific date and Panchang context; use the festival overview for the broader year-level reference.</p>
-    </div>:null}
-
-    {isDussehraChennai?<div className="seo-copy">
-      <h2>Dussehra 2026 in Tamil Nadu: Chennai local Panchang</h2>
-      <p>For Chennai, Tamil Nadu, Panchvani&apos;s maintained 2026 festival calendar places {f.name} on {f.date}. This page adds the Chennai-local Panchang context, including {data.tithi} until {tithiEnd}, sunrise at {data.sunrise}, sunset at {data.sunset}, and the lunar-month conventions calculated for the city.</p>
-      <p>If you are comparing regional timing context, see the <Link href={`/festivals/dussehra/${year}/hyderabad`}>Dussehra {year} Hyderabad page</Link>; the city pages use their own local solar and Panchang values rather than copying one timing set across regions.</p>
-    </div>:null}
-
-    {isShardiyaNavratriKolkata?<div className="seo-copy">
-      <h2>Kolkata Navratri 2026: local Panchang reference</h2>
-      <p>For Kolkata, {city.state}, {f.name} {year} is listed on {f.date}. The local reference on this page includes {data.tithi} until {tithiEnd}, sunrise at {data.sunrise}, sunset at {data.sunset}, Nakshatra until {nakshatraEnd}, and the lunar-month conventions shown above.</p>
-      <p>Use these Kolkata-local values when comparing Navratri 2026 timing with another city, because solar timings and Panchang transition times are calculated for the selected location.</p>
-    </div>:null}
-
-    {isShardiyaNavratriHyderabad?<div className="seo-copy">
-      <h2>Navratri 2026 in Hyderabad: local Panchang reference</h2>
-      <p>For Hyderabad, Telangana, {f.name} {year} is listed on {f.date}. The Hyderabad-local reference on this page includes {data.tithi} until {tithiEnd}, Nakshatra until {nakshatraEnd}, sunrise at {data.sunrise}, sunset at {data.sunset}, and the lunar-month context calculated for this location.</p>
-      <p>Use the city-level values here for Hyderabad-specific Navratri 2026 timing context, while the festival overview remains the broader year-level reference.</p>
-    </div>:null}
-
-    {isGaneshHyderabad?<div className="seo-copy">
-      <h2>Ganesh Chaturthi 2026 in Hyderabad, Telangana</h2>
-      <p>For Hyderabad, {city.state}, {f.name} falls on {f.date}. The Hyderabad-local Panchang on this page shows {data.tithi} until {tithiEnd}, sunrise at {data.sunrise}{localReference?`, and ${localReference.label.toLowerCase()} ${localReference.value}`:""}, giving the local timing context behind Ganesh Chaturthi 2026 searches for Hyderabad and Telangana.</p>
-      <p>For a city comparison, see <Link href={`/festivals/ganesh-chaturthi/${year}/ahmedabad`}>Ganesh Chaturthi {year} in Ahmedabad</Link> and <Link href={`/festivals/ganesh-chaturthi/${year}/delhi`}>Ganesh Chaturthi {year} in Delhi</Link>. Each page recalculates the local Panchang values rather than reusing Hyderabad timings.</p>
-    </div>:null}
-
-    {isHanumanJayantiChennai?<div className="seo-copy">
-      <h2>Hanuman Jayanti 2026 in Tamil Nadu: Chennai reference</h2>
-      <p>For Chennai, Tamil Nadu, Panchvani&apos;s maintained 2026 festival calendar places {f.name} on {f.date}. This page provides the Chennai-local Panchang values around that date, including {data.tithi} until {tithiEnd}, Nakshatra until {nakshatraEnd}, sunrise at {data.sunrise}, sunset at {data.sunset}, and the local lunar-month context.</p>
-      <p>Use this page for Chennai and Tamil Nadu location context; the year-level festival overview remains the broader reference for the shared 2026 observance date and meaning.</p>
-    </div>:null}
-
-    {localNarrative?<div className="seo-copy">
-      <h2>{localNarrative.heading}</h2>
-      {localNarrative.paragraphs.map((paragraph,index)=><p key={index}>{paragraph}</p>)}
-    </div>:null}
+    <section className="wide-panel"><div className="seo-copy">
+      <h2>Local observance signals</h2>
+      <p>{festival.rituals.join(" · ")}. The city calculation above supplies the local clock and lunar-state inputs for {city.name}; the shared festival overview carries the broader festival background.</p>
+      <p>{content.comparisonPrompt}</p>
+    </div></section>
 
     <div className="pill-links">
-      <Link href={`/festivals/${f.slug}/${year}`}>Festival overview</Link>
+      <Link href={`/festivals/${festival.slug}/${year}`}>{festival.name} {year} overview</Link>
+      <Link href={`/panchang/${city.slug}/${festival.date}`}>{city.name} Panchang · {festival.date}</Link>
       {vrat?<Link href={`/vrat/${vrat}/${year}/${city.slug}`}>{data.tithi} {year} in {city.name}</Link>:null}
-      {siblingYears.map(item=><Link href={`/festivals/${item.slug}/${item.year}/${city.slug}`} key={item.year}>{item.name} {item.year}</Link>)}
-      {ganeshPeerCities.map(item=><Link href={`/festivals/ganesh-chaturthi/${year}/${item.slug}`} key={item.slug}>Ganesh Chaturthi {year} in {item.name}</Link>)}
+      {siblingYears.map(item=><Link href={`/festivals/${item.slug}/${item.year}/${city.slug}`} key={item.year}>{item.name} {item.year} in {city.name}</Link>)}
     </div>
-    <TopicalGraph title={`Explore ${f.name} in ${city.name}`} groups={buildFestivalTopicalGraph(city,f)}/>
-    <MethodologyNote title="Festival calculation and observance scope"><p>{ruleProfile.ruleSummary}</p><ul>{ruleProfile.criteria.map(item=><li key={item}>{item}</li>)}</ul><p>{ruleProfile.localReference}</p>{localReference?<p>{localReference.note}</p>:null}{ruleProfile.limitations.length?<ul>{ruleProfile.limitations.map(item=><li key={item}>{item}</li>)}</ul>:null}<p>A ritual rule can require conditions beyond the astronomical values shown here, including tradition-specific Tithi overlap, Bhadra, Lagna, Rohini, Madhyahna or fasting/parana rules.</p>{ruleProfile.sources.length?<p><strong>Reference methodology:</strong> {ruleProfile.sources.map((source,index)=><span key={source.label}>{index?" · ":""}{source.label}</span>)}</p>:null}</MethodologyNote>
 
+    <TopicalGraph title={`Explore ${festival.name} in ${city.name}`} groups={buildFestivalTopicalGraph(city,festival)}/>
     <script type="application/ld+json" dangerouslySetInnerHTML={{__html:JSON.stringify(ld)}}/>
   </div></main>;
 }
