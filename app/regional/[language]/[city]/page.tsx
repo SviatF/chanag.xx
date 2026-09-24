@@ -11,6 +11,7 @@ import {regional} from "@/lib/regional";
 import {todayInIndia} from "@/lib/dates";
 import {getRegionalCalendarProfile} from "@/lib/regional-calendar";
 import {getLunarMonthConventions,getRegionalCalendarConventions} from "@/lib/calendar-conventions";
+import {buildRegionalPanchangQualityContent} from "@/lib/regional-content-engine";
 import {isRegionalIndexable,robotsFor} from "@/lib/seo-policy";
 import {isRegionalLanguageSlug,regionalAlternates,regionalIntentLinksForCity} from "@/lib/regional-seo";
 import {choghadiyaNativeNames,localizeNakshatra,localizePaksha,localizeTithi,nativeCityName} from "@/lib/regional-i18n";
@@ -63,6 +64,7 @@ export default async function RegionalPage({params}:{params:Promise<{language:st
   const nakshatraEnd=formatPanchangTime(data.nakshatraEnd,data.nakshatraEndDate,data.date);
   const moonrise=formatPanchangTime(data.moonrise,data.moonriseDate,data.date);
   const moonset=formatPanchangTime(data.moonset,data.moonsetDate,data.date);
+  const quality=buildRegionalPanchangQualityContent(language,city,data,displayMonth);
   const intentLinks=regionalIntentLinksForCity(language,city);
   const year=Number(data.date.slice(0,4));
   const month=data.date.slice(5,7);
@@ -79,7 +81,7 @@ export default async function RegionalPage({params}:{params:Promise<{language:st
   ];
   const yearLabel=language==="gujarati"?`${copy.gujaratiSamvat} ${regionalConventions.gujaratiSamvat}`:profile.yearLabel;
   const ld={"@context":"https://schema.org","@graph":[
-    {"@type":"WebPage","name":copy.cityPanchangTitle(cityName),"url":`https://panchvani.com/regional/${language}/${city.slug}`,"description":copy.cityMetaDescription(cityName),"inLanguage":copy.hreflang},
+    {"@type":"WebPage","name":copy.cityPanchangTitle(cityName),"url":`https://panchvani.com/regional/${language}/${city.slug}`,"description":quality.directAnswer,"inLanguage":copy.hreflang},
     {"@type":"BreadcrumbList","itemListElement":[
       {"@type":"ListItem","position":1,"name":"Panchvani","item":"https://panchvani.com/regional"},
       {"@type":"ListItem","position":2,"name":copy.panchangName,"item":`https://panchvani.com/regional/${language}`},
@@ -91,7 +93,9 @@ export default async function RegionalPage({params}:{params:Promise<{language:st
     <div className="breadcrumbs"><Link href="/regional">Panchvani</Link> / <Link href={`/regional/${language}`}>{copy.panchangName}</Link> / {cityName}</div>
     <p className="page-kicker">{copy.nativeLanguage} · {stateName} · {copy.localCalculation}</p>
     <h1 className="page-title">{copy.cityPanchangTitle(cityName)}</h1>
-    <p className="page-subtitle">{calendarName} · {displayMonth}{yearLabel?` · ${yearLabel}`:""}</p>
+    <p className="page-subtitle">{quality.directAnswer}</p>
+
+    <section className="wide-panel"><div className="seo-copy"><small>{calendarName} · {displayMonth}{yearLabel?` · ${yearLabel}`:""}</small><h2>{quality.fingerprintTitle}</h2><p>{quality.fingerprintBody}</p></div><div className="data-grid">{quality.facts.map(item=><div className="data-card" key={item.label}><small>{item.label}</small><strong>{item.value}</strong>{item.note?<small>{item.note}</small>:null}</div>)}</div></section>
 
     <div className="data-grid">
       <div className="data-card"><small>{t.tithi}</small><strong>{displayTithi}</strong><small>{displayPaksha} · {tithiEnd} {copy.until}</small></div>
@@ -107,6 +111,8 @@ export default async function RegionalPage({params}:{params:Promise<{language:st
       {language==="gujarati"?<div className="data-card"><small>{copy.gujaratiSamvat}</small><strong>{regionalConventions.gujaratiSamvat}</strong><small>{copy.yearBegins}: {regionalConventions.gujaratiSamvatYearStart}</small></div>:<div className="data-card"><small>{copy.vikramSamvat}</small><strong>{data.vikramSamvat}</strong></div>}
       <div className="data-card"><small>{copy.shakaSamvat}</small><strong>{data.shakaSamvat}</strong></div>
     </div>
+
+    <section className="wide-panel"><div className="seo-copy"><h2>{quality.timingTitle}</h2><p>{quality.timingBody}</p><h2>{quality.lunarTitle}</h2><p>{quality.lunarBody}</p></div></section>
 
     {regionalConventions.solarIngress?<div className="wide-panel"><h2>{copy.solarTransitionTitle}</h2><p className="page-subtitle">{copy.solarTransitionText(nativeRashi(language,regionalConventions.solarIngress.from),nativeRashi(language,regionalConventions.solarIngress.to),regionalConventions.solarIngress.time)}</p></div>:null}
 
