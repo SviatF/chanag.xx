@@ -11,6 +11,7 @@ import {formatWindow,getPanchang} from "@/lib/panchang";
 import {regional} from "@/lib/regional";
 import {getRegionalCalendarProfile} from "@/lib/regional-calendar";
 import {getLunarMonthConventions,getRegionalCalendarConventions} from "@/lib/calendar-conventions";
+import {buildRegionalIntentQualityContent} from "@/lib/regional-content-engine";
 import {
   isRegionalIntentIndexable,
   isRegionalIntentSlug,
@@ -61,6 +62,7 @@ export default async function RegionalIntentPage({params}:{params:Promise<{langu
   const cityName=nativeCityName(language,city);
   const date=todayInIndia();
   const data=await getPanchang(date,city);
+  const quality=buildRegionalIntentQualityContent(language,city,intent,data);
   const languageAlternates=regionalAlternates(city,intent);
   const lunar=getLunarMonthConventions(date,city,data);
   const regionalConventions=getRegionalCalendarConventions(date,city,data);
@@ -84,7 +86,7 @@ export default async function RegionalIntentPage({params}:{params:Promise<{langu
   ];
 
   const ld={"@context":"https://schema.org","@graph":[
-    {"@type":"WebPage","name":native,"url":`https://panchvani.com${regionalIntentPath(language,city,intent)}`,"description":copy.intentMetaDescription(intent,cityName),"inLanguage":copy.hreflang},
+    {"@type":"WebPage","name":native,"url":`https://panchvani.com${regionalIntentPath(language,city,intent)}`,"description":quality.directAnswer,"inLanguage":copy.hreflang},
     {"@type":"BreadcrumbList","itemListElement":[
       {"@type":"ListItem","position":1,"name":"Panchvani","item":"https://panchvani.com/regional"},
       {"@type":"ListItem","position":2,"name":copy.panchangName,"item":`https://panchvani.com/regional/${language}`},
@@ -97,7 +99,9 @@ export default async function RegionalIntentPage({params}:{params:Promise<{langu
     <div className="breadcrumbs"><Link href="/regional">Panchvani</Link> / <Link href={`/regional/${language}`}>{copy.panchangName}</Link> / <Link href={`/regional/${language}/${city.slug}`}>{cityName}</Link> / {native}</div>
     <p className="page-kicker">{copy.nativeLanguage} · {cityName} · {copy.localTiming}</p>
     <h1 className="page-title">{native}</h1>
-    <p className="page-subtitle">{data.date} · {calendarName} · {copy.localCalculation}</p>
+    <p className="page-subtitle">{quality.directAnswer}</p>
+
+    <section className="wide-panel"><div className="data-grid">{quality.facts.map(item=><div className="data-card" key={item.label}><small>{item.label}</small><strong>{item.value}</strong>{item.note?<small>{item.note}</small>:null}</div>)}</div></section>
 
     {intent==="rahu-kalam"?<>
       <div className="data-grid">
@@ -109,7 +113,6 @@ export default async function RegionalIntentPage({params}:{params:Promise<{langu
         <div className="data-card"><small>{lang.terms.tithi}</small><strong>{localizeTithi(language,data.tithi)}</strong><small>{localizePaksha(language,data.paksha)}</small></div>
         <div className="data-card"><small>{lang.terms.month}</small><strong>{month}</strong><small>{calendarName}</small></div>
       </div>
-      <div className="seo-copy"><h2>{native}</h2><p>{copy.rahuExplanation(cityName)}</p></div>
     </>:<>
       <div className="data-grid">
         <div className="data-card"><small>{lang.terms.sunrise}</small><strong>{data.sunrise}</strong></div>
@@ -118,14 +121,10 @@ export default async function RegionalIntentPage({params}:{params:Promise<{langu
         <div className="data-card"><small>{lang.terms.tithi}</small><strong>{localizeTithi(language,data.tithi)}</strong><small>{localizePaksha(language,data.paksha)}</small></div>
         <div className="data-card"><small>{lang.terms.month}</small><strong>{month}</strong><small>{calendarName}</small></div>
       </div>
-      <section className="wide-panel"><h2 className="page-title" style={{fontSize:32}}>{native}</h2><p className="page-subtitle">{copy.choghadiyaExplanation(cityName)}</p><ChoghadiyaTable day={data.dayChoghadiya} night={data.nightChoghadiya} locale={{dayTitle:copy.dayChoghadiya,nightTitle:copy.nightChoghadiya,daySubtitle:copy.sunriseToSunset,nightSubtitle:copy.sunsetToNextSunrise,goodLabel:copy.goodPeriods,neutralLabel:copy.neutralPeriod,badLabel:copy.difficultPeriods,names:choghadiyaNativeNames[language]}}/></section>
+      <section className="wide-panel"><h2 className="page-title" style={{fontSize:32}}>{native}</h2><ChoghadiyaTable day={data.dayChoghadiya} night={data.nightChoghadiya} locale={{dayTitle:copy.dayChoghadiya,nightTitle:copy.nightChoghadiya,daySubtitle:copy.sunriseToSunset,nightSubtitle:copy.sunsetToNextSunrise,goodLabel:copy.goodPeriods,neutralLabel:copy.neutralPeriod,badLabel:copy.difficultPeriods,names:choghadiyaNativeNames[language]}}/></section>
     </>}
 
-    <section className="wide-panel"><div className="seo-copy">
-      <h2>{copy.calendarExplanationTitle}</h2>
-      <p>{copy.methodologyText}</p>
-      <p>{copy.afterMidnightNote}</p>
-    </div></section>
+    <section className="wide-panel"><div className="seo-copy"><h2>{quality.analysisTitle}</h2><p>{quality.analysisBody}</p><h2>{quality.relationTitle}</h2><p>{quality.relationBody}</p></div></section>
 
     <LanguageLinks languages={languageAlternates}/>
     <TopicalGraph title={`${copy.regionalContext} · ${cityName}`} groupEyebrow={copy.nativeLanguage} groups={topical}/>
