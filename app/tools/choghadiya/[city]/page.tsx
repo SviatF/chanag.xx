@@ -6,7 +6,7 @@ import ChoghadiyaTable from "@/components/ChoghadiyaTable";
 import LanguageLinks from "@/components/LanguageLinks";
 import TopicalGraph from "@/components/TopicalGraph";
 import {findCityBySlug} from "@/lib/cities";
-import {buildChoghadiyaNarrative} from "@/lib/content-uniqueness";
+import {buildChoghadiyaQualityContent} from "@/lib/choghadiya-content-engine";
 import {getPanchang} from "@/lib/panchang";
 import {todayInIndia} from "@/lib/dates";
 import {isPriorityCity,robotsFor} from "@/lib/seo-policy";
@@ -35,11 +35,10 @@ export default async function ChoghadiyaCityPage({params}:{params:Promise<{city:
   const date=todayInIndia();
   const data=await getPanchang(date,city);
   const languageAlternates=regionalAlternates(city,"choghadiya");
-  const good=data.dayChoghadiya.filter(x=>x.effect==="good");
-  const narrative=buildChoghadiyaNarrative(data,city);
+  const quality=buildChoghadiyaQualityContent(data,city);
 
   const ld={"@context":"https://schema.org","@graph":[
-    {"@type":"WebApplication","name":`Choghadiya Calculator — ${city.name}`,"applicationCategory":"LifestyleApplication","operatingSystem":"Web","url":`https://panchvani.com/tools/choghadiya/${city.slug}`},
+    {"@type":"WebApplication","name":`Choghadiya Calculator — ${city.name}`,"applicationCategory":"LifestyleApplication","operatingSystem":"Web","url":`https://panchvani.com/tools/choghadiya/${city.slug}`,"description":quality.directAnswer},
     {"@type":"BreadcrumbList","itemListElement":[
       {"@type":"ListItem","position":1,"name":"Tools","item":"https://panchvani.com/tools"},
       {"@type":"ListItem","position":2,"name":"Choghadiya","item":"https://panchvani.com/tools/choghadiya"},
@@ -51,24 +50,19 @@ export default async function ChoghadiyaCityPage({params}:{params:Promise<{city:
     <div className="breadcrumbs"><Link href="/tools">Tools</Link> / <Link href="/tools/choghadiya">Choghadiya</Link> / {city.name}</div>
     <p className="page-kicker">LOCAL CHOGHADIYA · {city.state}</p>
     <h1 className="page-title">Today's Choghadiya<br/>{city.name}</h1>
-    <p className="page-subtitle">{data.date} · Local day and night Choghadiya for {city.name}.</p>
+    <p className="page-subtitle">{quality.directAnswer}</p>
     <LanguageLinks languages={languageAlternates}/>
 
-    <div className="data-grid">
-      <div className="data-card"><small>Sunrise</small><strong>{data.sunrise}</strong></div>
-      <div className="data-card"><small>Sunset</small><strong>{data.sunset}</strong></div>
-      <div className="data-card"><small>Favorable daytime Choghadiya</small><strong>{good.map(x=>x.name).join(" · ")||"See table"}</strong></div>
-      <div className="data-card"><small>Rahu Kalam</small><strong>{data.rahu.start} — {data.rahu.end}</strong></div>
-    </div>
+    <section className="wide-panel"><div className="data-grid">{quality.facts.map(item=><div className="data-card" key={item.label}><small>{item.label}</small><strong>{item.value}</strong>{item.note?<small>{item.note}</small>:null}</div>)}</div></section>
 
     <div className="wide-panel">
       <h2 className="page-title" style={{fontSize:32}}>Day & night Choghadiya</h2>
       <ChoghadiyaTable day={data.dayChoghadiya} night={data.nightChoghadiya}/>
     </div>
 
-    <TopicalGraph title={`Explore timing in ${city.name}`} groups={buildChoghadiyaTopicalGraph(city,date)}/>
-    <div className="seo-copy"><h2>What today's local sequence shows</h2><p>{narrative}</p></div>
+    <section className="wide-panel"><div className="seo-copy"><h2>{quality.fingerprintTitle}</h2><p>{quality.fingerprintBody}</p><h2>{quality.daytimeTitle}</h2><p>{quality.daytimeBody}</p><h2>{quality.nightTitle}</h2><p>{quality.nightBody}</p><h2>{quality.rahuTitle}</h2><p>{quality.rahuBody}</p></div></section>
 
+    <TopicalGraph title={`Explore timing in ${city.name}`} groups={buildChoghadiyaTopicalGraph(city,date)}/>
     <script type="application/ld+json" dangerouslySetInnerHTML={{__html:JSON.stringify(ld)}}/>
   </div></main>;
 }
