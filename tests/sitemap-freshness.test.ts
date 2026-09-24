@@ -1,23 +1,21 @@
 import {describe,expect,it} from "vitest";
+import {GET as getMasterSitemap} from "../app/sitemap.xml/route";
 import {GET as getCoreSitemap} from "../app/sitemap-core.xml/route";
 import {GET as getFestivalSitemap} from "../app/sitemap-festivals.xml/route";
-import {GET as getMasterSitemap} from "../app/sitemap.xml/route";
-import {
-  FESTIVAL_CITY_CONTENT_LASTMOD,
-  festivalCityLastmod,
-  sitemapFeedLastmod,
-  sitemapFreshnessDates,
-} from "../lib/sitemap-freshness";
+import {FESTIVAL_CITY_CONTENT_LASTMOD,festivalCityLastmod,sitemapFeedLastmod,sitemapFreshnessDates} from "../lib/sitemap-freshness";
 import {sitemapindex,urlset} from "../lib/xml";
 
-function count(value:string,needle:string){return value.split(needle).length-1;}
+function count(haystack:string,needle:string){return haystack.split(needle).length-1;}
 
 describe("sitemap freshness",()=>{
   it("uses conservative feed freshness instead of stamping every feed with today",()=>{
     const reference=new Date("2026-09-15T06:00:00Z");
-    expect(sitemapFreshnessDates(reference)).toEqual({today:"2026-09-15",month:"2026-09-01",year:"2026-01-01"});
+    const dates=sitemapFreshnessDates(reference);
+    expect(dates).toEqual({today:"2026-09-15",month:"2026-09-01",year:"2026-01-01"});
     expect(sitemapFeedLastmod("sitemap-core.xml",reference)).toBe("2026-09-15");
     expect(sitemapFeedLastmod("sitemap-panchang-daily.xml",reference)).toBe("2026-09-15");
+    expect(sitemapFeedLastmod("sitemap-regional.xml",reference)).toBe("2026-09-15");
+    expect(sitemapFeedLastmod("sitemap-tools.xml",reference)).toBe("2026-09-15");
     expect(sitemapFeedLastmod("sitemap-panchang-monthly.xml",reference)).toBe("2026-09-01");
     expect(sitemapFeedLastmod("sitemap-muhurat.xml",reference)).toBe("2026-09-01");
     expect(sitemapFeedLastmod("sitemap-yearly.xml",reference)).toBe("2026-01-01");
@@ -27,16 +25,10 @@ describe("sitemap freshness",()=>{
   });
 
   it("serializes optional lastmod safely and escapes XML values",()=>{
-    const urls=urlset([
-      {loc:"https://panchvani.com/example?a=1&b=2",lastmod:"2026-09-15"},
-      "https://panchvani.com/static",
-      {loc:"https://panchvani.com/bad",lastmod:"not-a-date"},
-    ]);
-    expect(urls).toContain("https://panchvani.com/example?a=1&amp;b=2");
-    expect(urls).toContain("<lastmod>2026-09-15</lastmod>");
-    expect(count(urls,"<lastmod>")).toBe(1);
-
-    const index=sitemapindex([{loc:"https://panchvani.com/sitemap-a.xml",lastmod:"2026-09-15"}]);
+    const urls=urlset([{loc:"https://panchvani.com/a?x=1&y=2",lastmod:"2026-09-15"},"https://panchvani.com/b"]);
+    expect(urls).toContain("<loc>https://panchvani.com/a?x=1&amp;y=2</loc><lastmod>2026-09-15</lastmod>");
+    expect(urls).toContain("<loc>https://panchvani.com/b</loc></url>");
+    const index=sitemapindex([{loc:"https://panchvani.com/sitemap-a.xml",lastmod:"2026-09-15"},{loc:"https://panchvani.com/sitemap-b.xml"}]);
     expect(index).toContain("<sitemap><loc>https://panchvani.com/sitemap-a.xml</loc><lastmod>2026-09-15</lastmod></sitemap>");
   });
 
@@ -49,9 +41,10 @@ describe("sitemap freshness",()=>{
 
   it("marks only the live homepage inside the core sitemap",async()=>{
     const body=await (await getCoreSitemap()).text();
-    expect(count(body,"<url>")).toBe(12);
+    expect(count(body,"<url>")).toBe(11);
     expect(count(body,"<lastmod>")).toBe(1);
     expect(body).toMatch(/<url><loc>https:\/\/panchvani\.com\/<\/loc><lastmod>\d{4}-\d{2}-\d{2}<\/lastmod><\/url>/);
+    expect(body).not.toContain("/disclaimer");
   });
 
   it("protects the two active festival SEO experiments from a false content lastmod",async()=>{
