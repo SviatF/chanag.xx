@@ -28,11 +28,12 @@ describe("Vrat and Muhurat semantic content architecture",()=>{
     const ekadashi=buildVratQualityContent(vratDefinitions.ekadashi,2026,city,vratRows("Ekadashi","Shukla"));
     const purnima=buildVratQualityContent(vratDefinitions.purnima,2026,city,vratRows("Purnima","Shukla"));
     const amavasya=buildVratQualityContent(vratDefinitions.amavasya,2026,city,vratRows("Amavasya","Krishna"));
-    expect(ekadashi.observanceBody).toContain("Ekadashi calendar");
-    expect(purnima.observanceBody).toContain("Purnima state");
-    expect(amavasya.observanceBody).toContain("Amavasya state");
+    expect(ekadashi.observanceBody).toContain("Ekadashi");
+    expect(purnima.observanceBody).toContain("Purnima");
+    expect(amavasya.observanceBody).toContain("Amavasya");
     expect(new Set([ekadashi.observanceBody,purnima.observanceBody,amavasya.observanceBody]).size).toBe(3);
     expect(ekadashi.transitionBody).toContain("following civil date");
+    expect(ekadashi.facts.find(item=>item.label==="Boundary profile")?.value).toBe("double-boundary");
   });
 
   it("creates event-specific Muhurat fingerprints from the same candidate rows",()=>{
