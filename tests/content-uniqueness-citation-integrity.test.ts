@@ -2,7 +2,8 @@ import {readFileSync,readdirSync,statSync} from "node:fs";
 import path from "node:path";
 import {describe,expect,it} from "vitest";
 import {findCityBySlug,type City} from "../lib/cities";
-import {buildChoghadiyaNarrative,buildDailyDataNarrative,buildFestivalCityNarrative,buildVratCityNarrative,jaccardTextSimilarity} from "../lib/content-uniqueness";
+import {buildChoghadiyaNarrative,buildDailyDataNarrative,buildVratCityNarrative,jaccardTextSimilarity} from "../lib/content-uniqueness";
+import {buildFestivalCityQualityContent} from "../lib/festival-content-engine";
 import {festivalBySlugYear} from "../lib/festivals";
 import {buildMuhuratSeoSummary} from "../lib/muhurat-seo";
 import type {MuhuratRow} from "../lib/muhurat";
@@ -48,10 +49,13 @@ function panchangFixture(index:number,city:City):Panchang{
     end:`${String(7+periodIndex).padStart(2,"0")}:${String((index*11+periodIndex*5)%60).padStart(2,"0")}`,
     effect:periodIndex===index%8||periodIndex===(index+3)%8?"good":"bad",
   }));
+  const date=`2026-09-${String(10+index).padStart(2,"0")}`;
   return {
-    date:`2026-09-${String(10+index).padStart(2,"0")}`,
-    weekday:weekdays[index],tithi:tithis[index],paksha:index%2?"Krishna":"Shukla",nakshatra:nakshatras[index],
-    sunrise,sunset,moonIllumination:[16,38,62,81,94][index],
+    date,
+    weekday:weekdays[index],tithi:tithis[index],paksha:index%2?"Krishna":"Shukla",nakshatra:nakshatras[index],nakshatraPada:index%4+1,
+    tithiEnd:["14:11","16:24","19:07","21:31","23:18"][index],tithiEndDate:date,
+    nakshatraEnd:["09:42","12:18","15:26","18:33","22:04"][index],nakshatraEndDate:date,
+    sunrise,sunset,moonIllumination:[16,38,62,81,94][index],moonrise:["19:11","20:02","20:51","21:36","22:19"][index],moonriseDate:date,
     rahu:{start,end:["09:21","10:41","11:30","13:01","14:36"][index]},
     abhijit:index===2?null:{start:["11:51","11:45","11:40","11:36","11:48"][index],end:["12:40","12:34","12:29","12:25","12:37"][index]},
     dayChoghadiya:periods,
@@ -130,24 +134,33 @@ describe("global content uniqueness and citation integrity",()=>{
       const value=buildMuhuratSeoSummary("wedding",2026,9,city,muhuratRows(index),"city");
       return [value.headline,value.overview,value.rankingInsight,value.timingInsight,value.alternatives].join(" ");
     });
-    const festival=festivalBySlugYear("ganesh-chaturthi",2026)!;
-    const festivalCopy=cities.map((city,index)=>{
-      const data={...panchangFixture(index,city),date:festival.date} as Panchang;
-      const value=buildFestivalCityNarrative(festival,data,city,{label:"Local festival reference",value:`${data.sunrise}–${data.sunset}`});
-      return [value.heading,...value.paragraphs].join(" ");
-    });
     expect(maxPairwise(daily,ignored)).toBeLessThan(0.8);
     expect(maxPairwise(choghadiya,ignored)).toBeLessThan(0.8);
     expect(maxPairwise(vratCopy,ignored)).toBeLessThan(0.8);
     expect(maxPairwise(muhurat,ignored)).toBeLessThan(0.8);
-    expect(maxPairwise(festivalCopy,ignored)).toBeLessThan(0.8);
   });
 
-  it("keeps active festival SEO experiments isolated from generalized local enrichment",()=>{
+  it("uses one semantic festival engine instead of city-specific manual SEO patches",()=>{
     const festivalPage=source("app/festivals/[festival]/[year]/[city]/page.tsx");
-    expect(festivalPage).toContain("const isSeoExperiment=isGaneshAhmedabad||isDussehraHyderabad");
-    expect(festivalPage).toContain("const localNarrative=isSeoExperiment?null:buildFestivalCityNarrative");
-    expect(festivalPage).toContain("Ganesh Chaturthi 2026 timing in Ahmedabad");
-    expect(festivalPage).toContain("Dasara 2026 date in Telangana");
+    const legacyEngine=source("lib/content-uniqueness.ts");
+    expect(festivalPage).toContain("buildFestivalCityQualityContent");
+    expect(festivalPage).not.toMatch(/isGaneshAhmedabad|isGaneshDelhi|isDussehraHyderabad|isDussehraKolkata|isDussehraChennai|isShardiyaNavratri|isGaneshHyderabad|isHanumanJayantiChennai/);
+    expect(festivalPage).not.toContain("buildFestivalCityNarrative");
+    expect(festivalPage).not.toContain("MethodologyNote");
+    expect(legacyEngine).not.toContain("buildFestivalCityNarrative");
+    expect(legacyEngine).not.toContain("longitudeSolarOffset");
+  });
+
+  it("builds festival city content from festival rules, local calculations and regional context",()=>{
+    const festival=festivalBySlugYear("shardiya-navratri",2026)!;
+    const outputs=cities.map((city,index)=>{
+      const data={...panchangFixture(index,city),date:festival.date,tithiEndDate:festival.date,nakshatraEndDate:festival.date,moonriseDate:festival.date} as Panchang;
+      const lunar={amantaLabel:`Ashwina ${index+1}`,purnimantaLabel:`Ashwina ${index+2}`} as any;
+      return buildFestivalCityQualityContent(festival,city,data,lunar,null);
+    });
+    expect(new Set(outputs.map(item=>item.directAnswer)).size).toBe(cities.length);
+    expect(outputs.every(item=>item.directFacts.length>=6)).toBe(true);
+    expect(outputs.some(item=>Boolean(item.regionalBody))).toBe(true);
+    expect(outputs.every(item=>item.ritualTitle.toLowerCase().includes("navratri"))).toBe(true);
   });
 });
