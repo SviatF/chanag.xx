@@ -121,6 +121,12 @@ export default async function RegionalIntentPage({params}:{params:Promise<{langu
       <section className="wide-panel"><h2 className="page-title" style={{fontSize:32}}>{native}</h2><p className="page-subtitle">{copy.choghadiyaExplanation(cityName)}</p><ChoghadiyaTable day={data.dayChoghadiya} night={data.nightChoghadiya} locale={{dayTitle:copy.dayChoghadiya,nightTitle:copy.nightChoghadiya,daySubtitle:copy.sunriseToSunset,nightSubtitle:copy.sunsetToNextSunrise,goodLabel:copy.goodPeriods,neutralLabel:copy.neutralPeriod,badLabel:copy.difficultPeriods,names:choghadiyaNativeNames[language]}}/></section>
     </>}
 
+    <section className="wide-panel"><div className="seo-copy">
+      <h2>{copy.calendarExplanationTitle}</h2>
+      <p>{copy.methodologyText}</p>
+      <p>{copy.afterMidnightNote}</p>
+    </div></section>
+
     <LanguageLinks languages={languageAlternates}/>
     <TopicalGraph title={`${copy.regionalContext} · ${cityName}`} groupEyebrow={copy.nativeLanguage} groups={topical}/>
     <script type="application/ld+json" dangerouslySetInnerHTML={{__html:JSON.stringify(ld)}}/>
