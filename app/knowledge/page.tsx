@@ -2,12 +2,22 @@ import type {Metadata} from "next";
 import Link from "next/link";
 import Header from "@/components/Header";
 import {cities} from "@/lib/cities";
-import {knowledgePagePath,knowledgeTopics,knowledgeTopicSlugs} from "@/lib/panchang-knowledge";
+import {knowledgePagePath,knowledgeTopics,knowledgeTopicSlugs,type KnowledgeTopicSlug} from "@/lib/panchang-knowledge";
 
 export const metadata:Metadata={
   title:"Panchang Guide — Tithi, Nakshatra, Yoga, Karana, Paksha & Hindu Months",
   description:"Understand Tithi, Nakshatra, Yoga, Karana, Paksha and Hindu lunar months with clear explanations of what each Panchang value means and how it is calculated.",
   alternates:{canonical:"/knowledge"}
+};
+
+const hubSummaries:Record<KnowledgeTopicSlug,string>={
+  panchang:"The five classical limbs, local sunrise context and the calculation layers that make up a daily Panchang.",
+  tithi:"Moon–Sun elongation, the 30 lunar-day positions, Paksha structure and calculated Tithi transition times.",
+  nakshatra:"The 27 sidereal lunar sectors, four Padas, Lahiri longitude and how Nakshatra transitions are calculated.",
+  yoga:"The 27 Nitya Yoga sectors derived from the combined sidereal longitudes of the Sun and Moon.",
+  karana:"Half-Tithi divisions, the repeating Karana sequence and the angular structure behind the daily value.",
+  paksha:"Shukla and Krishna halves of the lunar cycle, their boundaries and their relationship to Tithi.",
+  "hindu-months":"Amanta and Purnimanta month conventions, Adhika Maas and the regional calendar rules that can change month labels."
 };
 
 export default function KnowledgeHub(){
@@ -30,7 +40,7 @@ export default function KnowledgeHub(){
 
     <section className="wide-panel">
       <h2 className="page-title" style={{fontSize:32}}>Core Panchang guides</h2>
-      <div className="city-directory">{knowledgeTopicSlugs.map(slug=>{const topic=knowledgeTopics[slug];return <Link href={knowledgePagePath(slug)} key={slug}><small>{topic.kicker}</small><strong>{topic.label}</strong><span>{topic.description}</span></Link>;})}</div>
+      <div className="city-directory">{knowledgeTopicSlugs.map(slug=>{const topic=knowledgeTopics[slug];return <Link href={knowledgePagePath(slug)} key={slug}><small>{topic.kicker}</small><strong>{topic.label}</strong><span>{hubSummaries[slug]}</span></Link>;})}</div>
     </section>
 
     <div className="seo-copy">
