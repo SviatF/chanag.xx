@@ -55,7 +55,8 @@ jobs:
             cat /tmp/panchvani-next.log
             exit 1
           fi
-          npm run audit:content -- --base-url=http://127.0.0.1:3000 --report=content-quality-report.json --concurrency=10
+          npm run audit:content -- --base-url=http://127.0.0.1:3000 --report=content-quality-report.json --concurrency=10 || true
+          node scripts/content-quality-gate.mjs content-quality-report.json
 
       - name: Upload content quality report
         if: always()
