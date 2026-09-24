@@ -4,6 +4,7 @@ import {notFound} from "next/navigation";
 import Header from "@/components/Header";
 import TopicalGraph from "@/components/TopicalGraph";
 import {findCityBySlug} from "@/lib/cities";
+import {buildMonthlyCalendarQualityContent} from "@/lib/calendar-content-engine";
 import {getPrecomputedMuhuratPanchangMonth} from "@/lib/muhurat-precomputed";
 import {getPanchang} from "@/lib/panchang";
 import {festivalsForYear} from "@/lib/festivals";
@@ -49,6 +50,7 @@ export default async function CalendarPage({params}:{params:Promise<{city:string
 
   const monthFestivals=festivalsForYear(y).filter(f=>Number(f.date.slice(5,7))===m);
   const festivalByDate=new Map(monthFestivals.map(f=>[f.date,f]));
+  const qualityContent=buildMonthlyCalendarQualityContent(city,y,m,entries,monthFestivals);
   const monthName=monthLabel(y,m);
   const prev=new Date(Date.UTC(y,m-2,1));
   const next=new Date(Date.UTC(y,m,1));
@@ -63,6 +65,7 @@ export default async function CalendarPage({params}:{params:Promise<{city:string
     <div className="breadcrumbs"><Link href="/">Home</Link> / <Link href={`/panchang/${city.slug}`}>{city.name}</Link> / <Link href={cityCalendarYearPath(city,y)}>{y}</Link> / Calendar</div>
     <p className="page-kicker">MONTHLY HINDU CALENDAR</p>
     <h1 className="page-title">{monthName} {y}<br/>Hindu Calendar for {city.name}</h1>
+    <p className="page-subtitle">{qualityContent.directAnswer}</p>
     <p className="page-subtitle">Open any day for its local Panchang. Ekadashi, Purnima, Amavasya and maintained festival dates are highlighted directly in the month.</p>
 
     <div className="pill-links">
@@ -85,8 +88,18 @@ export default async function CalendarPage({params}:{params:Promise<{city:string
       })}
     </div>
 
+    <section className="wide-panel"><div className="seo-copy">
+      <small>MONTH FINGERPRINT · {city.name.toUpperCase()}</small>
+      <h2>{qualityContent.fingerprintTitle}</h2>
+      <p>{qualityContent.fingerprintBody}</p>
+    </div><div className="data-grid">{qualityContent.facts.map(item=><div className="data-card" key={item.label}><small>{item.label}</small><strong>{item.value}</strong>{item.note?<small>{item.note}</small>:null}</div>)}</div></section>
+
+    <section className="wide-panel"><div className="seo-copy"><h2>{qualityContent.lunarTitle}</h2><p>{qualityContent.lunarBody}</p></div></section>
+    <section className="wide-panel"><div className="seo-copy"><h2>{qualityContent.solarTitle}</h2><p>{qualityContent.solarBody}</p></div></section>
+
     <section className="wide-panel">
       <h2 className="page-title" style={{fontSize:32}}>Festivals in {monthName}</h2>
+      <p className="page-subtitle">{qualityContent.festivalBody}</p>
       {monthFestivals.length
         ? <div className="city-directory">{monthFestivals.map(festival=><Link href={`/festivals/${festival.slug}/${y}/${city.slug}`} key={festival.slug}><small>{festival.date}</small><strong>{festival.name}</strong><span>{festival.short}</span></Link>)}</div>
         : <p className="page-subtitle">No major festival from the maintained dataset falls in this month.</p>}
