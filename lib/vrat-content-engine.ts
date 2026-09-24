@@ -28,7 +28,11 @@ function durationFromSunrise(row:VratOccurrence){
   if(row.tithiEndDate>row.date||end<start)end+=1440;
   return Math.max(0,end-start);
 }
-function dayGap(a:string,b:string){return Math.round((dateMs(b)-dateMs(a))/86400000);}
+function dayGap(a:string,b:string){
+  const left=dateMs(a),right=dateMs(b);
+  if(!Number.isFinite(left)||!Number.isFinite(right))return 0;
+  return Math.round((right-left)/86400000);
+}
 function weekdayLeader(rows:VratOccurrence[]){
   const counts=new Map<string,number>();
   for(const row of rows)counts.set(row.weekday,(counts.get(row.weekday)??0)+1);
@@ -36,7 +40,7 @@ function weekdayLeader(rows:VratOccurrence[]){
 }
 function monthDistribution(rows:VratOccurrence[]){
   const counts=new Map<number,number>();
-  for(const row of rows){const month=monthNumber(row.date);counts.set(month,(counts.get(month)??0)+1);}
+  for(const row of rows){const month=monthNumber(row.date);if(month>=1&&month<=12)counts.set(month,(counts.get(month)??0)+1);}
   return [...counts.entries()].sort((a,b)=>a[0]-b[0]);
 }
 function peakMonths(distribution:[number,number][]){
@@ -48,12 +52,48 @@ function observanceAngle(slug:VratSlug,rows:VratOccurrence[]){
   if(slug==="ekadashi"){
     const shukla=rows.filter(row=>row.paksha==="Shukla").length;
     const krishna=rows.filter(row=>row.paksha==="Krishna").length;
-    return `This Ekadashi calendar contains both lunar halves: ${shukla} Shukla-paksha and ${krishna} Krishna-paksha sunrise observations. ${repeated?`${repeated} row${repeated===1?"":"s"} repeat across consecutive sunrises, making those transitions the most location-sensitive entries in the year.`:"No Ekadashi repeats across consecutive local sunrises in this calculation."}`;
+    const balance=shukla===krishna?"The two Pakshas are evenly represented":shukla>krishna?"Shukla-paksha observations are more numerous":"Krishna-paksha observations are more numerous";
+    const repeat=repeated?`${repeated} Ekadashi row${repeated===1?"":"s"} survive into a second local sunrise, creating the year's clearest boundary-sensitive cases.`:"Every Ekadashi row is confined to one retained sunrise checkpoint in this city dataset.";
+    return `${balance}: ${shukla} Shukla and ${krishna} Krishna sunrise states. ${repeat}`;
   }
   if(slug==="purnima"){
-    return `Every retained row is a Shukla-paksha Purnima state at local sunrise. ${repeated?`${repeated} Purnima state${repeated===1?"":"s"} persists across two consecutive sunrises.`:"Each retained Purnima appears at a single local sunrise in this yearly sequence."}`;
+    const repeat=repeated?`${repeated} full-moon Tithi state${repeated===1?"":"s"} remain active at two consecutive local sunrises.`:"No full-moon state repeats at the next local sunrise.";
+    return `This series tracks only Shukla-paksha Purnima at the sunrise checkpoint. ${repeat} The useful yearly signal is therefore persistence of the full-moon Tithi around sunrise rather than a Shukla/Krishna split.`;
   }
-  return `Every retained row is a Krishna-paksha Amavasya state at local sunrise. ${repeated?`${repeated} Amavasya state${repeated===1?"":"s"} persists across two consecutive sunrises.`:"Each retained Amavasya appears at a single local sunrise in this yearly sequence."}`;
+  const repeat=repeated?`${repeated} new-moon Tithi state${repeated===1?"":"s"} continue through a second sunrise.`:"Each retained new-moon state appears at one local sunrise only.";
+  return `This series is a Krishna-paksha Amavasya sequence. ${repeat} Its strongest differentiator is how long Amavasya remains active after sunrise and where those sunrise checkpoints fall through the year.`;
+}
+
+function coverageVoice(months:number,total:number){
+  if(months<=4)return {label:"clustered",body:`The ${total} retained rows are concentrated into only ${months} Gregorian months, so the year has long stretches with no sunrise match.`};
+  if(months<=8)return {label:"intermittent",body:`The sequence is intermittent across ${months} Gregorian months: several months contribute rows, but the pattern is not a near-monthly cadence.`};
+  return {label:"broad",body:`The sequence is broadly distributed across ${months} Gregorian months, giving the year a near-continuous month-to-month presence rather than a narrow seasonal cluster.`};
+}
+function repeatVoice(repeated:number,total:number){
+  if(!repeated)return `All ${total} retained entries are single-sunrise states; none carries the same target Tithi into the next local sunrise.`;
+  if(repeated===1)return `One row is a double-sunrise boundary case, making that date the most sensitive point in the local annual sequence.`;
+  return `${repeated} rows are double-sunrise boundary cases, so persistence across sunrise is a recurring feature rather than an isolated anomaly.`;
+}
+function durationVoice(avg:number,longest:number,shortest:number){
+  const spread=Math.max(0,longest-shortest);
+  if(avg>=900)return `Post-sunrise persistence is long on average at ${avg} minutes, with a ${spread}-minute spread between the longest and shortest retained states.`;
+  if(avg>=540)return `The target Tithi usually remains active well into the day after sunrise: average persistence is ${avg} minutes and the longest-shortest spread is ${spread} minutes.`;
+  if(avg>=300)return `The yearly set has a mid-length post-sunrise profile, averaging ${avg} minutes before the target Tithi ends; the duration spread is ${spread} minutes.`;
+  return `Turnover after sunrise is comparatively quick, averaging ${avg} minutes, with only ${spread} minutes separating the longest and shortest retained spans.`;
+}
+function cadenceVoice(gaps:{from:string;to:string;days:number}[]){
+  const valid=gaps.filter(item=>item.days>0);
+  if(!valid.length)return "There is no multi-row cadence to compare.";
+  const min=Math.min(...valid.map(item=>item.days)),max=Math.max(...valid.map(item=>item.days));
+  const spread=max-min;
+  if(spread<=2)return `Spacing is unusually steady: adjacent observations range only from ${min} to ${max} days apart.`;
+  if(spread<=8)return `Spacing is fairly regular, with adjacent gaps ranging from ${min} to ${max} days.`;
+  return `Spacing is uneven across the year: the shortest gap is ${min} days while the longest reaches ${max} days, a ${spread}-day cadence spread.`;
+}
+function pakshaVoice(shukla:number,krishna:number){
+  if(shukla===krishna)return "The retained sunrise states are perfectly balanced between Shukla and Krishna Paksha.";
+  const delta=Math.abs(shukla-krishna);
+  return shukla>krishna?`Shukla Paksha leads the yearly count by ${delta} observation${delta===1?"":"s"}.`:`Krishna Paksha leads the yearly count by ${delta} observation${delta===1?"":"s"}.`;
 }
 
 export function buildVratQualityContent(vrat:VratDefinition,year:number,city:City,rows:VratOccurrence[],scope:"city"|"baseline"="city"):VratQualityContent{
@@ -63,13 +103,13 @@ export function buildVratQualityContent(vrat:VratDefinition,year:number,city:Cit
       directAnswer:`No ${vrat.name} sunrise observation is present for ${year} in the ${location} calculation.`,
       facts:[{label:"Sunrise observations",value:"0",note:String(year)}],
       fingerprintTitle:`${vrat.name} ${year} fingerprint`,
-      fingerprintBody:`The empty result is itself the yearly fingerprint for this calculation: no local sunrise carries the target ${vrat.name} Tithi state.`,
+      fingerprintBody:`The empty result is the defining annual pattern here: none of the local sunrise checkpoints carries the target ${vrat.name} Tithi state.`,
       distributionTitle:"Yearly distribution",
-      distributionBody:"There are no retained months or weekday concentrations because the yearly sequence has no matching sunrise row.",
+      distributionBody:"There is no month concentration, weekday leader or spacing pattern because the retained sequence contains no row.",
       transitionTitle:"Transition pattern",
-      transitionBody:"No target Tithi transition is represented in the retained yearly list.",
+      transitionBody:"No target Tithi boundary enters the yearly retained set, so there is no post-sunrise duration profile to compare.",
       observanceTitle:`How this ${vrat.name} dataset is structured`,
-      observanceBody:`The page remains empty rather than inserting generic national dates into a location-specific sunrise dataset.`
+      observanceBody:`The local dataset remains empty rather than borrowing dates from a different city's sunrise sequence.`
     };
   }
 
@@ -83,15 +123,22 @@ export function buildVratQualityContent(vrat:VratDefinition,year:number,city:Cit
   const longest=durations[0];
   const shortest=durations[durations.length-1];
   const gaps=rows.slice(1).map((row,index)=>({from:rows[index].date,to:row.date,days:dayGap(rows[index].date,row.date)}));
-  const widestGap=[...gaps].sort((a,b)=>b.days-a.days)[0]??null;
-  const tightestGap=[...gaps].sort((a,b)=>a.days-b.days)[0]??null;
+  const validGaps=gaps.filter(item=>item.days>0);
+  const widestGap=[...validGaps].sort((a,b)=>b.days-a.days)[0]??null;
+  const tightestGap=[...validGaps].sort((a,b)=>a.days-b.days)[0]??null;
   const nextDayEnds=rows.filter(row=>row.tithiEndDate>row.date).length;
   const avgDuration=Math.round(durations.reduce((sum,item)=>sum+item.minutes,0)/durations.length);
   const monthsCovered=distribution.length;
-  const peakText=peaks.length?`${peaks.join(" / ")} has the highest monthly concentration at ${Math.max(...distribution.map(([,count])=>count))} observation${Math.max(...distribution.map(([,count])=>count))===1?"":"s"}.`:"";
+  const maxMonthly=Math.max(0,...distribution.map(([,count])=>count));
+  const coverage=coverageVoice(monthsCovered,rows.length);
+  const repeatPattern=repeatVoice(repeatedRows.length,rows.length);
+  const durationPattern=durationVoice(avgDuration,longest.minutes,shortest.minutes);
+  const cadencePattern=cadenceVoice(gaps);
+  const pakshaPattern=pakshaVoice(shukla,krishna);
+  const monthMap=distribution.map(([month,count])=>`${monthName(month)} ${count}`).join(" · ");
 
   return {
-    directAnswer:`${vrat.name} ${year} in ${location} contains ${rows.length} local-sunrise observation${rows.length===1?"":"s"}, running from ${rows[0].date} to ${rows[rows.length-1].date}; ${repeatedRows.length} repeat across consecutive sunrises.`,
+    directAnswer:`${vrat.name} ${year} in ${location} contains ${rows.length} local-sunrise observation${rows.length===1?"":"s"} from ${rows[0].date} to ${rows[rows.length-1].date}. The annual pattern is ${coverage.label}, with ${repeatedRows.length} repeated sunrise state${repeatedRows.length===1?"":"s"}.`,
     facts:[
       {label:"Observed months",value:String(monthsCovered),note:`of 12 in ${year}`},
       {label:"Shukla / Krishna",value:`${shukla} / ${krishna}`,note:"Sunrise rows by Paksha"},
@@ -101,12 +148,12 @@ export function buildVratQualityContent(vrat:VratDefinition,year:number,city:Cit
       {label:"Next-day Tithi endings",value:String(nextDayEnds),note:"Transition occurs after civil midnight"},
     ],
     fingerprintTitle:`${city.name} ${vrat.name} ${year} fingerprint`,
-    fingerprintBody:`The yearly sequence spans ${monthsCovered} Gregorian months. ${peakText} ${weekday?`${weekday[0]} is the most common weekday with ${weekday[1]} observation${weekday[1]===1?"":"s"}.`:""} The longest retained ${vrat.name} state after sunrise occurs on ${longest.row.date} for about ${longest.minutes} minutes; the shortest is ${shortest.row.date} at about ${shortest.minutes} minutes.`,
-    distributionTitle:`How ${vrat.name} is distributed through ${year}`,
-    distributionBody:`Month counts are ${distribution.map(([month,count])=>`${monthName(month)} ${count}`).join(" · ")}. ${widestGap?`The widest gap between retained observations is ${widestGap.days} days (${widestGap.from} → ${widestGap.to}).`:""} ${tightestGap?`The tightest non-identical gap is ${tightestGap.days} days (${tightestGap.from} → ${tightestGap.to}).`:""}`,
-    transitionTitle:`Sunrise and Tithi-end pattern in ${city.name}`,
-    transitionBody:`Across the retained rows, the target Tithi remains active for an average of about ${avgDuration} minutes after local sunrise. ${nextDayEnds} transition${nextDayEnds===1?"":"s"} end on the following civil date. ${repeatedRows.length?`The repeated sunrise rows are ${repeatedRows.map(row=>row.date).join(", ")}, where the same Tithi state survives into another local sunrise.`:"No retained row repeats the same Tithi across consecutive local sunrises."}`,
-    observanceTitle:`${vrat.name}-specific yearly pattern`,
-    observanceBody:observanceAngle(vrat.slug,rows),
+    fingerprintBody:`${coverage.body} ${durationPattern} ${weekday?`${weekday[0]} is the weekday leader with ${weekday[1]} retained sunrise observation${weekday[1]===1?"":"s"}.`:""}`,
+    distributionTitle:`${coverage.label[0].toUpperCase()+coverage.label.slice(1)} ${vrat.name} distribution through ${year}`,
+    distributionBody:`Month map: ${monthMap||"no valid month rows"}. ${peaks.length?`${peaks.join(" / ")} ${peaks.length===1?"is":"are"} the densest month${peaks.length===1?"":"s"} at ${maxMonthly} observation${maxMonthly===1?"":"s"}.`:""} ${cadencePattern} ${pakshaPattern}`,
+    transitionTitle:`Tithi persistence after ${city.name} sunrise`,
+    transitionBody:`${repeatPattern} ${nextDayEnds?`${nextDayEnds} retained transition${nextDayEnds===1?"":"s"} end after midnight on the following civil date.`:"Every retained Tithi ends before the following civil date."} ${widestGap&&tightestGap?`For cadence context, ${tightestGap.from} → ${tightestGap.to} is the tightest valid interval and ${widestGap.from} → ${widestGap.to} the widest.`:""}`,
+    observanceTitle:`${vrat.name}-specific annual signature`,
+    observanceBody:`${observanceAngle(vrat.slug,rows)} ${durationPattern}`,
   };
 }
