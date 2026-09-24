@@ -15,7 +15,6 @@ export async function GET(){
     base+"/data-sources",
     base+"/editorial-policy",
     base+"/corrections",
-    base+"/disclaimer",
     base+"/photo-credits"
   ]));
 }
