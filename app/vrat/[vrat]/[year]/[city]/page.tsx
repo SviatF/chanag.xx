@@ -9,6 +9,7 @@ import {isVratIndexable,robotsFor} from "@/lib/seo-policy";
 import {vratCitySsgPriority} from "@/lib/static-seo-routes";
 import {calculateVratCalendar,findVratBySlug,vratCalendarSummary} from "@/lib/vrat";
 import {buildVratQualityContent} from "@/lib/vrat-content-engine";
+import {buildVratCityContext} from "@/lib/vrat-city-context";
 import {buildVratTopicalGraph} from "@/lib/vrat-topical-links";
 
 export const dynamicParams=true;
@@ -31,6 +32,7 @@ export default async function VratCityPage({params}:{params:Promise<{vrat:string
   const rows=calculateVratCalendar(vrat.slug,year,city);
   const summary=vratCalendarSummary(rows);
   const quality=buildVratQualityContent(vrat,year,city,rows,"city");
+  const cityContext=buildVratCityContext(vrat,year,city,rows);
   const firstMonth=rows[0]?.date.slice(5,7)??"01";
   const ld={"@context":"https://schema.org","@graph":[
     {"@type":"WebPage","name":`${vrat.name} ${year} in ${city.name}`,"description":quality.directAnswer,"url":`https://panchvani.com/vrat/${vrat.slug}/${year}/${city.slug}`},
@@ -48,6 +50,13 @@ export default async function VratCityPage({params}:{params:Promise<{vrat:string
       <div className="data-card"><small>Sunrise observations</small><strong>{summary.count}</strong><small>{summary.first??"—"} → {summary.last??"—"}</small></div>
       {quality.facts.map(item=><div className="data-card" key={item.label}><small>{item.label}</small><strong>{item.value}</strong>{item.note?<small>{item.note}</small>:null}</div>)}
     </div>
+
+    <section className="wide-panel"><div className="seo-copy"><h2>{cityContext.focusTitle}</h2><p>{cityContext.focusBody}</p></div></section>
+
+    <section className="wide-panel">
+      <div className="seo-copy"><small>LOCAL CITY SIGNATURE · {city.state.toUpperCase()}</small><h2>{cityContext.title}</h2><p>{cityContext.body}</p><p>{cityContext.secondaryBody}</p></div>
+      <div className="data-grid">{cityContext.facts.map(item=><div className="data-card" key={item.label}><small>{item.label}</small><strong>{item.value}</strong>{item.note?<small>{item.note}</small>:null}</div>)}</div>
+    </section>
 
     <section className="wide-panel"><div className="seo-copy"><h2>{quality.fingerprintTitle}</h2><p>{quality.fingerprintBody}</p></div></section>
     <section className="wide-panel"><div className="seo-copy"><h2>{quality.distributionTitle}</h2><p>{quality.distributionBody}</p></div></section>
