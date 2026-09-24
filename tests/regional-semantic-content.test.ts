@@ -42,9 +42,11 @@ describe("regional and Choghadiya semantic content",()=>{
     const value=buildChoghadiyaQualityContent(data("2026-09-24","05:58","18:04",{start:"13:33",end:"15:04"},13),city);
     expect(value.directAnswer).toContain("Chennai");
     expect(value.facts.length).toBe(6);
-    expect(value.fingerprintBody).toContain("exact daytime order");
-    expect(value.nightBody).toContain("night sequence");
-    expect(value.rahuBody).toContain("overlaps");
+    expect(value.fingerprintTitle).toContain("Chennai");
+    expect(value.fingerprintBody).toContain("daytime chain");
+    expect(value.nightBody).toContain("night");
+    expect(value.rahuTitle).toContain("Rahu relationship");
+    expect(value.facts.find(item=>item.label==="Solar clock signature")?.value).toContain("/");
   });
 
   it("wires regional city, regional intent and English Choghadiya routes to semantic engines",()=>{
