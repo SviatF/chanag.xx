@@ -16,7 +16,6 @@ describe("Pre-GSC technical indexation integrity",()=>{
       "app/accuracy/page.tsx":"/accuracy",
       "app/editorial-policy/page.tsx":"/editorial-policy",
       "app/data-sources/page.tsx":"/data-sources",
-      "app/disclaimer/page.tsx":"/disclaimer",
       "app/corrections/page.tsx":"/corrections",
       "app/photo-credits/page.tsx":"/photo-credits",
       "app/festivals/page.tsx":"/festivals",
@@ -29,6 +28,9 @@ describe("Pre-GSC technical indexation integrity",()=>{
     for(const [path,canonical] of Object.entries(expected)){
       expect(source(path),path).toContain(`canonical:"${canonical}"`);
     }
+    const retiredDisclaimer=source("app/disclaimer/page.tsx");
+    expect(retiredDisclaimer).toContain("notFound()");
+    expect(retiredDisclaimer).not.toContain('canonical:"/disclaimer"');
   });
 
   it("keeps the regional root in only the core sitemap",async()=>{
@@ -72,7 +74,8 @@ describe("Pre-GSC technical indexation integrity",()=>{
   it("does not create a false English hreflang target for Rahu Kalam",()=>{
     const regionalSeo=source("lib/regional-seo.ts");
     expect(regionalSeo).toContain('if(intent==="choghadiya")');
-    expect(regionalSeo).toContain("}else if(!intent&&date){");
+    expect(regionalSeo).toContain("}else if(!intent){");
+    expect(regionalSeo).not.toContain('else if(intent==="rahu-kalam")');
     expect(regionalSeo).not.toContain('intent==="choghadiya"?`/tools/choghadiya/${city.slug}`:`/panchang/${city.slug}`');
   });
 
