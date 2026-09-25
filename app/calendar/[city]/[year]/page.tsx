@@ -5,6 +5,7 @@ import Header from "@/components/Header";
 import {findCityBySlug} from "@/lib/cities";
 import {buildYearlyCalendarQualityContent} from "@/lib/calendar-content-engine";
 import {buildCalendarYearCityContext} from "@/lib/calendar-year-city-context";
+import {buildCalendarYearSimilarityContext} from "@/lib/calendar-year-similarity-context";
 import {festivalDateIsValidated} from "@/lib/festival-expansion";
 import {festivalsForYear} from "@/lib/festivals";
 import {getPanchang} from "@/lib/panchang";
@@ -32,8 +33,9 @@ export default async function CityYearCalendar({params}:{params:Promise<{city:st
   const festivals=festivalsForYear(year).filter(item=>festivalDateIsValidated(item.slug,year));
   const qualityContent=buildYearlyCalendarQualityContent(city,year,snapshots,festivals);
   const cityContext=buildCalendarYearCityContext(city,year,snapshots,festivals);
+  const similarityContext=buildCalendarYearSimilarityContext(city,year,snapshots,festivals);
   const peers=sitemapPriorityCities.filter(item=>item.slug!==city.slug).slice(0,6);
-  const ld={"@context":"https://schema.org","@type":"CollectionPage","name":`Hindu Calendar ${year} in ${city.name}`,"url":`https://panchvani.com${cityCalendarYearPath(city,year)}`,"description":cityContext.body};
+  const ld={"@context":"https://schema.org","@type":"CollectionPage","name":`Hindu Calendar ${year} in ${city.name}`,"url":`https://panchvani.com${cityCalendarYearPath(city,year)}`,"description":similarityContext.localityBody};
 
   return <main><Header city={city}/><div className="page-shell internal-visual internal-calendar">
     <div className="breadcrumbs"><Link href={hinduCalendarYearPath(year)}>Hindu Calendar {year}</Link> / {city.name}</div>
@@ -55,8 +57,14 @@ export default async function CityYearCalendar({params}:{params:Promise<{city:st
       <div className="data-grid">{cityContext.facts.map(item=><div className="data-card" key={item.label}><small>{item.label}</small><strong>{item.value}</strong>{item.note?<small>{item.note}</small>:null}</div>)}</div>
     </section>
 
+    <section className="wide-panel">
+      <div className="seo-copy"><small>ANNUAL LOCALITY LENS · {city.name.toUpperCase()}</small><h2>{similarityContext.title}</h2><p>{similarityContext.localityBody}</p><h2>{similarityContext.chronologyTitle}</h2><p>{similarityContext.chronologyBody}</p></div>
+      <div className="data-grid">{similarityContext.facts.map(item=><div className="data-card" key={item.label}><small>{item.label}</small><strong>{item.value}</strong>{item.note?<small>{item.note}</small>:null}</div>)}</div>
+    </section>
+
     <section className="wide-panel"><div className="seo-copy"><h2>{cityContext.seasonalTitle}</h2><p>{cityContext.seasonalBody}</p><h2>{cityContext.lunarTitle}</h2><p>{cityContext.lunarBody}</p></div></section>
     <section className="wide-panel"><div className="seo-copy"><h2>{qualityContent.seasonalTitle}</h2><p>{qualityContent.seasonalBody}</p><h2>{qualityContent.lunarTitle}</h2><p>{qualityContent.lunarBody}</p></div></section>
+    <section className="wide-panel"><div className="seo-copy"><h2>{similarityContext.festivalTitle}</h2><p>{similarityContext.festivalBody}</p></div></section>
 
     <section className="wide-panel"><h2 className="page-title" style={{fontSize:32}}>Yearly lunar observances</h2><div className="pill-links">{primaryVratTypes.filter(vrat=>isVratIndexable(vrat,year,city.slug)).map(vrat=><Link href={`/vrat/${vrat}/${year}/${city.slug}`} key={vrat}>{vrat.replaceAll("-"," ")} {year}</Link>)}</div></section>
 
