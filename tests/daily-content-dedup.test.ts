@@ -39,6 +39,24 @@ function normalized(value:string,cityName:string,state:string){
   return text.replace(/\b\d+(?::\d+)?(?:\.\d+)?%?\b/g," ").replace(/[^\p{L}\p{M}]+/gu," ").replace(/\s+/g," ").trim();
 }
 
+function trigrams(value:string){
+  const words=value.split(/\s+/).filter(Boolean);
+  const set=new Set<string>();
+  for(let index=0;index<=words.length-3;index++)set.add(words.slice(index,index+3).join(" "));
+  return set;
+}
+function jaccard(a:string,b:string){
+  const left=trigrams(a),right=trigrams(b);
+  let overlap=0;
+  for(const item of left)if(right.has(item))overlap++;
+  return overlap/(left.size+right.size-overlap||1);
+}
+function maxPairwise(values:string[]){
+  let max=0;
+  for(let i=0;i<values.length;i++)for(let j=i+1;j<values.length;j++)max=Math.max(max,jaccard(values[i],values[j]));
+  return max;
+}
+
 describe("daily Panchang semantic dedup engine",()=>{
   it("keeps every phase-one city structurally distinct after city, state, date and digits are removed",()=>{
     const data=fixture();
@@ -49,6 +67,7 @@ describe("daily Panchang semantic dedup engine",()=>{
       return normalized(full,city.name,city.state);
     });
     expect(new Set(outputs).size).toBe(phase1PriorityCities.length);
+    expect(maxPairwise(outputs)).toBeLessThan(0.72);
   });
 
   it("uses real geography and timing classes rather than a city-name substitution template",()=>{
@@ -60,7 +79,7 @@ describe("daily Panchang semantic dedup engine",()=>{
     expect(west.fingerprintBody).toContain("IST standard meridian");
     expect(east.fingerprintBody).toContain("IST standard meridian");
     expect(normalized(west.fingerprintBody,mumbai.name,mumbai.state)).not.toBe(normalized(east.fingerprintBody,kolkata.name,kolkata.state));
-    expect(west.facts.map(item=>item.label)).toEqual(expect.arrayContaining(["Solar geography","Lunar transition order","Rahu position","Choghadiya shape"]));
+    expect(west.facts.map(item=>item.label)).toEqual(expect.arrayContaining(["Local geographic frame","Lunar transition order","Rahu position","Choghadiya shape"]));
   });
 
   it("wires the public daily route to the dedicated dedup engine",()=>{
