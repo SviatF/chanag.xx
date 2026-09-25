@@ -8,6 +8,7 @@ import LanguageLinks from "@/components/LanguageLinks";
 import TopicalGraph from "@/components/TopicalGraph";
 import {findCityBySlug} from "@/lib/cities";
 import {buildDailyPanchangQualityContent} from "@/lib/daily-content-engine";
+import {buildDailyCityContext} from "@/lib/daily-city-context";
 import {formatPanchangTime,formatWindow,getPanchang} from "@/lib/panchang";
 import {getLunarMonthConventions} from "@/lib/calendar-conventions";
 import {isDailyIndexable,robotsFor} from "@/lib/seo-policy";
@@ -48,6 +49,7 @@ export default async function PanchangPage({params}:{params:Promise<{city:string
   const languageAlternates=regionalAlternates(city,undefined,data.date);
   const lunar=getLunarMonthConventions(date,city,data);
   const qualityContent=buildDailyPanchangQualityContent(city,data,lunar);
+  const localContext=buildDailyCityContext(city,data);
   const guidance=getDailyGuidance(data,city);
   const festival=nextValidatedFestival(date);
   const topicalGroups=buildDailyTopicalGraph(city,date,festival);
@@ -112,6 +114,11 @@ export default async function PanchangPage({params}:{params:Promise<{city:string
       <h2>{qualityContent.fingerprintTitle}</h2>
       <p>{qualityContent.fingerprintBody}</p>
     </div><div className="data-grid">{qualityContent.facts.map(item=><div className="data-card" key={item.label}><small>{item.label}</small><strong>{item.value}</strong>{item.note?<small>{item.note}</small>:null}</div>)}</div></section>
+
+    <section className="wide-panel">
+      <div className="seo-copy"><small>LOCAL DAY INTERPRETATION · {city.state.toUpperCase()}</small><h2>{localContext.title}</h2><p>{localContext.body}</p><p>{localContext.secondaryBody}</p></div>
+      <div className="data-grid">{localContext.facts.map(item=><div className="data-card" key={item.label}><small>{item.label}</small><strong>{item.value}</strong>{item.note?<small>{item.note}</small>:null}</div>)}</div>
+    </section>
 
     <section className="wide-panel"><div className="seo-copy"><h2>{qualityContent.transitionTitle}</h2><p>{qualityContent.transitionBody}</p></div></section>
     <section className="wide-panel"><div className="seo-copy"><h2>{qualityContent.solarTitle}</h2><p>{qualityContent.solarBody}</p><h2>{qualityContent.lunarTitle}</h2><p>{qualityContent.lunarBody}</p></div></section>
