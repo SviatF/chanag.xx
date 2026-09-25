@@ -16,6 +16,29 @@ export type CalendarYearSimilarityContext={
   facts:Fact[];
 };
 
+const annualLensBySlug:Record<string,string>={
+  mumbai:"Mumbai's annual Panchang should be read as a western-coast sequence. The Konkan setting keeps the civil-time solar clock noticeably west of India's standard meridian, while the city's tropical latitude compresses the yearly daylight swing. Across twelve month openings, that combination makes clock placement more distinctive than raw month names: seasonal movement is present, but it is expressed inside a relatively compact daylight envelope.",
+  delhi:"Delhi's yearly sequence belongs to the northern plains and therefore carries a much stronger seasonal daylight arc than peninsular calendars. Its solar clock is west of the national standard meridian, so winter and summer sunrise shifts appear on a comparatively late IST frame. The annual interpretation is therefore driven by the combination of northern seasonality, Yamuna-plain geography and a western civil-clock offset.",
+  bengaluru:"Bengaluru combines an elevated southern-Deccan setting with low-latitude seasonality. Its yearly pattern is not a northern-style winter-versus-summer swing; instead, the month-start sequence stays comparatively compact while the western solar-clock offset keeps sunrise-derived periods later on IST than east-coast cities at similar latitude. The plateau location is the central annual lens for this calendar.",
+  hyderabad:"Hyderabad's annual calendar is a Deccan-plateau chronology centered on the Musi corridor. Mid-Deccan latitude gives more seasonal movement than the deep south without approaching the amplitude of Delhi or Jaipur, and the city remains west-shifted from the standard meridian. The result is a middle-band yearly profile: moderate daylight change carried on a later IST solar clock.",
+  ahmedabad:"Ahmedabad's year is anchored to the Sabarmati corridor in western India. Its north-central latitude produces a visible seasonal daylight cycle, while the strongly western longitude pushes sunrise-derived timing later on IST. The yearly calendar therefore combines western clock placement with greater seasonal amplitude than coastal Mumbai or southern Deccan cities, giving its twelve month starts a distinctly Gujarat inland profile.",
+  chennai:"Chennai's annual pattern is an east-coast tropical sequence on the Coromandel Coast. Low latitude keeps daylight variation relatively restrained, while the city's longitude shifts the solar clock earlier on IST than most western and Deccan metros. The twelve month openings should therefore be read as a mild-seasonality calendar whose timing boundaries occur on an earlier civil-time frame.",
+  kolkata:"Kolkata's yearly Panchang is shaped by the lower Hooghly corridor of the Bengal delta. Its eastern longitude places sunrise-derived intervals early on the IST clock, while north-central latitude creates more annual daylight movement than Chennai or Bengaluru. The defining yearly contrast is therefore an eastern civil-time frame combined with a meaningful but not extreme seasonal solar arc.",
+  surat:"Surat's annual calendar belongs to the lower Tapi basin near the Gulf of Khambhat. The city is strongly west-shifted from the standard meridian, yet it sits farther south than Ahmedabad, so its seasonal daylight range is comparatively softer. That pairing creates a Gujarat profile with late IST solar timing but a less northern annual swing than the Sabarmati corridor.",
+  pune:"Pune's twelve-month sequence is a western-Deccan calendar east of the Sahyadri range. Its plateau latitude keeps the annual daylight swing moderate, while western longitude delays sunrise-derived periods on IST relative to central-meridian cities. The useful yearly lens is therefore inland plateau seasonality on a distinctly western solar clock, rather than the maritime pattern of Mumbai.",
+  jaipur:"Jaipur's calendar reflects the Aravalli-side basin of Rajasthan at northern latitude. Strong seasonal daylight movement is paired with a substantially western solar clock, producing pronounced winter-summer changes on a later IST frame. Among the core cities, the annual sequence is best understood as a north-western combination of large seasonal amplitude and late civil-time solar placement.",
+  lucknow:"Lucknow's yearly series sits in the Awadh sector of the central Gangetic plain. Its longitude lies relatively near India's standard-meridian zone compared with Delhi or Ahmedabad, while northern-plain latitude still produces a substantial seasonal daylight cycle. The annual profile is therefore dominated more by north-Indian seasonality than by an extreme east-west clock offset.",
+  kanpur:"Kanpur's annual Panchang belongs to the central Uttar Pradesh Ganga corridor. The city is close enough to the national solar-time axis that the yearly distinction comes primarily from northern-plain daylight seasonality and the exact local month-start states, not from a large civil-clock displacement. Its twelve-month arc is a near-meridian Gangetic pattern with strong seasonal structure.",
+  nagpur:"Nagpur forms a central-India annual reference from the Vidarbha plateau. Its longitude lies close to the standard-meridian side of the country, reducing the east-west civil-time distortion seen in Gujarat or Assam, while mid-Deccan latitude keeps seasonality moderate. The yearly calendar is therefore a comparatively central solar-clock sequence with a balanced seasonal daylight arc.",
+  indore:"Indore's annual pattern is rooted in the Malwa plateau of western Madhya Pradesh. It sits west of the standard meridian and north of the deeper Deccan cities, so the calendar combines a moderately late IST solar clock with a stronger seasonal daylight cycle than Hyderabad or Bengaluru. This west-central plateau mix defines the yearly timing signature.",
+  thane:"Thane shares the Konkan climatic latitude band with Mumbai but occupies the north-eastern side of the metropolitan region rather than the open Arabian Sea-facing core. Its annual sequence remains western and relatively low-latitude, yet its own coordinates preserve separate month-start sunrise states. The yearly lens is a metropolitan-Konkan clock with compact seasonality, not a copied Mumbai calendar.",
+  bhopal:"Bhopal's yearly calendar belongs to the lake-and-plateau landscape of central Madhya Pradesh. Its longitude is closer to the national meridian than Indore's, while its central latitude creates a moderate seasonal daylight range. The annual profile therefore sits between western Malwa timing and the near-meridian central-India pattern, with neither extreme western delay nor deep-southern compression.",
+  visakhapatnam:"Visakhapatnam's annual Panchang is an east-coast sequence where the Bay of Bengal meets the Eastern Ghats. Its eastern longitude moves sunrise-derived intervals earlier on IST, and its peninsular latitude keeps the yearly daylight swing milder than the northern plains. The calendar's defining annual character is early civil-time solar placement combined with a restrained coastal seasonal arc.",
+  patna:"Patna's yearly sequence follows the south-bank Ganges plain of Bihar. The city sits east of most north-Indian core metros, so sunrise-derived timing is earlier on IST, while its northern-plain latitude still gives the year a pronounced seasonal daylight cycle. The annual fingerprint combines eastern Gangetic clock placement with substantial winter-summer solar movement.",
+  vadodara:"Vadodara's annual calendar is centered on the Vishwamitri basin of central Gujarat. Like Ahmedabad and Surat it is west-shifted from the standard meridian, but its intermediate latitude gives it a distinct seasonal balance between the more northerly Sabarmati corridor and the lower Tapi basin. The yearly signal is a central-Gujarat combination of late IST timing and moderate-to-strong seasonality.",
+  varanasi:"Varanasi's annual Panchang belongs to the middle Ganges corridor of eastern Uttar Pradesh. Its longitude is close to, and slightly east of, the national standard-meridian zone, so local solar time sits earlier than Lucknow or Delhi while northern latitude preserves a strong seasonal daylight cycle. The yearly lens is an eastern Gangetic sequence with near-meridian clock behavior and pronounced seasonality."
+};
+
 function clockMinutes(value:string){const [h,m]=value.split(":").map(Number);return Number.isFinite(h)&&Number.isFinite(m)?h*60+m:0;}
 function daylight(entry:Panchang){const rise=clockMinutes(entry.sunrise),set=clockMinutes(entry.sunset);return set>=rise?set-rise:set+1440-rise;}
 function monthName(month:number){return new Intl.DateTimeFormat("en-IN",{month:"long",timeZone:"Asia/Kolkata"}).format(new Date(Date.UTC(2026,month-1,1,6)));}
@@ -52,10 +75,11 @@ function cityVariant(slug:string){let h=19;for(let i=0;i<slug.length;i++)h=(h*15
 
 export function buildCalendarYearSimilarityContext(city:City,year:number,snapshots:readonly Panchang[],festivals:readonly FestivalSummary[]):CalendarYearSimilarityContext{
   const profile=buildCityContentProfile(city),frame=yearFrame(year),variant=cityVariant(city.slug),monthStart=dominantMonthStartWeekday(year);
+  const annualLens=annualLensBySlug[city.slug]??`${profile.dailyContext} The annual sequence keeps ${profile.geoContext} as its locality frame, with ${profile.latitudeContext} and ${profile.solarClockContext}.`;
   if(!snapshots.length){
     return {
       title:`${city.name} ${year} locality lens`,
-      localityBody:`${profile.dailyContext} The yearly route remains anchored to ${profile.geoContext}, with a ${profile.latitudeContext} and a solar clock ${profile.solarClockContext}.`,
+      localityBody:`${annualLens} No month-start Panchang snapshots are available, so the yearly route preserves the city frame without inventing an annual lunar sequence.`,
       chronologyTitle:`${frame.label}`,
       chronologyBody:`The civil year opens on ${frame.open} and closes on ${frame.close}; no month-start Panchang snapshots are currently available to build a twelve-step chronology.`,
       festivalTitle:"Festival footprint",
@@ -78,16 +102,16 @@ export function buildCalendarYearSimilarityContext(city:City,year:number,snapsho
   const lunarRashis=[...new Set(snapshots.map(item=>item.rashi))];
 
   const localityBody=variant===0
-    ? `${profile.dailyContext} Across the full ${year} calendar, that city-specific clock is sampled at twelve month starts. The sequence belongs to ${profile.geoContext}; a ${profile.latitudeContext} and a solar clock ${profile.solarClockContext} jointly determine where the annual sunrise and daylight pattern sits on IST.`
+    ? `${annualLens} Across the full ${year} calendar, the city-specific clock is sampled at twelve month starts. The sequence remains tied to ${profile.geoContext}; the observed annual sunrise and daylight pattern should therefore be read inside that locality rather than against a national fixed timetable.`
     : variant===1
-      ? `The yearly page should be read through ${city.name}'s local geography rather than as a renamed national calendar. ${profile.dailyContext} In annual terms, ${profile.geoContext} contributes a ${profile.latitudeContext}, while the city remains ${profile.solarClockContext}; those conditions shape every month-start checkpoint below.`
+      ? `${annualLens} The twelve first-of-month checkpoints turn that geographic frame into an annual series. Rather than treating the route as a renamed national calendar, each lunar state and solar boundary stays attached to the city's own coordinates.`
       : variant===2
-        ? `${city.name}'s annual chronology is anchored to ${profile.geoContext}. ${profile.dailyContext} The city's ${profile.latitudeContext} controls the scale of seasonal daylight change, and its position ${profile.solarClockContext} controls where those changes land on the civil clock.`
+        ? `${annualLens} The year-level chronology preserves those local coordinates at every month opening. Seasonal daylight change and civil-clock placement are therefore interpreted together instead of reducing the page to a generic list of twelve months.`
         : variant===3
-          ? `Start with place, not with the year number: ${profile.geoContext}. ${profile.dailyContext} That local frame combines a ${profile.latitudeContext} with a solar clock ${profile.solarClockContext}, so the twelve first-of-month Panchang states form a city-specific annual series.`
+          ? `${annualLens} That city frame is carried through twelve local month-start Panchang calculations. The result is an annual series in which solar timing, lunar state and festival placement remain tied to one locality.`
           : variant===4
-            ? `This yearly calendar keeps ${city.name}'s own solar frame intact. ${profile.dailyContext} The geographic baseline is ${profile.geoContext}; because it is a ${profile.latitudeContext} and ${profile.solarClockContext}, month-start sunrise states should not be substituted with a nearby city's series.`
-            : `${profile.geoContext} supplies the local frame for ${city.name}'s ${year} calendar. ${profile.dailyContext} Over twelve monthly checkpoints, its ${profile.latitudeContext} and solar clock ${profile.solarClockContext} create a distinct annual timing signature.`;
+            ? `${annualLens} The yearly route keeps this local solar frame intact at every first-of-month checkpoint, so nearby cities are not used as substitutes even when their civil dates or festival lists overlap.`
+            : `${annualLens} Twelve monthly checkpoints preserve the same city-specific frame across the year. The annual timing signature therefore comes from local coordinates plus the changing lunar state, not from a generic yearly shell.`;
 
   const chronologyBody=variant%3===0
     ? `${frame.label}. Month-start weekdays span ${distinctWeekdays} weekday labels, led by ${monthStart[0]} on ${monthStart[1]} month openings. The quarter checkpoints are ${firstQuarter}. The full lunar/sunrise arc is ${arc}.`
@@ -107,10 +131,10 @@ export function buildCalendarYearSimilarityContext(city:City,year:number,snapsho
     festivalTitle:`Annual festival and solar-day map`,
     festivalBody,
     facts:[
+      {label:"City annual lens",value:profile.geoContext,note:profile.dailyContext},
       {label:"Civil-year frame",value:frame.key,note:`${frame.open} → ${frame.close}`},
       {label:"Most common month-start weekday",value:monthStart[0],note:`${monthStart[1]} month openings`},
-      {label:"Geographic frame",value:profile.geoContext,note:profile.latitudeContext},
-      {label:"Solar-clock relation",value:profile.solarClockContext},
+      {label:"Solar-clock relation",value:profile.solarClockContext,note:profile.latitudeContext},
       {label:"Shortest sampled daylight",value:daylightClass(minDay),note:monthName(shortestIndex+1)},
       {label:"Longest sampled daylight",value:daylightClass(maxDay),note:monthName(longestIndex+1)},
       {label:"Sunrise-class variety",value:sunriseClasses.join(" · ")},
