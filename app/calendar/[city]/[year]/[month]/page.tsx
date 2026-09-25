@@ -7,6 +7,7 @@ import {findCityBySlug} from "@/lib/cities";
 import {buildMonthlyCalendarQualityContent} from "@/lib/calendar-content-engine";
 import {buildCalendarMonthCityContext} from "@/lib/calendar-month-city-context";
 import {buildCalendarMonthSimilarityContext} from "@/lib/calendar-month-similarity-context";
+import {buildCalendarMonthHighSimilarityContext} from "@/lib/calendar-month-high-similarity-context";
 import {getPrecomputedMuhuratPanchangMonth} from "@/lib/muhurat-precomputed";
 import {getPanchang} from "@/lib/panchang";
 import {festivalsForYear} from "@/lib/festivals";
@@ -55,6 +56,7 @@ export default async function CalendarPage({params}:{params:Promise<{city:string
   const qualityContent=buildMonthlyCalendarQualityContent(city,y,m,entries,monthFestivals);
   const cityContext=buildCalendarMonthCityContext(city,y,m,entries,monthFestivals);
   const similarityContext=buildCalendarMonthSimilarityContext(city,y,m,entries);
+  const highSimilarityContext=buildCalendarMonthHighSimilarityContext(city,y,m,entries);
   const monthName=monthLabel(y,m);
   const prev=new Date(Date.UTC(y,m-2,1));
   const next=new Date(Date.UTC(y,m,1));
@@ -107,6 +109,11 @@ export default async function CalendarPage({params}:{params:Promise<{city:string
       <div className="seo-copy"><small>MONTHLY LOCALITY LENS · {city.state.toUpperCase()}</small><h2>{similarityContext.title}</h2><p>{similarityContext.localityBody}</p><h2>{similarityContext.solarTitle}</h2><p>{similarityContext.solarBody}</p></div>
       <div className="data-grid">{similarityContext.facts.map(item=><div className="data-card" key={item.label}><small>{item.label}</small><strong>{item.value}</strong>{item.note?<small>{item.note}</small>:null}</div>)}</div>
     </section>
+
+    {highSimilarityContext?<section className="wide-panel">
+      <div className="seo-copy"><small>GUJARAT MONTH COMPARISON LENS</small><h2>{highSimilarityContext.title}</h2><p>{highSimilarityContext.geographyBody}</p><h2>{highSimilarityContext.rhythmTitle}</h2><p>{highSimilarityContext.rhythmBody}</p></div>
+      <div className="data-grid">{highSimilarityContext.facts.map(item=><div className="data-card" key={item.label}><small>{item.label}</small><strong>{item.value}</strong>{item.note?<small>{item.note}</small>:null}</div>)}</div>
+    </section>:null}
 
     <section className="wide-panel"><div className="seo-copy"><h2>{cityContext.lunarTitle}</h2><p>{cityContext.lunarBody}</p></div></section>
     <section className="wide-panel"><div className="seo-copy"><h2>{qualityContent.lunarTitle}</h2><p>{qualityContent.lunarBody}</p></div></section>
