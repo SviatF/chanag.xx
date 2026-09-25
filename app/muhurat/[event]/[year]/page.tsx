@@ -5,6 +5,7 @@ import Header from "@/components/Header";
 import {cityBySlug} from "@/lib/cities";
 import {muhuratRules} from "@/lib/muhurat";
 import {buildMuhuratYearQualityContent} from "@/lib/muhurat-content-engine";
+import {buildMuhuratYearContext} from "@/lib/muhurat-year-context";
 import {isYearlyMuhuratIndexable,robotsFor,yearlyIndexYears} from "@/lib/seo-policy";
 import {parseRouteYear} from "@/lib/route-validation";
 import {muhuratYearSsgPriority} from "@/lib/static-seo-routes";
@@ -24,6 +25,7 @@ export default async function YearlyMuhurat({params}:{params:Promise<{event:stri
   const city=cityBySlug("mumbai");const activeYears=yearlyIndexYears();
   const summary=await buildYearlyMuhuratSummary(p.event,year,city);
   const quality=buildMuhuratYearQualityContent(p.event,year,city,summary);
+  const yearContext=buildMuhuratYearContext(summary);
   const ld={"@context":"https://schema.org","@type":"CollectionPage","name":`${rule.title} ${year} analysis`,"url":`https://panchvani.com${muhuratYearPath(p.event,year)}`,"description":quality.directAnswer};
 
   return <main><Header city={city}/><div className="page-shell internal-visual internal-muhurat">
@@ -34,6 +36,15 @@ export default async function YearlyMuhurat({params}:{params:Promise<{event:stri
 
     <div className="data-grid">{quality.facts.map(item=><div className="data-card" key={item.label}><small>{item.label}</small><strong>{item.value}</strong>{item.note?<small>{item.note}</small>:null}</div>)}</div>
     <section className="wide-panel"><div className="seo-copy"><h2>{quality.fingerprintTitle}</h2><p>{quality.fingerprintBody}</p></div></section>
+
+    <section className="wide-panel">
+      <div className="seo-copy"><small>ANNUAL YEAR LENS · MUMBAI BASELINE</small><h2>{yearContext.title}</h2><p>{yearContext.body}</p></div>
+      <div className="data-grid">{yearContext.facts.map(item=><div className="data-card" key={item.label}><small>{item.label}</small><strong>{item.value}</strong>{item.note?<small>{item.note}</small>:null}</div>)}</div>
+    </section>
+
+    <section className="wide-panel"><div className="seo-copy"><h2>{yearContext.calendarTitle}</h2><p>{yearContext.calendarBody}</p><h2>{yearContext.densityTitle}</h2><p>{yearContext.densityBody}</p></div></section>
+    <section className="wide-panel"><div className="seo-copy"><h2>{yearContext.timingTitle}</h2><p>{yearContext.timingBody}</p><h2>{yearContext.rankingTitle}</h2><p>{yearContext.rankingBody}</p></div></section>
+
     <section className="wide-panel"><div className="seo-copy"><h2>{quality.seasonalTitle}</h2><p>{quality.seasonalBody}</p></div></section>
     <section className="wide-panel"><div className="seo-copy"><h2>{quality.rankingTitle}</h2><p>{quality.rankingBody}</p></div></section>
     <section className="wide-panel"><div className="seo-copy"><h2>{quality.ruleTitle}</h2><p>{quality.ruleBody}</p></div></section>
