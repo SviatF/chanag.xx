@@ -14,16 +14,10 @@ function rows():VratOccurrence[]{
     {date:"2026-05-04",weekday:"Monday",paksha:"Shukla",tithi:"Ekadashi",sunrise:"05:38",tithiEnd:"16:30",tithiEndDate:"2026-05-04",repeatedAtSunrise:false,sequence:5},
   ];
 }
-
-function normalized(value:string,city:string,state:string){
-  return value.toLowerCase()
-    .replaceAll(city.toLowerCase()," ")
-    .replaceAll(state.toLowerCase()," ")
-    .replace(/\b\d+(?::\d+)?\b/g," ")
-    .replace(/[^a-z]+/g," ")
-    .replace(/\s+/g," ")
-    .trim();
-}
+function normalized(value:string,city:string,state:string){return value.toLowerCase().replaceAll(city.toLowerCase()," ").replaceAll(state.toLowerCase()," ").replace(/\b\d+(?::\d+)?\b/g," ").replace(/[^a-z]+/g," ").replace(/\s+/g," ").trim();}
+function trigrams(value:string){const words=value.split(/\s+/).filter(Boolean),out=new Set<string>();for(let i=0;i<=words.length-3;i++)out.add(words.slice(i,i+3).join(" "));return out;}
+function jaccard(a:string,b:string){const left=trigrams(a),right=trigrams(b);let overlap=0;for(const item of left)if(right.has(item))overlap++;return overlap/(left.size+right.size-overlap||1);}
+function maxPairwise(values:string[]){let max=0;for(let i=0;i<values.length;i++)for(let j=i+1;j<values.length;j++)max=Math.max(max,jaccard(values[i],values[j]));return max;}
 
 describe("Vrat city semantic dedup layer",()=>{
   it("keeps every phase-one city distinct after city names, states and numbers are stripped",()=>{
@@ -35,6 +29,7 @@ describe("Vrat city semantic dedup layer",()=>{
       return normalized(text,city.name,city.state);
     });
     expect(new Set(values).size).toBe(phase1PriorityCities.length);
+    expect(maxPairwise(values)).toBeLessThan(0.8);
   });
 
   it("keeps Ekadashi, Purnima and Amavasya focus layers semantically distinct",()=>{
