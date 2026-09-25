@@ -96,6 +96,16 @@ export default async function Page({params}:{params:Promise<{festival:string;yea
       <div className="data-grid">{cityContext.facts.map(item=><div className="data-card" key={item.label}><small>{item.label}</small><strong>{item.value}</strong>{item.note?<small>{item.note}</small>:null}</div>)}</div>
     </section>
 
+    <section className="wide-panel"><div className="seo-copy">
+      <small>FESTIVAL LOCALITY LENS · {city.name.toUpperCase()}</small>
+      <h2>{cityContext.localityTitle}</h2>
+      <p>{cityContext.localityBody}</p>
+      <h2>{cityContext.chronologyTitle}</h2>
+      <p>{cityContext.chronologyBody}</p>
+      <h2>{cityContext.observanceTitle}</h2>
+      <p>{cityContext.observanceBody}</p>
+    </div></section>
+
     {content.regionalBody?<section className="wide-panel"><div className="seo-copy">
       <h2>{content.regionalTitle}</h2>
       <p>{content.regionalBody}</p>
