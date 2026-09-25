@@ -3,8 +3,6 @@ import {buildCityContentProfile} from "./city-content-profile";
 import type {Panchang} from "./panchang";
 
 type Fact={label:string;value:string;note?:string};
-type CalendarMonthSimilarityEntry=Pick<Panchang,"date"|"sunrise"|"sunset"|"rahu">;
-
 export type CalendarMonthSimilarityContext={
   title:string;
   localityBody:string;
@@ -38,7 +36,6 @@ const monthlyLocalityLensBySlug:Record<string,string>={
 
 function clockMinutes(value:string){const [h,m]=value.split(":").map(Number);return Number.isFinite(h)&&Number.isFinite(m)?h*60+m:0;}
 function average(values:number[]){return values.length?Math.round(values.reduce((sum,value)=>sum+value,0)/values.length):0;}
-function span(entry:CalendarMonthSimilarityEntry){const start=clockMinutes(entry.sunrise),end=clockMinutes(entry.sunset);return end>=start?end-start:end+1440-start;}
 function range(values:number[]){return values.length?Math.max(...values)-Math.min(...values):0;}
 function formatClock(total:number){const normalized=((Math.round(total)%1440)+1440)%1440;return `${String(Math.floor(normalized/60)).padStart(2,"0")}:${String(normalized%60).padStart(2,"0")}`;}
 function movement(values:number[],subject:string){
@@ -53,12 +50,9 @@ function amplitude(minutes:number){
   if(minutes<=15)return "moderate";
   return "broad";
 }
-function midpointBand(value:number){
-  if(value<710)return "early solar-midpoint band";
-  if(value<=730)return "noon-centred solar-midpoint band";
-  return "late solar-midpoint band";
-}
 function monthName(year:number,month:number){return new Intl.DateTimeFormat("en-IN",{month:"long",year:"numeric",timeZone:"Asia/Kolkata"}).format(new Date(Date.UTC(year,month-1,1,6)));}
+
+type CalendarMonthSimilarityEntry=Pick<Panchang,"date"|"rahu"|"yamaganda"|"gulika"|"abhijit">;
 
 export function buildCalendarMonthSimilarityContext(city:City,year:number,month:number,entries:readonly CalendarMonthSimilarityEntry[]):CalendarMonthSimilarityContext{
   const profile=buildCityContentProfile(city),label=monthName(year,month);
@@ -67,8 +61,8 @@ export function buildCalendarMonthSimilarityContext(city:City,year:number,month:
     return {
       title:`${city.name} ${label} locality lens`,
       localityBody,
-      solarTitle:`${label} local solar movement`,
-      solarBody:`No retained daily rows are available for a month-level solar movement calculation, so the locality section keeps ${city.name}'s geographic and solar-clock frame without inventing timing changes.`,
+      solarTitle:`${label} local exclusion-clock movement`,
+      solarBody:`No retained daily rows are available for a month-level timing movement calculation, so the locality section keeps ${city.name}'s geographic and solar-clock frame without inventing interval changes.`,
       facts:[
         {label:"Locality anchor",value:profile.geoContext},
         {label:"Latitude frame",value:profile.latitudeContext},
@@ -77,28 +71,27 @@ export function buildCalendarMonthSimilarityContext(city:City,year:number,month:
     };
   }
 
-  const sunrise=entries.map(entry=>clockMinutes(entry.sunrise));
-  const sunset=entries.map(entry=>clockMinutes(entry.sunset));
-  const daylight=entries.map(span);
   const rahu=entries.map(entry=>clockMinutes(entry.rahu.start));
-  const midpoints=entries.map((entry,index)=>sunrise[index]+daylight[index]/2);
-  const sunriseMove=movement(sunrise,"sunrise"),sunsetMove=movement(sunset,"sunset"),daylightMove=movement(daylight,"daylight length");
-  const daylightAmplitude=range(daylight),rahuAmplitude=range(rahu),averageMidpoint=average(midpoints);
-  const opening=entries[0],closing=entries[entries.length-1];
+  const yamaganda=entries.map(entry=>clockMinutes(entry.yamaganda.start));
+  const gulika=entries.map(entry=>clockMinutes(entry.gulika.start));
+  const rahuMove=movement(rahu,"Rahu start"),yamagandaMove=movement(yamaganda,"Yamaganda start"),gulikaMove=movement(gulika,"Gulika start");
+  const rahuAmplitude=range(rahu),yamagandaAmplitude=range(yamaganda),gulikaAmplitude=range(gulika);
+  const timingCentroid=average(entries.map((_,index)=>(rahu[index]+yamaganda[index]+gulika[index])/3));
+  const abhijitCoverage=entries.filter(entry=>entry.abhijit!==null).length;
 
   return {
     title:`${city.name} ${label} locality lens`,
     localityBody,
-    solarTitle:`${label} local solar movement`,
-    solarBody:`Across ${entries.length} retained local dates, ${sunriseMove.text}; ${sunsetMove.text}; and ${daylightMove.text}. The daylight arc is ${amplitude(daylightAmplitude)}, while Rahu start times occupy a ${amplitude(rahuAmplitude)} intramonth range. The average daylight midpoint falls in the ${midpointBand(averageMidpoint)} at about ${formatClock(averageMidpoint)}. The opening date runs from ${opening.sunrise} to ${opening.sunset}; the closing date runs from ${closing.sunrise} to ${closing.sunset}. These are coordinate-derived month signals, so the locality narrative is tied to the rendered ${city.name} calculations rather than to a city-name substitution.`,
+    solarTitle:`${label} local exclusion-clock movement`,
+    solarBody:`Across ${entries.length} retained local dates, ${rahuMove.text}; ${yamagandaMove.text}; and ${gulikaMove.text}. Rahu occupies a ${amplitude(rahuAmplitude)} start-time range, Yamaganda a ${amplitude(yamagandaAmplitude)} range, and Gulika a ${amplitude(gulikaAmplitude)} range. The three-window timing centroid is about ${formatClock(timingCentroid)}, while Abhijit is retained on ${abhijitCoverage} of ${entries.length} dates. These month signals come from the same city-specific precomputed timing rows used by the public calendar, so the locality narrative stays attached to ${city.name}'s calculation set rather than to a city-name substitution.`,
     facts:[
       {label:"Locality anchor",value:profile.geoContext,note:profile.dailyContext},
       {label:"Latitude frame",value:profile.latitudeContext,note:profile.solarClockContext},
-      {label:"Sunrise movement",value:sunriseMove.key,note:`${entries[0].sunrise} → ${entries[entries.length-1].sunrise} · ${Math.abs(sunriseMove.delta)} min net`},
-      {label:"Sunset movement",value:sunsetMove.key,note:`${entries[0].sunset} → ${entries[entries.length-1].sunset} · ${Math.abs(sunsetMove.delta)} min net`},
-      {label:"Daylight amplitude",value:amplitude(daylightAmplitude),note:`${daylightAmplitude} min range · ${daylightMove.key}`},
-      {label:"Rahu start amplitude",value:amplitude(rahuAmplitude),note:`${formatClock(Math.min(...rahu))} → ${formatClock(Math.max(...rahu))} · ${rahuAmplitude} min range`},
-      {label:"Average solar midpoint",value:formatClock(averageMidpoint),note:midpointBand(averageMidpoint)}
+      {label:"Rahu movement",value:rahuMove.key,note:`${entries[0].rahu.start} → ${entries[entries.length-1].rahu.start} · ${rahuAmplitude} min range`},
+      {label:"Yamaganda movement",value:yamagandaMove.key,note:`${entries[0].yamaganda.start} → ${entries[entries.length-1].yamaganda.start} · ${yamagandaAmplitude} min range`},
+      {label:"Gulika movement",value:gulikaMove.key,note:`${entries[0].gulika.start} → ${entries[entries.length-1].gulika.start} · ${gulikaAmplitude} min range`},
+      {label:"Timing centroid",value:formatClock(timingCentroid),note:"Average of the three local exclusion-window starts"},
+      {label:"Abhijit coverage",value:`${abhijitCoverage}/${entries.length}`,note:"Retained local dates with an Abhijit window"}
     ]
   };
 }

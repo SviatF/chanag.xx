@@ -9,9 +9,10 @@ function entries(){
     const day=index+1;
     return {
       date:`2026-09-${String(day).padStart(2,"0")}`,
-      sunrise:`06:${String(8+Math.floor(day/4)).padStart(2,"0")}`,
-      sunset:`18:${String(38-Math.floor(day/5)).padStart(2,"0")}`,
-      rahu:{start:`13:${String(18+Math.floor(day/6)).padStart(2,"0")}`,end:"14:52"}
+      rahu:{start:`13:${String(18+Math.floor(day/6)).padStart(2,"0")}`,end:"14:52"},
+      yamaganda:{start:`06:${String(8+Math.floor(day/7)).padStart(2,"0")}`,end:"07:42"},
+      gulika:{start:`09:${String(4+Math.floor(day/8)).padStart(2,"0")}`,end:"10:36"},
+      abhijit:day%7===0?null:{start:"11:51",end:"12:40"}
     };
   });
 }
