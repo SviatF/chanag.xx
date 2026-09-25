@@ -4,6 +4,7 @@ import {buildChoghadiyaQualityContent} from "../lib/choghadiya-content-engine";
 import {findCityBySlug} from "../lib/cities";
 import type {Panchang} from "../lib/panchang";
 import {buildRegionalIntentQualityContent,buildRegionalPanchangQualityContent} from "../lib/regional-content-engine";
+import {phase1PriorityCities} from "../lib/seo-policy";
 
 function data(date:string,sunrise:string,sunset:string,rahu:{start:string;end:string},shift=0):Panchang{
   const names=["Amrit","Kaal","Shubh","Rog","Udveg","Char","Labh","Amrit"] as const;
@@ -12,6 +13,10 @@ function data(date:string,sunrise:string,sunset:string,rahu:{start:string;end:st
   return {
     date,weekday:"Thursday",tithi:"Ekadashi",tithiEnd:"14:20",tithiEndDate:date,paksha:"Shukla",nakshatra:"Rohini",nakshatraEnd:"17:45",nakshatraEndDate:date,nakshatraPada:2,rashi:"Vrishabha",solarRashi:"Kanya",yoga:"Siddhi",karana:"Bava",sunrise,sunset,moonrise:"18:40",moonriseDate:date,moonset:"05:20",moonsetDate:date,moonIllumination:62,rahu,yamaganda:{start:"06:10",end:"07:40"},gulika:{start:"09:10",end:"10:40"},abhijit:{start:"11:50",end:"12:40"},dayChoghadiya:day,nightChoghadiya:night,hinduMonth:"Ashwin",vikramSamvat:2083,shakaSamvat:1948,samvatYearStart:"2026-03-19",dayLord:"Jupiter",sunriseConvention:"Upper limb + atmospheric refraction · sea-level horizon",engine:"Swiss Ephemeris · Moshier"
   };
+}
+
+function normalized(value:string,city:string,state:string){
+  return value.toLowerCase().replaceAll(city.toLowerCase()," ").replaceAll(state.toLowerCase()," ").replace(/\b\d+(?::\d+)?\b/g," ").replace(/[^a-z]+/g," ").replace(/\s+/g," ").trim();
 }
 
 describe("regional and Choghadiya semantic content",()=>{
@@ -37,16 +42,28 @@ describe("regional and Choghadiya semantic content",()=>{
     expect(choghadiya.relationBody).toContain("राहुकाल");
   });
 
-  it("builds an English Choghadiya fingerprint from the full day and night sequence",()=>{
+  it("builds an English Choghadiya fingerprint from the full day, night and city geography",()=>{
     const city=findCityBySlug("chennai")!;
     const value=buildChoghadiyaQualityContent(data("2026-09-24","05:58","18:04",{start:"13:33",end:"15:04"},13),city);
     expect(value.directAnswer).toContain("Chennai");
-    expect(value.facts.length).toBe(6);
+    expect(value.facts.length).toBeGreaterThanOrEqual(7);
     expect(value.fingerprintTitle).toContain("Chennai");
     expect(value.fingerprintBody).toContain("daytime chain");
+    expect(value.fingerprintBody).toContain("Coromandel Coast");
     expect(value.nightBody).toContain("night");
     expect(value.rahuTitle).toContain("Rahu relationship");
-    expect(value.facts.find(item=>item.label==="Solar clock signature")?.value).toContain("/");
+    expect(value.facts.find(item=>item.label==="Geographic setting")?.value).toContain("Coromandel Coast");
+  });
+
+  it("keeps every phase-one Choghadiya city distinct after city names, states and numbers are stripped",()=>{
+    const fixture=data("2026-09-24","06:05","18:15",{start:"13:35",end:"15:05"},9);
+    const values=phase1PriorityCities.map(slug=>{
+      const city=findCityBySlug(slug)!;
+      const value=buildChoghadiyaQualityContent(fixture,city);
+      const text=[value.fingerprintTitle,value.fingerprintBody,value.daytimeBody,value.nightBody,value.rahuBody,...value.facts.map(item=>`${item.label} ${item.value} ${item.note??""}`)].join(" ");
+      return normalized(text,city.name,city.state);
+    });
+    expect(new Set(values).size).toBe(phase1PriorityCities.length);
   });
 
   it("wires regional city, regional intent and English Choghadiya routes to semantic engines",()=>{
