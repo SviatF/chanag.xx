@@ -12,6 +12,7 @@ import {todayInIndia} from "@/lib/dates";
 import {getRegionalCalendarProfile} from "@/lib/regional-calendar";
 import {getLunarMonthConventions,getRegionalCalendarConventions} from "@/lib/calendar-conventions";
 import {buildRegionalPanchangQualityContent} from "@/lib/regional-content-engine";
+import {buildRegionalCityContext} from "@/lib/regional-city-context";
 import {isRegionalIndexable,robotsFor} from "@/lib/seo-policy";
 import {isRegionalLanguageSlug,regionalAlternates,regionalIntentLinksForCity} from "@/lib/regional-seo";
 import {choghadiyaNativeNames,localizeNakshatra,localizePaksha,localizeTithi,nativeCityName} from "@/lib/regional-i18n";
@@ -65,6 +66,7 @@ export default async function RegionalPage({params}:{params:Promise<{language:st
   const moonrise=formatPanchangTime(data.moonrise,data.moonriseDate,data.date);
   const moonset=formatPanchangTime(data.moonset,data.moonsetDate,data.date);
   const quality=buildRegionalPanchangQualityContent(language,city,data,displayMonth);
+  const cityContext=buildRegionalCityContext(language,city,data,displayMonth);
   const intentLinks=regionalIntentLinksForCity(language,city);
   const year=Number(data.date.slice(0,4));
   const month=data.date.slice(5,7);
@@ -96,6 +98,12 @@ export default async function RegionalPage({params}:{params:Promise<{language:st
     <p className="page-subtitle">{quality.directAnswer}</p>
 
     <section className="wide-panel"><div className="seo-copy"><small>{calendarName} · {displayMonth}{yearLabel?` · ${yearLabel}`:""}</small><h2>{quality.fingerprintTitle}</h2><p>{quality.fingerprintBody}</p></div><div className="data-grid">{quality.facts.map(item=><div className="data-card" key={item.label}><small>{item.label}</small><strong>{item.value}</strong>{item.note?<small>{item.note}</small>:null}</div>)}</div></section>
+
+    <section className="wide-panel">
+      <div className="seo-copy"><small>{copy.nativeLanguage} · {copy.localCalculation}</small><h2>{cityContext.localityTitle}</h2><p>{cityContext.localityBody}</p><h2>{cityContext.solarTitle}</h2><p>{cityContext.solarBody}</p></div>
+      <div className="data-grid">{cityContext.facts.map(item=><div className="data-card" key={item.label}><small>{item.label}</small><strong>{item.value}</strong>{item.note?<small>{item.note}</small>:null}</div>)}</div>
+    </section>
+    <section className="wide-panel"><div className="seo-copy"><h2>{cityContext.lunarTitle}</h2><p>{cityContext.lunarBody}</p><h2>{cityContext.dayTitle}</h2><p>{cityContext.dayBody}</p></div></section>
 
     <div className="data-grid">
       <div className="data-card"><small>{t.tithi}</small><strong>{displayTithi}</strong><small>{displayPaksha} · {tithiEnd} {copy.until}</small></div>
