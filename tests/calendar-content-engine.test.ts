@@ -104,4 +104,19 @@ describe("Panchang and calendar semantic content",()=>{
     expect(monthly).toContain("buildMonthlyCalendarQualityContent");
     expect(yearly).toContain("buildYearlyCalendarQualityContent");
   });
+
+  it("gives Hindu-calendar year hubs four distinct temporal roles without SEO or disclaimer copy",()=>{
+    const yearlyHub=readFileSync("app/hindu-calendar/[year]/page.tsx","utf8");
+    expect(yearlyHub).toContain("ARCHIVE REFERENCE");
+    expect(yearlyHub).toContain("ACTIVE YEAR");
+    expect(yearlyHub).toContain("NEXT-YEAR PLANNING");
+    expect(yearlyHub).toContain("FORWARD HORIZON");
+    expect(yearlyHub).toContain("Completed-year calendar reference");
+    expect(yearlyHub).toContain("Current operating calendar");
+    expect(yearlyHub).toContain("Near-future planning calendar");
+    expect(yearlyHub).toContain("Longer-range calendar horizon");
+    expect(yearlyHub).not.toContain("indexable annual owner");
+    expect(yearlyHub).not.toContain("SEO city policy");
+    expect(yearlyHub).not.toContain("not synthesized or guessed");
+  });
 });
