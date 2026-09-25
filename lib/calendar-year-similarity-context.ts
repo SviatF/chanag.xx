@@ -39,6 +39,29 @@ const annualLensBySlug:Record<string,string>={
   varanasi:"Varanasi's annual Panchang belongs to the middle Ganges corridor of eastern Uttar Pradesh. Its longitude is close to, and slightly east of, the national standard-meridian zone, so local solar time sits earlier than Lucknow or Delhi while northern latitude preserves a strong seasonal daylight cycle. The yearly lens is an eastern Gangetic sequence with near-meridian clock behavior and pronounced seasonality."
 };
 
+const annualDiscriminatorBySlug:Record<string,string>={
+  mumbai:"Annual discriminator: harbour-facing Konkan timing, maritime-western clock placement, compact tropical daylight seasonality.",
+  delhi:"Annual discriminator: Yamuna-plain northern seasonality, pronounced solstitial contrast, later western-IST sunrise placement.",
+  bengaluru:"Annual discriminator: elevated plateau low-latitude stability, mild solstitial spread, west-shifted inland southern clock.",
+  hyderabad:"Annual discriminator: Musi-Deccan middle-band seasonality, inland plateau timing, moderate western civil-clock delay.",
+  ahmedabad:"Annual discriminator: Sabarmati inland Gujarat profile, north-central seasonal expansion, strongly delayed western solar clock.",
+  chennai:"Annual discriminator: Coromandel tropical coast, restrained daylight oscillation, earlier east-coast civil-time sunrise pattern.",
+  kolkata:"Annual discriminator: Hooghly-delta eastern clock, Bengal lowland month starts, north-central seasonal daylight movement.",
+  surat:"Annual discriminator: lower-Tapi gulf-side setting, southern-Gujarat daylight moderation, late western solar-clock placement.",
+  pune:"Annual discriminator: Sahyadri-leeward Deccan plateau, inland western timing, moderate annual daylight expansion and contraction.",
+  jaipur:"Annual discriminator: Aravalli-basin north-western frame, large solstitial daylight swing, distinctly late western-India clock.",
+  lucknow:"Annual discriminator: Awadh central-Gangetic frame, strong northern seasonality, comparatively near-meridian civil solar timing.",
+  kanpur:"Annual discriminator: central Ganga corridor, near-standard-meridian solar clock, Doab-style northern seasonal month-start arc.",
+  nagpur:"Annual discriminator: Vidarbha central-India plateau, balanced mid-Deccan seasonality, near-axis civil-time solar placement.",
+  indore:"Annual discriminator: Malwa west-central plateau, stronger seasonal swing than Deccan south, moderately delayed solar clock.",
+  thane:"Annual discriminator: north-eastern metropolitan Konkan coordinates, compact coastal seasonality, separate Ulhas-side month-start timing.",
+  bhopal:"Annual discriminator: central lake-plateau geography, intermediate meridian position, moderate seasonality between Malwa and Vidarbha profiles.",
+  visakhapatnam:"Annual discriminator: Eastern-Ghats coastal edge, early Bay-of-Bengal civil clock, mild peninsular seasonal daylight cycle.",
+  patna:"Annual discriminator: Bihar south-bank Ganges setting, eastern IST sunrise placement, strong northern-plain seasonal amplitude.",
+  vadodara:"Annual discriminator: Vishwamitri central-Gujarat position, intermediate Gujarat latitude, late western clock with mid-level seasonality.",
+  varanasi:"Annual discriminator: eastern Uttar Pradesh Ganges corridor, slightly eastward near-meridian timing, pronounced northern seasonal cycle."
+};
+
 function clockMinutes(value:string){const [h,m]=value.split(":").map(Number);return Number.isFinite(h)&&Number.isFinite(m)?h*60+m:0;}
 function daylight(entry:Panchang){const rise=clockMinutes(entry.sunrise),set=clockMinutes(entry.sunset);return set>=rise?set-rise:set+1440-rise;}
 function monthName(month:number){return new Intl.DateTimeFormat("en-IN",{month:"long",timeZone:"Asia/Kolkata"}).format(new Date(Date.UTC(2026,month-1,1,6)));}
@@ -50,22 +73,15 @@ function yearFrame(year:number){
 }
 function sunriseClass(value:string){const min=clockMinutes(value);if(min<350)return "very-early";if(min<365)return "early";if(min<380)return "near-six";if(min<395)return "post-six";return "late";}
 function daylightClass(value:number){if(value<700)return "compact";if(value<730)return "short-balanced";if(value<760)return "balanced";if(value<790)return "long-balanced";return "extended";}
-function monthArc(snapshots:readonly Panchang[]){
-  return snapshots.map((item,index)=>`${monthName(index+1)} ${item.paksha} ${item.tithi} / ${item.nakshatra} / ${sunriseClass(item.sunrise)} sunrise`).join(" · ");
-}
-function seasonalArc(snapshots:readonly Panchang[]){
-  return snapshots.map((item,index)=>`${monthName(index+1)} ${daylightClass(daylight(item))}`).join(" · ");
-}
+function monthArc(snapshots:readonly Panchang[]){return snapshots.map((item,index)=>`${monthName(index+1)} ${item.paksha} ${item.tithi} / ${item.nakshatra} / ${sunriseClass(item.sunrise)} sunrise`).join(" · ");}
+function seasonalArc(snapshots:readonly Panchang[]){return snapshots.map((item,index)=>`${monthName(index+1)} ${daylightClass(daylight(item))}`).join(" · ");}
 function festivalMap(festivals:readonly FestivalSummary[],year:number){
   if(!festivals.length)return "No maintained festival entries are attached to this year.";
   const byMonth=new Map<number,FestivalSummary[]>();
   for(const item of festivals){const m=Number(item.date.slice(5,7));byMonth.set(m,[...(byMonth.get(m)??[]),item]);}
   return [...byMonth.entries()].sort((a,b)=>a[0]-b[0]).map(([month,items])=>`${monthName(month)}: ${items.map(item=>`${item.name} on ${weekday(year,month,Number(item.date.slice(8,10)))}`).join(", ")}`).join(" · ");
 }
-function quarterFingerprint(snapshots:readonly Panchang[]){
-  const picks=[0,3,6,9].filter(index=>snapshots[index]);
-  return picks.map(index=>{const item=snapshots[index];return `${monthName(index+1)} opens with ${item.paksha} ${item.tithi}, ${item.nakshatra}, Moon in ${item.rashi}`;}).join(" · ");
-}
+function quarterFingerprint(snapshots:readonly Panchang[]){const picks=[0,3,6,9].filter(index=>snapshots[index]);return picks.map(index=>{const item=snapshots[index];return `${monthName(index+1)} opens with ${item.paksha} ${item.tithi}, ${item.nakshatra}, Moon in ${item.rashi}`;}).join(" · ");}
 function dominantMonthStartWeekday(year:number){
   const counts=new Map<string,number>();
   for(let month=1;month<=12;month++){const w=weekday(year,month,1);counts.set(w,(counts.get(w)??0)+1);}
@@ -76,10 +92,11 @@ function cityVariant(slug:string){let h=19;for(let i=0;i<slug.length;i++)h=(h*15
 export function buildCalendarYearSimilarityContext(city:City,year:number,snapshots:readonly Panchang[],festivals:readonly FestivalSummary[]):CalendarYearSimilarityContext{
   const profile=buildCityContentProfile(city),frame=yearFrame(year),variant=cityVariant(city.slug),monthStart=dominantMonthStartWeekday(year);
   const annualLens=annualLensBySlug[city.slug]??`${profile.dailyContext} The annual sequence keeps ${profile.geoContext} as its locality frame, with ${profile.latitudeContext} and ${profile.solarClockContext}.`;
+  const discriminator=annualDiscriminatorBySlug[city.slug]??`Annual discriminator: ${profile.geoContext}, ${profile.latitudeContext}, ${profile.solarClockContext}.`;
   if(!snapshots.length){
     return {
       title:`${city.name} ${year} locality lens`,
-      localityBody:`${annualLens} No month-start Panchang snapshots are available, so the yearly route preserves the city frame without inventing an annual lunar sequence.`,
+      localityBody:`${annualLens} ${discriminator} No month-start Panchang snapshots are available, so the yearly route preserves the city frame without inventing an annual lunar sequence.`,
       chronologyTitle:`${frame.label}`,
       chronologyBody:`The civil year opens on ${frame.open} and closes on ${frame.close}; no month-start Panchang snapshots are currently available to build a twelve-step chronology.`,
       festivalTitle:"Festival footprint",
@@ -102,16 +119,16 @@ export function buildCalendarYearSimilarityContext(city:City,year:number,snapsho
   const lunarRashis=[...new Set(snapshots.map(item=>item.rashi))];
 
   const localityBody=variant===0
-    ? `${annualLens} Across the full ${year} calendar, the city-specific clock is sampled at twelve month starts. The sequence remains tied to ${profile.geoContext}; the observed annual sunrise and daylight pattern should therefore be read inside that locality rather than against a national fixed timetable.`
+    ? `${annualLens} ${discriminator} Across the full ${year} calendar, the city-specific clock is sampled at twelve month starts. The sequence remains tied to ${profile.geoContext}; the observed annual sunrise and daylight pattern should therefore be read inside that locality rather than against a national fixed timetable.`
     : variant===1
-      ? `${annualLens} The twelve first-of-month checkpoints turn that geographic frame into an annual series. Rather than treating the route as a renamed national calendar, each lunar state and solar boundary stays attached to the city's own coordinates.`
+      ? `${annualLens} ${discriminator} The twelve first-of-month checkpoints turn that geographic frame into an annual series. Rather than treating the route as a renamed national calendar, each lunar state and solar boundary stays attached to the city's own coordinates.`
       : variant===2
-        ? `${annualLens} The year-level chronology preserves those local coordinates at every month opening. Seasonal daylight change and civil-clock placement are therefore interpreted together instead of reducing the page to a generic list of twelve months.`
+        ? `${annualLens} ${discriminator} The year-level chronology preserves those local coordinates at every month opening. Seasonal daylight change and civil-clock placement are therefore interpreted together instead of reducing the page to a generic list of twelve months.`
         : variant===3
-          ? `${annualLens} That city frame is carried through twelve local month-start Panchang calculations. The result is an annual series in which solar timing, lunar state and festival placement remain tied to one locality.`
+          ? `${annualLens} ${discriminator} That city frame is carried through twelve local month-start Panchang calculations. The result is an annual series in which solar timing, lunar state and festival placement remain tied to one locality.`
           : variant===4
-            ? `${annualLens} The yearly route keeps this local solar frame intact at every first-of-month checkpoint, so nearby cities are not used as substitutes even when their civil dates or festival lists overlap.`
-            : `${annualLens} Twelve monthly checkpoints preserve the same city-specific frame across the year. The annual timing signature therefore comes from local coordinates plus the changing lunar state, not from a generic yearly shell.`;
+            ? `${annualLens} ${discriminator} The yearly route keeps this local solar frame intact at every first-of-month checkpoint, so nearby cities are not used as substitutes even when their civil dates or festival lists overlap.`
+            : `${annualLens} ${discriminator} Twelve monthly checkpoints preserve the same city-specific frame across the year. The annual timing signature therefore comes from local coordinates plus the changing lunar state, not from a generic yearly shell.`;
 
   const chronologyBody=variant%3===0
     ? `${frame.label}. Month-start weekdays span ${distinctWeekdays} weekday labels, led by ${monthStart[0]} on ${monthStart[1]} month openings. The quarter checkpoints are ${firstQuarter}. The full lunar/sunrise arc is ${arc}.`
@@ -131,10 +148,11 @@ export function buildCalendarYearSimilarityContext(city:City,year:number,snapsho
     festivalTitle:`Annual festival and solar-day map`,
     festivalBody,
     facts:[
-      {label:"City annual lens",value:profile.geoContext,note:profile.dailyContext},
+      {label:"Annual locality discriminator",value:discriminator,note:profile.dailyContext},
       {label:"Civil-year frame",value:frame.key,note:`${frame.open} → ${frame.close}`},
       {label:"Most common month-start weekday",value:monthStart[0],note:`${monthStart[1]} month openings`},
-      {label:"Solar-clock relation",value:profile.solarClockContext,note:profile.latitudeContext},
+      {label:"Geographic frame",value:profile.geoContext,note:profile.latitudeContext},
+      {label:"Solar-clock relation",value:profile.solarClockContext},
       {label:"Shortest sampled daylight",value:daylightClass(minDay),note:monthName(shortestIndex+1)},
       {label:"Longest sampled daylight",value:daylightClass(maxDay),note:monthName(longestIndex+1)},
       {label:"Sunrise-class variety",value:sunriseClasses.join(" · ")},
