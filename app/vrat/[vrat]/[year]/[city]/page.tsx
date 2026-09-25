@@ -10,6 +10,7 @@ import {vratCitySsgPriority} from "@/lib/static-seo-routes";
 import {calculateVratCalendar,findVratBySlug,vratCalendarSummary} from "@/lib/vrat";
 import {buildVratQualityContent} from "@/lib/vrat-content-engine";
 import {buildVratCityContext} from "@/lib/vrat-city-context";
+import {buildVratCitySimilarityContext} from "@/lib/vrat-city-similarity-context";
 import {buildVratTopicalGraph} from "@/lib/vrat-topical-links";
 
 export const dynamicParams=true;
@@ -33,6 +34,7 @@ export default async function VratCityPage({params}:{params:Promise<{vrat:string
   const summary=vratCalendarSummary(rows);
   const quality=buildVratQualityContent(vrat,year,city,rows,"city");
   const cityContext=buildVratCityContext(vrat,year,city,rows);
+  const similarityContext=buildVratCitySimilarityContext(vrat,year,city,rows);
   const firstMonth=rows[0]?.date.slice(5,7)??"01";
   const ld={"@context":"https://schema.org","@graph":[
     {"@type":"WebPage","name":`${vrat.name} ${year} in ${city.name}`,"description":quality.directAnswer,"url":`https://panchvani.com/vrat/${vrat.slug}/${year}/${city.slug}`},
@@ -56,6 +58,11 @@ export default async function VratCityPage({params}:{params:Promise<{vrat:string
     <section className="wide-panel">
       <div className="seo-copy"><small>LOCAL CITY SIGNATURE · {city.state.toUpperCase()}</small><h2>{cityContext.title}</h2><p>{cityContext.body}</p><p>{cityContext.secondaryBody}</p></div>
       <div className="data-grid">{cityContext.facts.map(item=><div className="data-card" key={item.label}><small>{item.label}</small><strong>{item.value}</strong>{item.note?<small>{item.note}</small>:null}</div>)}</div>
+    </section>
+
+    <section className="wide-panel">
+      <div className="seo-copy"><small>VRAT LOCALITY LENS · {city.state.toUpperCase()}</small><h2>{similarityContext.title}</h2><p>{similarityContext.localityBody}</p><h2>{similarityContext.boundaryTitle}</h2><p>{similarityContext.boundaryBody}</p></div>
+      <div className="data-grid">{similarityContext.facts.map(item=><div className="data-card" key={item.label}><small>{item.label}</small><strong>{item.value}</strong>{item.note?<small>{item.note}</small>:null}</div>)}</div>
     </section>
 
     <section className="wide-panel"><div className="seo-copy"><h2>{quality.fingerprintTitle}</h2><p>{quality.fingerprintBody}</p></div></section>
