@@ -5,7 +5,7 @@ type Entry={
   date:string;
   tithi:string;
   nakshatra:string;
-  paksha:string;
+  paksha?:string;
   rahu:Window;
   yamaganda:Window;
   gulika:Window;
@@ -101,7 +101,7 @@ export function buildCalendarMonthHighSimilarityContext(city:City,year:number,mo
   const label=monthLabel(year,month);
   const tithiDiversity=new Set(entries.map(entry=>entry.tithi)).size;
   const nakshatraDiversity=new Set(entries.map(entry=>entry.nakshatra)).size;
-  const pakshaSequence=[...new Set(entries.map(entry=>entry.paksha))];
+  const pakshaSequence=[...new Set(entries.map(entry=>entry.paksha).filter((value):value is string=>Boolean(value)))];
   const abhijitCount=entries.filter(entry=>entry.abhijit!==null).length;
   const variable=mostVariable(entries);
   const thirds=splitThirds(entries);
@@ -123,7 +123,7 @@ export function buildCalendarMonthHighSimilarityContext(city:City,year:number,mo
       {label:"Monthly geography role",value:city.slug==="ahmedabad"?"north-central anchor":"central transition hinge"},
       {label:"Tithi rotation",value:diversityLabel(tithiDiversity,"tithi"),note:`Opening / midpoint / closing: ${opening?.tithi??"—"} · ${middle?.tithi??"—"} · ${closing?.tithi??"—"}`},
       {label:"Nakshatra rotation",value:diversityLabel(nakshatraDiversity,"nakshatra"),note:`Opening / midpoint / closing: ${opening?.nakshatra??"—"} · ${middle?.nakshatra??"—"} · ${closing?.nakshatra??"—"}`},
-      {label:"Paksha path",value:pakshaSequence.join(" → ")||"unavailable"},
+      {label:"Paksha path",value:pakshaSequence.join(" → ")||"not exposed by the committed precomputed month shard"},
       {label:"Exclusion-clock drift",value:movementLabel(centroidDelta),note:`First-third to closing-third centroid delta: ${centroidDelta} min`},
       {label:"Most variable exclusion",value:variable.label,note:`${rangeLabel(variable.range)} · ${variable.range} min start-time range`},
       {label:"Latest timing third",value:third.label},
