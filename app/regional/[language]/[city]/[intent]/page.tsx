@@ -12,6 +12,7 @@ import {regional} from "@/lib/regional";
 import {getRegionalCalendarProfile} from "@/lib/regional-calendar";
 import {getLunarMonthConventions,getRegionalCalendarConventions} from "@/lib/calendar-conventions";
 import {buildRegionalIntentQualityContent} from "@/lib/regional-content-engine";
+import {buildRegionalIntentCityContext} from "@/lib/regional-intent-city-context";
 import {
   isRegionalIntentIndexable,
   isRegionalIntentSlug,
@@ -63,6 +64,7 @@ export default async function RegionalIntentPage({params}:{params:Promise<{langu
   const date=todayInIndia();
   const data=await getPanchang(date,city);
   const quality=buildRegionalIntentQualityContent(language,city,intent,data);
+  const cityContext=buildRegionalIntentCityContext(language,city,intent,data);
   const languageAlternates=regionalAlternates(city,intent);
   const lunar=getLunarMonthConventions(date,city,data);
   const regionalConventions=getRegionalCalendarConventions(date,city,data);
@@ -102,6 +104,12 @@ export default async function RegionalIntentPage({params}:{params:Promise<{langu
     <p className="page-subtitle">{quality.directAnswer}</p>
 
     <section className="wide-panel"><div className="data-grid">{quality.facts.map(item=><div className="data-card" key={item.label}><small>{item.label}</small><strong>{item.value}</strong>{item.note?<small>{item.note}</small>:null}</div>)}</div></section>
+
+    <section className="wide-panel">
+      <div className="seo-copy"><small>{copy.nativeLanguage} · {copy.localTiming}</small><h2>{cityContext.title}</h2><p>{cityContext.body}</p><h2>{cityContext.solarTitle}</h2><p>{cityContext.solarBody}</p></div>
+      <div className="data-grid">{cityContext.facts.map(item=><div className="data-card" key={item.label}><small>{item.label}</small><strong>{item.value}</strong>{item.note?<small>{item.note}</small>:null}</div>)}</div>
+    </section>
+    <section className="wide-panel"><div className="seo-copy"><h2>{cityContext.structureTitle}</h2><p>{cityContext.structureBody}</p></div></section>
 
     {intent==="rahu-kalam"?<>
       <div className="data-grid">
