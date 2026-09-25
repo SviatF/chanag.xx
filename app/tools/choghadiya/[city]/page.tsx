@@ -8,6 +8,7 @@ import TopicalGraph from "@/components/TopicalGraph";
 import {findCityBySlug} from "@/lib/cities";
 import {buildChoghadiyaQualityContent} from "@/lib/choghadiya-content-engine";
 import {buildChoghadiyaCityContext} from "@/lib/choghadiya-city-context";
+import {buildChoghadiyaCityHighSimilarityContext} from "@/lib/choghadiya-city-high-similarity-context";
 import {getPanchang} from "@/lib/panchang";
 import {todayInIndia} from "@/lib/dates";
 import {isPriorityCity,robotsFor} from "@/lib/seo-policy";
@@ -38,6 +39,7 @@ export default async function ChoghadiyaCityPage({params}:{params:Promise<{city:
   const languageAlternates=regionalAlternates(city,"choghadiya");
   const quality=buildChoghadiyaQualityContent(data,city);
   const cityContext=buildChoghadiyaCityContext(data,city);
+  const highSimilarityContext=buildChoghadiyaCityHighSimilarityContext(data,city);
 
   const ld={"@context":"https://schema.org","@graph":[
     {"@type":"WebApplication","name":`Choghadiya Calculator — ${city.name}`,"applicationCategory":"LifestyleApplication","operatingSystem":"Web","url":`https://panchvani.com/tools/choghadiya/${city.slug}`,"description":quality.directAnswer},
@@ -76,6 +78,19 @@ export default async function ChoghadiyaCityPage({params}:{params:Promise<{city:
       </div>
       <div className="data-grid">{cityContext.facts.map(item=><div className="data-card" key={item.label}><small>{item.label}</small><strong>{item.value}</strong>{item.note?<small>{item.note}</small>:null}</div>)}</div>
     </section>
+
+    {highSimilarityContext?<section className="wide-panel">
+      <div className="seo-copy">
+        <small>LOCAL CLOCK COMPARISON LENS · {city.name.toUpperCase()}</small>
+        <h2>{highSimilarityContext.title}</h2>
+        <p>{highSimilarityContext.localityBody}</p>
+        <h2>{highSimilarityContext.solarTitle}</h2>
+        <p>{highSimilarityContext.solarBody}</p>
+        <h2>{highSimilarityContext.planningTitle}</h2>
+        <p>{highSimilarityContext.planningBody}</p>
+      </div>
+      <div className="data-grid">{highSimilarityContext.facts.map(item=><div className="data-card" key={item.label}><small>{item.label}</small><strong>{item.value}</strong>{item.note?<small>{item.note}</small>:null}</div>)}</div>
+    </section>:null}
 
     <TopicalGraph title={`Explore timing in ${city.name}`} groups={buildChoghadiyaTopicalGraph(city,date)}/>
     <script type="application/ld+json" dangerouslySetInnerHTML={{__html:JSON.stringify(ld)}}/>
