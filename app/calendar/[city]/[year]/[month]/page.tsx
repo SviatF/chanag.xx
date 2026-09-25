@@ -6,6 +6,7 @@ import TopicalGraph from "@/components/TopicalGraph";
 import {findCityBySlug} from "@/lib/cities";
 import {buildMonthlyCalendarQualityContent} from "@/lib/calendar-content-engine";
 import {buildCalendarMonthCityContext} from "@/lib/calendar-month-city-context";
+import {buildCalendarMonthSimilarityContext} from "@/lib/calendar-month-similarity-context";
 import {getPrecomputedMuhuratPanchangMonth} from "@/lib/muhurat-precomputed";
 import {getPanchang} from "@/lib/panchang";
 import {festivalsForYear} from "@/lib/festivals";
@@ -53,6 +54,7 @@ export default async function CalendarPage({params}:{params:Promise<{city:string
   const festivalByDate=new Map(monthFestivals.map(f=>[f.date,f]));
   const qualityContent=buildMonthlyCalendarQualityContent(city,y,m,entries,monthFestivals);
   const cityContext=buildCalendarMonthCityContext(city,y,m,entries,monthFestivals);
+  const similarityContext=buildCalendarMonthSimilarityContext(city,y,m,entries);
   const monthName=monthLabel(y,m);
   const prev=new Date(Date.UTC(y,m-2,1));
   const next=new Date(Date.UTC(y,m,1));
@@ -99,6 +101,11 @@ export default async function CalendarPage({params}:{params:Promise<{city:string
     <section className="wide-panel">
       <div className="seo-copy"><small>LOCAL CITY SIGNATURE · {city.state.toUpperCase()}</small><h2>{cityContext.title}</h2><p>{cityContext.body}</p><p>{cityContext.secondaryBody}</p></div>
       <div className="data-grid">{cityContext.facts.map(item=><div className="data-card" key={item.label}><small>{item.label}</small><strong>{item.value}</strong>{item.note?<small>{item.note}</small>:null}</div>)}</div>
+    </section>
+
+    <section className="wide-panel">
+      <div className="seo-copy"><small>MONTHLY LOCALITY LENS · {city.state.toUpperCase()}</small><h2>{similarityContext.title}</h2><p>{similarityContext.localityBody}</p><h2>{similarityContext.solarTitle}</h2><p>{similarityContext.solarBody}</p></div>
+      <div className="data-grid">{similarityContext.facts.map(item=><div className="data-card" key={item.label}><small>{item.label}</small><strong>{item.value}</strong>{item.note?<small>{item.note}</small>:null}</div>)}</div>
     </section>
 
     <section className="wide-panel"><div className="seo-copy"><h2>{cityContext.lunarTitle}</h2><p>{cityContext.lunarBody}</p></div></section>
