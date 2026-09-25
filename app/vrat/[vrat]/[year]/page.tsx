@@ -9,6 +9,7 @@ import {isVratIndexable,robotsFor} from "@/lib/seo-policy";
 import {vratYearSsgPriority} from "@/lib/static-seo-routes";
 import {calculateVratCalendar,findVratBySlug,vratCalendarSummary} from "@/lib/vrat";
 import {buildVratQualityContent} from "@/lib/vrat-content-engine";
+import {buildVratYearContext} from "@/lib/vrat-year-context";
 import {buildVratTopicalGraph} from "@/lib/vrat-topical-links";
 
 export const dynamicParams=true;
@@ -27,6 +28,7 @@ export default async function VratYearPage({params}:{params:Promise<{vrat:string
   const rows=calculateVratCalendar(vrat.slug,year,referenceCity);
   const summary=vratCalendarSummary(rows);
   const quality=buildVratQualityContent(vrat,year,referenceCity,rows,"baseline");
+  const yearContext=buildVratYearContext(vrat,year,rows);
   const ld={"@context":"https://schema.org","@graph":[
     {"@type":"WebPage","name":`${vrat.name} ${year} lunar Tithi calendar reference`,"description":quality.directAnswer,"url":`https://panchvani.com/vrat/${vrat.slug}/${year}`},
     {"@type":"ItemList","name":`${vrat.name} ${year} sunrise observations`,"numberOfItems":rows.length,"itemListElement":rows.map((row,index)=>({"@type":"ListItem","position":index+1,"name":`${row.paksha} ${row.tithi} — ${row.date}`,"url":`https://panchvani.com/panchang/${referenceCity.slug}/${row.date}`}))}
@@ -41,6 +43,14 @@ export default async function VratYearPage({params}:{params:Promise<{vrat:string
     <div className="data-grid"><div className="data-card"><small>Sunrise observations</small><strong>{summary.count}</strong><small>{summary.first??"—"} → {summary.last??"—"}</small></div>{quality.facts.map(item=><div className="data-card" key={item.label}><small>{item.label}</small><strong>{item.value}</strong>{item.note?<small>{item.note}</small>:null}</div>)}</div>
 
     <section className="wide-panel"><div className="seo-copy"><h2>{quality.fingerprintTitle}</h2><p>{quality.fingerprintBody}</p></div></section>
+
+    <section className="wide-panel">
+      <div className="seo-copy"><small>ANNUAL LUNAR RHYTHM · MUMBAI BASELINE</small><h2>{yearContext.title}</h2><p>{yearContext.body}</p></div>
+      <div className="data-grid">{yearContext.facts.map(item=><div className="data-card" key={item.label}><small>{item.label}</small><strong>{item.value}</strong>{item.note?<small>{item.note}</small>:null}</div>)}</div>
+    </section>
+    <section className="wide-panel"><div className="seo-copy"><h2>{yearContext.calendarTitle}</h2><p>{yearContext.calendarBody}</p><h2>{yearContext.cadenceTitle}</h2><p>{yearContext.cadenceBody}</p></div></section>
+    <section className="wide-panel"><div className="seo-copy"><h2>{yearContext.persistenceTitle}</h2><p>{yearContext.persistenceBody}</p><h2>{yearContext.observanceTitle}</h2><p>{yearContext.observanceBody}</p></div></section>
+
     <section className="wide-panel"><div className="seo-copy"><h2>{quality.distributionTitle}</h2><p>{quality.distributionBody}</p></div></section>
     <section className="wide-panel"><div className="seo-copy"><h2>{quality.transitionTitle}</h2><p>{quality.transitionBody}</p></div></section>
     <section className="wide-panel"><div className="seo-copy"><h2>{quality.observanceTitle}</h2><p>{quality.observanceBody}</p></div></section>
