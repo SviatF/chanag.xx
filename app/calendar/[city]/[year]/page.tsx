@@ -6,6 +6,7 @@ import {findCityBySlug} from "@/lib/cities";
 import {buildYearlyCalendarQualityContent} from "@/lib/calendar-content-engine";
 import {buildCalendarYearCityContext} from "@/lib/calendar-year-city-context";
 import {buildCalendarYearSimilarityContext} from "@/lib/calendar-year-similarity-context";
+import {buildCalendarYearHighSimilarityContext} from "@/lib/calendar-year-high-similarity-context";
 import {festivalDateIsValidated} from "@/lib/festival-expansion";
 import {festivalsForYear} from "@/lib/festivals";
 import {getPanchang} from "@/lib/panchang";
@@ -34,6 +35,7 @@ export default async function CityYearCalendar({params}:{params:Promise<{city:st
   const qualityContent=buildYearlyCalendarQualityContent(city,year,snapshots,festivals);
   const cityContext=buildCalendarYearCityContext(city,year,snapshots,festivals);
   const similarityContext=buildCalendarYearSimilarityContext(city,year,snapshots,festivals);
+  const highSimilarityContext=buildCalendarYearHighSimilarityContext(city,year,snapshots,festivals);
   const peers=sitemapPriorityCities.filter(item=>item.slug!==city.slug).slice(0,6);
   const ld={"@context":"https://schema.org","@type":"CollectionPage","name":`Hindu Calendar ${year} in ${city.name}`,"url":`https://panchvani.com${cityCalendarYearPath(city,year)}`,"description":similarityContext.localityBody};
 
@@ -61,6 +63,11 @@ export default async function CityYearCalendar({params}:{params:Promise<{city:st
       <div className="seo-copy"><small>ANNUAL LOCALITY LENS · {city.name.toUpperCase()}</small><h2>{similarityContext.title}</h2><p>{similarityContext.localityBody}</p><h2>{similarityContext.chronologyTitle}</h2><p>{similarityContext.chronologyBody}</p></div>
       <div className="data-grid">{similarityContext.facts.map(item=><div className="data-card" key={item.label}><small>{item.label}</small><strong>{item.value}</strong>{item.note?<small>{item.note}</small>:null}</div>)}</div>
     </section>
+
+    {highSimilarityContext?<section className="wide-panel">
+      <div className="seo-copy"><small>{highSimilarityContext.eyebrow}</small><h2>{highSimilarityContext.title}</h2><p>{highSimilarityContext.localityBody}</p><h2>{highSimilarityContext.solarTitle}</h2><p>{highSimilarityContext.solarBody}</p><h2>{highSimilarityContext.lunarTitle}</h2><p>{highSimilarityContext.lunarBody}</p><h2>{highSimilarityContext.festivalTitle}</h2><p>{highSimilarityContext.festivalBody}</p></div>
+      <div className="data-grid">{highSimilarityContext.facts.map(item=><div className="data-card" key={item.label}><small>{item.label}</small><strong>{item.value}</strong>{item.note?<small>{item.note}</small>:null}</div>)}</div>
+    </section>:null}
 
     <section className="wide-panel"><div className="seo-copy"><h2>{cityContext.seasonalTitle}</h2><p>{cityContext.seasonalBody}</p><h2>{cityContext.lunarTitle}</h2><p>{cityContext.lunarBody}</p></div></section>
     <section className="wide-panel"><div className="seo-copy"><h2>{qualityContent.seasonalTitle}</h2><p>{qualityContent.seasonalBody}</p><h2>{qualityContent.lunarTitle}</h2><p>{qualityContent.lunarBody}</p></div></section>
