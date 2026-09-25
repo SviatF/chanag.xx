@@ -7,6 +7,7 @@ import LanguageLinks from "@/components/LanguageLinks";
 import TopicalGraph from "@/components/TopicalGraph";
 import {findCityBySlug} from "@/lib/cities";
 import {buildChoghadiyaQualityContent} from "@/lib/choghadiya-content-engine";
+import {buildChoghadiyaCityContext} from "@/lib/choghadiya-city-context";
 import {getPanchang} from "@/lib/panchang";
 import {todayInIndia} from "@/lib/dates";
 import {isPriorityCity,robotsFor} from "@/lib/seo-policy";
@@ -36,6 +37,7 @@ export default async function ChoghadiyaCityPage({params}:{params:Promise<{city:
   const data=await getPanchang(date,city);
   const languageAlternates=regionalAlternates(city,"choghadiya");
   const quality=buildChoghadiyaQualityContent(data,city);
+  const cityContext=buildChoghadiyaCityContext(data,city);
 
   const ld={"@context":"https://schema.org","@graph":[
     {"@type":"WebApplication","name":`Choghadiya Calculator — ${city.name}`,"applicationCategory":"LifestyleApplication","operatingSystem":"Web","url":`https://panchvani.com/tools/choghadiya/${city.slug}`,"description":quality.directAnswer},
@@ -61,6 +63,19 @@ export default async function ChoghadiyaCityPage({params}:{params:Promise<{city:
     </div>
 
     <section className="wide-panel"><div className="seo-copy"><h2>{quality.fingerprintTitle}</h2><p>{quality.fingerprintBody}</p><h2>{quality.daytimeTitle}</h2><p>{quality.daytimeBody}</p><h2>{quality.nightTitle}</h2><p>{quality.nightBody}</p><h2>{quality.rahuTitle}</h2><p>{quality.rahuBody}</p></div></section>
+
+    <section className="wide-panel">
+      <div className="seo-copy">
+        <small>CHOGHADIYA LOCALITY LENS · {city.name.toUpperCase()}</small>
+        <h2>{cityContext.localityTitle}</h2>
+        <p>{cityContext.localityBody}</p>
+        <h2>{cityContext.boundaryTitle}</h2>
+        <p>{cityContext.boundaryBody}</p>
+        <h2>{cityContext.weekdayTitle}</h2>
+        <p>{cityContext.weekdayBody}</p>
+      </div>
+      <div className="data-grid">{cityContext.facts.map(item=><div className="data-card" key={item.label}><small>{item.label}</small><strong>{item.value}</strong>{item.note?<small>{item.note}</small>:null}</div>)}</div>
+    </section>
 
     <TopicalGraph title={`Explore timing in ${city.name}`} groups={buildChoghadiyaTopicalGraph(city,date)}/>
     <script type="application/ld+json" dangerouslySetInnerHTML={{__html:JSON.stringify(ld)}}/>
