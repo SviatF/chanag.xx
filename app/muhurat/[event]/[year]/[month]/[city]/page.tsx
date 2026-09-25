@@ -7,6 +7,7 @@ import {findCityBySlug} from "@/lib/cities";
 import {getMonthlyMuhurat,muhuratRules} from "@/lib/muhurat";
 import {buildMuhuratMonthlyQualityContent} from "@/lib/muhurat-content-engine";
 import {buildMuhuratCityContext} from "@/lib/muhurat-city-context";
+import {buildMuhuratCitySimilarityContext} from "@/lib/muhurat-city-similarity-context";
 import {isMonthlyMuhuratIndexable,robotsFor} from "@/lib/seo-policy";
 import {parseRouteMonth,parseRouteYear} from "@/lib/route-validation";
 import {muhuratCityMonthSsgPriority} from "@/lib/static-seo-routes";
@@ -30,6 +31,7 @@ export default async function Page({params}:{params:Promise<{event:string;year:s
   const top=rows[0];
   const quality=buildMuhuratMonthlyQualityContent(p.event,year,month,city,rows,"city");
   const localContext=buildMuhuratCityContext(city,rows,rule.title);
+  const similarityContext=buildMuhuratCitySimilarityContext(city,rows,rule.title,year,month);
   const ld={"@context":"https://schema.org","@graph":[
     {"@type":"CollectionPage","name":`${rule.title} candidate dates in ${city.name} — ${p.month}/${year}`,"url":`https://panchvani.com/muhurat/${p.event}/${year}/${p.month}/${city.slug}`,"description":quality.directAnswer},
     {"@type":"ItemList","name":`${rule.title} screened candidate dates`,"itemListElement":rows.map((r,index)=>({"@type":"ListItem","position":index+1,"name":`${r.date} · Planning Score ${r.planning.score}/100`,"url":`https://panchvani.com/panchang/${city.slug}/${r.date}`}))}
@@ -47,6 +49,11 @@ export default async function Page({params}:{params:Promise<{event:string;year:s
     <section className="wide-panel">
       <div className="seo-copy"><small>LOCAL CITY SIGNATURE · {city.state.toUpperCase()}</small><h2>{localContext.title}</h2><p>{localContext.body}</p><p>{localContext.secondaryBody}</p></div>
       <div className="data-grid">{localContext.facts.map(item=><div className="data-card" key={item.label}><small>{item.label}</small><strong>{item.value}</strong>{item.note?<small>{item.note}</small>:null}</div>)}</div>
+    </section>
+
+    <section className="wide-panel">
+      <div className="seo-copy"><small>MUHURAT LOCALITY LENS · {city.state.toUpperCase()}</small><h2>{similarityContext.title}</h2><p>{similarityContext.localityBody}</p><h2>{similarityContext.decisionTitle}</h2><p>{similarityContext.decisionBody}</p></div>
+      <div className="data-grid">{similarityContext.facts.map(item=><div className="data-card" key={item.label}><small>{item.label}</small><strong>{item.value}</strong>{item.note?<small>{item.note}</small>:null}</div>)}</div>
     </section>
 
     <section className="wide-panel"><div className="seo-copy"><h2>{quality.rankingTitle}</h2><p>{quality.rankingBody}</p></div></section>
