@@ -18,28 +18,42 @@ function normalized(value:string,city:string,state:string){
   return value.toLowerCase()
     .replaceAll(city.toLowerCase()," ")
     .replaceAll(state.toLowerCase()," ")
-    .replace(/\b\d+(?::\d+)?\b/g," ")
+    .replace(/\b\d+(?::\d+)?(?:\.\d+)?%?\b/g," ")
     .replace(/[^a-z]+/g," ")
     .replace(/\s+/g," ")
     .trim();
 }
+function trigrams(value:string){const words=value.split(/\s+/).filter(Boolean),out=new Set<string>();for(let i=0;i<=words.length-3;i++)out.add(words.slice(i,i+3).join(" "));return out;}
+function jaccard(a:string,b:string){const left=trigrams(a),right=trigrams(b);let overlap=0;for(const item of left)if(right.has(item))overlap++;return overlap/(left.size+right.size-overlap||1);}
+function maxPairwise(values:string[]){let max=0;for(let i=0;i<values.length;i++)for(let j=i+1;j<values.length;j++)max=Math.max(max,jaccard(values[i],values[j]));return max;}
+function serialized(festivalSlug:string,citySlug:string){
+  const festival=festivalBySlugYear(festivalSlug,2026)!;
+  const city=findCityBySlug(citySlug)!;
+  const context=buildFestivalCityContext(festival,city,panchang(),null);
+  const text=[context.focusTitle,context.focusBody,context.title,context.body,context.secondaryBody,context.localityTitle,context.localityBody,context.chronologyTitle,context.chronologyBody,context.observanceTitle,context.observanceBody,...context.facts.map(item=>`${item.label} ${item.value} ${item.note??""}`)].join(" ");
+  return normalized(text,city.name,city.state);
+}
 
 describe("Festival city semantic dedup layer",()=>{
-  it("keeps all phase-one city contexts distinct after route names and numbers are stripped",()=>{
-    const festival=festivalBySlugYear("makar-sankranti",2026)!;
-    const values=phase1PriorityCities.map(slug=>{
-      const city=findCityBySlug(slug)!;
-      const context=buildFestivalCityContext(festival,city,panchang(),null);
-      const text=[context.focusTitle,context.focusBody,context.title,context.body,context.secondaryBody,...context.facts.map(item=>`${item.label} ${item.value} ${item.note??""}`)].join(" ");
-      return normalized(text,city.name,city.state);
-    });
+  it("keeps all phase-one city contexts distinct and below a strict similarity ceiling",()=>{
+    const values=phase1PriorityCities.map(slug=>serialized("makar-sankranti",slug));
     expect(new Set(values).size).toBe(phase1PriorityCities.length);
+    expect(maxPairwise(values)).toBeLessThan(0.65);
   });
 
-  it("renders the new semantic context instead of legacy ritual and generic city prose",()=>{
+  it("keeps different festival intents semantically distinct inside one city",()=>{
+    const values=["diwali","janmashtami","karwa-chauth","chhath-puja","ganesh-chaturthi"].map(slug=>serialized(slug,"ahmedabad"));
+    expect(new Set(values).size).toBe(values.length);
+    expect(maxPairwise(values)).toBeLessThan(0.78);
+  });
+
+  it("renders the locality lens instead of legacy ritual and generic city prose",()=>{
     const source=readFileSync("app/festivals/[festival]/[year]/[city]/page.tsx","utf8");
     expect(source).toContain("buildFestivalCityContext");
     expect(source).toContain("LOCAL CITY SIGNATURE");
+    expect(source).toContain("FESTIVAL LOCALITY LENS");
+    expect(source).toContain("cityContext.localityBody");
+    expect(source).toContain("cityContext.observanceBody");
     expect(source).not.toContain("content.ritualBody");
     expect(source).not.toContain("content.cityBody");
   });
