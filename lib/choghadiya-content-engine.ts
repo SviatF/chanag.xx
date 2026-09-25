@@ -1,4 +1,5 @@
 import type {City} from "./cities";
+import {buildCityContentProfile} from "./city-content-profile";
 import type {ChoghadiyaPeriod,Panchang,TimeWindow} from "./panchang";
 
 type Fact={label:string;value:string;note?:string};
@@ -114,6 +115,7 @@ function nightBodyBySlot(index:number,args:{night:{good:number;neutral:number;ba
 }
 
 export function buildChoghadiyaQualityContent(data:Panchang,city:City):ChoghadiyaQualityContent{
+  const cityProfile=buildCityContentProfile(city);
   const day=effectCounts(data.dayChoghadiya);
   const night=effectCounts(data.nightChoghadiya);
   const dayGood=favorable(data.dayChoghadiya);
@@ -136,7 +138,7 @@ export function buildChoghadiyaQualityContent(data:Panchang,city:City):Choghadiy
   const solarSignature=`${rise.key} / ${set.key} / ${daylight.key}`;
 
   const directAnswer=directAnswerByFirstGood(city.name,data.date,day,firstGood,lastGood,data.rahu,firstGoodIndex);
-  const fingerprintBody=rise.key==="pre-dawn-edge"
+  const clockBody=rise.key==="pre-dawn-edge"
     ? `${city.name} has ${rise.text} paired with ${set.text}. That combination creates ${daylight.text} of ${dayMinutes} minutes and shifts the entire eight-slot clock earlier than a city whose sunrise is near or after 06:00. Exact daytime order: ${sequence(data.dayChoghadiya)}.`
     : rise.key==="early-rise"
       ? `The local clock begins early in ${city.name}: ${data.sunrise} sunrise combines with ${data.sunset} sunset, producing ${daylight.text}. The signature is ${solarSignature}; the calculated daytime chain is ${sequence(data.dayChoghadiya)}.`
@@ -145,6 +147,7 @@ export function buildChoghadiyaQualityContent(data:Panchang,city:City):Choghadiy
         : rise.key==="near-six-rise"
           ? `A near-06:00 sunrise and ${set.text} define ${city.name}'s clock signature today. The resulting ${daylight.text} is split into the sequence ${sequence(data.dayChoghadiya)}; its boundary times are specific to this sunrise/sunset pair.`
           : `${city.name} has ${rise.text}, combined with ${set.text}. The result is ${daylight.text} of ${dayMinutes} minutes, so today's exact daytime order — ${sequence(data.dayChoghadiya)} — sits later on the clock than an otherwise identical weekday with an earlier sunrise.`;
+  const fingerprintBody=`${clockBody} Geographically, this calculation belongs to ${cityProfile.geoContext}; its ${cityProfile.latitudeContext} and solar clock ${cityProfile.solarClockContext} give the page a location-specific timing context even when another city shares the same weekday Choghadiya name order.`;
 
   const daytimeBody=daytimeBodyBySlot(firstGoodIndex,{dayMinutes,avg:avgDaySegment,first:firstGood,last:lastGood,day});
   const nightBody=nightBodyBySlot(firstNightGoodIndex,{night,avg:avgNightSegment,first:firstNightGood,seq:sequence(data.nightChoghadiya)});
@@ -159,14 +162,15 @@ export function buildChoghadiyaQualityContent(data:Panchang,city:City):Choghadiy
   return {
     directAnswer,
     facts:[
-      {label:"Solar clock signature",value:solarSignature,note:`${data.sunrise} → ${data.sunset}`},
+      {label:"Geographic setting",value:cityProfile.geoContext,note:cityProfile.latitudeContext},
+      {label:"Solar-clock relation",value:cityProfile.solarClockContext,note:solarSignature},
       {label:"Favorable day entry",value:firstGood?slotLabel(firstGoodIndex):"none",note:firstGood?`${firstGood.name} ${firstGood.start}–${firstGood.end}`:undefined},
       {label:"Favorable day exit",value:lastGood?slotLabel(lastGoodIndex):"none",note:lastGood?`${lastGood.name} ${lastGood.start}–${lastGood.end}`:undefined},
       {label:"Night favorable entry",value:firstNightGood?slotLabel(firstNightGoodIndex):"none",note:firstNightGood?`${firstNightGood.name} ${firstNightGood.start}–${firstNightGood.end}`:undefined},
       {label:"Rahu phase",value:rahuPosition.key,note:`${rahuDayShare}% after sunrise`},
       {label:"Rahu / good-label relation",value:rahuOverlap.key,note:`${rahuGoodOverlap} overlap min`},
     ],
-    fingerprintTitle:`${city.name} Choghadiya fingerprint · ${solarSignature}`,
+    fingerprintTitle:`${city.name} Choghadiya fingerprint · ${cityProfile.geoContext}`,
     fingerprintBody,
     daytimeTitle:`Daytime shape · favorable entry at ${firstGood?slotLabel(firstGoodIndex):"no slot"}`,
     daytimeBody,
