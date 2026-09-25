@@ -6,6 +6,7 @@ import TopicalGraph from "@/components/TopicalGraph";
 import {cityBySlug} from "@/lib/cities";
 import {getMonthlyMuhurat,muhuratRules} from "@/lib/muhurat";
 import {buildMuhuratMonthlyQualityContent} from "@/lib/muhurat-content-engine";
+import {buildMuhuratMonthSimilarityContext} from "@/lib/muhurat-month-similarity-context";
 import {isMonthlyMuhuratIndexable,robotsFor} from "@/lib/seo-policy";
 import {parseRouteMonth,parseRouteYear} from "@/lib/route-validation";
 import {muhuratMonthSsgPriority} from "@/lib/static-seo-routes";
@@ -29,6 +30,7 @@ export default async function MuhuratPage({params}:{params:Promise<{event:string
   const {rows}=await getMonthlyMuhurat(p.event,year,month,city);
   const top=rows[0];
   const quality=buildMuhuratMonthlyQualityContent(p.event,year,month,city,rows,"baseline");
+  const similarity=buildMuhuratMonthSimilarityContext(p.event,year,month,rows);
   const ld={"@context":"https://schema.org","@graph":[
     {"@type":"CollectionPage","name":`${rule.title} candidate dates — ${monthName} ${year}`,"url":`https://panchvani.com/muhurat/${p.event}/${year}/${p.month}`,"description":quality.directAnswer},
     {"@type":"ItemList","name":`${rule.title} screened candidate dates`,"itemListElement":rows.map((r,index)=>({"@type":"ListItem","position":index+1,"name":`${r.date} · Planning Score ${r.planning.score}/100`,"url":`https://panchvani.com/panchang/${city.slug}/${r.date}`}))}
@@ -41,6 +43,12 @@ export default async function MuhuratPage({params}:{params:Promise<{event:string
     <p className="page-subtitle">{quality.directAnswer}</p>
 
     <div className="data-grid">{quality.facts.map(item=><div className="data-card" key={item.label}><small>{item.label}</small><strong>{item.value}</strong>{item.note?<small>{item.note}</small>:null}</div>)}</div>
+
+    <section className="wide-panel">
+      <div className="seo-copy"><small>MONTH COMPARISON FINGERPRINT · MUMBAI BASELINE</small><h2>{similarity.title}</h2><p>{similarity.positionBody}</p><h2>{similarity.sequenceTitle}</h2><p>{similarity.sequenceBody}</p></div>
+      <div className="data-grid">{similarity.facts.map(item=><div className="data-card" key={item.label}><small>{item.label}</small><strong>{item.value}</strong>{item.note?<small>{item.note}</small>:null}</div>)}</div>
+    </section>
+
     <section className="wide-panel"><div className="seo-copy"><h2>{quality.fingerprintTitle}</h2><p>{quality.fingerprintBody}</p></div></section>
     <section className="wide-panel"><div className="seo-copy"><h2>{quality.rankingTitle}</h2><p>{quality.rankingBody}</p></div></section>
     <section className="wide-panel"><div className="seo-copy"><h2>{quality.timingTitle}</h2><p>{quality.timingBody}</p></div></section>
