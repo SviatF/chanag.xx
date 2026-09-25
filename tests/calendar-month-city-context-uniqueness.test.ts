@@ -18,16 +18,10 @@ function entry(day:number):Panchang{
     dayChoghadiya:dayPeriods,nightChoghadiya:nightPeriods,hinduMonth:"Ashwin",vikramSamvat:2083,shakaSamvat:1948,samvatYearStart:"2026-03-19",dayLord:"Jupiter",sunriseConvention:"Upper limb + atmospheric refraction · sea-level horizon",engine:"Swiss Ephemeris · Moshier"
   };
 }
-
-function normalized(value:string,city:string,state:string){
-  return value.toLowerCase()
-    .replaceAll(city.toLowerCase()," ")
-    .replaceAll(state.toLowerCase()," ")
-    .replace(/\b\d+(?::\d+)?\b/g," ")
-    .replace(/[^a-z]+/g," ")
-    .replace(/\s+/g," ")
-    .trim();
-}
+function normalized(value:string,city:string,state:string){return value.toLowerCase().replaceAll(city.toLowerCase()," ").replaceAll(state.toLowerCase()," ").replace(/\b\d+(?::\d+)?\b/g," ").replace(/[^a-z]+/g," ").replace(/\s+/g," ").trim();}
+function trigrams(value:string){const words=value.split(/\s+/).filter(Boolean),out=new Set<string>();for(let i=0;i<=words.length-3;i++)out.add(words.slice(i,i+3).join(" "));return out;}
+function jaccard(a:string,b:string){const left=trigrams(a),right=trigrams(b);let overlap=0;for(const item of left)if(right.has(item))overlap++;return overlap/(left.size+right.size-overlap||1);}
+function maxPairwise(values:string[]){let max=0;for(let i=0;i<values.length;i++)for(let j=i+1;j<values.length;j++)max=Math.max(max,jaccard(values[i],values[j]));return max;}
 
 describe("Monthly calendar city semantic dedup layer",()=>{
   it("keeps every phase-one city distinct after city names and numbers are stripped",()=>{
@@ -40,6 +34,7 @@ describe("Monthly calendar city semantic dedup layer",()=>{
       return normalized(text,city.name,city.state);
     });
     expect(new Set(values).size).toBe(phase1PriorityCities.length);
+    expect(maxPairwise(values)).toBeLessThan(0.8);
   });
 
   it("renders the city context on the public monthly calendar route",()=>{
