@@ -7,6 +7,7 @@ import {cities} from "@/lib/cities";
 import {festivalBySlugYear} from "@/lib/festivals";
 import {getFestivalSemantics} from "@/lib/festival-conventions";
 import {festivalPageIsIndexable,festivalYearSiblings} from "@/lib/festival-expansion";
+import {buildFestivalYearQualityContext} from "@/lib/festival-parent-quality";
 import {getFestivalRuleProfile} from "@/lib/religious-integrity";
 import {robotsFor} from "@/lib/seo-policy";
 import {parseRouteYear} from "@/lib/route-validation";
@@ -35,10 +36,11 @@ export default async function FestivalPage({params}:{params:Promise<{festival:st
 
   const semantics=getFestivalSemantics(f);
   const ruleProfile=getFestivalRuleProfile(f);
+  const quality=await buildFestivalYearQualityContext(f);
   const month=String(Number(f.date.slice(5,7))).padStart(2,"0");
   const siblingYears=festivalYearSiblings(f.slug,year);
   const ld={"@context":"https://schema.org","@graph":[
-    {"@type":"WebPage","name":`${f.name} ${year}`,"url":`https://panchvani.com/festivals/${f.slug}/${year}`,"description":semantics.displayShort,"about":{"@type":"Thing","name":f.name}},
+    {"@type":"WebPage","name":`${f.name} ${year}`,"url":`https://panchvani.com/festivals/${f.slug}/${year}`,"description":quality.directAnswer,"about":{"@type":"Thing","name":f.name}},
     {"@type":"BreadcrumbList","itemListElement":[
       {"@type":"ListItem","position":1,"name":"Home","item":"https://panchvani.com/"},
       {"@type":"ListItem","position":2,"name":"Festivals","item":"https://panchvani.com/festivals/"},
@@ -50,18 +52,30 @@ export default async function FestivalPage({params}:{params:Promise<{festival:st
     <div className="breadcrumbs"><Link href="/">Home</Link> / <Link href="/festivals">Festivals</Link> / {f.name}</div>
     <p className="page-kicker">HINDU FESTIVAL · {year}</p>
     <h1 className="page-title">{f.name}<br/>{year}</h1>
-    <p className="page-subtitle">{semantics.displayShort}</p>
+    <p className="page-subtitle">{quality.directAnswer}</p>
 
     <div className="data-grid">
-      <div className="data-card"><small>Date</small><strong>{f.date}</strong></div>
-      {semantics.aliases.length?<div className="data-card"><small>Also known as</small><strong>{semantics.aliases.join(" · ")}</strong></div>:null}
-      {semantics.relatedObservances.length?<div className="data-card"><small>Related regional observances</small><strong>{semantics.relatedObservances.join(" · ")}</strong></div>:null}
-      <div className="data-card"><small>Rule profile</small><strong>{ruleProfile.exactness==="derived-reference"?"Local reference available":"Panchang context"}</strong></div>
+      {quality.facts.map(item=><div className="data-card" key={item.label}><small>{item.label}</small><strong>{item.value}</strong>{item.note?<small>{item.note}</small>:null}</div>)}
     </div>
+
+    <section className="wide-panel"><div className="seo-copy">
+      <h2>{quality.contextTitle}</h2>
+      <p>{quality.contextBody}</p>
+      <h2>{quality.lunarTitle}</h2>
+      <p>{quality.lunarBody}</p>
+    </div></section>
+
+    <section className="wide-panel"><div className="seo-copy">
+      <h2>{quality.cityVariationTitle}</h2>
+      <p>{quality.cityVariationBody}</p>
+      <h2>{quality.observanceTitle}</h2>
+      <p>{quality.observanceBody}</p>
+    </div></section>
 
     <div className="seo-copy">
       <h2>Meaning and observance</h2>
       <p>{f.meaning}</p>
+      <p>{semantics.displayShort}</p>
       {semantics.lunarConventionNote?<p><strong>Calendar convention:</strong> {semantics.lunarConventionNote}</p>:null}
     </div>
 
@@ -72,7 +86,7 @@ export default async function FestivalPage({params}:{params:Promise<{festival:st
 
     <section className="wide-panel">
       <h2 className="page-title" style={{fontSize:32}}>Local Panchang by city</h2>
-      <p className="page-subtitle">Choose a priority city to see local Tithi, lunar-month conventions, sunrise, sunset, moonrise and supported festival references.</p>
+      <p className="page-subtitle">Choose a priority city to see local Tithi, lunar-month conventions, sunrise, sunset, moonrise and supported festival references. The shared festival date stays the same; local astronomical boundaries are recalculated for the selected city.</p>
       <div className="pill-links">{cities.slice(0,12).map(city=><Link href={`/festivals/${f.slug}/${year}/${city.slug}`} key={city.slug}>{city.name}</Link>)}</div>
     </section>
 
