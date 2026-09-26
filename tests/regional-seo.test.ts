@@ -67,20 +67,21 @@ describe("Regional SEO Scale Engine",()=>{
     expect(alternates["ta-IN"]).toBe("/regional/tamil/chennai");
   });
 
-  it("does not invent an English equivalent for regional Rahu Kalam intents",()=>{
+  it("does not emit a one-page Rahu Kalam hreflang cluster without a true equivalent",()=>{
     const city=findCityBySlug("coimbatore")!;
     process.env.SEO_EXTRA_INDEX_CITIES="coimbatore";
     delete process.env.SEO_EXTRA_REGIONAL_INTENTS;
-    const before=regionalAlternates(city,"rahu-kalam");
-    expect(before["en-IN"]).toBeUndefined();
-    expect(before["x-default"]).toBeUndefined();
-    expect(before["ta-IN"]).toBeUndefined();
+    expect(regionalAlternates(city,"rahu-kalam")).toEqual({});
 
     process.env.SEO_EXTRA_REGIONAL_INTENTS="tamil:coimbatore:rahu-kalam";
-    const after=regionalAlternates(city,"rahu-kalam");
-    expect(after["ta-IN"]).toBe("/regional/tamil/coimbatore/rahu-kalam");
-    expect(after["en-IN"]).toBeUndefined();
-    expect(after["x-default"]).toBeUndefined();
+    expect(isRegionalIntentIndexable("tamil",city,"rahu-kalam")).toBe(true);
+    expect(regionalAlternates(city,"rahu-kalam")).toEqual({});
+  });
+
+  it("keeps all curated Rahu Kalam pages free of incomplete hreflang clusters",()=>{
+    for(const slug of ["kolkata","chennai","ahmedabad","surat","vadodara","mumbai","pune","nagpur","thane"]){
+      expect(regionalAlternates(findCityBySlug(slug)!,"rahu-kalam")).toEqual({});
+    }
   });
 
   it("uses the self-canonical English Choghadiya tool as the Choghadiya equivalent",()=>{
