@@ -15,7 +15,7 @@ export async function generateMetadata({params}:{params:Promise<{nakshatra:strin
   if(!item)return {title:"Nakshatra not found",robots:{index:false,follow:true}};
   return {
     title:`Hindu Baby Names for ${item.name} Nakshatra — 4 Pada Sounds`,
-    description:`${item.name} Nakshatra baby-name reference with four Pada sounds (${item.sounds.join(", ")}), transliteration guidance, example names and a birth-time Pada workflow.`,
+    description:`${item.name} Nakshatra baby-name reference with four Pada sounds (${item.sounds.join(", ")}), Roman sound profile, example names and birth-time Pada workflow.`,
     alternates:{canonical:`/tools/hindu-baby-names/${item.slug}`}
   };
 }
@@ -42,7 +42,7 @@ export default async function Page({params}:{params:Promise<{nakshatra:string}>}
     </div>
 
     <section className="wide-panel">
-      <div className="seo-copy"><h2>{item.name} Pada-by-Pada naming sounds</h2><p>{item.note} The four cards below keep the Pada order explicit so the sound sequence is not confused with a general list of initials.</p></div>
+      <div className="seo-copy"><h2>{item.name} Pada-by-Pada sounds</h2><p>{item.note}</p></div>
       <div className="data-grid">
         {quality.padaGuides.map(guide=><div className="data-card" key={guide.pada}><small>Pada {guide.pada}</small><strong>{guide.sound}</strong><h3>{guide.title}</h3><p>{guide.body}</p></div>)}
       </div>
@@ -51,8 +51,8 @@ export default async function Page({params}:{params:Promise<{nakshatra:string}>}
     <section className="wide-panel"><div className="seo-copy"><h2>{quality.transliterationTitle}</h2><p>{quality.transliterationBody}</p></div></section>
 
     <section className="wide-panel">
-      <h2 className="page-title" style={{fontSize:32}}>Name ideas for {item.name}</h2>
-      <div className="city-directory">{item.names.map(name=><div className="data-card" key={name}><strong>{name}</strong><small>Example from Panchvani's maintained {item.name} reference set; compare the spoken opening syllable with the relevant Pada sound.</small></div>)}</div>
+      <h2 className="page-title" style={{fontSize:32}}>Name examples for {item.name}</h2>
+      <div className="city-directory">{item.names.map(name=><div className="data-card" key={name}><strong>{name}</strong></div>)}</div>
       <div className="seo-copy"><h2>{quality.examplesTitle}</h2><p>{quality.examplesBody}</p></div>
     </section>
 
@@ -70,7 +70,7 @@ export default async function Page({params}:{params:Promise<{nakshatra:string}>}
       {nakshatraNaming.slice(0,8).filter(n=>n.slug!==item.slug).map(n=><Link href={`/tools/hindu-baby-names/${n.slug}`} key={n.slug}>{n.name}</Link>)}
     </div>
 
-    <MethodologyNote title={`${item.name} naming methodology`}><p>This page uses Panchvani's maintained four-Pada sound reference and example-name dataset. It does not infer a child's natal Pada from a name. If your family follows Janma Nakshatra naming, the exact Nakshatra and Pada come from the Moon's position at birth. Panchvani's date-only finder is an estimate; exact natal calculation requires birth time and birthplace. Roman spellings are treated as pronunciation references because transliteration varies across Indian languages and family conventions.</p></MethodologyNote>
+    <MethodologyNote title={`${item.name} reference method`}><p>The page uses the maintained ${item.name} four-Pada sequence (${item.sounds.join(", ")}) and its stored example-name list. Exact Janma Nakshatra and Pada depend on birth date, time and birthplace; Roman spellings are compared by opening pronunciation because transliteration can vary.</p></MethodologyNote>
     <script type="application/ld+json" dangerouslySetInnerHTML={{__html:JSON.stringify(ld)}}/>
   </div></main>;
 }
