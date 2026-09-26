@@ -34,10 +34,7 @@ function soundShape(sound:string){
 
 function prefixExamples(item:NakshatraNaming,sound:string){
   const normalized=collapseLongVowels(sound);
-  const strict=item.names.filter(name=>collapseLongVowels(name).startsWith(normalized));
-  if(strict.length)return strict;
-  const first=normalized.slice(0,1);
-  return item.names.filter(name=>collapseLongVowels(name).startsWith(first)).slice(0,3);
+  return item.names.filter(name=>collapseLongVowels(name).startsWith(normalized));
 }
 
 const guideOpeners=[
@@ -69,7 +66,7 @@ export function buildNakshatraNamingQuality(item:NakshatraNaming,all:NakshatraNa
   const padaGuides=item.sounds.map((sound,i)=>{
     const examples=prefixExamples(item,sound);
     const exampleLine=examples.length
-      ?` In this page's maintained reference list, ${examples.join(", ")} ${examples.length===1?"is":"are"} the closest example${examples.length===1?"":"s"} to the ${sound} opening family.`
+      ?` In this page's maintained reference list, ${examples.join(", ")} ${examples.length===1?"is":"are"} the clean Roman-prefix example${examples.length===1?"":"s"} for the ${sound} opening family.`
       :` The current maintained example list does not contain a clean Roman-prefix match for ${sound}, so the sound card should be used as the primary reference rather than forcing an example into this Pada.`;
     return {
       pada:i+1,
@@ -102,7 +99,7 @@ export function buildNakshatraNamingQuality(item:NakshatraNaming,all:NakshatraNa
     examplesTitle:`How to use the ${item.name} example list`,
     examplesBody:`The maintained example set on this page contains ${item.names.length} names: ${nameSequence}. It is intentionally shown separately from the four Pada cards because a browsing list and an exact birth-Pada recommendation are different tasks. Use the list to explore familiar spellings and opening families, then compare the preferred name with the relevant Pada sound. The shortest spelling in the current set is ${shortest}; the longest is ${longest}. Those differences illustrate why character length is not a useful test for Nakshatra naming—the opening sound is the part that matters for this convention.`,
     workflowTitle:`A safer ${item.name} naming workflow`,
-    workflowBody:`Start with the birth information, not with the name list. A date-only Nakshatra estimate can narrow the search, but the Moon can change Nakshatra or Pada within a civil day. If the family wants to follow the convention precisely, use birth date, exact time and birthplace to establish the Janma Nakshatra and Pada. Once ${item.name} and a Pada are confirmed, return to the corresponding ${item.sounds[0]}, ${item.sounds[1]}, ${item.sounds[2]} or ${item.sounds[3]} card, shortlist names by their spoken opening syllable, and only then compare regional spellings or family-preferred transliterations. If exact birth-time information is unavailable, this page should be treated as a naming reference rather than a definitive natal recommendation.`,
+    workflowBody:`Start with the birth information, not with the name list. A date-only Nakshatra estimate can narrow the search, but the Moon can change Nakshatra or Pada within a civil day. If the family wants to follow the convention precisely, use birth date, exact birth time and birthplace to establish the Janma Nakshatra and Pada. Once ${item.name} and a Pada are confirmed, return to the corresponding ${item.sounds[0]}, ${item.sounds[1]}, ${item.sounds[2]} or ${item.sounds[3]} card, shortlist names by their spoken opening syllable, and only then compare regional spellings or family-preferred transliterations. If exact birth-time information is unavailable, this page should be treated as a naming reference rather than a definitive natal recommendation.`,
     sequenceTitle:`Where ${item.name} sits in the 27-Nakshatra reference`,
     sequenceBody:`In Panchvani's maintained sequence, ${item.name} is number ${ordinal}. The preceding reference page is ${previous.name}, whose stored sounds are ${previous.sounds.join(", ")}; the next is ${next.name}, with ${next.sounds.join(", ")}. This matters when a date-only estimate falls near a Nakshatra boundary: a nearby page can have a completely different four-sound set even though the civil date is the same. Do not blend adjacent sound lists. Confirm the calculated Nakshatra first, then use only that page's Pada sequence.`,
     faqs:[
