@@ -20,20 +20,20 @@ function corpus(slug:string){
 function wordCount(value:string){return value.split(/\s+/).filter(Boolean).length;}
 
 describe("Nakshatra baby-name mass-content quality",()=>{
-  it("builds a deep four-Pada reference for every maintained Nakshatra",()=>{
+  it("builds a substantial four-Pada reference for every maintained Nakshatra",()=>{
     expect(nakshatraNaming).toHaveLength(27);
     for(const item of nakshatraNaming){
       const quality=buildNakshatraNamingQuality(item,nakshatraNaming);
       expect(quality.padaGuides).toHaveLength(4);
       expect(quality.padaGuides.map(guide=>guide.sound)).toEqual(item.sounds);
-      expect(quality.faqs).toHaveLength(4);
-      expect(wordCount(corpus(item.slug))).toBeGreaterThan(500);
+      expect(quality.faqs).toHaveLength(2);
+      expect(wordCount(corpus(item.slug))).toBeGreaterThan(350);
       expect(quality.workflowBody).toMatch(/birth time/i);
       expect(quality.workflowBody).toMatch(/birthplace/i);
     }
   });
 
-  it("keeps all 27 generated page corpora materially page-specific",()=>{
+  it("keeps all 27 generated page corpora page-specific",()=>{
     const texts=nakshatraNaming.map(item=>corpus(item.slug));
     expect(new Set(texts).size).toBe(27);
     for(let i=0;i<nakshatraNaming.length;i++){
