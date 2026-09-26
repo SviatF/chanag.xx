@@ -95,6 +95,22 @@ const cityLenses:Record<string,CityLens>={
     terrainLabel:"interior Telangana Deccan plateau",
     clockLabel:"north-central Deccan clock",
   },
+  patna:{
+    title:"Middle Ganga east-meridian alluvial clock",
+    locality:"This route is read from the middle Ganga alluvial plain in Bihar, south of the river and east of India's standard-time meridian. Unlike the western-city profiles, its longitude places local solar progression slightly ahead of the IST meridian reference. The useful identity is therefore a Gangetic alluvial clock with an eastward solar lead, not a generic north-Indian weekday schedule.",
+    solar:"Start from the local Ganga-plain sunrise and follow the eight daytime divisions toward the eastern-plain sunset. Because the longitude lies east of the standard meridian, solar noon and the surrounding Choghadiya boundaries arrive earlier against IST than they do in western and near-meridian cities. That eastward lead is the defining clock feature of this page.",
+    planning:"For practical reading, identify the first favorable alluvial-plain slot, remove any Rahu overlap, and keep the city's earlier solar placement in view when comparing with an Uttar Pradesh or western-India timetable. The route is intended to preserve Bihar's local boundary clock rather than reuse a nearby Gangetic city's schedule.",
+    terrainLabel:"middle Ganga alluvial plain",
+    clockLabel:"east-of-meridian Gangetic lead",
+  },
+  varanasi:{
+    title:"Ganga riverfront near-meridian clock",
+    locality:"This Choghadiya belongs to the upper-middle Ganga riverfront in eastern Uttar Pradesh. Its longitude sits very close to India's standard-time meridian, so its solar clock has only a small meridian offset compared with cities farther east or west. The route's identity is a near-meridian riverfront day, not a broad Gangetic template.",
+    solar:"Read sunrise and sunset as the boundaries of a near-standard-meridian riverfront arc. The eight daytime divisions occupy a clock whose longitude is close to the IST reference, making the local placement distinct from Bihar's more easterly solar lead and from the larger delays of western India. The riverfront latitude and near-meridian longitude together form the timing fingerprint.",
+    planning:"Use the local riverfront sunrise to anchor the first slot, compare favorable labels against Rahu Kalam, and retain the intervals that survive that local check. When comparing with another Ganga-basin city, the important difference is the near-meridian clock placement rather than the repeated weekday Choghadiya name order.",
+    terrainLabel:"upper-middle Ganga riverfront plain",
+    clockLabel:"near-meridian Gangetic clock",
+  },
 };
 
 function clockMinutes(value:string){const [h,m]=value.split(":").map(Number);return Number.isFinite(h)&&Number.isFinite(m)?h*60+m:0;}
@@ -102,8 +118,21 @@ function periodMinutes(period:ChoghadiyaPeriod){const start=clockMinutes(period.
 function firstGood(periods:readonly ChoghadiyaPeriod[]){return periods.find(item=>item.effect==="good")??null;}
 function lastGood(periods:readonly ChoghadiyaPeriod[]){return [...periods].reverse().find(item=>item.effect==="good")??null;}
 function slotName(periods:readonly ChoghadiyaPeriod[],period:ChoghadiyaPeriod|null){if(!period)return "no favorable slot";const index=periods.indexOf(period);return ["opening","second","third","fourth","fifth","sixth","seventh","closing"][index]??`slot ${index+1}`;}
-function meridianLag(lng:number){return Math.round((82.5-lng)*4);}
-function lagBand(minutes:number){if(minutes>=35)return "strong west-of-meridian lag";if(minutes>=25)return "clear west-of-meridian lag";if(minutes>=15)return "moderate west-of-meridian lag";if(minutes>=5)return "light west-of-meridian lag";return "near-standard-meridian clock";}
+function meridianOffset(lng:number){return Math.round((lng-82.5)*4);}
+function offsetBand(minutes:number){
+  if(minutes<=-35)return "strong west-of-meridian lag";
+  if(minutes<=-25)return "clear west-of-meridian lag";
+  if(minutes<=-15)return "moderate west-of-meridian lag";
+  if(minutes<=-5)return "light west-of-meridian lag";
+  if(minutes<5)return "near-standard-meridian clock";
+  if(minutes<15)return "light east-of-meridian lead";
+  if(minutes<25)return "moderate east-of-meridian lead";
+  return "clear east-of-meridian lead";
+}
+function offsetRelation(minutes:number){
+  if(Math.abs(minutes)<2)return "approximately aligned with the standard meridian";
+  return `${Math.abs(minutes)} solar minutes ${minutes>0?"ahead of":"behind"} the standard meridian`;
+}
 function daylightBand(minutes:number){if(minutes<710)return "compact daylight arc";if(minutes<730)return "short-balanced daylight arc";if(minutes<750)return "balanced daylight arc";if(minutes<770)return "long-balanced daylight arc";return "extended daylight arc";}
 
 export function buildChoghadiyaCityHighSimilarityContext(data:Panchang,city:City):ChoghadiyaCityHighSimilarityContext|null{
@@ -114,12 +143,13 @@ export function buildChoghadiyaCityHighSimilarityContext(data:Panchang,city:City
   const dayMinutes=Math.max(0,clockMinutes(data.sunset)-clockMinutes(data.sunrise));
   const dayAvg=data.dayChoghadiya.length?Math.round(data.dayChoghadiya.reduce((sum,item)=>sum+periodMinutes(item),0)/data.dayChoghadiya.length):0;
   const nightAvg=data.nightChoghadiya.length?Math.round(data.nightChoghadiya.reduce((sum,item)=>sum+periodMinutes(item),0)/data.nightChoghadiya.length):0;
-  const lag=meridianLag(city.lng);
-  const lagClass=lagBand(lag);
+  const offset=meridianOffset(city.lng);
+  const offsetClass=offsetBand(offset);
+  const relation=offsetRelation(offset);
   const dayClass=daylightBand(dayMinutes);
 
   const solarBody=`${lens.solar} Today's local frame runs from ${data.sunrise} sunrise to ${data.sunset} sunset, a ${dayClass}. The first favorable daytime label is ${dayFirst?`${dayFirst.name} in the ${slotName(data.dayChoghadiya,dayFirst)} slot (${dayFirst.start}–${dayFirst.end})`:"absent"}; the last is ${dayLast?`${dayLast.name} ${dayLast.start}–${dayLast.end}`:"absent"}. Average daytime slot length is ${dayAvg} minutes, while the night grid averages ${nightAvg} minutes per slot.`;
-  const planningBody=`${lens.planning} On this ${data.weekday}, Rahu Kalam is ${data.rahu.start}–${data.rahu.end}. The first favorable night label is ${nightFirst?`${nightFirst.name} in the ${slotName(data.nightChoghadiya,nightFirst)} night slot`:"not present"}. The longitude-only relation to 82.5°E is about ${lag} solar minutes of westward lag, classified here as ${lagClass}.`;
+  const planningBody=`${lens.planning} On this ${data.weekday}, Rahu Kalam is ${data.rahu.start}–${data.rahu.end}. The first favorable night label is ${nightFirst?`${nightFirst.name} in the ${slotName(data.nightChoghadiya,nightFirst)} night slot`:"not present"}. The longitude-only relation to 82.5°E is ${relation}, classified here as ${offsetClass}.`;
 
   return {
     title:lens.title,
@@ -130,11 +160,11 @@ export function buildChoghadiyaCityHighSimilarityContext(data:Panchang,city:City
     planningBody,
     facts:[
       {label:"Geographic lens",value:lens.terrainLabel,note:`${city.lat.toFixed(2)}°N · ${city.lng.toFixed(2)}°E`},
-      {label:"Clock identity",value:lens.clockLabel,note:`${lagClass} vs 82.5°E`},
+      {label:"Clock identity",value:lens.clockLabel,note:`${offsetClass} vs 82.5°E`},
       {label:"Solar-day shape",value:dayClass,note:`${data.sunrise} → ${data.sunset}`},
       {label:"First favorable day slot",value:dayFirst?`${slotName(data.dayChoghadiya,dayFirst)} · ${dayFirst.name}`:"none",note:dayFirst?`${dayFirst.start}–${dayFirst.end}`:"No good-labelled daytime slot"},
       {label:"First favorable night slot",value:nightFirst?`${slotName(data.nightChoghadiya,nightFirst)} · ${nightFirst.name}`:"none",note:nightFirst?`${nightFirst.start}–${nightFirst.end}`:"No good-labelled night slot"},
-      {label:"Rahu check",value:`${data.rahu.start}–${data.rahu.end}`,note:`Evaluate after local favorable slots are identified`},
+      {label:"Rahu check",value:`${data.rahu.start}–${data.rahu.end}`,note:"Evaluate after local favorable slots are identified"},
     ]
   };
 }
