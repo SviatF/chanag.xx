@@ -8,6 +8,7 @@ import {nakshatraBySlug,nakshatraNaming} from "@/lib/baby-names";
 import {buildNakshatraNamingQuality} from "@/lib/baby-name-quality";
 
 export const revalidate=604800;
+const accuracyCopy="For this convention, exact Nakshatra and Pada come from the Moon's position at birth; exact natal calculation requires birth time and birthplace.";
 
 export async function generateMetadata({params}:{params:Promise<{nakshatra:string}>}):Promise<Metadata>{
   const p=await params;
@@ -70,7 +71,7 @@ export default async function Page({params}:{params:Promise<{nakshatra:string}>}
       {nakshatraNaming.slice(0,8).filter(n=>n.slug!==item.slug).map(n=><Link href={`/tools/hindu-baby-names/${n.slug}`} key={n.slug}>{n.name}</Link>)}
     </div>
 
-    <MethodologyNote title={`${item.name} reference method`}><p>The page uses the maintained ${item.name} four-Pada sequence (${item.sounds.join(", ")}) and its stored example-name list. For this convention, exact Nakshatra and Pada come from the {"Moon's position at birth"}; exact natal calculation requires birth time and birthplace. Roman spellings are compared by opening pronunciation because transliteration can vary.</p></MethodologyNote>
+    <MethodologyNote title={`${item.name} reference method`}><p>The page uses the maintained {item.name} four-Pada sequence ({item.sounds.join(", ")}) and its stored example-name list. {accuracyCopy} Roman spellings are compared by opening pronunciation because transliteration can vary.</p></MethodologyNote>
     <script type="application/ld+json" dangerouslySetInnerHTML={{__html:JSON.stringify(ld)}}/>
   </div></main>;
 }
