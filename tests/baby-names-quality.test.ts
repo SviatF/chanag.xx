@@ -48,6 +48,6 @@ describe("Nakshatra baby-name mass-content quality",()=>{
     const shravana=nakshatraNaming.find(item=>item.slug==="shravana")!;
     const quality=buildNakshatraNamingQuality(shravana,nakshatraNaming);
     expect(quality.examplesBody).toContain("Khem, Khemraj, Kheya");
-    expect(quality.padaGuides.some(guide=>guide.body.includes("does not contain a clean Roman-prefix match"))).toBe(true);
+    expect(quality.padaGuides.some(guide=>guide.body.includes("No maintained example begins with a clean"))).toBe(true);
   });
 });
