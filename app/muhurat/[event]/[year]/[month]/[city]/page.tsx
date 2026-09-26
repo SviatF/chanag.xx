@@ -8,6 +8,7 @@ import {getMonthlyMuhurat,muhuratRules} from "@/lib/muhurat";
 import {buildMuhuratMonthlyQualityContent} from "@/lib/muhurat-content-engine";
 import {buildMuhuratCityContext} from "@/lib/muhurat-city-context";
 import {buildMuhuratCitySimilarityContext} from "@/lib/muhurat-city-similarity-context";
+import {buildMuhuratCityMonthHeading} from "@/lib/muhurat-heading";
 import {isMonthlyMuhuratIndexable,robotsFor} from "@/lib/seo-policy";
 import {parseRouteMonth,parseRouteYear} from "@/lib/route-validation";
 import {muhuratCityMonthSsgPriority} from "@/lib/static-seo-routes";
@@ -21,26 +22,28 @@ export function generateStaticParams(){return muhuratCityMonthSsgPriority;}
 export async function generateMetadata({params}:{params:Promise<{event:string;year:string;month:string;city:string}>}):Promise<Metadata>{
   const p=await params;const city=findCityBySlug(p.city);const rule=muhuratRules[p.event];const year=parseRouteYear(p.year),month=parseRouteMonth(p.month);
   if(!city||!rule||!year||!month)notFound();
-  return {title:`${rule.title} in ${city.name} — Candidate Dates ${p.month}/${year}`,description:`${rule.title} candidate dates in ${city.name} with local clean-time rankings, score spread, timing-source coverage and event-specific continuity metrics.`,alternates:{canonical:`/muhurat/${p.event}/${year}/${p.month}/${city.slug}`},robots:robotsFor(isMonthlyMuhuratIndexable(p.event,year,month,city.slug))};
+  const heading=buildMuhuratCityMonthHeading(rule.title,city.name,year,month);
+  return {title:`${heading.full} Candidate Dates`,description:`${heading.full}: local clean-time rankings, score spread, timing-source coverage and event-specific continuity metrics.`,alternates:{canonical:`/muhurat/${p.event}/${year}/${p.month}/${city.slug}`},robots:robotsFor(isMonthlyMuhuratIndexable(p.event,year,month,city.slug))};
 }
 
 export default async function Page({params}:{params:Promise<{event:string;year:string;month:string;city:string}>}){
   const p=await params;const city=findCityBySlug(p.city);const rule=muhuratRules[p.event];const year=parseRouteYear(p.year),month=parseRouteMonth(p.month);
   if(!city||!rule||!year||!month)notFound();
+  const heading=buildMuhuratCityMonthHeading(rule.title,city.name,year,month);
   const {rows}=await getMonthlyMuhurat(p.event,year,month,city);
   const top=rows[0];
   const quality=buildMuhuratMonthlyQualityContent(p.event,year,month,city,rows,"city");
   const localContext=buildMuhuratCityContext(city,rows,rule.title);
   const similarityContext=buildMuhuratCitySimilarityContext(city,rows,rule.title,year,month);
   const ld={"@context":"https://schema.org","@graph":[
-    {"@type":"CollectionPage","name":`${rule.title} candidate dates in ${city.name} — ${p.month}/${year}`,"url":`https://panchvani.com/muhurat/${p.event}/${year}/${p.month}/${city.slug}`,"description":quality.directAnswer},
-    {"@type":"ItemList","name":`${rule.title} screened candidate dates`,"itemListElement":rows.map((r,index)=>({"@type":"ListItem","position":index+1,"name":`${r.date} · Planning Score ${r.planning.score}/100`,"url":`https://panchvani.com/panchang/${city.slug}/${r.date}`}))}
+    {"@type":"CollectionPage","name":`${heading.full} candidate dates`,"url":`https://panchvani.com/muhurat/${p.event}/${year}/${p.month}/${city.slug}`,"description":quality.directAnswer},
+    {"@type":"ItemList","name":`${heading.full} screened candidate dates`,"itemListElement":rows.map((r,index)=>({"@type":"ListItem","position":index+1,"name":`${r.date} · Planning Score ${r.planning.score}/100`,"url":`https://panchvani.com/panchang/${city.slug}/${r.date}`}))}
   ]};
 
   return <main><Header city={city}/><div className="page-shell internal-visual internal-muhurat">
-    <div className="breadcrumbs"><Link href={muhuratYearPath(p.event,year)}>{rule.title} {year}</Link> / <Link href={`/muhurat/${p.event}/${year}/${p.month}`}>{p.month}</Link> / {city.name}</div>
+    <div className="breadcrumbs"><Link href={muhuratYearPath(p.event,year)}>{rule.title} {year}</Link> / <Link href={`/muhurat/${p.event}/${year}/${p.month}`}>{heading.period}</Link> / {city.name}</div>
     <p className="page-kicker">LOCAL MUHURAT ANALYSIS · {city.state}</p>
-    <h1 className="page-title">{rule.title}<br/>{city.name}</h1>
+    <h1 className="page-title">{heading.primary}<br/>{heading.period}</h1>
     <p className="page-subtitle">{quality.directAnswer}</p>
 
     <div className="data-grid">{quality.facts.map(item=><div className="data-card" key={item.label}><small>{item.label}</small><strong>{item.value}</strong>{item.note?<small>{item.note}</small>:null}</div>)}</div>
@@ -66,7 +69,7 @@ export default async function Page({params}:{params:Promise<{event:string;year:s
 
     {p.event==="gold-purchase"?<section className="wide-panel"><div className="seo-copy"><small>PRICE CONTEXT · SEPARATE DATASET</small><h2>Gold price context for {city.name}</h2><p>The timing model and the market-price model are independent. Open the <Link href={`/gold-rate/${city.slug}`}>gold rate page for {city.name}</Link> to compare the local reference price separately from this timing analysis.</p></div></section>:null}
 
-    <div className="pill-links"><Link href={`/muhurat/${p.event}/${year}/${p.month}`}>India baseline · month</Link><Link href={muhuratYearPath(p.event,year)}>Full {year} analysis</Link></div>
+    <div className="pill-links"><Link href={`/muhurat/${p.event}/${year}/${p.month}`}>India baseline · {heading.period}</Link><Link href={muhuratYearPath(p.event,year)}>Full {year} analysis</Link></div>
     <TopicalGraph title={`Explore ${rule.title} around ${city.name}`} groups={buildMuhuratTopicalGraph(city,p.event,year,month)}/>
     <script type="application/ld+json" dangerouslySetInnerHTML={{__html:JSON.stringify(ld)}}/>
   </div></main>;
