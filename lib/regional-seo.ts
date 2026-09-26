@@ -136,13 +136,17 @@ export function regionalLanguageHubAlternates(){
 
 /**
  * Builds only true language equivalents. Regional city hubs represent today,
- * so historical/future English daily URLs never point at those hubs. Rahu Kalam
- * has no dedicated English city URL yet, therefore that cluster remains native-
- * language only until an exact English equivalent exists.
+ * so historical/future English daily URLs never point at those hubs. Choghadiya
+ * has an exact English city equivalent. Rahu Kalam does not, and the active
+ * Rahu pages currently have no second true language equivalent for the same
+ * city, so no hreflang cluster is emitted until such an equivalent exists.
  */
 export function regionalAlternates(city:City,intent?:RegionalIntentSlug,date?:string){
   const languages:Record<string,string>={};
   const today=indiaTodayIso();
+  if(intent==="rahu-kalam"){
+    return languages;
+  }
   if(intent==="choghadiya"){
     const english=`/tools/choghadiya/${city.slug}`;
     languages["en-IN"]=english;
