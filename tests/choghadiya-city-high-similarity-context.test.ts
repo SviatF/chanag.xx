@@ -4,14 +4,14 @@ import {buildChoghadiyaCityHighSimilarityContext} from "../lib/choghadiya-city-h
 import {findCityBySlug} from "../lib/cities";
 import type {Panchang} from "../lib/panchang";
 
-const riskCities=["ahmedabad","vadodara","surat","indore","bhopal","mumbai","pune","bengaluru","hyderabad"] as const;
+const riskCities=["ahmedabad","vadodara","surat","indore","bhopal","mumbai","pune","bengaluru","hyderabad","patna","varanasi"] as const;
 
 function panchang():Panchang{
-  const date="2026-09-25";
+  const date="2026-09-26";
   const names=["Amrit","Kaal","Shubh","Rog","Udveg","Char","Labh","Amrit"] as const;
   const day=names.map((name,index)=>({name,effect:(name==="Amrit"||name==="Shubh"||name==="Labh"?"good":name==="Char"?"neutral":"bad") as "good"|"neutral"|"bad",start:`${String(6+index).padStart(2,"0")}:1${index}`,end:`${String(7+index).padStart(2,"0")}:1${index}`,startDayOffset:0 as const,endDayOffset:0 as const}));
   const night=names.map((name,index)=>({name,effect:(name==="Amrit"||name==="Shubh"||name==="Labh"?"good":name==="Char"?"neutral":"bad") as "good"|"neutral"|"bad",start:`${String((18+index)%24).padStart(2,"0")}:2${index}`,end:`${String((19+index)%24).padStart(2,"0")}:2${index}`,startDayOffset:(18+index>=24?1:0) as 0|1,endDayOffset:(19+index>=24?1:0) as 0|1}));
-  return {date,weekday:"Friday",tithi:"Chaturdashi",tithiEnd:"14:20",tithiEndDate:date,paksha:"Shukla",nakshatra:"Purva Bhadrapada",nakshatraEnd:"17:45",nakshatraEndDate:date,nakshatraPada:2,rashi:"Kumbha",solarRashi:"Kanya",yoga:"Siddhi",karana:"Bava",sunrise:"06:12",sunset:"18:14",moonrise:"18:54",moonriseDate:date,moonset:"05:20",moonsetDate:date,moonIllumination:92,rahu:{start:"10:42",end:"12:13"},yamaganda:{start:"15:14",end:"16:44"},gulika:{start:"07:42",end:"09:12"},abhijit:{start:"11:49",end:"12:37"},dayChoghadiya:day,nightChoghadiya:night,hinduMonth:"Bhadrapada",vikramSamvat:2083,shakaSamvat:1948,samvatYearStart:"2026-03-19",dayLord:"Venus",sunriseConvention:"Upper limb + atmospheric refraction · sea-level horizon",engine:"Swiss Ephemeris · Moshier"};
+  return {date,weekday:"Saturday",tithi:"Purnima",tithiEnd:"14:20",tithiEndDate:date,paksha:"Shukla",nakshatra:"Uttara Bhadrapada",nakshatraEnd:"17:45",nakshatraEndDate:date,nakshatraPada:2,rashi:"Meena",solarRashi:"Kanya",yoga:"Siddhi",karana:"Bava",sunrise:"06:12",sunset:"18:14",moonrise:"18:54",moonriseDate:date,moonset:"05:20",moonsetDate:date,moonIllumination:99,rahu:{start:"09:12",end:"10:42"},yamaganda:{start:"13:43",end:"15:13"},gulika:{start:"06:12",end:"07:42"},abhijit:{start:"11:49",end:"12:37"},dayChoghadiya:day,nightChoghadiya:night,hinduMonth:"Bhadrapada",vikramSamvat:2083,shakaSamvat:1948,samvatYearStart:"2026-03-19",dayLord:"Saturn",sunriseConvention:"Upper limb + atmospheric refraction · sea-level horizon",engine:"Swiss Ephemeris · Moshier"};
 }
 
 const removable=riskCities.flatMap(slug=>{const city=findCityBySlug(slug)!;return [city.name.toLowerCase(),city.state.toLowerCase()];});
@@ -25,7 +25,7 @@ function similarity(a:string,b:string){const left=trigrams(a),right=trigrams(b);
 function text(slug:string){const city=findCityBySlug(slug)!;const context=buildChoghadiyaCityHighSimilarityContext(panchang(),city);expect(context).not.toBeNull();const c=context!;return [c.title,c.localityBody,c.solarTitle,c.solarBody,c.planningTitle,c.planningBody,...c.facts.map(item=>`${item.label} ${item.value} ${item.note??""}`)].join(" ");}
 
 describe("Choghadiya city HIGH-similarity cleanup",()=>{
-  it("keeps the nine rendered risk-city lenses distinct after city names, states and numbers are stripped",()=>{
+  it("keeps the rendered risk-city lenses distinct after city names, states and numbers are stripped",()=>{
     const outputs=riskCities.map(text);
     expect(new Set(outputs.map(normalized)).size).toBe(riskCities.length);
     let max=0;
@@ -33,9 +33,10 @@ describe("Choghadiya city HIGH-similarity cleanup",()=>{
     expect(max).toBeLessThan(0.60);
   });
 
-  it("limits the extra comparison layer to the actual HIGH-risk city set",()=>{
+  it("covers the current Gangetic rollover risk pair without broadening to clean cities",()=>{
     expect(buildChoghadiyaCityHighSimilarityContext(panchang(),findCityBySlug("delhi")!)).toBeNull();
-    expect(buildChoghadiyaCityHighSimilarityContext(panchang(),findCityBySlug("ahmedabad")!)).not.toBeNull();
+    expect(buildChoghadiyaCityHighSimilarityContext(panchang(),findCityBySlug("patna")!)).not.toBeNull();
+    expect(buildChoghadiyaCityHighSimilarityContext(panchang(),findCityBySlug("varanasi")!)).not.toBeNull();
   });
 
   it("renders the comparison lens on the public Choghadiya route",()=>{
