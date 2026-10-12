@@ -3,7 +3,7 @@ import {describe,expect,it} from "vitest";
 import {findCityBySlug} from "../lib/cities";
 import type {MuhuratRow} from "../lib/muhurat";
 import {buildMuhuratCitySimilarityContext} from "../lib/muhurat-city-similarity-context";
-import {phase1PriorityCities} from "../lib/seo-policy";
+import {phase1PriorityCities,wave2ControlledCities,wave2ControlledCities} from "../lib/seo-policy";
 
 const rows:MuhuratRow[]=[
   {date:"2027-07-05",data:{date:"2027-07-05",tithi:"Panchami",nakshatra:"Rohini",rahu:{start:"07:30",end:"09:00"},yamaganda:{start:"10:30",end:"12:00"},gulika:{start:"13:30",end:"15:00"},abhijit:{start:"12:05",end:"12:52"},dayChoghadiya:[]},recommendedWindows:[{start:"09:12",end:"10:18",sources:["Amrit Choghadiya","Shubh Choghadiya"]}],avoidWindows:[],reasons:["Panchami Tithi","Rohini Nakshatra"],planning:{score:82,grade:"Strong",totalCleanMinutes:112,longestWindowMinutes:66,sourceCount:2,hasAbhijit:false,idealContinuousMinutes:30,factors:[]}},
@@ -11,7 +11,7 @@ const rows:MuhuratRow[]=[
   {date:"2027-07-23",data:{date:"2027-07-23",tithi:"Ekadashi",nakshatra:"Shravana",rahu:{start:"10:30",end:"12:00"},yamaganda:{start:"15:00",end:"16:30"},gulika:{start:"07:30",end:"09:00"},abhijit:{start:"12:06",end:"12:53"},dayChoghadiya:[]},recommendedWindows:[{start:"12:06",end:"12:53",sources:["Abhijit Muhurat"]}],avoidWindows:[],reasons:["Ekadashi Tithi","Shravana Nakshatra"],planning:{score:74,grade:"Strong",totalCleanMinutes:47,longestWindowMinutes:47,sourceCount:1,hasAbhijit:true,idealContinuousMinutes:30,factors:[]}}
 ];
 
-const cityNames=phase1PriorityCities.map(slug=>findCityBySlug(slug)!).flatMap(city=>[city.name.toLowerCase(),city.state.toLowerCase()]);
+const cityNames=activeCities.map(slug=>findCityBySlug(slug)!).flatMap(city=>[city.name.toLowerCase(),city.state.toLowerCase()]);
 function normalized(value:string){
   let out=value.toLowerCase();
   for(const token of cityNames.sort((a,b)=>b.length-a.length))out=out.replaceAll(token," ");
@@ -23,9 +23,9 @@ function maxPairwise(values:string[]){let max=0;for(let i=0;i<values.length;i++)
 function rendered(slug:string){const city=findCityBySlug(slug)!;const c=buildMuhuratCitySimilarityContext(city,rows,"Vehicle Purchase Muhurat",2027,7);return normalized([c.title,c.localityBody,c.decisionTitle,c.decisionBody,...c.facts.map(f=>`${f.label} ${f.value} ${f.note??""}`)].join(" "));}
 
 describe("Muhurat city-month high-similarity locality layer",()=>{
-  it("keeps all phase-one cities distinct even when the Muhurat rows are identical",()=>{
-    const values=phase1PriorityCities.map(rendered);
-    expect(new Set(values).size).toBe(phase1PriorityCities.length);
+  it("keeps all active cities distinct even when the Muhurat rows are identical",()=>{
+    const values=activeCities.map(rendered);
+    expect(new Set(values).size).toBe(activeCities.length);
     expect(maxPairwise(values)).toBeLessThan(0.55);
   });
   it("separates the most frequent current high-risk city pairs",()=>{
