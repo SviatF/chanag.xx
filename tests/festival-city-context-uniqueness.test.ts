@@ -4,7 +4,8 @@ import {findCityBySlug} from "../lib/cities";
 import {buildFestivalCityContext} from "../lib/festival-city-context";
 import {festivalBySlugYear} from "../lib/festivals";
 import type {Panchang} from "../lib/panchang";
-import {phase1PriorityCities,wave2ControlledCities,wave2ControlledCities} from "../lib/seo-policy";
+import {phase1PriorityCities,wave2ControlledCities} from "../lib/seo-policy";
+const activeCities=[...phase1PriorityCities,...wave2ControlledCities];
 
 function panchang():Panchang{
   const date="2026-01-14";
