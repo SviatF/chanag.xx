@@ -14,7 +14,10 @@ describe("SEO launch guardrails",()=>{
   it("keeps the full runtime city pool larger than the curated core set",()=>{
     expect(supportedCities.length).toBeGreaterThan(coreCities.length);
     expect(phase1PriorityCities.length).toBe(20);
-    for(const slug of phase1PriorityCities)expect(isPriorityCity(slug)).toBe(true);\n    expect(wave2ControlledCities).toHaveLength(5);\n    for(const slug of wave2ControlledCities)expect(isPriorityCity(slug)).toBe(true);\n    expect(activeIndexCitySlugs()).toHaveLength(25);
+    for(const slug of phase1PriorityCities)expect(isPriorityCity(slug)).toBe(true);
+    expect(wave2ControlledCities).toHaveLength(5);
+    for(const slug of wave2ControlledCities)expect(isPriorityCity(slug)).toBe(true);
+    expect(activeIndexCitySlugs()).toHaveLength(25);
   });
 
   it("activates only valid supported city slugs from the runtime allowlist",()=>{
