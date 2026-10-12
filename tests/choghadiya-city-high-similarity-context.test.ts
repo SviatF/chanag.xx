@@ -2,9 +2,10 @@ import {readFileSync} from "node:fs";
 import {describe,expect,it} from "vitest";
 import {buildChoghadiyaCityHighSimilarityContext} from "../lib/choghadiya-city-high-similarity-context";
 import {findCityBySlug} from "../lib/cities";
+import {wave2ControlledCities} from "../lib/seo-policy";
 import type {Panchang} from "../lib/panchang";
 
-const riskCities=["ahmedabad","vadodara","surat","indore","bhopal","mumbai","pune","bengaluru","hyderabad","patna","varanasi"] as const;
+const riskCities=["ahmedabad","vadodara","surat","indore","bhopal","mumbai","pune","bengaluru","hyderabad","patna","varanasi",...wave2ControlledCities] as const;
 
 function panchang():Panchang{
   const date="2026-09-26";
@@ -33,10 +34,14 @@ describe("Choghadiya city HIGH-similarity cleanup",()=>{
     expect(max).toBeLessThan(0.60);
   });
 
-  it("covers the current Gangetic rollover risk pair without broadening to clean cities",()=>{
+  it("covers the current Gangetic and Wave 2 risk cities without broadening every city",()=>{
     expect(buildChoghadiyaCityHighSimilarityContext(panchang(),findCityBySlug("delhi")!)).toBeNull();
     expect(buildChoghadiyaCityHighSimilarityContext(panchang(),findCityBySlug("patna")!)).not.toBeNull();
     expect(buildChoghadiyaCityHighSimilarityContext(panchang(),findCityBySlug("varanasi")!)).not.toBeNull();
+    for(const slug of wave2ControlledCities){
+      expect(buildChoghadiyaCityHighSimilarityContext(panchang(),findCityBySlug(slug)!)).not.toBeNull();
+    }
+    expect(similarity(text("ludhiana"),text("nashik"))).toBeLessThan(0.5);
   });
 
   it("renders the comparison lens on the public Choghadiya route",()=>{
