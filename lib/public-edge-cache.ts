@@ -14,7 +14,7 @@ function defaultEdgeCache(){
 
 function isTrackingParam(name:string){return name.toLowerCase().startsWith("utm_")||TRACKING_PARAMS.has(name.toLowerCase());}
 
-export function publicEdgeCacheDecision(request:Request,versionId="dev"):PublicEdgeCacheDecision{
+export function publicEdgeCacheDecision(request:Request,versionId?:string):PublicEdgeCacheDecision{
   if(request.method!=="GET")return {eligible:false,reason:"method",cacheUrl:null};
   const url=new URL(request.url);
   if(url.pathname==="/admin"||url.pathname.startsWith("/admin/")||url.pathname==="/api"||url.pathname.startsWith("/api/"))return {eligible:false,reason:"private-route",cacheUrl:null};
@@ -22,13 +22,16 @@ export function publicEdgeCacheDecision(request:Request,versionId="dev"):PublicE
   if(request.headers.get("rsc")==="1"||request.headers.has("next-router-state-tree")||request.headers.has("next-router-prefetch"))return {eligible:false,reason:"next-rsc",cacheUrl:null};
   const accept=request.headers.get("accept")??"";
   if(!accept.toLowerCase().includes("text/html"))return {eligible:false,reason:"not-html-navigation",cacheUrl:null};
+  // Without a deployment-specific version, a cached HTML document can outlive
+  // its metadata/content deployment. Prefer safe uncached rendering.
+  if(!versionId||versionId==="dev")return {eligible:false,reason:"unversioned-deployment",cacheUrl:null};
 
   for(const key of [...url.searchParams.keys()]){
     if(isTrackingParam(key))url.searchParams.delete(key);
   }
   if(url.searchParams.size>0)return {eligible:false,reason:"functional-query",cacheUrl:null};
 
-  url.searchParams.set("__pv_edge_v",versionId||"dev");
+  url.searchParams.set("__pv_edge_v",versionId);
   return {eligible:true,reason:"public-html",cacheUrl:url.toString()};
 }
 
@@ -82,7 +85,7 @@ export async function servePublicWithEdgeCache(
   ctx:ExecutionContextLike,
   render:()=>Promise<Response>,
 ){
-  const decision=publicEdgeCacheDecision(request,versionId??"dev");
+  const decision=publicEdgeCacheDecision(request,versionId);
   if(!decision.eligible||!decision.cacheUrl)return withTelemetry(await render(),"BYPASS");
 
   const edgeCache=defaultEdgeCache();
