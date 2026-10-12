@@ -1,4 +1,4 @@
-import {festivalPageIsIndexable} from "./festival-expansion";
+import {festivalCityPageIsIndexable,festivalPageIsIndexable} from "./festival-expansion";
 import {isMonthlyMuhuratIndexable,isVratIndexable,isYearlyCalendarIndexable} from "./seo-policy";
 import {sitemapPriorityCities} from "./seo-sitemap";
 
@@ -21,9 +21,9 @@ export function cityYearAuthorityLinks(year:number):AuthorityCityLink[]{
 
 export function festivalCityAuthorityLinks(festival:string,year:number):AuthorityCityLink[]{
   if(!festivalPageIsIndexable(festival,year))return [];
-  return sitemapPriorityCities.map(city=>
-    link(city.slug,city.name,city.state,`/festivals/${festival}/${year}/${city.slug}`)
-  );
+  return sitemapPriorityCities
+    .filter(city=>festivalCityPageIsIndexable(festival,year,city.slug))
+    .map(city=>link(city.slug,city.name,city.state,`/festivals/${festival}/${year}/${city.slug}`));
 }
 
 export function muhuratCityAuthorityLinks(event:string,year:number,month:number):AuthorityCityLink[]{
