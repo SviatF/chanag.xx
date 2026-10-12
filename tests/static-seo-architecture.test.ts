@@ -1,6 +1,7 @@
 import {readFileSync} from "node:fs";
 import {describe,expect,it} from "vitest";
 import {festivals2026} from "../lib/festivals";
+import {festivalCityPageIsIndexable} from "../lib/festival-expansion";
 import {phase1PriorityCities,primaryMuhuratEvents,primaryVratTypes,wave2ControlledCities,yearlyIndexYears} from "../lib/seo-policy";
 import {rollingDailyDates,rollingMonths,sitemapPriorityCities} from "../lib/seo-sitemap";
 import {
@@ -29,11 +30,13 @@ import {
 } from "../lib/static-seo-routes";
 
 describe("SSG/ISR SEO architecture",()=>{
-  it("pre-renders the 2026 festival priority matrix and keeps it duplicate-free",()=>{
-    const expectedCount=(phase1PriorityCities.length+wave2ControlledCities.length)*festivals2026.length;
+  it("pre-renders the controlled 2026 festival priority matrix and keeps it duplicate-free",()=>{
+    const wave2FestivalCount=festivals2026.filter(festival=>festivalCityPageIsIndexable(festival.slug,2026,wave2ControlledCities[0])).length;
+    const expectedCount=phase1PriorityCities.length*festivals2026.length+wave2ControlledCities.length*wave2FestivalCount;
     expect(phase1PriorityCities.length).toBe(20);
     expect(festivals2026.length).toBe(19);
-    expect(expectedCount).toBe(475);
+    expect(wave2FestivalCount).toBe(8);
+    expect(expectedCount).toBe(420);
     expect(festivalCitySsgPriority.length).toBe(expectedCount);
     expect(festivalCitySsgPilot).toBe(festivalCitySsgPriority);
 
@@ -45,8 +48,12 @@ describe("SSG/ISR SEO architecture",()=>{
     for(const city of phase1PriorityCities){
       expect(festivalCitySsgPriority.filter(item=>item.city===city)).toHaveLength(festivals2026.length);
     }
+    for(const city of wave2ControlledCities){
+      expect(festivalCitySsgPriority.filter(item=>item.city===city)).toHaveLength(wave2FestivalCount);
+    }
     for(const festival of festivals2026){
-      expect(festivalCitySsgPriority.filter(item=>item.festival===festival.slug)).toHaveLength(phase1PriorityCities.length+wave2ControlledCities.length);
+      const expectedCities=phase1PriorityCities.length+(festivalCityPageIsIndexable(festival.slug,2026,wave2ControlledCities[0])?wave2ControlledCities.length:0);
+      expect(festivalCitySsgPriority.filter(item=>item.festival===festival.slug)).toHaveLength(expectedCities);
     }
   });
 
