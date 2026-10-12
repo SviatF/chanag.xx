@@ -111,7 +111,7 @@ export default async function CalendarPage({params}:{params:Promise<{city:string
     </section>
 
     {highSimilarityContext?<section className="wide-panel">
-      <div className="seo-copy"><small>GUJARAT MONTH COMPARISON LENS</small><h2>{highSimilarityContext.title}</h2><p>{highSimilarityContext.geographyBody}</p><h2>{highSimilarityContext.rhythmTitle}</h2><p>{highSimilarityContext.rhythmBody}</p></div>
+      <div className="seo-copy"><small>LOCAL MONTH COMPARISON LENS · {city.name.toUpperCase()}</small><h2>{highSimilarityContext.title}</h2><p>{highSimilarityContext.geographyBody}</p><h2>{highSimilarityContext.rhythmTitle}</h2><p>{highSimilarityContext.rhythmBody}</p></div>
       <div className="data-grid">{highSimilarityContext.facts.map(item=><div className="data-card" key={item.label}><small>{item.label}</small><strong>{item.value}</strong>{item.note?<small>{item.note}</small>:null}</div>)}</div>
     </section>:null}
 
