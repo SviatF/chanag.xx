@@ -1,14 +1,14 @@
 import {describe,expect,it} from "vitest";
 import {festivalCityAuthorityLinks,cityYearAuthorityLinks,muhuratCityAuthorityLinks,vratCityAuthorityLinks} from "../lib/authority-city-links";
-import {phase1PriorityCities} from "../lib/seo-policy";
+import {activeIndexCitySlugs} from "../lib/seo-policy";
 import {rollingMonths} from "../lib/seo-sitemap";
 import {todayInIndia} from "../lib/dates";
 
 function expectFullPriorityCoverage(rows:{slug:string;href:string}[]){
-  expect(rows).toHaveLength(phase1PriorityCities.length);
-  expect(new Set(rows.map(row=>row.slug)).size).toBe(phase1PriorityCities.length);
-  expect(new Set(rows.map(row=>row.href)).size).toBe(phase1PriorityCities.length);
-  expect(new Set(rows.map(row=>row.slug))).toEqual(new Set(phase1PriorityCities));
+  expect(rows).toHaveLength(activeIndexCitySlugs().length);
+  expect(new Set(rows.map(row=>row.slug)).size).toBe(activeIndexCitySlugs().length);
+  expect(new Set(rows.map(row=>row.href)).size).toBe(activeIndexCitySlugs().length);
+  expect(new Set(rows.map(row=>row.slug))).toEqual(new Set(activeIndexCitySlugs()));
 }
 
 describe("internal authority city spine",()=>{
