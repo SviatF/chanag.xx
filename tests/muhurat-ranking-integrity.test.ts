@@ -14,7 +14,7 @@ describe("Muhurat factual ranking language",()=>{
     for(let n=2;n<=5;n++){
       const copy=buildMuhuratMonthlyQualityContent("vehicle-purchase",2026,10,city,candidates.slice(0,n));
       expect(copy.rankingBody).toContain("tied at 82/100");
-      expect(copy.directAnswer).toContain("shares the top score");
+      expect(copy.directAnswer).toContain("share the top score");
       expect(copy.rankingBody).not.toMatch(/leads? .* by 0 point|0-point gap/i);
     }
   });

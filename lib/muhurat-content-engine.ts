@@ -100,14 +100,14 @@ function sourceProfile(sources:number){
 
 function monthlyDirect(ruleTitle:string,location:string,label:string,rows:readonly MuhuratRow[],top:MuhuratRow,shortlist:{key:string;label:string}){
   const tied=rows.length>1&&rows[1].planning.score===top.planning.score;
-  const firstNote=tied?`${top.date} shares the top score of ${top.planning.score}/100 with ${rows[1].date}`:`${top.date} ranks first at ${top.planning.score}/100`;
+  const firstNote=tied?`${top.date} and ${rows[1].date} share the top score of ${top.planning.score}/100`:`${top.date} ranks first at ${top.planning.score}/100`;
   switch(shortlist.key){
     case "single-candidate":return `${label} leaves ${location} with one ${ruleTitle.toLowerCase()} candidate only: ${top.date}, scoring ${top.planning.score}/100 with a ${top.planning.longestWindowMinutes}-minute longest clean block.`;
-    case "head-to-head":return `${ruleTitle} in ${location} is a two-date contest for ${label}. ${firstNote}; its longest uninterrupted clean block is ${top.planning.longestWindowMinutes} minutes.`;
-    case "compact-trio":return `${location} has a compact trio of ${ruleTitle.toLowerCase()} candidates in ${label}. The three-date field has ${firstNote} and ${top.planning.longestWindowMinutes} uninterrupted minutes.`;
-    case "four-way-field":return `Four screened ${ruleTitle.toLowerCase()} dates form ${location}'s ${label} comparison field. ${firstNote}, carrying a ${top.planning.longestWindowMinutes}-minute longest clean block.`;
-    case "deep-shortlist":return `${label} produces a deep but selective ${ruleTitle.toLowerCase()} shortlist in ${location}: ${rows.length} dates survive the lunar screen, with ${firstNote}.`;
-    default:return `${location} has a broad ${ruleTitle.toLowerCase()} field in ${label}: ${rows.length} screened dates remain, with ${firstNote}.`;
+    case "head-to-head":return `${ruleTitle} in ${location} is a two-date contest for ${label}. ${firstNote}. The first date offers a ${top.planning.longestWindowMinutes}-minute longest uninterrupted clean block.`;
+    case "compact-trio":return `${location} has a compact trio of ${ruleTitle.toLowerCase()} candidates in ${label}. ${firstNote}. The first listed date has ${top.planning.longestWindowMinutes} uninterrupted clean minutes.`;
+    case "four-way-field":return `Four screened ${ruleTitle.toLowerCase()} dates form ${location}'s ${label} comparison field. ${firstNote}. The first listed date carries a ${top.planning.longestWindowMinutes}-minute longest clean block.`;
+    case "deep-shortlist":return `${label} produces a deep but selective ${ruleTitle.toLowerCase()} shortlist in ${location}: ${rows.length} dates survive the lunar screen, and ${firstNote}.`;
+    default:return `${location} has a broad ${ruleTitle.toLowerCase()} field in ${label}: ${rows.length} screened dates remain, and ${firstNote}.`;
   }
 }
 
@@ -130,7 +130,7 @@ export function buildMuhuratMonthlyQualityContent(event:string,year:number,month
   const gap=top&&runner?top.planning.score-runner.planning.score:null;
   const pairComparison=top&&runner
     ?gap===0
-      ?`${top.date} and ${runner.date} are tied at ${top.planning.score}/100; the table order reflects the existing deterministic tie-break`
+      ?`${top.date} and ${runner.date} are tied at ${top.planning.score}/100; the displayed order does not imply a higher score`
       :`${top.date} leads ${runner.date} by ${gap} point${gap===1?"":"s"}`
     :"";
 

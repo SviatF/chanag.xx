@@ -16,9 +16,9 @@ const agents={
 };
 function attr(tag,name){return new RegExp(`\\b${name}\\s*=\\s*["']([^"']+)["']`,"i").exec(tag)?.[1]??null;}
 function metadata(html){
-  const links=[...html.matchAll(/<link\\b[^>]*>/gi)].map(x=>x[0]);
-  const metas=[...html.matchAll(/<meta\\b[^>]*>/gi)].map(x=>x[0]);
-  const canonical=links.find(tag=>(attr(tag,"rel")??"").toLowerCase().split(/\\s+/).includes("canonical"));
+  const links=[...html.matchAll(/<link\b[^>]*>/gi)].map(x=>x[0]);
+  const metas=[...html.matchAll(/<meta\b[^>]*>/gi)].map(x=>x[0]);
+  const canonical=links.find(tag=>(attr(tag,"rel")??"").toLowerCase().split(/\s+/).includes("canonical"));
   const robots=metas.filter(tag=>["robots","googlebot"].includes((attr(tag,"name")??"").toLowerCase())).map(tag=>attr(tag,"content")??"");
   return {canonical:canonical?attr(canonical,"href"):null,robots};
 }
@@ -35,7 +35,7 @@ for(const path of paths){
       const errors=[];
       if(response.status!==200)errors.push(`HTTP ${response.status}`);
       if(canonical!==url)errors.push(`canonical mismatch: ${canonical??"missing"}`);
-      if([...m.robots,xRobots].some(s=>/\\bnoindex\\b/i.test(s)))errors.push("noindex");
+      if([...m.robots,xRobots].some(s=>/\bnoindex\b/i.test(s)))errors.push("noindex");
       results.push({path,agent,status:response.status,canonical,robots:m.robots,xRobots,cache:response.headers.get("x-panchvani-edge-cache"),errors});
     }catch(error){results.push({path,agent,errors:[String(error)]});}
   }

@@ -89,7 +89,6 @@ function observanceFrame(rule:Festival["pujaRule"]){
 export function buildFestivalCityHighSimilarityContext(festival:Festival,city:City,data:Panchang):FestivalCityHighSimilarityContext{
   const profile=buildCityContentProfile(city);
   const daylight=daylightMinutes(data);
-  const rise=clockMinutes(data.sunrise);
   const tithiEnd=datedMinutes(data.tithiEnd,data.tithiEndDate,data.date);
   const nakshatraEnd=datedMinutes(data.nakshatraEnd,data.nakshatraEndDate,data.date);
   const tithiPart=localDayPhase(data.tithiEnd,data.tithiEndDate,data.date,data.sunrise,data.sunset);
@@ -99,7 +98,6 @@ export function buildFestivalCityHighSimilarityContext(festival:Festival,city:Ci
     : tithiEnd<nakshatraEnd
       ? "Tithi-first lunar hand-off"
       : "Nakshatra-first lunar hand-off";
-  const rahuOffset=Math.max(0,clockMinutes(data.rahu.start)-rise);
   const rahuPart=localDayPhase(data.rahu.start,data.date,data.date,data.sunrise,data.sunset);
   const frame=observanceFrame(festival.pujaRule);
   const locality=festivalCityLocalityBySlug[city.slug]??`${profile.dailyContext} This festival page retains ${profile.geoContext} as its local comparison frame instead of substituting a nearby city's timetable.`;
