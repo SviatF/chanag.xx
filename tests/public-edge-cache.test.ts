@@ -18,6 +18,44 @@ describe("public Cloudflare edge cache shield",()=>{
     expect(response.headers.get("x-panchvani-worker-version")).toBe("version-for-test");
   });
 
+  it("disables implicit CDN HTML caching while preserving meta and version headers",async()=>{
+    const input='<html><head><link rel="canonical" href="https://panchvani.com/festivals/dussehra/2026/hyderabad"/></head><body>moonrise occurs in local daylight</body></html>';
+    const response=await servePublicWithEdgeCache(
+      htmlRequest("https://panchvani.com/festivals/dussehra/2026/hyderabad"),
+      "deploy-b",
+      {waitUntil(_promise:Promise<unknown>){}},
+      async()=>new Response(input,{
+        status:200,
+        headers:{
+          "content-type":"text/html; charset=utf-8",
+          "cache-control":"public, max-age=0, must-revalidate",
+          "cdn-cache-control":"public, max-age=86400, stale-while-revalidate=31449600",
+          "x-robots-tag":"index, follow"
+        }
+      })
+    );
+    expect(response.headers.get("cache-control")).toBe("no-store");
+    expect(response.headers.get("cdn-cache-control")).toBe("no-store");
+    expect(response.headers.get("cloudflare-cdn-cache-control")).toBe("no-store");
+    expect(response.headers.get("x-robots-tag")).toBe("index, follow");
+    expect(response.headers.get("x-panchvani-worker-version")).toBe("deploy-b");
+    expect(await response.text()).toBe(input);
+  });
+
+  it("does not change caching headers for non-HTML resources",async()=>{
+    const response=await servePublicWithEdgeCache(
+      htmlRequest("https://panchvani.com/assets/app.js"),
+      "deploy-b",
+      {waitUntil(_promise:Promise<unknown>){}},
+      async()=>new Response("export const version=1;",{
+        status:200,headers:{"content-type":"application/javascript","cache-control":"public, max-age=31536000","cdn-cache-control":"public, max-age=31536000"}
+      })
+    );
+    expect(response.headers.get("cache-control")).toBe("public, max-age=31536000");
+    expect(response.headers.get("cdn-cache-control")).toBe("public, max-age=31536000");
+    expect(response.headers.get("cloudflare-cdn-cache-control")).toBeNull();
+  });
+
   it("caches public HTML and strips tracking-only query params from the cache key",()=>{
     const decision=publicEdgeCacheDecision(htmlRequest("https://panchvani.com/panchang/mumbai/2026-09-15?utm_source=gsc&fbclid=abc"),"deploy-123");
     expect(decision.eligible).toBe(true);

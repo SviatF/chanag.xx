@@ -58,6 +58,15 @@ export function isPublicResponseCacheable(response:Response){
 function withTelemetry(response:Response,cacheStatus:"HIT"|"MISS"|"COALESCED"|"BYPASS",handlerMs?:number,versionId?:string){
   const headers=new Headers(response.headers);
   headers.set("x-panchvani-edge-cache",cacheStatus);
+  // vinext/Next may emit a one-day CDN TTL with a year-long stale window.
+  // Never let an HTML document persist across content or metadata deploys in
+  // Cloudflare's implicit CDN cache. Our deployment-versioned Cache API remains
+  // a separate, explicitly controlled performance layer.
+  if((headers.get("content-type")??"").toLowerCase().includes("text/html")){
+    headers.set("cache-control","no-store");
+    headers.set("cdn-cache-control","no-store");
+    headers.set("cloudflare-cdn-cache-control","no-store");
+  }
   // This header identifies the responding Worker build during canonical/cache audits.
   // If absent in a production HTML response, inspect upstream cache and asset routing.
   headers.set("x-panchvani-worker","chanag-xx");
@@ -68,7 +77,10 @@ function withTelemetry(response:Response,cacheStatus:"HIT"|"MISS"|"COALESCED"|"B
 
 function cacheableCopy(response:Response,ttl:number){
   const headers=new Headers(response.headers);
-  // Browser stays revalidation-first while Cloudflare Cache API retains the object at the edge.
+  // Keep the explicitly versioned Worker Cache API independent from the
+  // upstream CDN's broad HTML caching directives.
+  headers.delete("cdn-cache-control");
+  headers.delete("cloudflare-cdn-cache-control");
   headers.set("cache-control",`public, max-age=0, s-maxage=${ttl}, stale-while-revalidate=60`);
   headers.set("x-panchvani-edge-cache","STORED");
   return new Response(response.body,{status:response.status,statusText:response.statusText,headers});

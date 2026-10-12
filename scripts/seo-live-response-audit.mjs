@@ -34,10 +34,18 @@ for(const path of paths){
       const xRobots=response.headers.get("x-robots-tag")??"";
       const worker=response.headers.get("x-panchvani-worker");
       const workerVersion=response.headers.get("x-panchvani-worker-version");
+      const browserCache=response.headers.get("cache-control");
+      const cdnCache=response.headers.get("cdn-cache-control");
+      const cfCache=response.headers.get("cf-cache-status");
       const errors=[];
       if(response.status!==200)errors.push(`HTTP ${response.status}`);
       if(canonical!==url)errors.push(`canonical mismatch: ${canonical??"missing"}`);
       if([...m.robots,xRobots].some(s=>/\bnoindex\b/i.test(s)))errors.push("noindex");
+      // The current production Worker must not return an implicit CDN HTML TTL.
+      if(worker==="chanag-xx"&&workerVersion){
+        if(browserCache!=="no-store")errors.push(`unsafe HTML Cache-Control: ${browserCache??"missing"}`);
+        if(cdnCache&&cdnCache!=="no-store")errors.push(`unsafe HTML CDN-Cache-Control: ${cdnCache}`);
+      }
       if(path==="/festivals/dussehra/2026/hyderabad"){
         if(html.includes("moonrise arrives late relative to sunset"))errors.push("stale Moonrise chronology from a pre-fix deployment");
         if(!html.includes("moonrise occurs in local daylight"))errors.push("new Moonrise chronology not present");
@@ -46,7 +54,7 @@ for(const path of paths){
       if(path==="/muhurat/vehicle-purchase/2026/10/pune"&&/\bby 0 points?\b/i.test(html)){
         errors.push("stale Muhurat zero-point lead");
       }
-      results.push({path,agent,status:response.status,canonical,robots:m.robots,xRobots,worker,workerVersion,cache:response.headers.get("x-panchvani-edge-cache"),errors});
+      results.push({path,agent,status:response.status,canonical,robots:m.robots,xRobots,worker,workerVersion,browserCache,cdnCache,cfCache,cache:response.headers.get("x-panchvani-edge-cache"),errors});
     }catch(error){results.push({path,agent,errors:[String(error)]});}
   }
 }
