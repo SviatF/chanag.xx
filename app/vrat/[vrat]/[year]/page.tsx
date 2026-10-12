@@ -61,8 +61,8 @@ export default async function VratYearPage({params}:{params:Promise<{vrat:string
 
     {cityLinks.length?<section className="wide-panel">
       <h2 className="page-title" style={{fontSize:32}}>{vrat.name} {year} by city</h2>
-      <p className="page-subtitle">Open the local sunrise-based yearly reference for every actively indexed city.</p>
-      <div className="city-directory">{cityLinks.map(item=><Link href={item.href} key={item.slug}><small>{item.state}</small><strong>{item.name}</strong><span>Local sunrise Tithi reference</span></Link>)}</div>
+      <p className="page-subtitle">Open the local sunrise-based yearly reference for any actively indexed city.</p>
+      <div className="pill-links">{cityLinks.map(item=><Link href={item.href} key={item.slug}>{item.name}</Link>)}</div>
     </section>:null}
 
     <TopicalGraph title={`Explore ${vrat.name} ${year}`} groups={buildVratTopicalGraph(referenceCity,vrat.slug,year,rows,"baseline")}/>
