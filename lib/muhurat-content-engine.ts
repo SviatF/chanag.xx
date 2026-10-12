@@ -99,13 +99,15 @@ function sourceProfile(sources:number){
 }
 
 function monthlyDirect(ruleTitle:string,location:string,label:string,rows:readonly MuhuratRow[],top:MuhuratRow,shortlist:{key:string;label:string}){
+  const tied=rows.length>1&&rows[1].planning.score===top.planning.score;
+  const firstNote=tied?`${top.date} and ${rows[1].date} share the top score of ${top.planning.score}/100`:`${top.date} ranks first at ${top.planning.score}/100`;
   switch(shortlist.key){
     case "single-candidate":return `${label} leaves ${location} with one ${ruleTitle.toLowerCase()} candidate only: ${top.date}, scoring ${top.planning.score}/100 with a ${top.planning.longestWindowMinutes}-minute longest clean block.`;
-    case "head-to-head":return `${ruleTitle} in ${location} is a two-date contest for ${label}. ${top.date} leads the pair at ${top.planning.score}/100; its longest uninterrupted clean block is ${top.planning.longestWindowMinutes} minutes.`;
-    case "compact-trio":return `${location} has a compact trio of ${ruleTitle.toLowerCase()} candidates in ${label}. The three-date field is led by ${top.date} at ${top.planning.score}/100 and ${top.planning.longestWindowMinutes} uninterrupted minutes.`;
-    case "four-way-field":return `Four screened ${ruleTitle.toLowerCase()} dates form ${location}'s ${label} comparison field. ${top.date} sits first at ${top.planning.score}/100, carrying a ${top.planning.longestWindowMinutes}-minute longest clean block.`;
-    case "deep-shortlist":return `${label} produces a deep but selective ${ruleTitle.toLowerCase()} shortlist in ${location}: ${rows.length} dates survive the lunar screen, with ${top.date} leading at ${top.planning.score}/100.`;
-    default:return `${location} has a broad ${ruleTitle.toLowerCase()} field in ${label}: ${rows.length} screened dates remain, headed by ${top.date} at ${top.planning.score}/100.`;
+    case "head-to-head":return `${ruleTitle} in ${location} is a two-date contest for ${label}. ${firstNote}. The first date offers a ${top.planning.longestWindowMinutes}-minute longest uninterrupted clean block.`;
+    case "compact-trio":return `${location} has a compact trio of ${ruleTitle.toLowerCase()} candidates in ${label}. ${firstNote}. The first listed date has ${top.planning.longestWindowMinutes} uninterrupted clean minutes.`;
+    case "four-way-field":return `Four screened ${ruleTitle.toLowerCase()} dates form ${location}'s ${label} comparison field. ${firstNote}. The first listed date carries a ${top.planning.longestWindowMinutes}-minute longest clean block.`;
+    case "deep-shortlist":return `${label} produces a deep but selective ${ruleTitle.toLowerCase()} shortlist in ${location}: ${rows.length} dates survive the lunar screen, and ${firstNote}.`;
+    default:return `${location} has a broad ${ruleTitle.toLowerCase()} field in ${label}: ${rows.length} screened dates remain, and ${firstNote}.`;
   }
 }
 
@@ -126,6 +128,11 @@ export function buildMuhuratMonthlyQualityContent(event:string,year:number,month
   const sources=uniqueSources(rows);
   const spread=rows.length?Math.max(...rows.map(r=>r.planning.score))-Math.min(...rows.map(r=>r.planning.score)):0;
   const gap=top&&runner?top.planning.score-runner.planning.score:null;
+  const pairComparison=top&&runner
+    ?gap===0
+      ?`${top.date} and ${runner.date} are tied at ${top.planning.score}/100; the displayed order does not imply a higher score`
+      :`${top.date} leads ${runner.date} by ${gap} point${gap===1?"":"s"}`
+    :"";
 
   if(!top){
     return {
@@ -165,18 +172,18 @@ export function buildMuhuratMonthlyQualityContent(event:string,year:number,month
   if(!runner){
     rankingBody=`There is no runner-up: ${top.date} is the only lunar-profile survivor. Its ${top.planning.score}/100 score combines ${top.planning.totalCleanMinutes} clean minutes with a ${top.planning.longestWindowMinutes}-minute longest block, so comparison must move to another month rather than a weaker in-month fallback.`;
   }else if(rows.length===2){
-    rankingBody=`The month is a head-to-head: ${top.date} leads ${runner.date} by ${gap} point${gap===1?"":"s"}. Their longest clean blocks are ${top.planning.longestWindowMinutes} and ${runner.planning.longestWindowMinutes} minutes respectively, making the runner-up a concrete alternative rather than one row in a long table.`;
+    rankingBody=`The month is a head-to-head: ${pairComparison}. Their longest clean blocks are ${top.planning.longestWindowMinutes} and ${runner.planning.longestWindowMinutes} minutes respectively, making the runner-up a concrete alternative rather than one row in a long table.`;
   }else if(rows.length===3){
     const third=rows[2];
-    rankingBody=`The trio has a clear 1–2–3 structure. ${top.date} leads by ${gap} point${gap===1?"":"s"} over ${runner.date}; ${third.date} supplies the third fallback at ${third.planning.score}/100. This makes ranking depth visible without diluting the comparison across many dates.`;
+    rankingBody=`The trio has a clear 1–2–3 structure. ${pairComparison}; ${third.date} supplies the third fallback at ${third.planning.score}/100. This makes ranking depth visible without diluting the comparison across many dates.`;
   }else if(rows.length===4){
-    rankingBody=`Leadership sits inside a four-way field: ${top.date} is #1, ${runner.date} is #2 at a ${gap}-point gap, and two additional rows preserve fallback depth. ${spreadState.text}; ${profile.decision}.`;
+    rankingBody=`Leadership sits inside a four-way field: ${pairComparison}, and two additional rows preserve fallback depth. ${spreadState.text}; ${profile.decision}.`;
   }else{
-    rankingBody=`The top pair is only the front of a ${rows.length}-date field. ${top.date} leads ${runner.date} by ${gap} point${gap===1?"":"s"}, while ${rows.length-2} additional screened dates create deeper fallback capacity. ${spreadState.text}; ${profile.decision}.`;
+    rankingBody=`The top pair is only the front of a ${rows.length}-date field. ${pairComparison}, while ${rows.length-2} additional screened dates create deeper fallback capacity. ${spreadState.text}; ${profile.decision}.`;
   }
 
   const timingBody=clean.key==="fragmented"
-    ? `${clean.body} ${abhijit.text} ${noWindowRows} candidate row${noWindowRows===1?"":"s"} has no surviving recommended window, so lunar qualification is materially stronger than practical daytime continuity in this local month.`
+    ? `${clean.body} ${abhijit.text} ${noWindowRows} candidate row${noWindowRows===1?"":"s"} ${noWindowRows===1?"has":"have"} no surviving recommended window, so lunar qualification is materially stronger than practical daytime continuity in this local month.`
     : clean.key==="narrow"
       ? `${clean.body} ${abhijit.text} The surviving windows draw on ${sourceProfile(sources)}, so small changes in local exclusions matter more than raw candidate count.`
       : clean.key==="compact"

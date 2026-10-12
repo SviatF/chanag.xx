@@ -47,14 +47,14 @@ describe("sitemap freshness",()=>{
     expect(body).not.toContain("/disclaimer");
   });
 
-  it("protects the two active festival SEO experiments from a false content lastmod",async()=>{
-    expect(festivalCityLastmod("/festivals/ganesh-chaturthi/2026/ahmedabad")).toBeUndefined();
-    expect(festivalCityLastmod("/festivals/dussehra/2026/hyderabad")).toBeUndefined();
+  it("uses the shared content release date for all changed festival city pages",async()=>{
+    expect(festivalCityLastmod("/festivals/ganesh-chaturthi/2026/ahmedabad")).toBe(FESTIVAL_CITY_CONTENT_LASTMOD);
+    expect(festivalCityLastmod("/festivals/dussehra/2026/hyderabad")).toBe(FESTIVAL_CITY_CONTENT_LASTMOD);
     expect(festivalCityLastmod("/festivals/diwali/2026/mumbai")).toBe(FESTIVAL_CITY_CONTENT_LASTMOD);
 
     const body=await (await getFestivalSitemap()).text();
     expect(body).toContain(`<loc>https://panchvani.com/festivals/diwali/2026/mumbai</loc><lastmod>${FESTIVAL_CITY_CONTENT_LASTMOD}</lastmod>`);
-    expect(body).toContain("<loc>https://panchvani.com/festivals/ganesh-chaturthi/2026/ahmedabad</loc></url>");
-    expect(body).toContain("<loc>https://panchvani.com/festivals/dussehra/2026/hyderabad</loc></url>");
+    expect(body).toContain(`<loc>https://panchvani.com/festivals/ganesh-chaturthi/2026/ahmedabad</loc><lastmod>${FESTIVAL_CITY_CONTENT_LASTMOD}</lastmod>`);
+    expect(body).toContain(`<loc>https://panchvani.com/festivals/dussehra/2026/hyderabad</loc><lastmod>${FESTIVAL_CITY_CONTENT_LASTMOD}</lastmod>`);
   });
 });

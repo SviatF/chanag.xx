@@ -1,4 +1,5 @@
 import type {City} from "./cities";
+import {localDayPhase,localMoonriseRelation} from "./festival-day-clock";
 import {buildCityContentProfile} from "./city-content-profile";
 import type {Festival} from "./festivals";
 import type {Panchang} from "./panchang";
@@ -35,14 +36,6 @@ function daylightMinutes(data:Panchang){
   const start=clockMinutes(data.sunrise),end=clockMinutes(data.sunset);
   return end>=start?end-start:end+1440-start;
 }
-function dayPart(minutesFromSunrise:number,daylight:number){
-  const ratio=daylight?minutesFromSunrise/daylight:0;
-  if(ratio<0.18)return "opening daylight";
-  if(ratio<0.36)return "morning";
-  if(ratio<0.55)return "midday";
-  if(ratio<0.76)return "afternoon";
-  return "late daylight";
-}
 function daylightClass(minutes:number){
   if(minutes<700)return "compact solar day";
   if(minutes<730)return "short-balanced solar day";
@@ -59,19 +52,19 @@ function sunriseClass(value:string){
   return "late sunrise";
 }
 function transitionProfile(data:Panchang){
-  const rise=clockMinutes(data.sunrise),daylight=daylightMinutes(data);
   const t=datedMinutes(data.tithiEnd,data.tithiEndDate,data.date);
   const n=datedMinutes(data.nakshatraEnd,data.nakshatraEndDate,data.date);
-  const tPart=dayPart(Math.max(0,t-rise),daylight),nPart=dayPart(Math.max(0,n-rise),daylight);
+  const tPart=localDayPhase(data.tithiEnd,data.tithiEndDate,data.date,data.sunrise,data.sunset);
+  const nPart=localDayPhase(data.nakshatraEnd,data.nakshatraEndDate,data.date,data.sunrise,data.sunset);
   const delta=Math.abs(t-n);
   if(delta<30)return {key:"near-synchronous",text:`Tithi and Nakshatra transitions share the same narrow local clock band around ${tPart}`,tPart,nPart};
   if(t<n)return {key:"tithi-first",text:`Tithi changes first in ${tPart}; Nakshatra follows in ${nPart}`,tPart,nPart};
   return {key:"nakshatra-first",text:`Nakshatra changes first in ${nPart}; Tithi follows in ${tPart}`,tPart,nPart};
 }
 function rahuProfile(data:Panchang){
-  const sunrise=clockMinutes(data.sunrise),daylight=daylightMinutes(data);
+  const sunrise=clockMinutes(data.sunrise);
   const start=Math.max(0,clockMinutes(data.rahu.start)-sunrise);
-  return {key:dayPart(start,daylight),offset:start};
+  return {key:localDayPhase(data.rahu.start,data.date,data.date,data.sunrise,data.sunset),offset:start};
 }
 function favorableProfile(data:Panchang){
   const good=data.dayChoghadiya.filter(item=>item.effect==="good");
@@ -87,15 +80,7 @@ function nightProfile(data:Panchang){
   return {count:good.length,first:first?`${first.name} ${first.start}–${first.end}`:"none",firstSlot:first?data.nightChoghadiya.indexOf(first)+1:-1};
 }
 function moonProfile(data:Panchang){
-  if(data.moonrise==="—")return {key:"unavailable",text:"moonrise is not present in the local calculation",delta:null as number|null};
-  const sunset=clockMinutes(data.sunset);
-  let moon=datedMinutes(data.moonrise,data.moonriseDate,data.date);
-  if(moon<sunset)moon+=1440;
-  const delta=moon-sunset;
-  if(delta<60)return {key:"near-sunset",text:"moonrise follows sunset within about an hour",delta};
-  if(delta<180)return {key:"early-night",text:"moonrise falls in the early local night",delta};
-  if(delta<360)return {key:"mid-night",text:"moonrise falls deeper into the first half of night",delta};
-  return {key:"late-night",text:"moonrise arrives late relative to sunset",delta};
+  return localMoonriseRelation(data);
 }
 function moonLight(value:number){
   if(value<20)return "very-low illumination";
@@ -201,7 +186,7 @@ export function buildFestivalCityContext(festival:Festival,city:City,data:Pancha
     ? `Local sunrise is ${data.sunrise} and sunset is ${data.sunset}. ${transitions.text}. Rahu starts ${rahu.offset} minutes after sunrise in ${rahu.key}; ${favorable.count} daytime periods carry a favorable label, beginning in slot ${favorable.firstSlot>0?favorable.firstSlot:"—"} and ending in slot ${favorable.lastSlot>0?favorable.lastSlot:"—"}. Moon state: ${moon.text}.`
     : variant%3===1
       ? `The festival-day clock opens at ${data.sunrise} and closes its daylight span at ${data.sunset}. Tithi occupies the ${transitions.tPart} transition band while Nakshatra occupies ${transitions.nPart}; the order is ${transitions.key}. The favorable-day shape is ${favorable.key}, and the night contains ${night.count} favorable-labelled periods.`
-      : `Read the chronology from dawn forward: ${sunriseClass(data.sunrise)}, then Rahu in ${rahu.key}, then a ${favorable.key} favorable-period pattern. Lunar turnover is ${transitions.key}: ${transitions.text}. After sunset, ${moon.text}; the first favorable night period is ${night.first}.`;
+      : `Read the chronology from dawn forward: ${sunriseClass(data.sunrise)}, then Rahu in ${rahu.key}, then a ${favorable.key} favorable-period pattern. Lunar turnover is ${transitions.key}: ${transitions.text}. Moonrise timing: ${moon.text}; the first favorable night period is ${night.first}.`;
 
   return {
     focusTitle:focus.title,

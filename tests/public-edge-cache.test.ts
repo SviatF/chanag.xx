@@ -14,6 +14,12 @@ describe("public Cloudflare edge cache shield",()=>{
     expect(decision.cacheUrl).not.toContain("fbclid");
   });
 
+  it("bypasses caching when no deployment version is bound",()=>{
+    expect(publicEdgeCacheDecision(htmlRequest("https://panchvani.com/festivals/dussehra/2026/hyderabad")).reason).toBe("unversioned-deployment");
+    expect(publicEdgeCacheDecision(htmlRequest("https://panchvani.com/festivals/dussehra/2026/hyderabad"),"dev").eligible).toBe(false);
+    expect(publicEdgeCacheDecision(htmlRequest("https://panchvani.com/festivals/dussehra/2026/hyderabad"),"deployment-v2").eligible).toBe(true);
+  });
+
   it("never caches admin, APIs, RSC payloads or functional query pages",()=>{
     expect(publicEdgeCacheDecision(htmlRequest("https://panchvani.com/admin"),"v").eligible).toBe(false);
     expect(publicEdgeCacheDecision(htmlRequest("https://panchvani.com/api/admin/seo-data"),"v").eligible).toBe(false);

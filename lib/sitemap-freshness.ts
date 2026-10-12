@@ -17,12 +17,7 @@ export type SitemapFeedName=typeof sitemapFeedNames[number];
 
 // This date is intentionally release-bound, not a moving "today" value.
 // It must change only when the generalized festival-city content layer changes.
-export const FESTIVAL_CITY_CONTENT_LASTMOD="2026-09-15";
-
-export const protectedFestivalExperimentPaths=new Set([
-  "/festivals/ganesh-chaturthi/2026/ahmedabad",
-  "/festivals/dussehra/2026/hyderabad",
-]);
+export const FESTIVAL_CITY_CONTENT_LASTMOD="2026-10-12";
 
 export function sitemapFreshnessDates(reference:Date=todayInIndia()){
   const today=reference.toISOString().slice(0,10);
@@ -63,6 +58,8 @@ export function sitemapFeedLastmod(name:SitemapFeedName,reference:Date=todayInIn
   }
 }
 
-export function festivalCityLastmod(path:string){
-  return protectedFestivalExperimentPaths.has(path)?undefined:FESTIVAL_CITY_CONTENT_LASTMOD;
+export function festivalCityLastmod(_path:string){
+  // Every festival-city route consumes the revised shared timing narrative.
+  // This date is release-bound and must not advance on ordinary daily crawls.
+  return FESTIVAL_CITY_CONTENT_LASTMOD;
 }
