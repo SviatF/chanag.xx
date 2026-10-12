@@ -2,7 +2,7 @@ import {existsSync,readFileSync,readdirSync} from "node:fs";
 import {gunzipSync} from "node:zlib";
 import {describe,expect,it} from "vitest";
 import {MUHURAT_BUILD_DATA_SHARD_MAX_BYTES,type MuhuratBuildDataShard} from "../lib/muhurat-build-data-schema";
-import {calendarMonthSsgPriority,muhuratMonthSsgPriority,muhuratYearSsgPriority} from "../lib/static-seo-routes";
+import {calendarMonthSsgPriority,muhuratCityMonthSsgPriority,muhuratMonthSsgPriority,muhuratYearSsgPriority} from "../lib/static-seo-routes";
 
 function decodeShard(path:string){
   const source=readFileSync(path,"utf8");
@@ -39,7 +39,15 @@ describe("Muhurat precomputed build-data architecture",()=>{
       expect(data.version).toBe(2);
       expect(data.shardId).toBe(expectedShardIds[index]);
       expect(data.signature).toMatch(/^[a-f0-9]{64}$/);
-      const expectedTargets=calendarMonthlyShardIds.has(data.shardId)?20:1;
+      const expectedCities=new Set<string>();
+      for(const item of calendarMonthSsgPriority){
+        if(`${item.year}-${item.month}`===data.shardId)expectedCities.add(item.city);
+      }
+      for(const item of muhuratCityMonthSsgPriority){
+        if(`${item.year}-${item.month}`===data.shardId)expectedCities.add(item.city);
+      }
+      if(muhuratMonthlyShardIds.has(data.shardId)||yearlyShardIds.has(data.shardId))expectedCities.add("mumbai");
+      const expectedTargets=expectedCities.size;
       expect(data.targets).toHaveLength(expectedTargets);
       expect(Object.keys(data.entries)).toHaveLength(expectedTargets);
       if(expectedTargets===1)expect(data.targets[0].startsWith("mumbai|")).toBe(true);
@@ -57,7 +65,7 @@ describe("Muhurat precomputed build-data architecture",()=>{
         }
       }
     }
-    expect(totalTargets).toBe(333);
+    expect(totalTargets).toBe(338);
   });
 
   it("uses a generated lazy-loader registry and removes the monolithic artifact",()=>{

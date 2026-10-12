@@ -1,5 +1,6 @@
 import {allFestivals,festivalBySlugYear,festivalsByYear,festivalsForYear,type Festival} from "./festivals";
 import {todayInIndia} from "./dates";
+import {isPriorityCity,isWave2ControlledCity} from "./seo-policy";
 
 export type FestivalDatasetIssue={
   code:"INVALID_DATE"|"YEAR_MISMATCH"|"DUPLICATE_SLUG"|"UNKNOWN_SLUG";
@@ -64,6 +65,12 @@ export function festivalIndexYears(){
 
 export function festivalPageIsIndexable(slug:string,year:number){
   return festivalIndexYears().includes(year)&&festivalDateIsValidated(slug,year);
+}
+
+export function festivalCityPageIsIndexable(slug:string,year:number,citySlug:string){
+  if(!festivalPageIsIndexable(slug,year)||!isPriorityCity(citySlug))return false;
+  if(isWave2ControlledCity(citySlug))return year===todayInIndia().getUTCFullYear();
+  return true;
 }
 
 export function festivalYearSiblings(slug:string,year:number){

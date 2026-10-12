@@ -46,14 +46,15 @@ describe("SEO Command Center",()=>{
   });
 
   it("excludes already-indexable baseline cities from expansion candidates",()=>{
-    const rows=buildCityExpansionCandidates([opportunity("Mumbai"),opportunity("Agra")]);
+    const rows=buildCityExpansionCandidates([opportunity("Mumbai"),opportunity("Agra"),opportunity("Faridabad")]);
     expect(rows.some(row=>row.city==="Mumbai")).toBe(false);
-    expect(rows.some(row=>row.city==="Agra")).toBe(true);
+    expect(rows.some(row=>row.city==="Agra")).toBe(false);
+    expect(rows.some(row=>row.city==="Faridabad")).toBe(true);
   });
 
   it("keeps city activation as review evidence rather than changing index policy",()=>{
-    const model=buildSeoCommandCenter({snapshot:snapshot(),opportunities:[opportunity("Agra")],records:{},indexation:null,autopilot:null});
-    expect(model.cityExpansion[0]?.city).toBe("Agra");
+    const model=buildSeoCommandCenter({snapshot:snapshot(),opportunities:[opportunity("Faridabad")],records:{},indexation:null,autopilot:null});
+    expect(model.cityExpansion[0]?.city).toBe("Faridabad");
     expect(model.nextActions.some(action=>action.type==="CITY_EXPANSION")).toBe(true);
   });
 });

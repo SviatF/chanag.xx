@@ -10,10 +10,10 @@ import {buildFestivalCityContext} from "@/lib/festival-city-context";
 import {buildFestivalCityHighSimilarityContext} from "@/lib/festival-city-high-similarity-context";
 import {festivalBySlugYear} from "@/lib/festivals";
 import {getFestivalSemantics} from "@/lib/festival-conventions";
-import {festivalPageIsIndexable,festivalYearSiblings} from "@/lib/festival-expansion";
+import {festivalCityPageIsIndexable,festivalYearSiblings} from "@/lib/festival-expansion";
 import {formatPanchangTime,getPanchang} from "@/lib/panchang";
 import {getFestivalLocalReference} from "@/lib/religious-integrity";
-import {isPriorityCity,robotsFor} from "@/lib/seo-policy";
+import {robotsFor} from "@/lib/seo-policy";
 import {parseRouteYear} from "@/lib/route-validation";
 import {buildFestivalTopicalGraph} from "@/lib/topical-links";
 import {festivalCitySsgPilot} from "@/lib/static-seo-routes";
@@ -43,7 +43,7 @@ export async function generateMetadata({params}:{params:Promise<{festival:string
     title:`${festival.name} ${year} in ${city.name} — ${festival.date} Panchang`,
     description:`${festival.name} ${year} in ${city.name} falls on ${festival.date}. Local sunrise ${data.sunrise}, sunset ${data.sunset}, ${data.tithi} Tithi and ${data.nakshatra} Nakshatra.`,
     alternates:{canonical:`/festivals/${festival.slug}/${year}/${city.slug}`},
-    robots:robotsFor(festivalPageIsIndexable(festival.slug,year)&&isPriorityCity(city.slug)),
+    robots:robotsFor(festivalCityPageIsIndexable(festival.slug,year,city.slug)),
   };
 }
 

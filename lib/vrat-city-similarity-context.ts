@@ -94,7 +94,27 @@ const localLens:Record<string,LocalLens>={
   varanasi:{
     place:`This annual sequence is tied to the middle-Ganges corridor of eastern Uttar Pradesh. Longitude places the solar clock close to the standard-meridian side and east of the central Gangetic metros, while northern latitude retains a substantial seasonal cycle. The resulting sunrise boundary is an eastern-Uttar-Pradesh riverine frame that differs from both downstream Bihar and farther-western Awadh.`,
     reading:`Read the middle-Ganges year through progression along the calendar. The first and last retained months define the civil arc; sunrise spread and post-dawn persistence show how the astronomical boundary changes inside it. Rows that end on a following date or repeat at another sunrise expose the strongest carryover cases. Weekday structure then adds cadence without replacing the local dawn rule that determines inclusion.`
-  }
+  },
+  "pimpri-chinchwad":{
+    place:`The yearly sequence is tied to the upper Bhima-basin side of the Pune metropolitan plateau. Its sunrise curve is close to Pune but is calculated from a separate coordinate, so boundary-sensitive Tithi states are not copied between neighbouring urban clocks. The inland plateau frame also differs from the Konkan coast to the west and from the more northerly Godavari-basin timing of Nashik.`,
+    reading:`Read the local year through small sunrise-boundary shifts. Compare earliest and latest dawn, then inspect how long each retained Tithi persists after that checkpoint and which rows cross into a following civil date. Repeated-at-sunrise cases are especially useful because they show where a close metropolitan clock produces a genuinely different annual lunar boundary pattern.`
+  },
+  "ghaziabad":{
+    place:`This annual reference belongs to the upper Ganga-Yamuna plain immediately east of Delhi. It shares the northern seasonal regime of the NCR but uses a slightly more easterly solar position, so the sunrise checkpoint is close to the capital without being interchangeable with it. Agra supplies the south-eastern Yamuna comparison while Lucknow moves farther into the central Gangetic plain.`,
+    reading:`Use the NCR-edge lens to measure boundary sensitivity rather than broad regional difference. The important signals are sunrise spread, post-dawn Tithi persistence, next-date endings and repeated morning states. Month and weekday distributions describe cadence, but the defining local evidence is whether the lunar transition survives Ghaziabad's own dawn.`
+  },
+  "ludhiana":{
+    place:`The yearly set is generated from the central Punjab alluvial plain at a far-northern latitude. Strong seasonal sunrise movement combines with a western longitude that keeps the civil solar clock later than in the central Gangetic belt. This creates a Punjab-plains sunrise frame with more annual movement than the Deccan and a different longitude signature from Delhi.`,
+    reading:`Read the Punjab year from seasonality into persistence. First compare the winter and summer ends of the local dawn range, then classify how long the target Tithi survives after sunrise and whether any observation reaches a second dawn. Next-date endings and weekday concentration add structure to the sequence without replacing the astronomical morning boundary.`
+  },
+  "agra":{
+    place:`The annual sequence follows the Yamuna corridor of western Uttar Pradesh. Agra sits east of Jaipur, south-east of the NCR and west of the standard-meridian side, combining a northern seasonal cycle with a distinct river-corridor solar position. The local sunrise test is therefore neither an NCR proxy nor an Awadh proxy.`,
+    reading:`Use the Yamuna-corridor lens to compare annual dawn movement with lunar carryover. Measure the shortest and longest post-sunrise persistence, flag rows that end on the next date, and isolate any repeated sunrise states. The month footprint then shows when those boundary cases occur across the year, keeping the sequence tied to Agra rather than to a neighbouring northern city.`
+  },
+  "nashik":{
+    place:`This yearly reference comes from the upper Godavari basin of northern Maharashtra. The city is an inland western clock north of Pune and away from the Mumbai-Thane coast, so its sunrise curve combines western civil-time placement with a distinct seasonal latitude profile. That makes Nashik's dawn checkpoint its own Maharashtra reference rather than a reused Pune timetable.`,
+    reading:`Read the upper-Godavari year through seasonal dawn spread and Tithi persistence. Compare the earliest and latest local sunrises, then examine which observations retain the lunar state deep into daylight, which end after civil midnight and which repeat at another sunrise. This combination distinguishes Nashik from both the Pune plateau and the Konkan metropolitan clocks.`
+  },
 };
 
 function clockMinutes(value:string){const [h,m]=value.split(":").map(Number);return Number.isFinite(h)&&Number.isFinite(m)?h*60+m:0;}

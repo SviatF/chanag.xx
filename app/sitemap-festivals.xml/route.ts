@@ -1,5 +1,5 @@
 import {festivalsForYear} from "@/lib/festivals";
-import {festivalIndexYears,festivalPageIsIndexable} from "@/lib/festival-expansion";
+import {festivalCityPageIsIndexable,festivalIndexYears,festivalPageIsIndexable} from "@/lib/festival-expansion";
 import {festivalCityLastmod} from "@/lib/sitemap-freshness";
 import {sitemapPriorityCities} from "@/lib/seo-sitemap";
 import {type SitemapUrlEntry,urlset,xml} from "@/lib/xml";
@@ -14,6 +14,7 @@ export async function GET(){
       if(!festivalPageIsIndexable(festival.slug,year))continue;
       urls.push(`${base}/festivals/${festival.slug}/${year}`);
       for(const city of sitemapPriorityCities){
+        if(!festivalCityPageIsIndexable(festival.slug,year,city.slug))continue;
         const path=`/festivals/${festival.slug}/${year}/${city.slug}`;
         const lastmod=festivalCityLastmod(path);
         urls.push(lastmod?{loc:`${base}${path}`,lastmod}:`${base}${path}`);

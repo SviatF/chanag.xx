@@ -1,5 +1,5 @@
 import {muhuratRules} from "@/lib/muhurat";
-import {isMuhuratIndexable,primaryMuhuratEvents} from "@/lib/seo-policy";
+import {isMonthlyMuhuratIndexable,isMuhuratIndexable,primaryMuhuratEvents} from "@/lib/seo-policy";
 import {rollingMonths,sitemapPriorityCities} from "@/lib/seo-sitemap";
 import {urlset,xml} from "@/lib/xml";
 
@@ -11,7 +11,7 @@ export async function GET(){
     for(const item of months){
       urls.push(`https://panchvani.com/muhurat/${event}/${item.year}/${item.slug}`);
       for(const city of sitemapPriorityCities){
-        if(isMuhuratIndexable(event,city.slug))urls.push(`https://panchvani.com/muhurat/${event}/${item.year}/${item.slug}/${city.slug}`);
+        if(isMonthlyMuhuratIndexable(event,item.year,item.month,city.slug))urls.push(`https://panchvani.com/muhurat/${event}/${item.year}/${item.slug}/${city.slug}`);
       }
     }
   }

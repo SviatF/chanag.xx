@@ -64,7 +64,8 @@ describe("Demand-backed Vrat calendar engine",()=>{
     expect(summary.count).toBe(rows.length);
     expect(summary.shukla+summary.krishna).toBe(rows.length);
     expect(isVratIndexable("ekadashi",2026,"delhi")).toBe(true);
-    expect(isVratIndexable("ekadashi",2026,"agra")).toBe(false);
+    expect(isVratIndexable("ekadashi",2026,"agra")).toBe(true);
+    expect(isVratIndexable("ekadashi",2027,"agra")).toBe(false);
     expect(isVratIndexable("ekadashi",2100,"delhi")).toBe(false);
     expect(isVratIndexable("unsupported",2026,"delhi")).toBe(false);
   });

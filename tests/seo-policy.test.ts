@@ -1,6 +1,6 @@
 import {afterEach,describe,expect,it} from "vitest";
 import {coreCities,supportedCities} from "../lib/cities";
-import {activeIndexCitySlugs,isDailyIndexable,isMonthlyIndexable,isMonthlyMuhuratIndexable,isPriorityCity,phase1PriorityCities,robotsFor} from "../lib/seo-policy";
+import {activeIndexCitySlugs,isDailyIndexable,isMonthlyIndexable,isMonthlyMuhuratIndexable,isPriorityCity,phase1PriorityCities,robotsFor,wave2ControlledCities} from "../lib/seo-policy";
 import {rollingDailyDates,rollingMonths} from "../lib/seo-sitemap";
 
 const originalExtra=process.env.SEO_EXTRA_INDEX_CITIES;
@@ -15,10 +15,13 @@ describe("SEO launch guardrails",()=>{
     expect(supportedCities.length).toBeGreaterThan(coreCities.length);
     expect(phase1PriorityCities.length).toBe(20);
     for(const slug of phase1PriorityCities)expect(isPriorityCity(slug)).toBe(true);
+    expect(wave2ControlledCities).toHaveLength(5);
+    for(const slug of wave2ControlledCities)expect(isPriorityCity(slug)).toBe(true);
+    expect(activeIndexCitySlugs()).toHaveLength(25);
   });
 
   it("activates only valid supported city slugs from the runtime allowlist",()=>{
-    const expansion=supportedCities.find(city=>!phase1PriorityCities.includes(city.slug as any));
+    const expansion=supportedCities.find(city=>!activeIndexCitySlugs().includes(city.slug));
     expect(expansion).toBeDefined();
     process.env.SEO_EXTRA_INDEX_CITIES=`${expansion!.slug},not-a-supported-city,${expansion!.slug}`;
 
@@ -30,7 +33,7 @@ describe("SEO launch guardrails",()=>{
 
   it("keeps non-approved expansion cities noindex while allowing links to be followed",()=>{
     delete process.env.SEO_EXTRA_INDEX_CITIES;
-    const expansion=supportedCities.find(city=>!phase1PriorityCities.includes(city.slug as any));
+    const expansion=supportedCities.find(city=>!activeIndexCitySlugs().includes(city.slug));
     expect(expansion).toBeDefined();
     expect(isPriorityCity(expansion!.slug)).toBe(false);
     expect(robotsFor(isPriorityCity(expansion!.slug))).toMatchObject({index:false,follow:true});

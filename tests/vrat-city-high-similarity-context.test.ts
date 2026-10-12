@@ -1,7 +1,8 @@
 import {readFileSync} from "node:fs";
 import {describe,expect,it} from "vitest";
 import {findCityBySlug} from "../lib/cities";
-import {phase1PriorityCities} from "../lib/seo-policy";
+import {phase1PriorityCities,wave2ControlledCities} from "../lib/seo-policy";
+const activeCities=[...phase1PriorityCities,...wave2ControlledCities];
 import {buildVratCitySimilarityContext} from "../lib/vrat-city-similarity-context";
 import {findVratBySlug,type VratOccurrence} from "../lib/vrat";
 
@@ -12,7 +13,7 @@ const rows:VratOccurrence[]=[
   {date:"2027-10-07",weekday:"Thursday",paksha:"Shukla",tithi:"Purnima",sunrise:"06:21",tithiEnd:"23:18",tithiEndDate:"2027-10-07",repeatedAtSunrise:false,sequence:4}
 ];
 const vrat=findVratBySlug("purnima")!;
-const allCities=phase1PriorityCities.map(slug=>findCityBySlug(slug)!);
+const allCities=activeCities.map(slug=>findCityBySlug(slug)!);
 const removable=allCities.flatMap(city=>[city.name.toLowerCase(),city.state.toLowerCase()]).sort((a,b)=>b.length-a.length);
 function normalize(value:string){let out=value.toLowerCase();for(const token of removable)out=out.replaceAll(token," ");return out.replace(/\b\d+(?::\d+)?\b/g," ").replace(/[^a-z]+/g," ").replace(/\s+/g," ").trim();}
 function trigrams(value:string){const words=value.split(/\s+/).filter(Boolean),out=new Set<string>();for(let i=0;i<=words.length-3;i++)out.add(words.slice(i,i+3).join(" "));return out;}
@@ -21,9 +22,9 @@ function maxPairwise(values:string[]){let max=0;for(let i=0;i<values.length;i++)
 function rendered(slug:string){const city=findCityBySlug(slug)!;const c=buildVratCitySimilarityContext(vrat,2027,city,rows);return normalize([c.title,c.localityBody,c.boundaryTitle,c.boundaryBody,...c.facts.map(f=>`${f.label} ${f.value} ${f.note??""}`)].join(" "));}
 
 describe("Vrat city high-similarity locality layer",()=>{
-  it("keeps all phase-one cities distinct on identical annual lunar rows",()=>{
-    const values=phase1PriorityCities.map(rendered);
-    expect(new Set(values).size).toBe(phase1PriorityCities.length);
+  it("keeps all active cities distinct on identical annual lunar rows",()=>{
+    const values=activeCities.map(rendered);
+    expect(new Set(values).size).toBe(activeCities.length);
     expect(maxPairwise(values)).toBeLessThan(0.55);
   });
   it("separates the dominant current high-risk city pairs",()=>{

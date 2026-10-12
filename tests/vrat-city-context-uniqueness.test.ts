@@ -1,7 +1,8 @@
 import {readFileSync} from "node:fs";
 import {describe,expect,it} from "vitest";
 import {findCityBySlug} from "../lib/cities";
-import {phase1PriorityCities} from "../lib/seo-policy";
+import {phase1PriorityCities,wave2ControlledCities} from "../lib/seo-policy";
+const activeCities=[...phase1PriorityCities,...wave2ControlledCities];
 import {buildVratCityContext} from "../lib/vrat-city-context";
 import {findVratBySlug,type VratOccurrence} from "../lib/vrat";
 
@@ -20,15 +21,15 @@ function jaccard(a:string,b:string){const left=trigrams(a),right=trigrams(b);let
 function maxPairwise(values:string[]){let max=0;for(let i=0;i<values.length;i++)for(let j=i+1;j<values.length;j++)max=Math.max(max,jaccard(values[i],values[j]));return max;}
 
 describe("Vrat city semantic dedup layer",()=>{
-  it("keeps every phase-one city distinct after city names, states and numbers are stripped",()=>{
+  it("keeps every active city distinct after city names, states and numbers are stripped",()=>{
     const vrat=findVratBySlug("ekadashi")!;
-    const values=phase1PriorityCities.map(slug=>{
+    const values=activeCities.map(slug=>{
       const city=findCityBySlug(slug)!;
       const context=buildVratCityContext(vrat,2026,city,rows());
       const text=[context.focusTitle,context.focusBody,context.title,context.body,context.secondaryBody,...context.facts.map(item=>`${item.label} ${item.value} ${item.note??""}`)].join(" ");
       return normalized(text,city.name,city.state);
     });
-    expect(new Set(values).size).toBe(phase1PriorityCities.length);
+    expect(new Set(values).size).toBe(activeCities.length);
     expect(maxPairwise(values)).toBeLessThan(0.8);
   });
 

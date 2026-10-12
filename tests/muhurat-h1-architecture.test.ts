@@ -7,7 +7,7 @@ import {muhuratCityMonthSsgPriority} from "../lib/static-seo-routes";
 
 describe("Muhurat city-month H1 architecture",()=>{
   it("gives every indexed city-month Muhurat URL a distinct visible heading",()=>{
-    expect(muhuratCityMonthSsgPriority).toHaveLength(780);
+    expect(muhuratCityMonthSsgPriority).toHaveLength(795);
     const headings=muhuratCityMonthSsgPriority.map(item=>{
       const city=findCityBySlug(item.city)!;
       const rule=muhuratRules[item.event];

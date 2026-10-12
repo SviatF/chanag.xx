@@ -4,7 +4,8 @@ import {findCityBySlug} from "../lib/cities";
 import {buildFestivalCityContext} from "../lib/festival-city-context";
 import {festivalBySlugYear} from "../lib/festivals";
 import type {Panchang} from "../lib/panchang";
-import {phase1PriorityCities} from "../lib/seo-policy";
+import {phase1PriorityCities,wave2ControlledCities} from "../lib/seo-policy";
+const activeCities=[...phase1PriorityCities,...wave2ControlledCities];
 
 function panchang():Panchang{
   const date="2026-01-14";
@@ -44,9 +45,9 @@ function fullSerialized(festivalSlug:string,citySlug:string){
 }
 
 describe("Festival city semantic dedup layer",()=>{
-  it("keeps the dedicated locality lens distinct across every phase-one city",()=>{
-    const values=phase1PriorityCities.map(slug=>localitySerialized("makar-sankranti",slug));
-    expect(new Set(values).size).toBe(phase1PriorityCities.length);
+  it("keeps the dedicated locality lens distinct across every active city",()=>{
+    const values=activeCities.map(slug=>localitySerialized("makar-sankranti",slug));
+    expect(new Set(values).size).toBe(activeCities.length);
     expect(maxPairwise(values)).toBeLessThan(0.65);
   });
 

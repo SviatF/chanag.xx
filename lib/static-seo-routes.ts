@@ -1,5 +1,6 @@
 import {festivals2026} from "./festivals";
-import {phase1PriorityCities,primaryMuhuratEvents,primaryVratTypes,yearlyIndexYears} from "./seo-policy";
+import {festivalCityPageIsIndexable} from "./festival-expansion";
+import {isDailyIndexable,isMonthlyIndexable,isMonthlyMuhuratIndexable,isVratIndexable,isYearlyCalendarIndexable,primaryMuhuratEvents,primaryVratTypes,yearlyIndexYears} from "./seo-policy";
 import {rollingDailyDates,rollingMonths,sitemapPriorityCities} from "./seo-sitemap";
 
 export type FestivalCityStaticParam={festival:string;year:string;city:string};
@@ -17,8 +18,10 @@ export type MuhuratCityMonthStaticParam=MuhuratMonthStaticParam&{city:string};
  * Deterministic festival/city pages for the maintained 2026 festival calendar
  * and the existing 20-city SEO priority policy.
  */
-export const festivalCitySsgPriority:FestivalCityStaticParam[]=phase1PriorityCities.flatMap(city=>
-  festivals2026.map(festival=>({festival:festival.slug,year:"2026",city}))
+export const festivalCitySsgPriority:FestivalCityStaticParam[]=sitemapPriorityCities.flatMap(city=>
+  festivals2026
+    .filter(festival=>festivalCityPageIsIndexable(festival.slug,2026,city.slug))
+    .map(festival=>({festival:festival.slug,year:"2026",city:city.slug}))
 );
 
 // Backward-compatible export used by the route introduced in the bounded pilot.
@@ -33,7 +36,9 @@ export const vratYearSsgPriority:VratYearStaticParam[]=primaryVratTypes.flatMap(
   yearlyStaticYears.map(year=>({vrat,year:String(year)}))
 );
 export const vratCitySsgPriority:VratCityStaticParam[]=vratYearSsgPriority.flatMap(item=>
-  phase1PriorityCities.map(city=>({...item,city}))
+  sitemapPriorityCities
+    .filter(city=>isVratIndexable(item.vrat,Number(item.year),city.slug))
+    .map(city=>({...item,city:city.slug}))
 );
 
 /**
@@ -44,12 +49,16 @@ export const vratCitySsgPriority:VratCityStaticParam[]=vratYearSsgPriority.flatM
  */
 const dailyStaticDates=rollingDailyDates(14,45);
 export const datedPanchangSsgPriority:DatedPanchangStaticParam[]=sitemapPriorityCities.flatMap(city=>
-  dailyStaticDates.map(date=>({city:city.slug,date:[date]}))
+  dailyStaticDates
+    .filter(date=>isDailyIndexable(city.slug,date))
+    .map(date=>({city:city.slug,date:[date]}))
 );
 
 const monthlyStaticMonths=rollingMonths(2,12);
 export const calendarMonthSsgPriority:CalendarMonthStaticParam[]=sitemapPriorityCities.flatMap(city=>
-  monthlyStaticMonths.map(item=>({city:city.slug,year:String(item.year),month:item.slug}))
+  monthlyStaticMonths
+    .filter(item=>isMonthlyIndexable(city.slug,item.year,item.month))
+    .map(item=>({city:city.slug,year:String(item.year),month:item.slug}))
 );
 
 /**
@@ -60,7 +69,9 @@ export const calendarMonthSsgPriority:CalendarMonthStaticParam[]=sitemapPriority
  */
 export const hinduCalendarYearSsgPriority:HinduCalendarYearStaticParam[]=yearlyStaticYears.map(year=>({year:String(year)}));
 export const cityCalendarYearSsgPriority:CityCalendarYearStaticParam[]=sitemapPriorityCities.flatMap(city=>
-  yearlyStaticYears.map(year=>({city:city.slug,year:String(year)}))
+  yearlyStaticYears
+    .filter(year=>isYearlyCalendarIndexable(year,city.slug))
+    .map(year=>({city:city.slug,year:String(year)}))
 );
 export const muhuratYearSsgPriority:MuhuratYearStaticParam[]=primaryMuhuratEvents.flatMap(event=>
   yearlyStaticYears.map(year=>({event,year:String(year)}))
@@ -75,13 +86,15 @@ export const muhuratYearSsgPriority:MuhuratYearStaticParam[]=primaryMuhuratEvent
  * so the complete monthly matrix needs only 260 month/city datasets.
  */
 const muhuratPriorityMonths=rollingMonths(0,12);
-export const muhuratSsgPriorityCitySlugs=phase1PriorityCities;
+export const muhuratSsgPriorityCitySlugs=sitemapPriorityCities.map(city=>city.slug);
 export const muhuratMonthSsgPriority:MuhuratMonthStaticParam[]=muhuratPriorityMonths.flatMap(item=>
   primaryMuhuratEvents.map(event=>({event,year:String(item.year),month:item.slug}))
 );
 export const muhuratCityMonthSsgPriority:MuhuratCityMonthStaticParam[]=muhuratPriorityMonths.flatMap(item=>
   muhuratSsgPriorityCitySlugs.flatMap(city=>
-    primaryMuhuratEvents.map(event=>({event,year:String(item.year),month:item.slug,city}))
+    primaryMuhuratEvents
+      .filter(event=>isMonthlyMuhuratIndexable(event,item.year,item.month,city))
+      .map(event=>({event,year:String(item.year),month:item.slug,city}))
   )
 );
 
