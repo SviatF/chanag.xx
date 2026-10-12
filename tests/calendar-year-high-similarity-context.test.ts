@@ -2,6 +2,7 @@ import {readFileSync} from "node:fs";
 import {describe,expect,it} from "vitest";
 import {buildCalendarYearHighSimilarityContext} from "../lib/calendar-year-high-similarity-context";
 import {findCityBySlug} from "../lib/cities";
+import {wave2ControlledCities} from "../lib/seo-policy";
 import type {Panchang} from "../lib/panchang";
 
 function snapshot(year:number,month:number,cityShift:number):Panchang{
@@ -22,20 +23,33 @@ function festivals(year:number){return [
   {name:"Ganesh Chaturthi",slug:"ganesh-chaturthi",date:`${year}-09-12`},
   {name:"Diwali",slug:"diwali",date:`${year}-11-08`},
 ];}
-function normalized(value:string,city:string,state:string){return value.toLowerCase().replaceAll(city.toLowerCase()," ").replaceAll(state.toLowerCase()," ").replace(/\b\d+(?:\.\d+)?(?::\d+)?\b/g," ").replace(/[^a-z]+/g," ").replace(/\s+/g," ").trim();}
+const comparisonCities=["pune","thane",...wave2ControlledCities] as const;
+const removable=comparisonCities.flatMap(slug=>{const city=findCityBySlug(slug)!;return [city.name.toLowerCase(),city.state.toLowerCase()]}).sort((a,b)=>b.length-a.length);
+function normalized(value:string){let out=value.toLowerCase();for(const token of removable)out=out.replaceAll(token," ");return out.replace(/\b\d+(?:\.\d+)?(?::\d+)?\b/g," ").replace(/[^a-z]+/g," ").replace(/\s+/g," ").trim();}
 function trigrams(value:string){const words=value.split(/\s+/).filter(Boolean),out=new Set<string>();for(let i=0;i<=words.length-3;i++)out.add(words.slice(i,i+3).join(" "));return out;}
 function similarity(a:string,b:string){const left=trigrams(a),right=trigrams(b);let overlap=0;for(const item of left)if(right.has(item))overlap++;return overlap/(left.size+right.size-overlap||1);}
-function text(slug:string,year:number){const city=findCityBySlug(slug)!;const shift=slug==="pune"?1:4;const snapshots=Array.from({length:12},(_,i)=>snapshot(year,i+1,shift));const context=buildCalendarYearHighSimilarityContext(city,year,snapshots,festivals(year));expect(context).not.toBeNull();const c=context!;return normalized([c.title,c.localityBody,c.solarTitle,c.solarBody,c.lunarTitle,c.lunarBody,c.festivalTitle,c.festivalBody,...c.facts.map(f=>`${f.label} ${f.value} ${f.note??""}`)].join(" "),city.name,city.state);}
+function text(slug:string,year:number){const city=findCityBySlug(slug)!;const shift=2;const snapshots=Array.from({length:12},(_,i)=>snapshot(year,i+1,shift));const context=buildCalendarYearHighSimilarityContext(city,year,snapshots,festivals(year));expect(context).not.toBeNull();const x=context!;return normalized([x.title,x.localityBody,x.solarTitle,x.solarBody,x.lunarTitle,x.lunarBody,x.festivalTitle,x.festivalBody,...x.facts.map(f=>`${f.label} ${f.value} ${f.note??""}`)].join(" "));}
 
 describe("final yearly calendar city HIGH cleanup",()=>{
   it("keeps Pune and Thane semantically separate after city names and numbers are stripped",()=>{
     for(const year of [2026,2027])expect(similarity(text("pune",year),text("thane",year))).toBeLessThan(0.58);
   });
 
-  it("limits the comparison lens to the two remaining risk cities",()=>{
+  it("keeps all targeted annual locality lenses separated even on identical snapshots",()=>{
+    const values=comparisonCities.map(slug=>text(slug,2026));
+    expect(new Set(values).size).toBe(comparisonCities.length);
+    let max=0;
+    for(let i=0;i<values.length;i++)for(let j=i+1;j<values.length;j++)max=Math.max(max,similarity(values[i],values[j]));
+    expect(max).toBeLessThan(0.58);
+  });
+
+  it("adds yearly comparison lenses only to explicit risk cities",()=>{
     const mumbai=findCityBySlug("mumbai")!;
     const snapshots=Array.from({length:12},(_,i)=>snapshot(2026,i+1,2));
     expect(buildCalendarYearHighSimilarityContext(mumbai,2026,snapshots,festivals(2026))).toBeNull();
+    for(const slug of wave2ControlledCities){
+      expect(buildCalendarYearHighSimilarityContext(findCityBySlug(slug)!,2026,snapshots,festivals(2026))).not.toBeNull();
+    }
   });
 
   it("renders the targeted yearly comparison lens on the public route",()=>{
