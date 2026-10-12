@@ -2,6 +2,7 @@ import {readFileSync} from "node:fs";
 import {describe,expect,it} from "vitest";
 import {buildCalendarMonthHighSimilarityContext} from "../lib/calendar-month-high-similarity-context";
 import {findCityBySlug} from "../lib/cities";
+import {wave2ControlledCities} from "../lib/seo-policy";
 
 function entries(month=11){
   const days=month===2?28:month===4||month===6||month===9||month===11?30:31;
@@ -22,10 +23,12 @@ function entries(month=11){
     };
   });
 }
-function normalized(value:string,city:string,state:string){
-  return value.toLowerCase()
-    .replaceAll(city.toLowerCase()," ")
-    .replaceAll(state.toLowerCase()," ")
+const comparisonCities=["ahmedabad","vadodara",...wave2ControlledCities] as const;
+const removable=comparisonCities.flatMap(slug=>{const city=findCityBySlug(slug)!;return [city.name.toLowerCase(),city.state.toLowerCase()]}).sort((a,b)=>b.length-a.length);
+function normalized(value:string){
+  let out=value.toLowerCase();
+  for(const token of removable)out=out.replaceAll(token," ");
+  return out
     .replace(/\b\d+(?::\d+)?(?:\.\d+)?%?\b/g," ")
     .replace(/[^a-z]+/g," ")
     .replace(/\s+/g," ")
@@ -47,14 +50,29 @@ function serialized(citySlug:string,month:number){
   expect(context).not.toBeNull();
   const value=context!;
   const text=[value.title,value.geographyBody,value.rhythmTitle,value.rhythmBody,...value.facts.map(item=>`${item.label} ${item.value} ${item.note??""}`)].join(" ");
-  return normalized(text,city.name,city.state);
+  return normalized(text);
 }
 
-describe("Monthly calendar Gujarat HIGH-similarity cleanup",()=>{
+describe("Monthly calendar locality HIGH-similarity cleanup",()=>{
   it("keeps Ahmedabad and Vadodara strongly separated after route tokens and numbers are stripped",()=>{
     for(const month of [1,2,3,4,5,6,7,8,9,10,11,12]){
       expect(jaccard(serialized("ahmedabad",month),serialized("vadodara",month))).toBeLessThan(0.32);
     }
+  });
+
+
+  it("keeps all targeted locality lenses distinct with identical monthly data",()=>{
+    const values=comparisonCities.map(slug=>serialized(slug,10));
+    expect(new Set(values).size).toBe(comparisonCities.length);
+    let max=0;
+    for(let i=0;i<values.length;i++)for(let j=i+1;j<values.length;j++)max=Math.max(max,jaccard(values[i],values[j]));
+    expect(max).toBeLessThan(0.55);
+  });
+
+  it("separates the new Wave 2 cities that produced rendered HIGH pairs",()=>{
+    expect(jaccard(serialized("ghaziabad",10),serialized("ludhiana",10))).toBeLessThan(0.48);
+    expect(jaccard(serialized("agra",10),serialized("pimpri-chinchwad",10))).toBeLessThan(0.48);
+    expect(jaccard(serialized("nashik",10),serialized("ludhiana",10))).toBeLessThan(0.48);
   });
 
   it("does not inject this targeted comparison block into unrelated cities",()=>{
@@ -65,7 +83,7 @@ describe("Monthly calendar Gujarat HIGH-similarity cleanup",()=>{
   it("renders the comparison lens on the public monthly calendar route",()=>{
     const source=readFileSync("app/calendar/[city]/[year]/[month]/page.tsx","utf8");
     expect(source).toContain("buildCalendarMonthHighSimilarityContext");
-    expect(source).toContain("GUJARAT MONTH COMPARISON LENS");
+    expect(source).toContain("LOCAL MONTH COMPARISON LENS");
     expect(source).toContain("highSimilarityContext.rhythmBody");
   });
 });
