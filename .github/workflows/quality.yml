@@ -24,6 +24,16 @@ jobs:
       - name: Install dependencies
         run: npm install --legacy-peer-deps --no-audit --no-fund
 
+      - name: Regenerate Muhurat build data for rollover
+        run: npm run precompute:muhurat
+
+      - name: Upload regenerated Muhurat build data
+        uses: actions/upload-artifact@v4
+        with:
+          name: muhurat-regenerated
+          path: generated/muhurat-panchang-*.ts
+          if-no-files-found: error
+
       - name: Verify committed Muhurat build data
         run: npm run verify:muhurat-precompute
 
