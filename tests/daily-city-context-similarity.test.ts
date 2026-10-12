@@ -3,7 +3,7 @@ import {describe,expect,it} from "vitest";
 import {findCityBySlug} from "../lib/cities";
 import {buildDailyCityContext} from "../lib/daily-city-context";
 import type {Panchang} from "../lib/panchang";
-import {phase1PriorityCities} from "../lib/seo-policy";
+import {activeIndexCitySlugs} from "../lib/seo-policy";
 
 function fixture():Panchang{
   const names=["Amrit","Kaal","Shubh","Rog","Udveg","Char","Labh","Amrit"] as const;
@@ -17,10 +17,11 @@ function trigrams(value:string){const words=value.split(/\s+/).filter(Boolean);c
 function similarity(a:string,b:string){const left=trigrams(a),right=trigrams(b);let overlap=0;for(const item of left)if(right.has(item))overlap++;return overlap/(left.size+right.size-overlap||1);}
 
 describe("Daily local-context similarity layer",()=>{
-  it("keeps phase-one city narratives structurally differentiated",()=>{
+  it("keeps every active city narrative structurally differentiated",()=>{
     const data=fixture();
-    const values=phase1PriorityCities.map(slug=>{const city=findCityBySlug(slug)!;const context=buildDailyCityContext(city,data);return normalized([context.title,context.body,context.secondaryBody,...context.facts.map(item=>`${item.label} ${item.value} ${item.note??""}`)].join(" "),city.name,city.state);});
-    expect(new Set(values).size).toBe(phase1PriorityCities.length);
+    const active=activeIndexCitySlugs();
+    const values=active.map(slug=>{const city=findCityBySlug(slug)!;const context=buildDailyCityContext(city,data);return normalized([context.title,context.body,context.secondaryBody,...context.facts.map(item=>`${item.label} ${item.value} ${item.note??""}`)].join(" "),city.name,city.state);});
+    expect(new Set(values).size).toBe(active.length);
     let max=0;
     for(let i=0;i<values.length;i++)for(let j=i+1;j<values.length;j++)max=Math.max(max,similarity(values[i],values[j]));
     expect(max).toBeLessThan(0.6);

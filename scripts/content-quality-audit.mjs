@@ -328,6 +328,7 @@ if(structuralIssues.length)fatal.push(`${structuralIssues.length} structural iss
 if(hreflangIssues.length)fatal.push(`${hreflangIssues.length} hreflang reciprocity issue(s)`);
 if(duplicateCanonicals.length)fatal.push(`${duplicateCanonicals.length} duplicate canonical owner(s)`);
 if(exactNormalizedDuplicates.length)fatal.push(`${exactNormalizedDuplicates.length} exact normalized duplicate group(s)`);
+if(report.totals.disclaimerPages)fatal.push(`${report.totals.disclaimerPages} disclaimer-style page(s)`);
 if(enforceSimilarity&&report.totals.severeSimilarityPairs)fatal.push(`${report.totals.severeSimilarityPairs} severe similarity pair(s)`);
 if(fatal.length){
   console.error(`[content-audit] FAILED: ${fatal.join("; ")}`);

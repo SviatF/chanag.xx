@@ -38,6 +38,11 @@ describe("public disclaimer purge integrity",()=>{
     expect(source("app/sitemap-core.xml/route.ts")).not.toContain('base+"/disclaimer"');
   });
 
+  it("makes disclaimer-style rendered copy a fatal content-audit condition",()=>{
+    const audit=source("scripts/content-quality-audit.mjs");
+    expect(audit).toContain('if(report.totals.disclaimerPages)fatal.push');
+  });
+
   it("keeps direct public copy free of generic disclaimer language",()=>{
     for(const file of directCopyFiles){
       const text=source(file);
