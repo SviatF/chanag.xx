@@ -11,6 +11,7 @@ import {buildFestivalYearQualityContext} from "@/lib/festival-parent-quality";
 import {getFestivalRuleProfile} from "@/lib/religious-integrity";
 import {robotsFor} from "@/lib/seo-policy";
 import {parseRouteYear} from "@/lib/route-validation";
+import {festivalCityAuthorityLinks} from "@/lib/authority-city-links";
 
 export const revalidate=86400;
 
@@ -39,6 +40,7 @@ export default async function FestivalPage({params}:{params:Promise<{festival:st
   const quality=await buildFestivalYearQualityContext(f);
   const month=String(Number(f.date.slice(5,7))).padStart(2,"0");
   const siblingYears=festivalYearSiblings(f.slug,year);
+  const cityLinks=festivalCityAuthorityLinks(f.slug,year);
   const ld={"@context":"https://schema.org","@graph":[
     {"@type":"WebPage","name":`${f.name} ${year}`,"url":`https://panchvani.com/festivals/${f.slug}/${year}`,"description":quality.directAnswer,"about":{"@type":"Thing","name":f.name}},
     {"@type":"BreadcrumbList","itemListElement":[
@@ -87,7 +89,7 @@ export default async function FestivalPage({params}:{params:Promise<{festival:st
     <section className="wide-panel">
       <h2 className="page-title" style={{fontSize:32}}>Local Panchang by city</h2>
       <p className="page-subtitle">Choose a priority city to see local Tithi, lunar-month conventions, sunrise, sunset, moonrise and supported festival references. The shared festival date stays the same; local astronomical boundaries are recalculated for the selected city.</p>
-      <div className="pill-links">{cities.slice(0,12).map(city=><Link href={`/festivals/${f.slug}/${year}/${city.slug}`} key={city.slug}>{city.name}</Link>)}</div>
+      <div className="pill-links">{cityLinks.map(city=><Link href={city.href} key={city.slug}>{city.name}</Link>)}</div>
     </section>
 
     <div className="pill-links">
