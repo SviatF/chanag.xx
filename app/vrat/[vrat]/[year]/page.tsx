@@ -11,6 +11,7 @@ import {calculateVratCalendar,findVratBySlug,vratCalendarSummary} from "@/lib/vr
 import {buildVratQualityContent} from "@/lib/vrat-content-engine";
 import {buildVratYearContext} from "@/lib/vrat-year-context";
 import {buildVratTopicalGraph} from "@/lib/vrat-topical-links";
+import {vratCityAuthorityLinks} from "@/lib/authority-city-links";
 
 export const dynamicParams=true;
 export const revalidate=604800;
@@ -29,6 +30,7 @@ export default async function VratYearPage({params}:{params:Promise<{vrat:string
   const summary=vratCalendarSummary(rows);
   const quality=buildVratQualityContent(vrat,year,referenceCity,rows,"baseline");
   const yearContext=buildVratYearContext(vrat,year,rows);
+  const cityLinks=vratCityAuthorityLinks(vrat.slug,year);
   const ld={"@context":"https://schema.org","@graph":[
     {"@type":"WebPage","name":`${vrat.name} ${year} lunar Tithi calendar reference`,"description":quality.directAnswer,"url":`https://panchvani.com/vrat/${vrat.slug}/${year}`},
     {"@type":"ItemList","name":`${vrat.name} ${year} sunrise observations`,"numberOfItems":rows.length,"itemListElement":rows.map((row,index)=>({"@type":"ListItem","position":index+1,"name":`${row.paksha} ${row.tithi} — ${row.date}`,"url":`https://panchvani.com/panchang/${referenceCity.slug}/${row.date}`}))}
@@ -56,6 +58,12 @@ export default async function VratYearPage({params}:{params:Promise<{vrat:string
     <section className="wide-panel"><div className="seo-copy"><h2>{quality.observanceTitle}</h2><p>{quality.observanceBody}</p></div></section>
 
     <section className="wide-panel"><h2 className="page-title" style={{fontSize:34}}>{vrat.name} observations in {year}</h2><p className="page-subtitle">Each card opens the exact daily Panchang behind the local sunrise row.</p><div className="city-directory">{rows.map(row=><Link href={`/panchang/${referenceCity.slug}/${row.date}`} key={`${row.date}-${row.paksha}`}><small>{row.weekday} · {row.paksha} Paksha{row.repeatedAtSunrise?" · repeated at sunrise":""}</small><strong>{row.date}</strong><span>Sunrise {row.sunrise} · Tithi until {endLabel(row.date,row.tithiEnd,row.tithiEndDate)}</span></Link>)}</div></section>
+
+    {cityLinks.length?<section className="wide-panel">
+      <h2 className="page-title" style={{fontSize:32}}>{vrat.name} {year} by city</h2>
+      <p className="page-subtitle">Open the local sunrise-based yearly reference for every actively indexed city.</p>
+      <div className="city-directory">{cityLinks.map(item=><Link href={item.href} key={item.slug}><small>{item.state}</small><strong>{item.name}</strong><span>Local sunrise Tithi reference</span></Link>)}</div>
+    </section>:null}
 
     <TopicalGraph title={`Explore ${vrat.name} ${year}`} groups={buildVratTopicalGraph(referenceCity,vrat.slug,year,rows,"baseline")}/>
     <script type="application/ld+json" dangerouslySetInnerHTML={{__html:JSON.stringify(ld)}}/>
