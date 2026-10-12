@@ -1,7 +1,8 @@
 import {readFileSync} from "node:fs";
 import {describe,expect,it} from "vitest";
 import {findCityBySlug} from "../lib/cities";
-import {phase1PriorityCities,wave2ControlledCities,wave2ControlledCities} from "../lib/seo-policy";
+import {phase1PriorityCities,wave2ControlledCities} from "../lib/seo-policy";
+const activeCities=[...phase1PriorityCities,...wave2ControlledCities];
 import {buildVratCityContext} from "../lib/vrat-city-context";
 import {findVratBySlug,type VratOccurrence} from "../lib/vrat";
 
