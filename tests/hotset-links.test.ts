@@ -1,5 +1,5 @@
 import {describe,expect,it} from "vitest";
-import {phase1PriorityCities,primaryMuhuratEvents,primaryVratTypes} from "../lib/seo-policy";
+import {activeIndexCitySlugs,primaryMuhuratEvents,primaryVratTypes} from "../lib/seo-policy";
 import {
   currentCityHotset,
   currentMuhuratHotset,
@@ -13,8 +13,8 @@ const reference=new Date("2026-10-12T06:00:00Z");
 describe("hotset internal discovery",()=>{
   it("prioritizes today, current month and current year for every active city",()=>{
     const rows=currentCityHotset(reference);
-    expect(rows).toHaveLength(phase1PriorityCities.length);
-    expect(new Set(rows.map(row=>row.slug))).toEqual(new Set(phase1PriorityCities));
+    expect(rows).toHaveLength(activeIndexCitySlugs().length);
+    expect(new Set(rows.map(row=>row.slug))).toEqual(new Set(activeIndexCitySlugs()));
     for(const row of rows){
       expect(row.todayHref).toBe(`/panchang/${row.slug}/2026-10-12`);
       expect(row.monthHref).toBe(`/calendar/${row.slug}/2026/10`);
@@ -22,13 +22,13 @@ describe("hotset internal discovery",()=>{
     }
   });
 
-  it("builds current-month Muhurat hotsets for all three primary events and 20 cities",()=>{
+  it("builds current-month Muhurat hotsets for all three primary events and 25 active cities",()=>{
     const groups=currentMuhuratHotset(reference);
     expect(groups.map(group=>group.event)).toEqual([...primaryMuhuratEvents]);
     expect(groups).toHaveLength(3);
     for(const group of groups){
       expect(group.parentHref).toBe(`/muhurat/${group.event}/2026/10`);
-      expect(group.cityLinks).toHaveLength(phase1PriorityCities.length);
+      expect(group.cityLinks).toHaveLength(activeIndexCitySlugs().length);
     }
   });
 
@@ -37,7 +37,7 @@ describe("hotset internal discovery",()=>{
     expect(groups.map(group=>group.vrat)).toEqual([...primaryVratTypes]);
     for(const group of groups){
       expect(group.parentHref).toBe(`/vrat/${group.vrat}/2026`);
-      expect(group.cityLinks).toHaveLength(phase1PriorityCities.length);
+      expect(group.cityLinks).toHaveLength(activeIndexCitySlugs().length);
     }
   });
 
@@ -47,7 +47,7 @@ describe("hotset internal discovery",()=>{
     expect(rows.map(row=>row.festival.slug)).toEqual(["dussehra","karwa-chauth"]);
     for(const row of rows){
       expect(row.festival.date>="2026-10-12").toBe(true);
-      expect(row.cityLinks).toHaveLength(phase1PriorityCities.length);
+      expect(row.cityLinks).toHaveLength(activeIndexCitySlugs().length);
     }
   });
 
