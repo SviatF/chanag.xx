@@ -2,7 +2,7 @@ import {describe,expect,it} from "vitest";
 import {findCityBySlug} from "../lib/cities";
 import {buildMuhuratCityContext} from "../lib/muhurat-city-context";
 import type {MuhuratRow} from "../lib/muhurat";
-import {phase1PriorityCities} from "../lib/seo-policy";
+import {phase1PriorityCities,wave2ControlledCities,wave2ControlledCities} from "../lib/seo-policy";
 
 function rows():MuhuratRow[]{
   return [
@@ -34,14 +34,14 @@ function normalized(value:string,city:string,state:string){
 }
 
 describe("Muhurat city semantic dedup layer",()=>{
-  it("keeps every phase-one city distinct even after city names and numbers are stripped",()=>{
-    const values=phase1PriorityCities.map(slug=>{
+  it("keeps every active city distinct even after city names and numbers are stripped",()=>{
+    const values=activeCities.map(slug=>{
       const city=findCityBySlug(slug)!;
       const context=buildMuhuratCityContext(city,rows(),"Wedding Muhurat");
       const text=[context.title,context.body,context.secondaryBody,...context.facts.map(item=>`${item.label} ${item.value} ${item.note??""}`)].join(" ");
       return normalized(text,city.name,city.state);
     });
-    expect(new Set(values).size).toBe(phase1PriorityCities.length);
+    expect(new Set(values).size).toBe(activeCities.length);
   });
 
   it("is rendered on the public city-month Muhurat route",async()=>{
