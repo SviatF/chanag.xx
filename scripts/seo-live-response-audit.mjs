@@ -32,11 +32,21 @@ for(const path of paths){
       const m=metadata(html);
       const canonical=m.canonical?new URL(m.canonical,url).href:null;
       const xRobots=response.headers.get("x-robots-tag")??"";
+      const worker=response.headers.get("x-panchvani-worker");
+      const workerVersion=response.headers.get("x-panchvani-worker-version");
       const errors=[];
       if(response.status!==200)errors.push(`HTTP ${response.status}`);
       if(canonical!==url)errors.push(`canonical mismatch: ${canonical??"missing"}`);
       if([...m.robots,xRobots].some(s=>/\bnoindex\b/i.test(s)))errors.push("noindex");
-      results.push({path,agent,status:response.status,canonical,robots:m.robots,xRobots,cache:response.headers.get("x-panchvani-edge-cache"),errors});
+      if(path==="/festivals/dussehra/2026/hyderabad"){
+        if(html.includes("moonrise arrives late relative to sunset"))errors.push("stale Moonrise chronology from a pre-fix deployment");
+        if(!html.includes("moonrise occurs in local daylight"))errors.push("new Moonrise chronology not present");
+        if(html.includes("Tithi changes first in afternoon"))errors.push("stale Tithi daylight classification");
+      }
+      if(path==="/muhurat/vehicle-purchase/2026/10/pune"&&/\bby 0 points?\b/i.test(html)){
+        errors.push("stale Muhurat zero-point lead");
+      }
+      results.push({path,agent,status:response.status,canonical,robots:m.robots,xRobots,worker,workerVersion,cache:response.headers.get("x-panchvani-edge-cache"),errors});
     }catch(error){results.push({path,agent,errors:[String(error)]});}
   }
 }
