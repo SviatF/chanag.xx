@@ -69,7 +69,18 @@ export function festivalPageIsIndexable(slug:string,year:number){
 
 export function festivalCityPageIsIndexable(slug:string,year:number,citySlug:string){
   if(!festivalPageIsIndexable(slug,year)||!isPriorityCity(citySlug))return false;
-  if(isWave2ControlledCity(citySlug))return year===todayInIndia().getUTCFullYear();
+  if(isWave2ControlledCity(citySlug)){
+    const festival=festivalBySlugYear(slug,year);
+    if(!festival)return false;
+    const now=todayInIndia();
+    const currentYear=now.getUTCFullYear();
+    if(year!==currentYear)return false;
+    const todayUtc=Date.UTC(now.getUTCFullYear(),now.getUTCMonth(),now.getUTCDate());
+    const targetUtc=Date.parse(`${festival.date}T00:00:00Z`);
+    const deltaDays=(targetUtc-todayUtc)/86400000;
+    // Controlled Wave 2 only exposes recent/current/near-term festivals.
+    return deltaDays>=-14&&deltaDays<=90;
+  }
   return true;
 }
 
