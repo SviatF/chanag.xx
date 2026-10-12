@@ -149,8 +149,9 @@ export function isVratIndexable(vrat:string,year:number,citySlug?:string){
 
 export function isRegionalIndexable(language:string,city:City){
   const code=regionalLanguageCode[language];
-  // Regional Wave 2 is intentionally held back until the 25-city core settles.
-  if(!code||!isBaselinePriorityCity(city.slug)) return false;
+  // Controlled Wave 2 stays out of regional scale. Explicit legacy expansion
+  // through SEO_EXTRA_INDEX_CITIES still works for separately reviewed cities.
+  if(!code||(!isBaselinePriorityCity(city.slug)&&!isConfiguredExtraCity(city.slug))) return false;
   return city.language.includes(code);
 }
 
