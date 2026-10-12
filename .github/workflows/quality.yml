@@ -6,9 +6,6 @@ on:
   pull_request:
     branches: [main]
 
-permissions:
-  contents: write
-
 jobs:
   test-and-build:
     runs-on: ubuntu-latest
@@ -26,38 +23,6 @@ jobs:
 
       - name: Install dependencies
         run: npm install --legacy-peer-deps --no-audit --no-fund
-
-      - name: Regenerate Muhurat build data for rollover
-        run: npm run precompute:muhurat
-
-      - name: Upload regenerated Muhurat build data
-        uses: actions/upload-artifact@v4
-        with:
-          name: muhurat-regenerated
-          path: generated/muhurat-panchang-*.ts
-          if-no-files-found: error
-      - name: Commit regenerated Muhurat rollover data
-        if: github.event_name == 'pull_request'
-        env:
-          GH_TOKEN: ${{ github.token }}
-          PR_BRANCH: ${{ github.head_ref }}
-        shell: bash
-        run: |
-          set -euo pipefail
-          mapfile -t changed < <(git diff --name-only -- 'generated/muhurat-panchang-*.ts')
-          echo "Changed generated files: ${changed[*]:-none}"
-          for file in "${changed[@]}"; do
-            current_sha="$(gh api "repos/${GITHUB_REPOSITORY}/contents/${file}?ref=${PR_BRANCH}" --jq .sha)"
-            payload="$(mktemp)"
-            jq -n \
-              --arg message "Refresh Muhurat rollover data" \
-              --arg content "$(base64 -w0 "$file")" \
-              --arg sha "$current_sha" \
-              --arg branch "$PR_BRANCH" \
-              '{message:$message,content:$content,sha:$sha,branch:$branch}' > "$payload"
-            gh api --method PUT "repos/${GITHUB_REPOSITORY}/contents/${file}" --input "$payload" >/dev/null
-            rm -f "$payload"
-          done
 
       - name: Verify committed Muhurat build data
         run: npm run verify:muhurat-precompute
