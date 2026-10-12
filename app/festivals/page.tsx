@@ -5,6 +5,8 @@ import {cities} from "@/lib/cities";
 import {festivalsForYear} from "@/lib/festivals";
 import {getFestivalSemantics} from "@/lib/festival-conventions";
 import {festivalCoverageSnapshot,festivalIndexYears} from "@/lib/festival-expansion";
+import {todayInIndia} from "@/lib/dates";
+import {upcomingFestivalHotset} from "@/lib/hotset-links";
 
 const publicYears=festivalIndexYears();
 const range=publicYears.length?(publicYears.length===1?String(publicYears[0]):`${publicYears[0]}–${publicYears[publicYears.length-1]}`):"Festival calendar";
@@ -16,11 +18,17 @@ export const metadata={
 
 export default function FestivalsIndex(){
   const coverage=new Map(festivalCoverageSnapshot().map(item=>[item.year,item]));
+  const upcoming=upcomingFestivalHotset(todayInIndia(),2);
   return <main><Header city={cities[0]}/><div className="page-shell internal-visual internal-festival">
     <div className="breadcrumbs"><Link href="/">Home</Link> / Festivals</div>
     <p className="page-kicker">FESTIVAL DIRECTORY</p>
     <h1 className="page-title">Hindu Festivals<br/>{range}</h1>
     <p className="page-subtitle">Browse festival years, then open a festival or city page for local Tithi, sunrise and sunset, lunar-month conventions and observance-rule context.</p>
+    {upcoming.length?<section className="wide-panel">
+      <h2 className="page-title" style={{fontSize:32}}>Coming next</h2>
+      <p className="page-subtitle">The nearest maintained festival pages and their city-local references.</p>
+      <div className="data-grid">{upcoming.map(group=><div className="data-card" key={group.festival.slug}><small>{group.festival.date}</small><strong>{group.festival.name}</strong><div className="pill-links"><Link href={group.parentHref}>Festival overview</Link>{group.cityLinks.map(city=><Link href={city.href} key={city.slug}>{city.name}</Link>)}</div></div>)}</div>
+    </section>:null}
     {publicYears.map(year=>{const state=coverage.get(year);return <section className="wide-panel" key={year}>
       <h2 className="page-title" style={{fontSize:34}}>{year} festivals</h2>
       <p className="page-subtitle">{state?.present??0} maintained festival dates.</p>

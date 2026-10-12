@@ -5,6 +5,7 @@ import {cities} from "@/lib/cities";
 import {todayInIndia} from "@/lib/dates";
 import {muhuratRules} from "@/lib/muhurat";
 import {primaryMuhuratEvents} from "@/lib/seo-policy";
+import {currentMuhuratHotset} from "@/lib/hotset-links";
 
 export const revalidate=86400;
 export const metadata:Metadata={title:"Muhurat Planning — Wedding, Griha Pravesh & Vehicle Purchase",description:"Explore Muhurat candidate dates for wedding, Griha Pravesh, vehicle purchase and other milestones, with city-local timing analysis and event-specific continuity metrics.",alternates:{canonical:"/muhurat"}};
@@ -20,6 +21,7 @@ const descriptions:Record<string,string>={
 
 export default function MuhuratHub(){
   const city=cities[0];const now=todayInIndia();const year=now.getUTCFullYear();const month=String(now.getUTCMonth()+1).padStart(2,"0");
+  const currentHotset=currentMuhuratHotset(now);
   const entries=Object.entries(muhuratRules);const primary=new Set<string>(primaryMuhuratEvents);
   const ld={"@context":"https://schema.org","@type":"CollectionPage","name":"Muhurat Planning","url":"https://panchvani.com/muhurat","description":"Event-specific candidate-date analysis with local timing windows and planning metrics."};
   return <main><Header city={city}/><div className="page-shell internal-visual internal-muhurat">
@@ -27,6 +29,11 @@ export default function MuhuratHub(){
     <p className="page-kicker">MUHURAT PLANNING</p><h1 className="page-title">Muhurat candidates<br/>for important moments</h1>
     <p className="page-subtitle">Choose a milestone, then open a year, month and city to compare candidate density, local clean-time supply and event-specific continuity.</p>
     <section className="wide-panel"><h2 className="page-title" style={{fontSize:32}}>Most-used Muhurat planning guides</h2><div className="city-directory">{entries.filter(([slug])=>primary.has(slug)).map(([slug,rule])=><Link href={`/muhurat/${slug}/${year}`} key={slug}><small>{year} yearly analysis</small><strong>{rule.title}</strong><span>{descriptions[slug]}</span></Link>)}</div></section>
+    <section className="wide-panel">
+      <h2 className="page-title" style={{fontSize:32}}>Current month by city</h2>
+      <p className="page-subtitle">Prioritized local planning pages for the current month across all actively indexed cities.</p>
+      <div className="data-grid">{currentHotset.map(group=>{const rule=muhuratRules[group.event];return <div className="data-card" key={group.event}><small>Current month</small><strong>{rule.title}</strong><div className="pill-links"><Link href={group.parentHref}>Month overview</Link>{group.cityLinks.map(item=><Link href={item.href} key={item.slug}>{item.name}</Link>)}</div></div>})}</div>
+    </section>
     <section className="wide-panel"><h2 className="page-title" style={{fontSize:32}}>More milestone planning</h2><div className="city-directory">{entries.filter(([slug])=>!primary.has(slug)).map(([slug,rule])=><Link href={`/muhurat/${slug}/${year}/${month}`} key={slug}><small>Current month analysis</small><strong>{rule.title}</strong><span>{descriptions[slug]}</span></Link>)}</div></section>
     <div className="pill-links"><Link href={`/panchang/${city.slug}`}>Today’s Panchang</Link><Link href="/methodology">Calculation methodology</Link></div>
     <script type="application/ld+json" dangerouslySetInnerHTML={{__html:JSON.stringify(ld)}}/>

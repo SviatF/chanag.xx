@@ -4,6 +4,7 @@ import {coreCities,supportedCities} from "@/lib/cities";
 import {todayInIndia} from "@/lib/dates";
 import {activeIndexCitySlugs} from "@/lib/seo-policy";
 import {cityYearAuthorityLinks} from "@/lib/authority-city-links";
+import {currentCityHotset} from "@/lib/hotset-links";
 import Link from "next/link";
 
 export const metadata={
@@ -18,6 +19,7 @@ export default function Cities(){
   const today=now.toISOString().slice(0,10);
   const year=now.getUTCFullYear();
   const cityYearLinks=cityYearAuthorityLinks(year);
+  const hotset=currentCityHotset(now);
   const featured=supportedCities.filter(city=>active.has(city.slug)).sort((a,b)=>a.state.localeCompare(b.state)||a.name.localeCompare(b.name));
   return <main><Header city={coreCities[0]}/><div className="page-shell internal-visual internal-cities">
     <p className="page-kicker">LOCAL PANCHANG · INDIA</p>
@@ -33,6 +35,12 @@ export default function Cities(){
     <section className="wide-panel">
       <h2 className="page-title" style={{fontSize:32}}>Popular local Panchang pages</h2>
       <div className="city-directory">{featured.map(city=><Link href={`/panchang/${city.slug}/${today}`} key={city.slug}><strong>{city.name}</strong><small>{city.state}</small><span>Today’s local Panchang</span></Link>)}</div>
+    </section>
+
+    <section className="wide-panel">
+      <h2 className="page-title" style={{fontSize:32}}>Current month calendars</h2>
+      <p className="page-subtitle">Direct links to the current local calendar month for every actively indexed city.</p>
+      <div className="pill-links">{hotset.map(item=><Link href={item.monthHref} key={item.slug}>{item.name}</Link>)}</div>
     </section>
 
     <section className="wide-panel">
