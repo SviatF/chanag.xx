@@ -2,7 +2,8 @@ import {describe,expect,it} from "vitest";
 import {findCityBySlug} from "../lib/cities";
 import {buildMuhuratCityContext} from "../lib/muhurat-city-context";
 import type {MuhuratRow} from "../lib/muhurat";
-import {phase1PriorityCities,wave2ControlledCities,wave2ControlledCities} from "../lib/seo-policy";
+import {phase1PriorityCities,wave2ControlledCities} from "../lib/seo-policy";
+const activeCities=[...phase1PriorityCities,...wave2ControlledCities];
 
 function rows():MuhuratRow[]{
   return [
