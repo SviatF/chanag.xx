@@ -9,6 +9,7 @@ import { formatPanchangTime, formatWindow, getPanchang } from "@/lib/panchang";
 import { festivalsForYear, nextFestival } from "@/lib/festivals";
 import { todayInIndia } from "@/lib/dates";
 import {regionalCitiesForLanguage} from "@/lib/regional-seo";
+import {homepageHotset} from "@/lib/hotset-links";
 import mainHero from "@/lib/main-hero.webp";
 import geneshaYourDay from "@/lib/genesha-your_day.webp";
 
@@ -67,6 +68,7 @@ export default async function Home({searchParams}:{searchParams:Promise<{city?:s
     : bestChoghadiya
       ? {name:`${bestChoghadiya.name} Choghadiya`,time:`${bestChoghadiya.start} — ${bestChoghadiya.end}`}
       : {name:"See full Panchang",time:"Multiple local windows"};
+  const currentHotset=homepageHotset(now,city.slug);
   const regionalChoices=[
     ["বাংলা","Bengali","bengali"],
     ["தமிழ்","Tamil","tamil"],
@@ -192,6 +194,11 @@ export default async function Home({searchParams}:{searchParams:Promise<{city?:s
           </div>
         </div>
       </div>
+    </section>
+
+    <section className="section shell">
+      <div className="section-head"><div><h2>Current Panchang paths</h2><p>Quick access to today, the current month and the nearest maintained observances.</p></div></div>
+      <div className="pill-links">{currentHotset.map(item=><Link href={item.href} key={item.href}>{item.label}</Link>)}</div>
     </section>
 
     <footer className="footer shell"><div><strong>PANCHVANI</strong><p>Ancient wisdom for a brighter tomorrow.</p></div><div className="footer-links"><Link href="/about">About</Link><Link href="/methodology">Methodology</Link><Link href="/corrections">Corrections</Link><Link href="/photo-credits">Credits</Link><span className="footer-social">◉</span><span className="footer-social">◎</span><span className="footer-social">𝕏</span><span className="footer-divider">||</span><span>ॐ तत् सत्</span></div></footer>
