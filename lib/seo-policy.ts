@@ -8,6 +8,14 @@ export const phase1PriorityCities = [
   "bhopal","visakhapatnam","patna","vadodara","varanasi"
 ] as const;
 
+export const wave2ControlledCities = [
+  "pimpri-chinchwad",
+  "ghaziabad",
+  "ludhiana",
+  "agra",
+  "nashik",
+] as const;
+
 export const primaryMuhuratEvents = [
   "wedding",
   "griha-pravesh",
@@ -17,6 +25,7 @@ export const primaryMuhuratEvents = [
 export const primaryVratTypes=["ekadashi","purnima","amavasya"] as const;
 
 const baselinePriorityCitySet=new Set<string>(phase1PriorityCities);
+const wave2ControlledCitySet=new Set<string>(wave2ControlledCities);
 const supportedCitySlugSet=new Set(supportedCities.map(city=>city.slug));
 const primaryMuhuratSet=new Set<string>(primaryMuhuratEvents);
 const primaryVratSet=new Set<string>(primaryVratTypes);
@@ -31,16 +40,21 @@ const regionalLanguageCode:Record<string,string>={
 
 function configuredExtraIndexCities(){
   const raw=process.env.SEO_EXTRA_INDEX_CITIES??"";
-  return [...new Set(raw.split(",").map(slug=>slug.trim().toLowerCase()).filter(slug=>slug&&supportedCitySlugSet.has(slug)&&!baselinePriorityCitySet.has(slug)))];
+  return [...new Set(raw.split(",").map(slug=>slug.trim().toLowerCase()).filter(slug=>slug&&supportedCitySlugSet.has(slug)&&!baselinePriorityCitySet.has(slug)&&!wave2ControlledCitySet.has(slug)))];
 }
 
 export function activeIndexCitySlugs(){
-  return [...phase1PriorityCities,...configuredExtraIndexCities()];
+  return [...phase1PriorityCities,...wave2ControlledCities,...configuredExtraIndexCities()];
 }
 
 export function getIndexActivationSnapshot(){
   const extra=configuredExtraIndexCities();
-  return {baseline:[...phase1PriorityCities],extra,active:[...phase1PriorityCities,...extra]};
+  return {
+    baseline:[...phase1PriorityCities],
+    controlled:[...wave2ControlledCities],
+    extra,
+    active:[...phase1PriorityCities,...wave2ControlledCities,...extra],
+  };
 }
 
 function monthDistance(year:number,month:number){
@@ -57,8 +71,20 @@ export function yearlyIndexYears(){
   return [current-1,current,current+1,current+2];
 }
 
+export function isBaselinePriorityCity(citySlug:string){
+  return baselinePriorityCitySet.has(citySlug);
+}
+
+export function isWave2ControlledCity(citySlug:string){
+  return wave2ControlledCitySet.has(citySlug);
+}
+
+function isConfiguredExtraCity(citySlug:string){
+  return configuredExtraIndexCities().includes(citySlug);
+}
+
 export function isPriorityCity(citySlug:string){
-  return baselinePriorityCitySet.has(citySlug)||configuredExtraIndexCities().includes(citySlug);
+  return isBaselinePriorityCity(citySlug)||isWave2ControlledCity(citySlug)||isConfiguredExtraCity(citySlug);
 }
 
 export function isDailyIndexable(citySlug:string,dateIso:string){
@@ -70,20 +96,28 @@ export function isDailyIndexable(citySlug:string,dateIso:string){
   const todayUtc=Date.UTC(now.getUTCFullYear(),now.getUTCMonth(),now.getUTCDate());
   const deltaDays=(target.getTime()-todayUtc)/86400000;
 
-  // Keep robots indexability aligned with sitemap-panchang-daily.xml:
-  // 14 days of recent history + today + 45 days of near-future coverage.
+  if(isWave2ControlledCity(citySlug)){
+    // Controlled Wave 2: keep discovery concentrated around live/near-term intent.
+    return deltaDays>=-3&&deltaDays<=14;
+  }
+
+  // Baseline + explicitly configured expansion cities retain the mature window.
   return deltaDays>=-14&&deltaDays<=45;
 }
 
 export function isMonthlyIndexable(citySlug:string,year:number,month:number){
   if(!isPriorityCity(citySlug)) return false;
   const distance=monthDistance(year,month);
+  if(isWave2ControlledCity(citySlug))return distance===0;
   return distance>=-3&&distance<=12;
 }
 
 export function isYearlyCalendarIndexable(year:number,citySlug?:string){
   if(!yearlyIndexYears().includes(year))return false;
-  return citySlug?isPriorityCity(citySlug):true;
+  if(!citySlug)return true;
+  if(!isPriorityCity(citySlug))return false;
+  if(isWave2ControlledCity(citySlug))return year===todayInIndia().getUTCFullYear();
+  return true;
 }
 
 export function isMuhuratIndexable(event:string,citySlug?:string){
@@ -94,7 +128,7 @@ export function isMuhuratIndexable(event:string,citySlug?:string){
 export function isMonthlyMuhuratIndexable(event:string,year:number,month:number,citySlug?:string){
   if(!isMuhuratIndexable(event,citySlug))return false;
   const distance=monthDistance(year,month);
-  // Keep month-level Muhurat robots aligned with sitemap-muhurat.xml.
+  if(citySlug&&isWave2ControlledCity(citySlug))return distance===0;
   return distance>=0&&distance<=12;
 }
 
@@ -107,12 +141,16 @@ export function isVratIndexable(vrat:string,year:number,citySlug?:string){
   if(!primaryVratSet.has(vrat))return false;
   const distance=yearDistance(year);
   if(distance < -1 || distance > 2)return false;
-  return citySlug?isPriorityCity(citySlug):true;
+  if(!citySlug)return true;
+  if(!isPriorityCity(citySlug))return false;
+  if(isWave2ControlledCity(citySlug))return distance===0;
+  return true;
 }
 
 export function isRegionalIndexable(language:string,city:City){
   const code=regionalLanguageCode[language];
-  if(!code||!isPriorityCity(city.slug)) return false;
+  // Regional Wave 2 is intentionally held back until the 25-city core settles.
+  if(!code||!isBaselinePriorityCity(city.slug)) return false;
   return city.language.includes(code);
 }
 
