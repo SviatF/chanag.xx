@@ -3,7 +3,8 @@ import {describe,expect,it} from "vitest";
 import {findCityBySlug} from "../lib/cities";
 import type {MuhuratRow} from "../lib/muhurat";
 import {buildMuhuratCitySimilarityContext} from "../lib/muhurat-city-similarity-context";
-import {phase1PriorityCities,wave2ControlledCities,wave2ControlledCities} from "../lib/seo-policy";
+import {phase1PriorityCities,wave2ControlledCities} from "../lib/seo-policy";
+const activeCities=[...phase1PriorityCities,...wave2ControlledCities];
 
 const rows:MuhuratRow[]=[
   {date:"2027-07-05",data:{date:"2027-07-05",tithi:"Panchami",nakshatra:"Rohini",rahu:{start:"07:30",end:"09:00"},yamaganda:{start:"10:30",end:"12:00"},gulika:{start:"13:30",end:"15:00"},abhijit:{start:"12:05",end:"12:52"},dayChoghadiya:[]},recommendedWindows:[{start:"09:12",end:"10:18",sources:["Amrit Choghadiya","Shubh Choghadiya"]}],avoidWindows:[],reasons:["Panchami Tithi","Rohini Nakshatra"],planning:{score:82,grade:"Strong",totalCleanMinutes:112,longestWindowMinutes:66,sourceCount:2,hasAbhijit:false,idealContinuousMinutes:30,factors:[]}},
