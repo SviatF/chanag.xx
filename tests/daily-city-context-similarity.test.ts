@@ -19,7 +19,8 @@ function similarity(a:string,b:string){const left=trigrams(a),right=trigrams(b);
 describe("Daily local-context similarity layer",()=>{
   it("keeps every active city narrative structurally differentiated",()=>{
     const data=fixture();
-    const active=activeIndexCitySlugs();\n    const values=active.map(slug=>{const city=findCityBySlug(slug)!;const context=buildDailyCityContext(city,data);return normalized([context.title,context.body,context.secondaryBody,...context.facts.map(item=>`${item.label} ${item.value} ${item.note??""}`)].join(" "),city.name,city.state);});
+    const active=activeIndexCitySlugs();
+    const values=active.map(slug=>{const city=findCityBySlug(slug)!;const context=buildDailyCityContext(city,data);return normalized([context.title,context.body,context.secondaryBody,...context.facts.map(item=>`${item.label} ${item.value} ${item.note??""}`)].join(" "),city.name,city.state);});
     expect(new Set(values).size).toBe(active.length);
     let max=0;
     for(let i=0;i<values.length;i++)for(let j=i+1;j<values.length;j++)max=Math.max(max,similarity(values[i],values[j]));
