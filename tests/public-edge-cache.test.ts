@@ -1,11 +1,23 @@
 import {describe,expect,it} from "vitest";
-import {isPublicResponseCacheable,publicEdgeCacheDecision,publicEdgeCacheTtlSeconds} from "../lib/public-edge-cache";
+import {isPublicResponseCacheable,publicEdgeCacheDecision,publicEdgeCacheTtlSeconds,servePublicWithEdgeCache} from "../lib/public-edge-cache";
 
 function htmlRequest(url:string,headers:Record<string,string>={}){
   return new Request(url,{headers:{accept:"text/html",...headers}});
 }
 
 describe("public Cloudflare edge cache shield",()=>{
+  it("marks HTML responses with the actual Worker identity and deployment version",async()=>{
+    const context={waitUntil(_promise:Promise<unknown>){}};
+    const response=await servePublicWithEdgeCache(
+      htmlRequest("https://panchvani.com/festivals/dussehra/2026/hyderabad"),
+      "version-for-test",
+      context,
+      async()=>new Response("<html><head></head></html>",{headers:{"content-type":"text/html"}})
+    );
+    expect(response.headers.get("x-panchvani-worker")).toBe("chanag-xx");
+    expect(response.headers.get("x-panchvani-worker-version")).toBe("version-for-test");
+  });
+
   it("caches public HTML and strips tracking-only query params from the cache key",()=>{
     const decision=publicEdgeCacheDecision(htmlRequest("https://panchvani.com/panchang/mumbai/2026-09-15?utm_source=gsc&fbclid=abc"),"deploy-123");
     expect(decision.eligible).toBe(true);

@@ -55,9 +55,13 @@ export function isPublicResponseCacheable(response:Response){
   return contentType.includes("text/html");
 }
 
-function withTelemetry(response:Response,cacheStatus:"HIT"|"MISS"|"COALESCED"|"BYPASS",handlerMs?:number){
+function withTelemetry(response:Response,cacheStatus:"HIT"|"MISS"|"COALESCED"|"BYPASS",handlerMs?:number,versionId?:string){
   const headers=new Headers(response.headers);
   headers.set("x-panchvani-edge-cache",cacheStatus);
+  // This header identifies the responding Worker build during canonical/cache audits.
+  // If absent in a production HTML response, inspect upstream cache and asset routing.
+  headers.set("x-panchvani-worker","chanag-xx");
+  if(versionId)headers.set("x-panchvani-worker-version",versionId);
   if(handlerMs!==undefined)headers.set("x-panchvani-handler-ms",String(Math.max(0,Math.round(handlerMs))));
   return new Response(response.body,{status:response.status,statusText:response.statusText,headers});
 }
@@ -86,15 +90,15 @@ export async function servePublicWithEdgeCache(
   render:()=>Promise<Response>,
 ){
   const decision=publicEdgeCacheDecision(request,versionId);
-  if(!decision.eligible||!decision.cacheUrl)return withTelemetry(await render(),"BYPASS");
+  if(!decision.eligible||!decision.cacheUrl)return withTelemetry(await render(),"BYPASS",undefined,versionId);
 
   const edgeCache=defaultEdgeCache();
-  if(!edgeCache)return withTelemetry(await render(),"BYPASS");
+  if(!edgeCache)return withTelemetry(await render(),"BYPASS",undefined,versionId);
   const cacheKey=new Request(decision.cacheUrl,{method:"GET",headers:{accept:"text/html"}});
 
   try{
     const cached=await edgeCache.match(cacheKey);
-    if(cached)return withTelemetry(cached,"HIT",0);
+    if(cached)return withTelemetry(cached,"HIT",0,versionId);
   }catch{
     // Cache failure must never make a public page unavailable.
   }
@@ -108,5 +112,5 @@ export async function servePublicWithEdgeCache(
     const copy=cacheableCopy(response.clone(),ttl);
     ctx.waitUntil(edgeCache.put(cacheKey,copy).catch(()=>undefined));
   }
-  return withTelemetry(response,rendered.coalesced?"COALESCED":"MISS",handlerMs);
+  return withTelemetry(response,rendered.coalesced?"COALESCED":"MISS",handlerMs,versionId);
 }
