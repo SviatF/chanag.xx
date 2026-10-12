@@ -1,4 +1,5 @@
 import type {City} from "./cities";
+import {localDayPhase} from "./festival-day-clock";
 import {buildCityContentProfile} from "./city-content-profile";
 import type {Festival} from "./festivals";
 import type {Panchang} from "./panchang";
@@ -70,14 +71,6 @@ function sunriseBand(value:string){
   if(minutes<405)return "post-six dawn band";
   return "late dawn band";
 }
-function dayPart(offset:number,daylight:number){
-  const ratio=daylight?offset/daylight:0;
-  if(ratio<0.2)return "opening daylight";
-  if(ratio<0.4)return "morning";
-  if(ratio<0.6)return "midday";
-  if(ratio<0.8)return "afternoon";
-  return "late daylight";
-}
 function illuminationBand(value:number){
   if(value<20)return "dark-moon side";
   if(value<45)return "low-illumination side";
@@ -99,15 +92,15 @@ export function buildFestivalCityHighSimilarityContext(festival:Festival,city:Ci
   const rise=clockMinutes(data.sunrise);
   const tithiEnd=datedMinutes(data.tithiEnd,data.tithiEndDate,data.date);
   const nakshatraEnd=datedMinutes(data.nakshatraEnd,data.nakshatraEndDate,data.date);
-  const tithiPart=dayPart(Math.max(0,tithiEnd-rise),daylight);
-  const nakshatraPart=dayPart(Math.max(0,nakshatraEnd-rise),daylight);
+  const tithiPart=localDayPhase(data.tithiEnd,data.tithiEndDate,data.date,data.sunrise,data.sunset);
+  const nakshatraPart=localDayPhase(data.nakshatraEnd,data.nakshatraEndDate,data.date,data.sunrise,data.sunset);
   const transitionOrder=Math.abs(tithiEnd-nakshatraEnd)<30
     ? "near-synchronous lunar hand-off"
     : tithiEnd<nakshatraEnd
       ? "Tithi-first lunar hand-off"
       : "Nakshatra-first lunar hand-off";
   const rahuOffset=Math.max(0,clockMinutes(data.rahu.start)-rise);
-  const rahuPart=dayPart(rahuOffset,daylight);
+  const rahuPart=localDayPhase(data.rahu.start,data.date,data.date,data.sunrise,data.sunset);
   const frame=observanceFrame(festival.pujaRule);
   const locality=festivalCityLocalityBySlug[city.slug]??`${profile.dailyContext} This festival page retains ${profile.geoContext} as its local comparison frame instead of substituting a nearby city's timetable.`;
   const abhijit=data.abhijit?`${data.abhijit.start}–${data.abhijit.end}`:"not retained on this date";
