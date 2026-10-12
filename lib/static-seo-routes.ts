@@ -1,6 +1,6 @@
 import {festivals2026} from "./festivals";
 import {festivalCityPageIsIndexable} from "./festival-expansion";
-import {isDailyIndexable,isMonthlyIndexable,isMonthlyMuhuratIndexable,isVratIndexable,isYearlyCalendarIndexable,phase1PriorityCities,primaryMuhuratEvents,primaryVratTypes,yearlyIndexYears} from "./seo-policy";
+import {isDailyIndexable,isMonthlyIndexable,isMonthlyMuhuratIndexable,isVratIndexable,isYearlyCalendarIndexable,primaryMuhuratEvents,primaryVratTypes,yearlyIndexYears} from "./seo-policy";
 import {rollingDailyDates,rollingMonths,sitemapPriorityCities} from "./seo-sitemap";
 
 export type FestivalCityStaticParam={festival:string;year:string;city:string};
