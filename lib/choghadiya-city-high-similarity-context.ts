@@ -110,7 +110,7 @@ const cityLenses:Record<string,CityLens>={
     planning:"Use the local riverfront sunrise to anchor the first slot, compare favorable labels against Rahu Kalam, and retain the intervals that survive that local check. When comparing with another Ganga-basin city, the important difference is the near-meridian clock placement rather than the repeated weekday Choghadiya name order.",
     terrainLabel:"upper-middle Ganga riverfront plain",
     clockLabel:"near-meridian Gangetic clock",
-  },,
+  },
   "pimpri-chinchwad":{
     title:`Upper-Bhima metropolitan plateau clock`,
     locality:`This Choghadiya is anchored on the upper Bhima-basin side of the Pune metropolitan plateau. The city is close enough to Pune for the broad civil-time pattern to resemble it, but the route keeps the coordinate separate because sunrise-derived slot boundaries can shift by several minutes and alter overlap with Rahu Kalam. Mumbai and Thane provide the coastal comparison beyond the Sahyadri, while Nashik adds a more northerly inland Maharashtra clock. The useful identity is therefore a near-Pune plateau boundary clock whose value lies in exact local slot placement, not in a renamed metropolitan timetable.`,
