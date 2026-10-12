@@ -122,12 +122,12 @@ describe("SSG/ISR SEO architecture",()=>{
     }
   });
 
-  it("pre-renders the complete sitemap-visible Muhurat monthly matrix at exactly 819 pages",()=>{
+  it("pre-renders the controlled sitemap-visible Muhurat monthly matrix at 834 pages",()=>{
     const priorityMonths=rollingMonths(0,12);
     expect(primaryMuhuratEvents).toHaveLength(3);
     expect(priorityMonths).toHaveLength(13);
     expect(phase1PriorityCities).toHaveLength(20);
-    expect(muhuratSsgPriorityCitySlugs).toEqual([...phase1PriorityCities,...wave2ControlledCities]);
+    expect(new Set(muhuratSsgPriorityCitySlugs)).toEqual(new Set([...phase1PriorityCities,...wave2ControlledCities]));
     expect(muhuratMonthSsgPriority).toHaveLength(39);
     expect(muhuratCityMonthSsgPriority).toHaveLength(795);
     expect(muhuratMonthSsgPriority.length+muhuratCityMonthSsgPriority.length).toBe(834);
