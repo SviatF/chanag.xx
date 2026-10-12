@@ -77,11 +77,14 @@ describe("Wave 2 controlled city activation",()=>{
     }
   });
 
-  it("opens validated 2026 festival city pages but holds back regional expansion",()=>{
+  it("opens only recent/current/near-term 2026 festival city pages and holds back regional expansion",()=>{
     vi.useFakeTimers();vi.setSystemTime(reference);
     for(const citySlug of wave2ControlledCities){
       const city=findCityBySlug(citySlug)!;
+      expect(festivalCityPageIsIndexable("shardiya-navratri",2026,citySlug)).toBe(true);
       expect(festivalCityPageIsIndexable("diwali",2026,citySlug)).toBe(true);
+      expect(festivalCityPageIsIndexable("ganesh-chaturthi",2026,citySlug)).toBe(false);
+      expect(festivalCityPageIsIndexable("holi",2026,citySlug)).toBe(false);
       expect(festivalCityPageIsIndexable("diwali",2027,citySlug)).toBe(false);
       for(const language of ["bengali","tamil","malayalam","gujarati","marathi"]){
         expect(isRegionalIndexable(language,city)).toBe(false);
