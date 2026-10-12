@@ -5,7 +5,7 @@ import {buildFestivalCityContext} from "../lib/festival-city-context";
 import {buildFestivalCityHighSimilarityContext} from "../lib/festival-city-high-similarity-context";
 import {festivalBySlugYear} from "../lib/festivals";
 import type {Panchang} from "../lib/panchang";
-import {phase1PriorityCities} from "../lib/seo-policy";
+import {phase1PriorityCities,wave2ControlledCities,wave2ControlledCities} from "../lib/seo-policy";
 
 function panchang():Panchang{
   const date="2026-01-14";
@@ -42,8 +42,8 @@ function serialized(citySlug:string,lensOnly=false){
 
 describe("Festival city HIGH-similarity cleanup",()=>{
   it("keeps the new comparison lens strongly separated after city/state/numbers are stripped",()=>{
-    const values=phase1PriorityCities.map(slug=>serialized(slug,true));
-    expect(new Set(values).size).toBe(phase1PriorityCities.length);
+    const values=activeCities.map(slug=>serialized(slug,true));
+    expect(new Set(values).size).toBe(activeCities.length);
     expect(maxPairwise(values)).toBeLessThan(0.58);
   });
 
