@@ -32,6 +32,7 @@ if(native.safeForCeremonyFiltering!==false||angular.safeForCeremonyFiltering!==f
   !Array.isArray(native.nativeHeliacalResults)||!Array.isArray(angular.cases))
   throw Error("Wave 3Q needs an explicit research-only input schema");
 const nativeResults=native.nativeHeliacalResults;
+const outOfYearNativeCount=nativeResults.filter(x=>x.status==="native-event-outside-target-year").length;
 const targets=new Map<string,{planet:"Jupiter"|"Venus";year:number;locality:string}>();
 const add=(planet:"Jupiter"|"Venus",year:number,locality:string)=>{
   targets.set([planet,year,locality].join("|"),{planet,year,locality});
@@ -89,7 +90,8 @@ const report={
   isConfidenceInterval:false,
   provenance:{angularFile,nativeFile,
     publishedReferenceCount:astaEvidenceLedger.length,
-    nativeEventCount:native.heliacalSearchCount},
+    nativeEventCount:native.heliacalSearchCount,
+    nativeEventsOutsideTargetYear:outOfYearNativeCount},
   methodTaxonomy,targets:comparisons.length,
   comparisonStatuses:statuses,
   scenarioEnvelopeGroups:uncertain.length,
