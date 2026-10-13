@@ -5,7 +5,7 @@ import { getPrecomputedMuhuratPanchangMonth } from "./muhurat-precomputed";
 import { getPanchang, Panchang, TimeWindow } from "./panchang";
 import {boundMuhuratWindowsByLunarTransitions,type MuhuratLunarWindowResult} from "./muhurat-lunar-transitions";
 import {getVerifiedMuhuratClosure} from "./verified-muhurat-closures";
-import {screenWeddingVishtiKarana,type WeddingKaranaScreen} from "./muhurat-wedding-karana";
+import {screenWeddingVishtiKarana,weddingKaranaBlockLabel,type WeddingKaranaScreen} from "./muhurat-wedding-karana";
 
 export type MuhuratEvent="wedding"|"griha-pravesh"|"vehicle-purchase"|"naming-ceremony"|"business-opening"|"gold-purchase";
 type Rule={title:string;goodTithi:string[];goodNakshatra:string[];idealContinuousMinutes:number;note:string};
@@ -217,7 +217,7 @@ export async function getMonthlyMuhurat(event:string,year:number,month:number,ci
         {label:"Rahu Kalam",window:data.rahu},
         {label:"Yamaganda",window:data.yamaganda},
         {label:"Gulika",window:data.gulika},
-        ...(karana?.blocked.map(window=>({label:"Vishti Karana (Bhadra)",window}))??[])
+        ...(karana?.blocked.map(window=>({label:weddingKaranaBlockLabel(data.karana),window}))??[])
       ],
       reasons:[`${data.tithi} Tithi`,`${data.nakshatra} Nakshatra`],
       planning:buildMuhuratPlanningScore(event,recommendedWindows)

@@ -1,7 +1,7 @@
 import {describe,expect,it} from "vitest";
 import {cityBySlug} from "../lib/cities";
 import {getMonthlyMuhurat,buildRecommendedMuhuratWindows} from "../lib/muhurat";
-import {screenWeddingVishtiKarana,hasCompleteWeddingKaranaEvidence} from "../lib/muhurat-wedding-karana";
+import {screenWeddingVishtiKarana,hasCompleteWeddingKaranaEvidence,weddingKaranaBlockLabel} from "../lib/muhurat-wedding-karana";
 import {buildYearlyMuhuratSummary} from "../lib/yearly-expansion";
 import {boundMuhuratWindowsByLunarTransitions} from "../lib/muhurat-lunar-transitions";
 
@@ -23,13 +23,24 @@ describe("Wave 3K: Wedding Vishti is a time interval, not a false all-day ban",(
     expect(r.windows).toEqual([{start:"09:00",end:"11:00",sources:["Amrit Choghadiya"]}]);
     expect(windows[0].end).toBe("13:00");
   });
-  it("removes only the early Vishti hours when Bhadra is already active at sunrise",()=>{
+  it("correctly allows a first-half movable Vishti to end before its parent Tithi",()=>{
+    // Vishti occurs in BOTH Tithi halves across the seven-Karana cycle.
+    // After a first-half Vishti, the next Karana is Bava (not Bhadra).
     const r=screenWeddingVishtiKarana({...evidence,karana:"Vishti",karanaEnd:"10:30"},windows);
+    expect(r.status).toBe("vishti-screened");
     expect(r.blocked).toEqual([{start:"00:00",end:"10:30"}]);
     expect(r.windows).toEqual([
       {start:"10:30",end:"13:00",sources:["Amrit Choghadiya"]},
       windows[1]
     ]);
+  });
+  it("keeps valid sunrise Vishti closed through the Tithi boundary",()=>{
+    const r=screenWeddingVishtiKarana({
+      ...evidence,karana:"Vishti",karanaEnd:"10:30",tithiEnd:"10:30"
+    },windows);
+    expect(r.status).toBe("vishti-screened");
+    expect(r.blocked).toEqual([{start:"00:00",end:"10:30"}]);
+    expect(r.windows).toEqual([]);
   });
   it("treats Shakuni as its own Tithi-ending half and does not invent an extra prohibition",()=>{
     // Krishna Chaturdashi ends with Shakuni. The next Chatushpada
@@ -47,14 +58,12 @@ describe("Wave 3K: Wedding Vishti is a time interval, not a false all-day ban",(
     expect(result.blocked).toEqual([{start:"00:00",end:"19:00"}]);
     expect(result.windows).toEqual([]);
   });
-  it("allows post-transition clocks after the terminal prohibited Naga moves to Kimstughna",()=>{
-    const candidate={...evidence,karana:"Naga",karanaEnd:"11:00"};
+  it("never reopens after Naga when its Tithi ends, even with unclipped input windows",()=>{
+    const candidate={...evidence,tithi:"Amavasya",karana:"Naga",karanaEnd:"11:00",tithiEnd:"11:00"};
     const result=screenWeddingVishtiKarana(candidate,windows);
+    expect(result.status).toBe("vishti-screened");
     expect(result.blocked).toEqual([{start:"00:00",end:"11:00"}]);
-    expect(result.windows).toEqual([
-      {start:"11:00",end:"13:00",sources:["Amrit Choghadiya"]},
-      windows[1]
-    ]);
+    expect(result.windows).toEqual([]);
   });
   it("keeps fixed-Karana exclusions until midnight for next-day Tithi ends",()=>{
     const candidate={
@@ -73,7 +82,7 @@ describe("Wave 3K: Wedding Vishti is a time interval, not a false all-day ban",(
   it("handles next-day Karana ends with correct civil-date boundaries",()=>{
     const r=screenWeddingVishtiKarana({
       ...evidence,karana:"Vishti",karanaEnd:"02:00",karanaEndDate:"2026-05-07",
-      tithiEnd:"03:00",tithiEndDate:"2026-05-07"
+      tithiEnd:"02:00",tithiEndDate:"2026-05-07"
     },windows);
     expect(r.windows).toEqual([]);
     expect(r.blocked).toEqual([{start:"00:00",end:"23:59"}]);
@@ -87,6 +96,12 @@ describe("Wave 3K: Wedding Vishti is a time interval, not a false all-day ban",(
       {...evidence,karanaEndDate:"2026-05-05"},
       {...evidence,karanaEndDate:"2026-05-10"},
       {...evidence,tithiEnd:"10:30"},
+      {...evidence,karana:"Shakuni",karanaEnd:"11:00"},
+      {...evidence,karana:"Naga",karanaEnd:"11:00"},
+      {...evidence,karana:"Chatushpada",karanaEnd:"19:00"},
+      {...evidence,tithi:"Amavasya",karana:"Shakuni",karanaEnd:"19:00"},
+      {...evidence,tithi:"Chaturdashi",karana:"Chatushpada"},
+      {...evidence,tithi:"Pratipada",karana:"Naga",karanaEnd:"19:00"},
     ];
     for(const row of invalid){
       expect(hasCompleteWeddingKaranaEvidence(row)).toBe(false);
@@ -94,6 +109,19 @@ describe("Wave 3K: Wedding Vishti is a time interval, not a false all-day ban",(
       expect(r.status).toBe("invalid-evidence");
       expect(r.windows).toEqual([]);
     }
+  });
+  it("preserves the parent Tithi boundary for other Karana even when a caller omitted lunar clipping",()=>{
+    const r=screenWeddingVishtiKarana({...evidence,karana:"Garaja",tithiEnd:"12:00"},windows);
+    expect(r.status).toBe("vishti-screened");
+    expect(r.blocked).toEqual([]);
+    expect(r.windows).toEqual([{start:"09:00",end:"12:00",sources:["Amrit Choghadiya"]}]);
+  });
+  it("uses the actual Karana name instead of falsely calling all exclusions Bhadra",()=>{
+    expect(weddingKaranaBlockLabel("Vishti")).toBe("Vishti Karana (Bhadra)");
+    expect(weddingKaranaBlockLabel("Vanija")).toBe("Vishti Karana (Bhadra)");
+    expect(weddingKaranaBlockLabel("Shakuni")).toBe("Shakuni Karana");
+    expect(weddingKaranaBlockLabel("Chatushpada")).toBe("Chatushpada and Naga Karana");
+    expect(weddingKaranaBlockLabel("Naga")).toBe("Naga Karana");
   });
   it("leaves non-Vishti controls and zero-seconds fragments unaltered",()=>{
     const r=screenWeddingVishtiKarana({...evidence,karana:"Garaja"},[

@@ -15,6 +15,7 @@ import {muhuratRelativeEndMinutes} from "./muhurat-lunar-transitions";
  */
 export type WeddingKaranaEvidence={
   date:string;
+  tithi?:string;
   karana?:string;
   karanaEnd?:string;
   karanaEndDate?:string|null;
@@ -64,8 +65,36 @@ const KNOWN_KARANAS=new Set(["Kimstughna","Bava","Balava","Kaulava","Taitila","G
 export function hasCompleteWeddingKaranaEvidence(evidence:WeddingKaranaEvidence):boolean{
   const k=muhuratRelativeEndMinutes(evidence.date,evidence.karanaEndDate,evidence.karanaEnd);
   const t=muhuratRelativeEndMinutes(evidence.date,evidence.tithiEndDate,evidence.tithiEnd);
-  return typeof evidence.karana==="string"&&KNOWN_KARANAS.has(evidence.karana)&&
-    k!==null&&t!==null&&k>0&&t>0&&k<=t+1;
+  if(typeof evidence.karana!=="string"||!KNOWN_KARANAS.has(evidence.karana)||
+    k===null||t===null||k<=0||t<=0||k>t+1)return false;
+
+  // Shakuni and Naga are the fixed SECOND halves of their respective
+  // Tithis. Only they must end with the parent Tithi (±1 clock minute).
+  // Important: movable Vishti can be FIRST or SECOND half depending on
+  // its position in the repeating 7-Karana cycle. Never force k == t for
+  // Vishti: a first-half Vishti may legitimately end before Tithi end.
+  if(["Shakuni","Naga"].includes(evidence.karana)&&Math.abs(k-t)>1)return false;
+  // Chatushpada is the FIRST half of Amavasya, followed by prohibited Naga.
+  if(evidence.karana==="Chatushpada"&&t-k<=1)return false;
+
+  // When the snapshot includes Tithi, check the fixed Karana alignment.
+  // Missing Tithi alone does not authorize a ceremony: this is only an
+  // additional consistency check, not a full Muhurat approval rule.
+  const fixedTithi:Record<string,string>={
+    Shakuni:"Chaturdashi",Chatushpada:"Amavasya",
+    Naga:"Amavasya",Kimstughna:"Pratipada"
+  };
+  if(evidence.tithi&&fixedTithi[evidence.karana]&&
+    evidence.tithi!==fixedTithi[evidence.karana])return false;
+  return true;
+}
+
+/** Human-readable reason must match the Karana actually excluded. */
+export function weddingKaranaBlockLabel(karana:string):string{
+  if(karana==="Shakuni")return "Shakuni Karana";
+  if(karana==="Chatushpada")return "Chatushpada and Naga Karana";
+  if(karana==="Naga")return "Naga Karana";
+  return "Vishti Karana (Bhadra)";
 }
 export function screenWeddingVishtiKarana(
   evidence:WeddingKaranaEvidence,
@@ -98,7 +127,15 @@ export function screenWeddingVishtiKarana(
     if(k<1440)ranges.push({start:k,end:Math.min(1440,t)});
   }
   const normalized=ranges.filter(x=>x.end>x.start);
-  const screened=windows.flatMap(w=>removeBlocked(w,normalized));
+  // Recheck the parent Tithi here as defense in depth. A caller that omits
+  // upstream lunar clipping must not reopen a terminal Karana afterward.
+  const screened=windows.flatMap(w=>{
+    const start=mins(w.start),end=mins(w.end);
+    if(start===null||end===null||end<=start)return [];
+    const boundedEnd=Math.min(end,t);
+    if(boundedEnd-start<15)return [];
+    return removeBlocked({...w,end:clock(boundedEnd)},normalized);
+  });
   return {
     status:"vishti-screened",
     windows:screened,
