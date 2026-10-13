@@ -6,6 +6,8 @@ describe("festival day timing integrity",()=>{
     expect(localDayPhase("12:51","2026-10-20","2026-10-20","06:11","17:51")).toBe("midday");
     expect(localDayPhase("16:10","2026-10-20","2026-10-20","06:11","17:51")).toBe("late daylight");
     expect(localDayPhase("03:00","2026-10-21","2026-10-20","06:11","17:51")).toBe("the following local day");
+    expect(localDayPhase("18:04","2026-10-20","2026-10-20","06:11","17:51")).toBe("the post-sunset period");
+    expect(localDayPhase("05:40","2026-10-20","2026-10-20","06:11","17:51")).toBe("the pre-sunrise period");
   });
   it("never rolls a daytime moonrise over to the next day",()=>{
     const result=localMoonriseRelation({date:"2026-10-20",sunrise:"06:11",sunset:"17:51",moonrise:"13:57",moonriseDate:"2026-10-20"});

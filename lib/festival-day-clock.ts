@@ -19,10 +19,10 @@ export function localDayPhase(time:string,eventDate:string|null|undefined,baseDa
   if(minute===null||offset===null||rise===null||set===null||set<=rise)return "time unavailable";
   if(offset<0)return "the previous local day";
   if(offset>0)return "the following local day";
-  if(minute<rise)return "before sunrise";
-  if(minute===rise)return "at sunrise";
-  if(minute>set)return "after sunset";
-  if(minute===set)return "at sunset";
+  if(minute<rise)return "the pre-sunrise period";
+  if(minute===rise)return "the sunrise boundary";
+  if(minute>set)return "the post-sunset period";
+  if(minute===set)return "the sunset boundary";
   const ratio=(minute-rise)/(set-rise);
   if(ratio<0.2)return "opening daylight";
   if(ratio<0.4)return "morning";

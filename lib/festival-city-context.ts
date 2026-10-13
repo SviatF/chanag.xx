@@ -58,8 +58,8 @@ function transitionProfile(data:Panchang){
   const nPart=localDayPhase(data.nakshatraEnd,data.nakshatraEndDate,data.date,data.sunrise,data.sunset);
   const delta=Math.abs(t-n);
   if(delta<30)return {key:"near-synchronous",text:`Tithi and Nakshatra transitions share the same narrow local clock band around ${tPart}`,tPart,nPart};
-  if(t<n)return {key:"tithi-first",text:`Tithi changes first in ${tPart}; Nakshatra follows in ${nPart}`,tPart,nPart};
-  return {key:"nakshatra-first",text:`Nakshatra changes first in ${nPart}; Tithi follows in ${tPart}`,tPart,nPart};
+  if(t<n)return {key:"tithi-first",text:`Tithi changes first during ${tPart}; Nakshatra follows during ${nPart}`,tPart,nPart};
+  return {key:"nakshatra-first",text:`Nakshatra changes first during ${nPart}; Tithi follows during ${tPart}`,tPart,nPart};
 }
 function rahuProfile(data:Panchang){
   const sunrise=clockMinutes(data.sunrise);
@@ -168,7 +168,7 @@ export function buildFestivalCityContext(festival:Festival,city:City,data:Pancha
           ? `${city.name}'s sunrise-led ${festival.name} profile is anchored in ${geoLead}. The city has a ${profile.latitudeContext} and is ${profile.solarClockContext}; after sunrise, ${transitions.text} and Rahu falls in ${rahu.key}.`
           : `${festival.name} in ${city.name} is calculated for ${geoLead}. Across its ${daylightClass(daylight)}, ${transitions.text}; favorable Choghadiya is ${favorable.key}, and Rahu sits in ${rahu.key}.`;
 
-  const secondaryBody=`The local timing shape is ${solarShape}. ${moon.text}; the first favorable daytime period is ${favorable.first} and the last is ${favorable.last}. Rahu starts in the ${rahu.key} segment of daylight. These signals come from the actual city Panchang rather than from the shared festival date alone.`;
+  const secondaryBody=`The local timing shape is ${solarShape}. ${moon.text.charAt(0).toUpperCase()+moon.text.slice(1)}; the first favorable daytime period is ${favorable.first} and the last is ${favorable.last}. Rahu starts in the ${rahu.key} segment of daylight. These signals come from the actual city Panchang rather than from the shared festival date alone.`;
 
   const localityBody=variant===0
     ? `${profile.dailyContext} For ${festival.name}, that city-level timing frame is carried into the festival date: ${solarShape}, ${transitions.key} transition order and ${rahu.key} Rahu placement. The festival date may be shared nationally, but the sunrise checkpoint and every daylight-derived clock remain local.`
@@ -185,7 +185,7 @@ export function buildFestivalCityContext(festival:Festival,city:City,data:Pancha
   const chronologyBody=variant%3===0
     ? `Local sunrise is ${data.sunrise} and sunset is ${data.sunset}. ${transitions.text}. Rahu starts ${rahu.offset} minutes after sunrise in ${rahu.key}; ${favorable.count} daytime periods carry a favorable label, beginning in slot ${favorable.firstSlot>0?favorable.firstSlot:"—"} and ending in slot ${favorable.lastSlot>0?favorable.lastSlot:"—"}. Moon state: ${moon.text}.`
     : variant%3===1
-      ? `The festival-day clock opens at ${data.sunrise} and closes its daylight span at ${data.sunset}. Tithi occupies the ${transitions.tPart} transition band while Nakshatra occupies ${transitions.nPart}; the order is ${transitions.key}. The favorable-day shape is ${favorable.key}, and the night contains ${night.count} favorable-labelled periods.`
+      ? `The festival-day clock opens at ${data.sunrise} and closes its daylight span at ${data.sunset}. Tithi changes during ${transitions.tPart} while Nakshatra changes during ${transitions.nPart}; the order is ${transitions.key}. The favorable-day shape is ${favorable.key}, and the night contains ${night.count} favorable-labelled periods.`
       : `Read the chronology from dawn forward: ${sunriseClass(data.sunrise)}, then Rahu in ${rahu.key}, then a ${favorable.key} favorable-period pattern. Lunar turnover is ${transitions.key}: ${transitions.text}. Moonrise timing: ${moon.text}; the first favorable night period is ${night.first}.`;
 
   return {
