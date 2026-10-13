@@ -44,7 +44,7 @@ export default async function YearlyMuhurat({params}:{params:Promise<{event:stri
       <small>{year} · MUMBAI WEDDING KARANA SCREEN</small>
       <h2>How Bhadra changed the {year} wedding candidate windows</h2>
       <p>The {year} source-window check removed {summary.vishtiExcludedReferenceMinutes??0} total reference-window minutes on {summary.vishtiAffectedDates??0} screened dates where Vishti (Bhadra) overlapped a Wedding candidate clock. These are summed intervals and may overlap; they are not unique hours or fully certified Muhurat times.</p>
-      <p>Month-by-month reference timing removed: {summary.months.map(m=>`${m.name}: ${m.vishtiExcludedReferenceMinutes??0} min over ${m.vishtiAffectedDates??0} dates`).join(" · ")}. A month with 0 removed minutes can still have other religious exclusions or lack a verified ceremony calendar.</p>
+      <p>Months where Bhadra changed the ranked source-clock supply: {summary.months.filter(m=>(m.vishtiExcludedReferenceMinutes??0)>0).map(m=>`${m.name}: ${m.vishtiExcludedReferenceMinutes} minutes affecting ${m.vishtiAffectedDates} dates`).join("; ")||"none in this year’s currently screened candidates"}. Other months still require their independent customary and planetary eligibility checks.</p>
     </div></section>:null}
     <section className="wide-panel"><div className="seo-copy"><h2>{quality.fingerprintTitle}</h2><p>{quality.fingerprintBody}</p></div></section>
 
@@ -56,11 +56,14 @@ export default async function YearlyMuhurat({params}:{params:Promise<{event:stri
     <section className="wide-panel"><div className="seo-copy"><h2>{yearContext.calendarTitle}</h2><p>{yearContext.calendarBody}</p><h2>{yearContext.densityTitle}</h2><p>{yearContext.densityBody}</p></div></section>
     <section className="wide-panel"><div className="seo-copy"><h2>{yearContext.timingTitle}</h2><p>{yearContext.timingBody}</p><h2>{yearContext.rankingTitle}</h2><p>{yearContext.rankingBody}</p></div></section>
 
+    {p.event!=="wedding"?<>
     <section className="wide-panel">
       <div className="seo-copy"><small>ANNUAL COMPARISON FINGERPRINT</small><h2>{highSimilarityContext.title}</h2><p>{highSimilarityContext.eventBody}</p><h2>{highSimilarityContext.sequenceTitle}</h2><p>{highSimilarityContext.sequenceBody}</p></div>
       <div className="data-grid">{highSimilarityContext.facts.map(item=><div className="data-card" key={item.label}><small>{item.label}</small><strong>{item.value}</strong>{item.note?<small>{item.note}</small>:null}</div>)}</div>
     </section>
-    <section className="wide-panel"><div className="seo-copy"><h2>{highSimilarityContext.shortlistTitle}</h2><p>{highSimilarityContext.shortlistBody}</p></div></section>
+    <section className="wide-panel"><div className="seo-copy"><h2>{highSimilarityContext.shortlistTitle}</h2><p>{highSimilarityContext.shortlistBody}</p></div></section></>
+
+    :null}
 
     <section className="wide-panel"><div className="seo-copy"><h2>{quality.seasonalTitle}</h2><p>{quality.seasonalBody}</p></div></section>
     <section className="wide-panel"><div className="seo-copy"><h2>{quality.rankingTitle}</h2><p>{quality.rankingBody}</p></div></section>
