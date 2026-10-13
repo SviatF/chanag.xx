@@ -2,7 +2,7 @@ import {readFileSync} from "node:fs";
 import {describe,expect,it} from "vitest";
 import {festivals2026} from "../lib/festivals";
 import {festivalCityPageIsIndexable} from "../lib/festival-expansion";
-import {phase1PriorityCities,primaryMuhuratEvents,primaryVratTypes,wave2ControlledCities,yearlyIndexYears} from "../lib/seo-policy";
+import {phase1PriorityCities,primaryMuhuratEvents,primaryVratTypes,wave2ControlledCities,yearlyIndexYears,isMonthlyMuhuratIndexable} from "../lib/seo-policy";
 import {rollingDailyDates,rollingMonths,sitemapPriorityCities} from "../lib/seo-sitemap";
 import {
   calendarMonthSsgPriority,
@@ -135,9 +135,11 @@ describe("SSG/ISR SEO architecture",()=>{
     expect(priorityMonths).toHaveLength(13);
     expect(phase1PriorityCities).toHaveLength(20);
     expect(new Set(muhuratSsgPriorityCitySlugs)).toEqual(new Set([...phase1PriorityCities,...wave2ControlledCities]));
-    expect(muhuratMonthSsgPriority).toHaveLength(39);
-    expect(muhuratCityMonthSsgPriority).toHaveLength(795);
-    expect(muhuratMonthSsgPriority.length+muhuratCityMonthSsgPriority.length).toBe(834);
+    const expectedBaselines=priorityMonths.reduce((n,item)=>n+primaryMuhuratEvents.filter(event=>isMonthlyMuhuratIndexable(event,item.year,item.month)).length,0);
+    const expectedCities=priorityMonths.reduce((n,item)=>n+sitemapPriorityCities.reduce((citySum,city)=>citySum+primaryMuhuratEvents.filter(event=>isMonthlyMuhuratIndexable(event,item.year,item.month,city.slug)).length,0),0);
+    expect(muhuratMonthSsgPriority).toHaveLength(expectedBaselines);
+    expect(muhuratCityMonthSsgPriority).toHaveLength(expectedCities);
+    expect(muhuratMonthSsgPriority.length+muhuratCityMonthSsgPriority.length).toBe(expectedBaselines+expectedCities);
 
     const baselineKeys=muhuratMonthSsgPriority.map(muhuratMonthStaticKey);
     const cityKeys=muhuratCityMonthSsgPriority.map(muhuratCityMonthStaticKey);
@@ -145,12 +147,14 @@ describe("SSG/ISR SEO architecture",()=>{
     expect(new Set(cityKeys).size).toBe(cityKeys.length);
 
     for(const month of priorityMonths){
-      expect(muhuratMonthSsgPriority.filter(item=>item.year===String(month.year)&&item.month===month.slug)).toHaveLength(primaryMuhuratEvents.length);
+      const allowedBaseline=primaryMuhuratEvents.filter(event=>isMonthlyMuhuratIndexable(event,month.year,month.month)).length;
+      expect(muhuratMonthSsgPriority.filter(item=>item.year===String(month.year)&&item.month===month.slug)).toHaveLength(allowedBaseline);
       for(const city of phase1PriorityCities){
-        expect(muhuratCityMonthSsgPriority.filter(item=>item.year===String(month.year)&&item.month===month.slug&&item.city===city)).toHaveLength(primaryMuhuratEvents.length);
+        const allowed=primaryMuhuratEvents.filter(event=>isMonthlyMuhuratIndexable(event,month.year,month.month,city)).length;
+        expect(muhuratCityMonthSsgPriority.filter(item=>item.year===String(month.year)&&item.month===month.slug&&item.city===city)).toHaveLength(allowed);
       }
       for(const city of wave2ControlledCities){
-        const expected=month===priorityMonths[0]?primaryMuhuratEvents.length:0;
+        const expected=primaryMuhuratEvents.filter(event=>isMonthlyMuhuratIndexable(event,month.year,month.month,city)).length;
         expect(muhuratCityMonthSsgPriority.filter(item=>item.year===String(month.year)&&item.month===month.slug&&item.city===city)).toHaveLength(expected);
       }
     }

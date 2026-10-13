@@ -2,12 +2,17 @@ import {readFileSync} from "node:fs";
 import {describe,expect,it} from "vitest";
 import {findCityBySlug} from "../lib/cities";
 import {muhuratRules} from "../lib/muhurat";
+import {primaryMuhuratEvents,isMonthlyMuhuratIndexable} from "../lib/seo-policy";
+import {rollingMonths,sitemapPriorityCities} from "../lib/seo-sitemap";
 import {buildMuhuratCityMonthHeading,muhuratMonthName} from "../lib/muhurat-heading";
 import {muhuratCityMonthSsgPriority} from "../lib/static-seo-routes";
 
 describe("Muhurat city-month H1 architecture",()=>{
   it("gives every indexed city-month Muhurat URL a distinct visible heading",()=>{
-    expect(muhuratCityMonthSsgPriority).toHaveLength(795);
+    const expected=rollingMonths(0,12).reduce((sum,item)=>
+      sum+sitemapPriorityCities.reduce((citySum,city)=>
+        citySum+primaryMuhuratEvents.filter(event=>isMonthlyMuhuratIndexable(event,item.year,item.month,city.slug)).length,0),0);
+    expect(muhuratCityMonthSsgPriority).toHaveLength(expected);
     const headings=muhuratCityMonthSsgPriority.map(item=>{
       const city=findCityBySlug(item.city)!;
       const rule=muhuratRules[item.event];

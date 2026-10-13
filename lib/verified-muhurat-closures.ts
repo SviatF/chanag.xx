@@ -1,49 +1,62 @@
 import type {City} from "./cities";
 
 /**
- * A reviewed religious-observance rule is NOT a generic astronomical clock rule.
- * Keep each reviewed closure explicitly scoped by event, city, year, and month.
- * Other local or household traditions may use different ceremonial calendars.
+ * Source-reviewed **community convention**, not a claim about every ceremony
+ * or every religious household in Maharashtra.
+ *
+ * Source ledger (including alternative approaches) is kept outside runtime in:
+ * tests/fixtures/muhurat-closure-2025-27-evidence.ts
+ * Do not infer partial July/November restrictions or transit/combustion dates.
  */
+const MONTH_NAMES={8:"August",9:"September",10:"October"} as const;
+type ReviewedMonth=keyof typeof MONTH_NAMES;
+type ReviewedYear=2025|2026|2027;
+
 export type VerifiedMuhuratClosure={
-  code:"marathi-chaturmas-2026-august"|"marathi-chaturmas-2026-september"|"marathi-chaturmas-2026-october";
+  code:string;
   event:"wedding";
-  year:2026;
-  month:8|9|10;
+  year:ReviewedYear;
+  month:ReviewedMonth;
+  cityName:string;
   convention:"Customary Marathi marriage calendar";
-  observedPeriod:{from:string;through:string};
+  /** Only populate when actual bounds have independent review. */
+  observedPeriod?:{from:string;through:string};
   reason:"Chaturmas";
   headline:string;
   explanation:string;
   alternativesNote:string;
+  periodNote:string;
   reviewedOn:string;
 };
 
-const MONTHS={8:"August",9:"September",10:"October"} as const;
-type ReviewedMonth=keyof typeof MONTHS;
-function verifiedMumbaiWeddingClosure(month:ReviewedMonth):VerifiedMuhuratClosure{
-  const name=MONTHS[month];
-  return {
-    code:`marathi-chaturmas-2026-${name.toLowerCase()}` as VerifiedMuhuratClosure["code"],
-    event:"wedding",
-    year:2026,
-    month,
-    convention:"Customary Marathi marriage calendar",
-    observedPeriod:{from:"2026-07-25",through:"2026-11-20"},
-    reason:"Chaturmas",
-    headline:`No traditional Marathi wedding Muhurat dates in Mumbai in ${name} 2026`,
-    explanation:`${name} 2026 falls wholly inside the Chaturmas period of the reviewed customary Marathi wedding calendar. Under that convention, the month has no recommended marriage dates. A favorable Tithi, Nakshatra, Choghadiya or Abhijit clock period does not override this month-level observance rule. The general lunar/daytime screening model does not constitute a verified Vivaha Muhurat calendar.`,
-    alternativesNote:`Marriage observances differ by community and tradition. Some other calendars and communities allow ceremonies during the months that customary Marathi calendars exclude. This ${name} 2026 result describes one specifically reviewed Marathi convention, not a prohibition for everyone in Mumbai or India.`,
-    reviewedOn:"2026-10-13"
-  };
+function isReviewedYear(value:number):value is ReviewedYear{
+  return value===2025||value===2026||value===2027;
 }
-const REVIEWED_MUMBAI_2026_MONTHS={
-  8:verifiedMumbaiWeddingClosure(8),
-  9:verifiedMumbaiWeddingClosure(9),
-  10:verifiedMumbaiWeddingClosure(10)
-} as const;
+function isReviewedMonth(value:number):value is ReviewedMonth{
+  return value===8||value===9||value===10;
+}
 
-export function getVerifiedMuhuratClosure(event:string,year:number,month:number,city:Pick<City,"slug">):VerifiedMuhuratClosure|null{
-  if(event!=="wedding"||year!==2026||city.slug!=="mumbai")return null;
-  return REVIEWED_MUMBAI_2026_MONTHS[month as ReviewedMonth]??null;
+export function getVerifiedMuhuratClosure(
+  event:string,year:number,month:number,city:Pick<City,"name"|"state"|"slug">
+):VerifiedMuhuratClosure|null{
+  if(event!=="wedding"||city.state!=="Maharashtra"||!isReviewedYear(year)||!isReviewedMonth(month))return null;
+  const monthName=MONTH_NAMES[month];
+  const observedPeriod=year===2026?{from:"2026-07-25",through:"2026-11-20"}:undefined;
+  return {
+    code:`marathi-chaturmas-${year}-${monthName.toLowerCase()}`,
+    event:"wedding",
+    year,
+    month,
+    cityName:city.name,
+    convention:"Customary Marathi marriage calendar",
+    ...(observedPeriod?{observedPeriod}:{}),
+    reason:"Chaturmas",
+    headline:`No traditional Marathi wedding Muhurat dates in ${city.name} in ${monthName} ${year}`,
+    explanation:`The reviewed customary Marathi marriage calendars list no marriage Muhurat days in ${monthName} ${year} during Chaturmas. A favorable Tithi, Nakshatra, Choghadiya or Abhijit clock period cannot, by itself, override this calendar-level restriction for families following that convention. A lunar/daytime screening result must not be called a verified Vivaha Muhurat.`,
+    alternativesNote:`This zero-date result describes the customary Marathi marriage calendar, not a blanket prohibition for every family in ${city.name} or all of India. Community, lineage and local astrologers can use different traditions; the calculation methodology and individual marriage suitability remain distinct questions.`,
+    periodNote:year===2026
+      ?"For the reviewed 2026 Marathi calendar the approximately late-July to late-November Chaturmas observance covers this entire month. Exact start and end instants may differ by calendar convention."
+      :`The independent ${year} calendar references agree this entire month has no customary Marathi wedding Muhurat. Exact Chaturmas boundary instants are not independently established here, so we do not apply a guessed partial-month exclusion.`,
+    reviewedOn:"2026-10-13",
+  };
 }

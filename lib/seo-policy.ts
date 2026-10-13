@@ -128,8 +128,20 @@ export function isMuhuratIndexable(event:string,citySlug?:string){
 export function isMonthlyMuhuratIndexable(event:string,year:number,month:number,citySlug?:string){
   if(!isMuhuratIndexable(event,citySlug))return false;
   const distance=monthDistance(year,month);
-  if(citySlug&&isWave2ControlledCity(citySlug))return distance===0;
-  return distance>=0&&distance<=12;
+  if(distance<0||distance>12)return false;
+  if(citySlug&&isWave2ControlledCity(citySlug)&&distance!==0)return false;
+
+  // Source-reviewed Marathi Aug–Oct ceremony closure is a single shared
+  // STATEWIDE calendar fact, not 25 independent time-sensitive city discoveries.
+  // Keep the full 200-HTML pages followable for local users, but avoid indexing
+  // semantically indistinguishable duplicate titles/bodies. The only indexed
+  // regional representative is /muhurat/wedding/YYYY/MM/mumbai, not the
+  // generic India-baseline route. Distinct daily Panchang pages are unaffected.
+  if(event==="wedding"&&[2025,2026,2027].includes(year)&&[8,9,10].includes(month)){
+    if(!citySlug)return false;
+    if(citySlug!=="mumbai"&&supportedCities.some(city=>city.slug===citySlug&&city.state==="Maharashtra"))return false;
+  }
+  return true;
 }
 
 export function isYearlyMuhuratIndexable(event:string,year:number,citySlug?:string){

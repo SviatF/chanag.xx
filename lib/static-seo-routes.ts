@@ -88,7 +88,7 @@ export const muhuratYearSsgPriority:MuhuratYearStaticParam[]=primaryMuhuratEvent
 const muhuratPriorityMonths=rollingMonths(0,12);
 export const muhuratSsgPriorityCitySlugs=sitemapPriorityCities.map(city=>city.slug);
 export const muhuratMonthSsgPriority:MuhuratMonthStaticParam[]=muhuratPriorityMonths.flatMap(item=>
-  primaryMuhuratEvents.map(event=>({event,year:String(item.year),month:item.slug}))
+  primaryMuhuratEvents.filter(event=>isMonthlyMuhuratIndexable(event,item.year,item.month)).map(event=>({event,year:String(item.year),month:item.slug}))
 );
 export const muhuratCityMonthSsgPriority:MuhuratCityMonthStaticParam[]=muhuratPriorityMonths.flatMap(item=>
   muhuratSsgPriorityCitySlugs.flatMap(city=>
