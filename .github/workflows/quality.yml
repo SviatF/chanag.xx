@@ -45,6 +45,17 @@ jobs:
           path: artifacts/asta-evidence-audit.json
           if-no-files-found: warn
 
+      - name: Compare Asta geometric models (research only)
+        run: npm run research:asta-models
+
+      - name: Upload non-ceremonial Asta model residual report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: asta-wave3o-model-comparison
+          path: artifacts/asta-observer-model-comparison.json
+          if-no-files-found: warn
+
       - name: Build Next.js reference
         run: npm run build:next
 
