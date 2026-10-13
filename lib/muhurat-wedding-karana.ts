@@ -80,7 +80,7 @@ export function screenWeddingVishtiKarana(
 
   const ranges:LocalRange[]=[];
   const prohibited=new Set(["Vishti","Shakuni","Chatushpada","Naga"]);
-  if(prohibited.has(evidence.karana)){
+  if(evidence.karana&&prohibited.has(evidence.karana)){
     ranges.push({start:0,end:Math.min(1440,k)});
   }else if(evidence.karana==="Vanija"&&k<t-1){
     // The moveable Karana sequence is ... Garaja -> Vanija -> Vishti.
