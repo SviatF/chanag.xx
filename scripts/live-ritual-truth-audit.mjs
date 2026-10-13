@@ -18,6 +18,16 @@ for(const [slug,city] of [
   ["kalyan-dombivli","Kalyan-Dombivli"],["vasai-virar","Vasai-Virar"],
   ["aurangabad","Aurangabad"],["navi-mumbai","Navi Mumbai"],["solapur","Solapur"],
 ])requests.push({path:`/muhurat/wedding/2026/10/${slug}`,year:2026,month:"10",name:"October",city});
+// Check source-reviewed house-entry closure independently of Vivah: 2026 only.
+for(const [month,name] of months){
+  for(const [slug,city] of [
+    [null,"Mumbai"],["mumbai","Mumbai"],["pune","Pune"],
+    ["nagpur","Nagpur"],["thane","Thane"],["nashik","Nashik"]
+  ]){
+    const suffix=slug?"/"+slug:"";
+    requests.push({path:`/muhurat/griha-pravesh/2026/${month}${suffix}`,year:2026,month,name,city});
+  }
+}
 const results=[];
 for(const {path,year,month,name,city} of requests){
     let row={path,status:0,verified:false,errors:[],worker:null,workerVersion:null,edge:null,vinext:null,cacheControl:null};
@@ -31,15 +41,18 @@ for(const {path,year,month,name,city} of requests){
       row.edge=response.headers.get("x-panchvani-edge-cache");
       row.vinext=response.headers.get("x-vinext-cache");
       row.cacheControl=response.headers.get("cache-control");
-      const title=`No traditional Marathi wedding Muhurat dates in ${city} in ${name} ${year}`;
+      const isGriha=path.includes("/griha-pravesh/");
+      const title=isGriha
+        ?`No customary Marathi Griha Pravesh Muhurat dates in ${city} in ${name} ${year}`
+        :`No traditional Marathi wedding Muhurat dates in ${city} in ${name} ${year}`;
       if(response.status!==200)row.errors.push(`HTTP ${response.status}`);
       if(!html.includes(title))row.errors.push(`missing reviewed ${name} 2026 zero-date headline`);
-      if(!html.includes("Traditional Marathi marriage dates"))row.errors.push("missing convention-scoped 0-date statement");
-      if(!html.includes("Chaturmas"))row.errors.push("missing Chaturmas reason");
+      if(!html.includes(isGriha?"Traditional Marathi house-entry dates":"Traditional Marathi marriage dates"))row.errors.push("missing event-scoped 0-date statement");
+      if(isGriha?(!html.includes("restricted lunar months")||!html.includes("planetary Asta")):!html.includes("Chaturmas"))row.errors.push("missing event-specific restriction reasons");
       if(!html.includes("Marriage observances differ by community and tradition"))row.errors.push("missing community caveat");
       if(/\b(\d+)\s+dates survive the lunar screen/i.test(html))row.errors.push("stale candidate-date content still published");
       if(/(?:100\/100|Why 2026-10-12 gets)/i.test(html))row.errors.push("stale or fictitious ceremony score still visible");
-      if(!html.includes(`Wedding Muhurat in ${city}`))row.errors.push("unexpected city-specific body");
+      if(!html.includes(`${isGriha?"Griha Pravesh Muhurat":"Wedding Muhurat"} in ${city}`))row.errors.push("unexpected city/event body");
       if(year!==2026&&!html.includes("Exact Chaturmas boundary instants are not independently established"))row.errors.push("invented or missing date uncertainty");
       row.verified=row.errors.length===0;
     }catch(e){row.errors.push("fetch failed: "+String(e));}
@@ -48,6 +61,6 @@ for(const {path,year,month,name,city} of requests){
 }
 const output="artifacts/live-ritual-truth-report.json";
 mkdirSync("artifacts",{recursive:true});
-writeFileSync(output,JSON.stringify({createdAt:new Date().toISOString(),base:BASE,verified:results.filter(x=>x.verified).length,checked:results.length,results,limitations:["A cached response may differ by edge PoP and time; run from multiple regions and compare request headers.","This verifies ONLY these 28 source-reviewed community-calendar URLs, not all PANCHVANI astrology content."]},null,2));
+writeFileSync(output,JSON.stringify({createdAt:new Date().toISOString(),base:BASE,verified:results.filter(x=>x.verified).length,checked:results.length,results,limitations:["A cached response may differ by edge PoP and time; run from multiple regions and compare request headers.","This verifies ONLY the source-reviewed Marathi marriage 2025–27 and house-entry 2026 sample URLs, not all PANCHVANI astrology content."]},null,2));
 console.log("[live-ritual-truth] "+results.filter(x=>x.verified).length+"/"+results.length+" passed; report="+output);
 if(strict&&results.some(x=>!x.verified))process.exitCode=1;
