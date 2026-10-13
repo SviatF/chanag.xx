@@ -2,6 +2,7 @@ import {existsSync,readFileSync,readdirSync} from "node:fs";
 import {gunzipSync} from "node:zlib";
 import {describe,expect,it} from "vitest";
 import {MUHURAT_BUILD_DATA_SHARD_MAX_BYTES,type MuhuratBuildDataShard} from "../lib/muhurat-build-data-schema";
+import {hasCompleteMuhuratLunarBoundaries} from "../lib/muhurat-lunar-transitions";
 import {calendarMonthSsgPriority,muhuratCityMonthSsgPriority,muhuratMonthSsgPriority,muhuratYearSsgPriority} from "../lib/static-seo-routes";
 
 function decodeShard(path:string){
@@ -36,7 +37,7 @@ describe("Muhurat precomputed build-data architecture",()=>{
     let totalTargets=0;
     for(const [index,file] of shardFiles.entries()){
       const {data,base64Length}=decodeShard(`generated/${file}`);
-      expect(data.version).toBe(2);
+      expect(data.version).toBe(3);
       expect(data.shardId).toBe(expectedShardIds[index]);
       expect(data.signature).toMatch(/^[a-f0-9]{64}$/);
       const expectedCities=new Set<string>();
@@ -60,8 +61,9 @@ describe("Muhurat precomputed build-data architecture",()=>{
         expect(rows.length===28||rows.length===29||rows.length===30||rows.length===31).toBe(true);
         for(const row of rows){
           expect(Object.keys(row).sort()).toEqual([
-            "abhijit","date","dayChoghadiya","gulika","nakshatra","rahu","tithi","yamaganda",
+            "abhijit","date","dayChoghadiya","gulika","nakshatra","nakshatraEnd","nakshatraEndDate","rahu","tithi","tithiEnd","tithiEndDate","yamaganda",
           ]);
+          expect(hasCompleteMuhuratLunarBoundaries(row)).toBe(true);
         }
       }
     }
