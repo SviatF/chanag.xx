@@ -2,6 +2,15 @@ name: Content Truth Audit
 
 on:
   workflow_dispatch:
+  pull_request:
+    branches: [main]
+    paths:
+      - "lib/panchang.ts"
+      - "lib/ephemeris-integrity.ts"
+      - "scripts/content-truth-checks.ts"
+      - "tests/fixtures/content-truth-references.ts"
+      - "scripts/content-integrity-audit.ts"
+      - ".github/workflows/content-truth-audit.yml"
   schedule:
     - cron: "33 5 * * 3"
   push:
