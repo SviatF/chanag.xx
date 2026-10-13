@@ -4,6 +4,7 @@ import { type MuhuratPanchangSnapshot } from "./muhurat-build-data-schema";
 import { getPrecomputedMuhuratPanchangMonth } from "./muhurat-precomputed";
 import { getPanchang, Panchang, TimeWindow } from "./panchang";
 import {boundMuhuratWindowsByLunarTransitions,type MuhuratLunarWindowResult} from "./muhurat-lunar-transitions";
+import {getVerifiedMuhuratClosure} from "./verified-muhurat-closures";
 
 export type MuhuratEvent="wedding"|"griha-pravesh"|"vehicle-purchase"|"naming-ceremony"|"business-opening"|"gold-purchase";
 type Rule={title:string;goodTithi:string[];goodNakshatra:string[];idealContinuousMinutes:number;note:string};
@@ -191,6 +192,9 @@ export function buildMuhuratPlanningScore(event:string,windows:RecommendedMuhura
 export async function getMonthlyMuhurat(event:string,year:number,month:number,city:City){
   const rule=muhuratRules[event];
   if(!rule)throw new Error(`Unsupported Muhurat event: ${event}`);
+  // A reviewed ceremony prohibition overrides favorable sunrise/clock screening.
+  // This is locality + tradition + month scoped, not a blanket India calendar.
+  if(getVerifiedMuhuratClosure(event,year,month,city))return {rule,rows:[] as MuhuratRow[]};
   const precomputed=await getPrecomputedMuhuratPanchangMonth(year,month,city);
   const monthPanchang=precomputed??await getMuhuratPanchangMonth(year,month,city);
   const rows:MuhuratRow[]=[];
