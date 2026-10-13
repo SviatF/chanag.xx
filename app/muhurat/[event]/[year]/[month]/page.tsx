@@ -7,6 +7,7 @@ import {cityBySlug} from "@/lib/cities";
 import {getMonthlyMuhurat,muhuratRules} from "@/lib/muhurat";
 import {getMuhuratScoreEvidence} from "@/lib/muhurat-score-evidence";
 import {getVerifiedMuhuratClosure} from "@/lib/verified-muhurat-closures";
+import {getMuhuratVerificationNotice} from "@/lib/muhurat-verification-notice";
 import VerifiedMuhuratClosurePage from "@/components/VerifiedMuhuratClosurePage";
 import {buildMuhuratMonthlyQualityContent} from "@/lib/muhurat-content-engine";
 import {buildMuhuratMonthSimilarityContext} from "@/lib/muhurat-month-similarity-context";
@@ -38,6 +39,7 @@ export default async function MuhuratPage({params}:{params:Promise<{event:string
   const {rows}=await getMonthlyMuhurat(p.event,year,month,city);
   const top=rows[0];
   const scoreEvidence=top?getMuhuratScoreEvidence(top):null;
+  const verification=getMuhuratVerificationNotice(p.event,year,month,city);
   const quality=buildMuhuratMonthlyQualityContent(p.event,year,month,city,rows,"baseline");
   const similarity=buildMuhuratMonthSimilarityContext(p.event,year,month,rows);
   const cityLinks=muhuratCityAuthorityLinks(p.event,year,month);
@@ -51,6 +53,7 @@ export default async function MuhuratPage({params}:{params:Promise<{event:string
     <p className="page-kicker">MUHURAT ANALYSIS · MUMBAI BASELINE</p>
     <h1 className="page-title">{rule.title}<br/>{monthName} {year}</h1>
     <p className="page-subtitle">{quality.directAnswer}</p>
+    <section className="wide-panel"><div className="seo-copy"><small>BASELINE RITUAL VERIFICATION · {p.event.toUpperCase()}</small><h2>{verification.headline}</h2><p>{verification.explanation}</p></div></section>
 
     <div className="data-grid">{quality.facts.map(item=><div className="data-card" key={item.label}><small>{item.label}</small><strong>{item.value}</strong>{item.note?<small>{item.note}</small>:null}</div>)}</div>
 
