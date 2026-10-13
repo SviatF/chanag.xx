@@ -2,11 +2,11 @@ import type {Panchang} from "./panchang";
 import type {TruthReference} from "./content-truth-references";
 type Finding={field:string;severity:"error"|"warning";explanation:string};
 function clock(value:string):number|null{
-  const m=/^([01]\\d|2[0-3]):([0-5]\\d)$/.exec(value);
+  const m=/^([01]\d|2[0-3]):([0-5]\d)$/.exec(value);
   return m?Number(m[1])*60+Number(m[2]):null;
 }
 function dayDistance(start:string,end:string):number|null{
-  if(!/^\\d{4}-\\d{2}-\\d{2}$/.test(start)||!/^\\d{4}-\\d{2}-\\d{2}$/.test(end))return null;
+  if(!/^\d{4}-\d{2}-\d{2}$/.test(start)||!/^\d{4}-\d{2}-\d{2}$/.test(end))return null;
   const x=Date.parse(start+"T00:00:00Z"),y=Date.parse(end+"T00:00:00Z");
   return Number.isFinite(x)&&Number.isFinite(y)?Math.round((y-x)/86400000):null;
 }
@@ -18,7 +18,7 @@ function duration(start:string,end:string):number|null{
 export function checkPanchangIntegrity(data:Panchang):Finding[]{
   const result:Finding[]=[];
   const fail=(field:string,explanation:string)=>result.push({field,severity:"error",explanation});
-  if(!/^\\d{4}-\\d{2}-\\d{2}$/.test(data.date))fail("date","Invalid civil date");
+  if(!/^\d{4}-\d{2}-\d{2}$/.test(data.date))fail("date","Invalid civil date");
   const daylight=duration(data.sunrise,data.sunset);
   if(daylight===null||daylight<500||daylight>950)fail("solar-day",`Implausible India-local sunrise/sunset span: ${data.sunrise}–${data.sunset}`);
   for(const [field,window] of [["rahu",data.rahu],["yamaganda",data.yamaganda],["gulika",data.gulika]] as const){
