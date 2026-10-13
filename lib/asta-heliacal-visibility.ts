@@ -5,7 +5,7 @@
  */
 export type TwilightBand="daylight"|"civil"|"nautical"|"astronomical"|"night";
 export type VisibilityProfile={
-  id:"clear"|"hazy"|"high-altitude";
+  id:"clear"|"hazy"|"low-pressure";
   pressureHpa:number;
   temperatureC:number;
   humidityPct:number;
@@ -15,7 +15,7 @@ export type VisibilityProfile={
 export const ASTA_ATMOSPHERE_SCENARIOS:readonly VisibilityProfile[]=[
   {id:"clear",pressureHpa:1013.25,temperatureC:20,humidityPct:40,meteorologicalRangeKm:40,horizonObstructionDegrees:0},
   {id:"hazy",pressureHpa:1000,temperatureC:32,humidityPct:75,meteorologicalRangeKm:10,horizonObstructionDegrees:2},
-  {id:"high-altitude",pressureHpa:900,temperatureC:12,humidityPct:30,meteorologicalRangeKm:80,horizonObstructionDegrees:0}
+  {id:"low-pressure",pressureHpa:900,temperatureC:12,humidityPct:30,meteorologicalRangeKm:80,horizonObstructionDegrees:0}
 ] as const;
 
 export type AstaSkySample={
