@@ -72,7 +72,7 @@ describe("Muhurat Engine 2.0 local windows",()=>{
 
   it("returns qualified monthly rows ordered by planning score",async()=>{
     const city=findCityBySlug("mumbai")!;
-    const {rows}=await getMonthlyMuhurat("wedding",2026,9,city);
+    const {rows}=await getMonthlyMuhurat("wedding",2026,5,city);
 
     expect(rows.length).toBeGreaterThan(0);
     for(let index=1;index<rows.length;index++){
