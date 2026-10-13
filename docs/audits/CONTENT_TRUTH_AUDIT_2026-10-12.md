@@ -1,0 +1,65 @@
+# PANCHVANI — factual integrity and useful-content audit
+
+Status: Wave 0 implemented, further factual auditing pending.
+Scope: live indexable sitemap (3,350 pages as of 2026-10-12), not all routable future pages.
+Goal: establish whether facts, dates, local calculations and decision-making content are correct and useful.
+
+## What the current quality gate actually proves
+The existing rendered content audit verifies sitemap fetch success, self-canonical, indexability,
+hreflang, disclaimer-style copy, superficial length and normalized textual similarity.
+This does NOT establish factual correctness, original research, accurate festival timings
+or meaningful value for users.
+
+## Wave plan and priority
+1. **Daily / Choghadiya (P1):** multi-city/date astronomical invariants, verified Swiss Ephemeris
+   sampling with independently transcribed dated sources, solar/lunar events with civil dates.
+2. **Festival pages (P1):** independently source date/region/observance criteria; check
+   Tithi, Nakshatra, actual Muhurat vs sunrise/daylight *reference*; avoid fabricated ritual windows.
+3. **Muhurat (P1):** independently assess ceremony eligibility and selected Tithi/Nakshatra,
+   reconsider meaning of planning score/100, avoid presenting heuristic as certified muhurat.
+4. **Vrat / Calendar (P2):** cross-check moon phases and observance precedence at sunrise,
+   year/month turnovers including Adhika/Purnimanta vs Amanta.
+5. **Regional / tools / knowledge (P2):** genuine local distinctions, languages, verified tool
+   calculations and source evidence.
+6. **All URLs (P2):** content specificity, per-family decision usefulness and effective information
+   gain, normalize location tokens when assessing similarity; preserve indexability policy.
+
+## Confirmed architectural risks requiring review
+- `lib/panchang.ts` uses fallback Julian dates if `sweRiseTrans` fails and falls back to
+  sunrise minus ~29.5 days when previous new Moon resolution fails. These must not be
+  silently published as facts; replace in a scoped patch after checking date/city coverage.
+- `lib/festivals.ts` dates are a manually maintained 2026/2027 ledger; automatic lunar calculation
+  does not independently establish observance dates in all traditions/regions.
+- `lib/muhurat.ts` 0–100 is an internally weighted heuristic based on clean windows and source counts,
+  not an external, universally validated measure of auspiciousness.
+- The external Panchang regression fixture covers a handful of city/date observations, not
+  all 25 active cities and all listed dates.
+- Unique wording is not proof of genuine unique information or decision-making value.
+
+## Wave 0 controls
+`tests/fixtures/content-truth-references.ts`: external source observations; don't update to satisfy a test.
+`scripts/content-truth-checks.ts`: chronology/invariants and independent snapshot comparison.
+`npm run audit:truth`: 25 city x 5 event dates plus source comparisons; JSON audit artifact.
+`Content Truth Audit` workflow: weekly + manual + changed-code push.
+A sampled PASS is NOT certification of 3,350 URLs; failures remain visible and actionable.
+
+## Sourcing policy
+Use cited, date-stamped source per festival/district and record different traditions.
+Swiss Ephemeris position calculations and validated external observance rules must be
+treated separately. For public pages, show only specific, verified user-facing facts;
+do not replace missing calculations with fabricated ritual clocks or generic text.
+Public pages do not gain disclaimer-style boilerplate from this audit.
+
+## Safe deployment
+Never bulk-create new URLs, expand cities, or globally change robots/canonical during
+content integrity work. Patch by family, with before/after tests, quality gate and
+controlled GSC outcome tracking. Report unresolved source conflicts explicitly.
+
+## First independently detected semantic conflict
+On 2026-09-14 Ahmedabad's Ganesh Chaturthi festival date, the source reports
+Chaturthi begins approximately 07:06 local time *after sunrise*. The actual
+sunrise-state is Tritiya, ending approximately 07:08 in Panchvani. This is not
+an astronomical mismatch. Festival pages that show only sunrise Tithi beside
+the festival date can mislead users without explicitly showing the transition.
+Follow up in Wave 2 with a general festival-rule-aware presentation of
+festival-Tithi transition (no per-city hardcoded SEO text).

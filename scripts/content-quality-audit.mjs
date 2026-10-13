@@ -180,9 +180,21 @@ async function mapLimit(items,limit,worker){
   return results;
 }
 
+function factualEvidenceSignals(html,text){
+  // Evidence density != correctness; these counts only identify candidates for review.
+  // Count unique concrete values instead of rewarding repetitions of the same clock.
+  const clocks=[...new Set(text.match(/\b(?:[01]?\d|2[0-3]):[0-5]\d\b/g)||[])];
+  const isoDates=[...new Set(text.match(/\b20\d{2}-\d{2}-\d{2}\b/g)||[])];
+  const factualCards=[...html.matchAll(/<div\b[^>]*class=["'][^"']*\bdata-card\b[^"']*["'][^>]*>/gi)].length;
+  const dataRows=[...html.matchAll(/<tr\b/gi)].length;
+  const sections=[...html.matchAll(/<h[2-4]\b/gi)].length;
+  return {distinctClockValues:clocks.length,distinctIsoDates:isoDates.length,factualCards,dataRows,sections};
+}
+
 function auditPage(pathname,html){
   const classification=classify(pathname);
   const text=primaryText(html);
+  const factualEvidence=factualEvidenceSignals(html,text);
   const words=normalizeWords(text,pathname);
   const canonical=extractCanonical(html);
   const canonicalPath=canonical?absolutePath(canonical):null;
@@ -211,6 +223,7 @@ function auditPage(pathname,html){
     alternates,
     robots,
     h1,
+    factualEvidence,
     wordCount:words.length,
     normalizedHash:sha(words.join(" ")),
     normalizedWords:words,
@@ -285,6 +298,11 @@ const familySummary={};
 for(const page of pages){
   const entry=familySummary[page.family]??={pages:0,issues:0,warnings:0,disclaimerPages:0};
   entry.pages++;entry.issues+=page.issues.length;entry.warnings+=page.warnings.length;if(page.disclaimerHits.length)entry.disclaimerPages++;
+  entry.evidenceTotals??={distinctClockValues:0,distinctIsoDates:0,factualCards:0,dataRows:0,sections:0};
+  for(const key of Object.keys(entry.evidenceTotals))entry.evidenceTotals[key]+=page.factualEvidence[key];
+  if(page.factualEvidence.distinctClockValues===0&&["panchang-daily","festival-city","muhurat-city-month","choghadiya-city"].includes(page.family)){
+    entry.noExplicitClockPages=(entry.noExplicitClockPages??0)+1;
+  }
 }
 for(const pair of similarityPairs){
   const family=pair.group.split("::")[0];
@@ -305,6 +323,7 @@ const report={
     disclaimerPages:pages.filter(page=>page.disclaimerHits.length).length,
   },
   familySummary,
+  evidenceNote:"Quantitative evidence counts are observation and prioritization only, not independent fact verification.",
   fetchErrors,
   structuralIssues,
   hreflangIssues,
