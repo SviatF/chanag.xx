@@ -26,6 +26,13 @@ export const festivalCatalogSlugs=festivalCatalog.map(item=>item.slug);
 export const festivalDatasetYears=Object.keys(festivalsByYear).map(Number).sort((a,b)=>a-b);
 const catalogSlugSet=new Set(festivalCatalogSlugs);
 
+/**
+ * Explicit publication gate, separate from date-ledger completeness.
+ * Completing a future year's records MUST NOT silently open hundreds of
+ * festival/city URLs while search crawling recovers.
+ */
+const releasedFestivalIndexYears=new Set([2026]);
+
 function validIsoDate(value:string,year:number){
   if(!/^\d{4}-\d{2}-\d{2}$/.test(value))return false;
   const date=new Date(value+"T00:00:00Z");
@@ -60,7 +67,7 @@ export function festivalDateIsValidated(slug:string,year:number){
 
 export function festivalIndexYears(){
   const current=todayInIndia().getUTCFullYear();
-  return festivalDatasetYears.filter(year=>year>=current-1&&year<=current+2&&validateFestivalYear(year).valid);
+  return festivalDatasetYears.filter(year=>releasedFestivalIndexYears.has(year)&&year>=current-1&&year<=current+2&&validateFestivalYear(year).valid);
 }
 
 export function festivalPageIsIndexable(slug:string,year:number){

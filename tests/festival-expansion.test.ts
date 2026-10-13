@@ -19,15 +19,17 @@ describe("Demand-led festival expansion registry",()=>{
     expect(coverage.valid).toBe(true);
   });
 
-  it("reports incomplete 2027 coverage and blocks the year from indexation",()=>{
+  it("keeps a complete 2027 date ledger separate from explicit index activation",()=>{
     const coverage=validateFestivalYear(2027);
-    expect(coverage.valid).toBe(false);
-    expect(coverage.present).toBeLessThan(coverage.expected);
-    expect(coverage.missing).toContain("dhanteras");
-    expect(coverage.missing).toContain("chhath-puja");
+    expect(coverage.valid).toBe(true);
+    expect(coverage.present).toBe(coverage.expected);
+    expect(coverage.missing).toEqual([]);
+    expect(coverage.issues).toEqual([]);
     expect(festivalDateIsValidated("diwali",2027)).toBe(true);
-    expect(festivalDateIsValidated("dhanteras",2027)).toBe(false);
+    expect(festivalDateIsValidated("dhanteras",2027)).toBe(true);
+    expect(festivalDateIsValidated("chhath-puja",2027)).toBe(true);
     expect(festivalPageIsIndexable("diwali",2027)).toBe(false);
+    expect(festivalPageIsIndexable("chhath-puja",2027)).toBe(false);
   });
 
   it("does not expose absent future years as validated festival pages",()=>{
@@ -36,7 +38,7 @@ describe("Demand-led festival expansion registry",()=>{
     expect(festivalPageIsIndexable("diwali",2028)).toBe(false);
   });
 
-  it("keeps index years inside complete dataset coverage only",()=>{
+  it("requires explicit SEO release even after year data becomes complete",()=>{
     const years=festivalIndexYears();
     expect(years).toContain(2026);
     expect(years).not.toContain(2027);
@@ -50,7 +52,7 @@ describe("Demand-led festival expansion registry",()=>{
     expect(festivalDateIsValidated("unknown-festival",2026)).toBe(false);
   });
 
-  it("returns no next festival from an incomplete future year",()=>{
+  it("returns no next festival from a complete but unreleased future year",()=>{
     expect(nextValidatedFestival(new Date("2026-11-16T06:00:00Z"))).toBeNull();
     expect(nextValidatedFestival(new Date("2027-01-01T06:00:00Z"))).toBeNull();
   });

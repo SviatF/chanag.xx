@@ -4,6 +4,7 @@ import type {Panchang} from "./panchang";
 import type {LunarMonthConventions} from "./calendar-conventions";
 import type {FestivalLocalReference} from "./religious-integrity";
 import {getFestivalTithiEvidence} from "./festival-lunar-evidence";
+import {addIsoDays} from "./india-time";
 import {formatPanchangTime,formatWindow} from "./panchang";
 
 export type FestivalCityQualityContent={
@@ -80,6 +81,17 @@ const regionalContext:Record<string,Partial<Record<string,string>>>= {
   },
 };
 
+/**
+ * The final night Choghadiya segment ends at *next* local sunrise.
+ * Only return it when the existing astronomical night clearly rolls to +1 day.
+ */
+export function chhathFollowingSunrise(data:Panchang):{date:string;time:string}|null{
+  const periods=data.nightChoghadiya;
+  const last=periods.at(-1);
+  if(periods.length!==8||periods[0]?.start!==data.sunset||!last||last.endDayOffset!==1||!/^([01][0-9]|2[0-3]):[0-5][0-9]$/.test(last.end))return null;
+  return {date:addIsoDays(data.date,1),time:last.end};
+}
+
 function ritualCopy(festival:Festival,data:Panchang,localReference:FestivalLocalReference){
   const tithiEnd=formatPanchangTime(data.tithiEnd,data.tithiEndDate,data.date);
   const nakshatraEnd=formatPanchangTime(data.nakshatraEnd,data.nakshatraEndDate,data.date);
@@ -121,7 +133,7 @@ function ritualCopy(festival:Festival,data:Panchang,localReference:FestivalLocal
     case "bhai-dooj":
       return {title:"Bhai Dooj local Panchang",body:`Bhai Dooj is tied to Shukla Dwitiya in the post-Diwali sequence. The city calculation shows ${data.tithi} until ${tithiEnd}, ${data.nakshatra} until ${nakshatraEnd} and local sunrise ${data.sunrise}.`};
     case "chhath-puja":
-      return {title:"Chhath solar timings",body:`Chhath is directly tied to offerings to the setting and rising Sun, so local solar timing is central rather than secondary. For this city, sunset is ${data.sunset}; the page also records sunrise ${data.sunrise} and the surrounding Panchang state.`};
+      return {title:"Chhath sunset and next sunrise",body:`On ${data.date}, Sandhya Arghya uses the local sunset at ${data.sunset}. ${chhathFollowingSunrise(data)?`Usha Arghya follows at the next sunrise, ${chhathFollowingSunrise(data)!.time} on ${chhathFollowingSunrise(data)!.date}.`:"The next local sunrise was not available in the calculated night sequence."} The sunrise at ${data.sunrise} belongs to the festival date itself, not the following morning.`};
     default:
       return {title:`${festival.name} local Panchang`,body:`The city calculation shows ${data.tithi} until ${tithiEnd}, ${data.nakshatra} until ${nakshatraEnd}, sunrise ${data.sunrise}, sunset ${data.sunset} and Rahu Kalam ${formatWindow(data.rahu)}.`};
   }
@@ -145,6 +157,10 @@ export function buildFestivalCityQualityContent(festival:Festival,city:City,data
   ];
   if(tithiEvidence.value&&tithiEvidence.label)directFacts.push({label:tithiEvidence.label,value:tithiEvidence.value,note:"Calculated first Tithi transition"});
   if(localReference)directFacts.push({label:localReference.label,value:localReference.value,note:"Festival-specific local reference"});
+  if(festival.slug==="chhath-puja"){
+    const following=chhathFollowingSunrise(data);
+    if(following)directFacts.push({label:"Usha Arghya · next sunrise",value:following.time,note:following.date});
+  }
 
   return {
     directAnswer,

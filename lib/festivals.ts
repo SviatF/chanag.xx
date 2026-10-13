@@ -145,8 +145,9 @@ const dates:Record<number,Record<string,string>>={
     "chaitra-navratri":"2027-04-07","rama-navami":"2027-04-15","hanuman-jayanti":"2027-04-20",
     "akshaya-tritiya":"2027-05-09","guru-purnima":"2027-07-18","raksha-bandhan":"2027-08-17",
     "janmashtami":"2027-08-25","ganesh-chaturthi":"2027-09-04","shardiya-navratri":"2027-09-30",
-    "dussehra":"2027-10-09","karwa-chauth":"2027-10-18","diwali":"2027-10-29",
-    "govardhan-puja":"2027-10-30","bhai-dooj":"2027-10-31"
+    "dussehra":"2027-10-09","karwa-chauth":"2027-10-18","dhanteras":"2027-10-27",
+    "diwali":"2027-10-29","govardhan-puja":"2027-10-30","bhai-dooj":"2027-10-31",
+    "chhath-puja":"2027-11-04"
   }
 };
 

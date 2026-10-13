@@ -45,3 +45,7 @@
   backlog are reviewed.
 - Run the full rendered sitemap audit for structural and text similarity after
   each patch.
+
+
+## Wave 2B follow-up
+Added source-backed Dhanteras and Chhath 2027 dates, while freezing future-year publication via an explicit allowlist. Chhath sunset Arghya now links to the actual following sunrise instead of festival-day sunrise. Full 2026/27 festival×city audit runs with a separate ritual-profile screening. See `docs/audits/FESTIVAL_WAVE2B_2026-10-13.md`.
