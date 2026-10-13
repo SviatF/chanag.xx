@@ -15,6 +15,7 @@ import {muhuratRelativeEndMinutes} from "./muhurat-lunar-transitions";
  */
 export type WeddingKaranaEvidence={
   date:string;
+  tithi?:string;
   karana?:string;
   karanaEnd?:string;
   karanaEndDate?:string|null;
@@ -64,8 +65,34 @@ const KNOWN_KARANAS=new Set(["Kimstughna","Bava","Balava","Kaulava","Taitila","G
 export function hasCompleteWeddingKaranaEvidence(evidence:WeddingKaranaEvidence):boolean{
   const k=muhuratRelativeEndMinutes(evidence.date,evidence.karanaEndDate,evidence.karanaEnd);
   const t=muhuratRelativeEndMinutes(evidence.date,evidence.tithiEndDate,evidence.tithiEnd);
-  return typeof evidence.karana==="string"&&KNOWN_KARANAS.has(evidence.karana)&&
-    k!==null&&t!==null&&k>0&&t>0&&k<=t+1;
+  if(typeof evidence.karana!=="string"||!KNOWN_KARANAS.has(evidence.karana)||
+    k===null||t===null||k<=0||t<=0||k>t+1)return false;
+
+  // Every Vishti is the second Karana of its Tithi, as are the fixed
+  // Shakuni and Naga. They cannot finish hours before their parent Tithi.
+  // One minute compensates for independently rounded displayed clocks.
+  if(["Vishti","Shakuni","Naga"].includes(evidence.karana)&&Math.abs(k-t)>1)return false;
+  // Chatushpada is the FIRST half of Amavasya, followed by prohibited Naga.
+  if(evidence.karana==="Chatushpada"&&t-k<=1)return false;
+
+  // When the snapshot includes Tithi, check the fixed Karana alignment.
+  // Missing Tithi alone does not authorize a ceremony: this is only an
+  // additional consistency check, not a full Muhurat approval rule.
+  const fixedTithi:Record<string,string>={
+    Shakuni:"Chaturdashi",Chatushpada:"Amavasya",
+    Naga:"Amavasya",Kimstughna:"Pratipada"
+  };
+  if(evidence.tithi&&fixedTithi[evidence.karana]&&
+    evidence.tithi!==fixedTithi[evidence.karana])return false;
+  return true;
+}
+
+/** Human-readable reason must match the Karana actually excluded. */
+export function weddingKaranaBlockLabel(karana:string):string{
+  if(karana==="Shakuni")return "Shakuni Karana";
+  if(karana==="Chatushpada")return "Chatushpada and Naga Karana";
+  if(karana==="Naga")return "Naga Karana";
+  return "Vishti Karana (Bhadra)";
 }
 export function screenWeddingVishtiKarana(
   evidence:WeddingKaranaEvidence,
