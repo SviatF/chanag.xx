@@ -3,6 +3,7 @@ import {describe,expect,it} from "vitest";
 import {findCityBySlug} from "../lib/cities";
 import {getVerifiedMuhuratClosure} from "../lib/verified-muhurat-closures";
 import {getMonthlyMuhurat} from "../lib/muhurat";
+import {reviewedMarathiMarriageOctober2026} from "./fixtures/muhurat-closure-2026-evidence";
 const mumbai=findCityBySlug("mumbai")!;
 const delhi=findCityBySlug("delhi")!;
 const pune=findCityBySlug("pune")!;
@@ -10,7 +11,9 @@ describe("Conventional Marathi wedding calendar — October 2026",()=>{
   it("records audited sources and limits the closure to the explicitly reviewed Mumbai city-month",()=>{
     const closed=getVerifiedMuhuratClosure("wedding",2026,10,mumbai);
     expect(closed?.reason).toBe("Chaturmas");
-    expect(closed?.sourceUrls).toHaveLength(3);
+    expect(reviewedMarathiMarriageOctober2026.sources).toHaveLength(4);
+    expect(reviewedMarathiMarriageOctober2026.sources.filter(s=>s.verdict==="zero")).toHaveLength(3);
+    expect(reviewedMarathiMarriageOctober2026.sources.some(s=>s.verdict.includes("conflict"))).toBe(true);
     expect(closed?.observedPeriod).toEqual({from:"2026-07-25",through:"2026-11-20"});
     for(const city of [delhi,pune]){
       expect(getVerifiedMuhuratClosure("wedding",2026,10,city)).toBeNull();
