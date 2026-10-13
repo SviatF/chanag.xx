@@ -29,7 +29,7 @@ describe("Reviewed Marathi marriage calendar by state, year and month",()=>{
       expect(independent).toBeDefined();
       expect(independent?.months).toEqual([8,9,10]);
       expect(independent?.verdict).toContain("zero");
-      expect(independent?.notes).toContain("not municipality");
+      expect(independent?.location).toContain("not city-specific");
     }
   });
   it("only applies a named community convention to supported Maharashtra localities",()=>{
