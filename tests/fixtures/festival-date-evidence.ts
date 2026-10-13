@@ -53,3 +53,20 @@ export const festivalDateEvidence:readonly FestivalDateReference[]=[
   {slug:"bhai-dooj",year:2027,date:"2027-10-31",source:delhi2027,sourceLocality:"Delhi, NCT, India",observedOn:"2026-10-13"},
   {slug:"chhath-puja",year:2027,date:"2027-11-04",source:delhi2027,sourceLocality:"Delhi, NCT, India",observedOn:"2026-10-13"},
 ] as const;
+
+
+/**
+ * Second-publisher cross-checks. These do NOT inflate the 38 unique primary
+ * records in festivalDateEvidence. Prokerala describes a general Indian
+ * calendar, not per-city ritual timing, and is independent of Drik's ledger.
+ * Every row is checked separately by the Festival Truth Audit.
+ */
+export const independentFestivalDateChecks:readonly FestivalDateReference[]=[
+  {slug:"ganesh-chaturthi",year:2026,date:"2026-09-14",source:"https://www.prokerala.com/festivals/ganesh-chaturthi.html",sourceLocality:"Prokerala India-wide festival date reference",observedOn:"2026-10-13"},
+  {slug:"ganesh-chaturthi",year:2027,date:"2027-09-04",source:"https://www.prokerala.com/calendar/hinducalendar-2027.html",sourceLocality:"Prokerala general Hindu calendar 2027",observedOn:"2026-10-13"},
+  {slug:"dussehra",year:2027,date:"2027-10-09",source:"https://www.prokerala.com/calendar/hinducalendar-2027.html",sourceLocality:"Prokerala general Hindu calendar 2027",observedOn:"2026-10-13"},
+  {slug:"karwa-chauth",year:2027,date:"2027-10-18",source:"https://www.prokerala.com/calendar/hinducalendar-2027.html",sourceLocality:"Prokerala general Hindu calendar 2027",observedOn:"2026-10-13"},
+  {slug:"diwali",year:2027,date:"2027-10-29",source:"https://www.prokerala.com/calendar/hinducalendar-2027.html",sourceLocality:"Prokerala general Hindu calendar 2027",observedOn:"2026-10-13"},
+  {slug:"govardhan-puja",year:2027,date:"2027-10-30",source:"https://www.prokerala.com/calendar/hinducalendar-2027.html",sourceLocality:"Prokerala general Hindu calendar 2027",observedOn:"2026-10-13"},
+  {slug:"bhai-dooj",year:2027,date:"2027-10-31",source:"https://www.prokerala.com/calendar/hinducalendar-2027.html",sourceLocality:"Prokerala general Hindu calendar 2027",observedOn:"2026-10-13"},
+] as const;
