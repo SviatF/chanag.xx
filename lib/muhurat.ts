@@ -3,6 +3,7 @@ import { createBoundedPromiseCache } from "./bounded-promise-cache";
 import { type MuhuratPanchangSnapshot } from "./muhurat-build-data-schema";
 import { getPrecomputedMuhuratPanchangMonth } from "./muhurat-precomputed";
 import { getPanchang, Panchang, TimeWindow } from "./panchang";
+import {boundMuhuratWindowsByLunarTransitions,type MuhuratLunarWindowResult} from "./muhurat-lunar-transitions";
 
 export type MuhuratEvent="wedding"|"griha-pravesh"|"vehicle-purchase"|"naming-ceremony"|"business-opening"|"gold-purchase";
 type Rule={title:string;goodTithi:string[];goodNakshatra:string[];idealContinuousMinutes:number;note:string};
@@ -30,6 +31,8 @@ export type MuhuratRow={
   date:string;
   data:MuhuratPanchangSnapshot;
   recommendedWindows:RecommendedMuhuratWindow[];
+  /** Sunrise-only for V2 precomputed rows; lunar-bounded when actual transition instants exist. */
+  lunarEvidenceStatus?:MuhuratLunarWindowResult["status"];
   avoidWindows:{label:string;window:TimeWindow}[];
   reasons:string[];
   planning:MuhuratPlanningScore;
@@ -193,11 +196,15 @@ export async function getMonthlyMuhurat(event:string,year:number,month:number,ci
   const rows:MuhuratRow[]=[];
   for(const data of monthPanchang){
     if(!rule.goodTithi.includes(data.tithi)||!rule.goodNakshatra.includes(data.nakshatra))continue;
-    const recommendedWindows=buildRecommendedMuhuratWindows(data);
+    // V2 build data lacks end instants: keep clearly non-certified reference clocks.
+    // Full live Panchang rows contain dated transitions and are clipped fail-closed.
+    const lunar=boundMuhuratWindowsByLunarTransitions(data,buildRecommendedMuhuratWindows(data));
+    const recommendedWindows=lunar.windows;
     rows.push({
       date:data.date,
       data,
       recommendedWindows,
+      lunarEvidenceStatus:lunar.status,
       avoidWindows:[
         {label:"Rahu Kalam",window:data.rahu},
         {label:"Yamaganda",window:data.yamaganda},
