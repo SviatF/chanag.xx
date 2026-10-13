@@ -95,3 +95,11 @@ festival-Tithi transition (no per-city hardcoded SEO text).
   eligibility certificate.
 - Drik source Rakhi 2026: https://www.drikpanchang.com/hindu-festivals/rakhi/rakhi.html?time-format=24hour
 - Drik source New Delhi 2027: https://www.drikpanchang.com/festivals/raksha-bandhan/raksha-bandhan-date-time.html?geoname-id=1261481&year=2027
+
+
+## Wave 2F completed scope (2026-10-13)
+Janmashtami Ashtami/Nishita intersection and Diwali Amavasya/Pradosh
+intersection use two sunrise records for 25 cities × 2026/2027.
+Important 2027 Janmashtami no-overlap and Diwali partial-overlap cases
+are visible. Do not mistake these for fully certified ritual Muhurat.
+Details: docs/audits/FESTIVAL_WAVE2F_2026-10-13.md

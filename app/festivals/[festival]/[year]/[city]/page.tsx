@@ -12,6 +12,8 @@ import {festivalBySlugYear} from "@/lib/festivals";
 import {getFestivalSemantics} from "@/lib/festival-conventions";
 import {festivalCityPageIsIndexable,festivalYearSiblings} from "@/lib/festival-expansion";
 import {formatPanchangTime,getPanchang} from "@/lib/panchang";
+import {addIsoDays,formatDatedTime} from "@/lib/india-time";
+import {festivalNightEligibility} from "@/lib/festival-night-eligibility";
 import {getFestivalLocalReference} from "@/lib/religious-integrity";
 import {rakhiBhadraAtSunrise} from "@/lib/rakhi-bhadra-evidence";
 import {getRegionalFestivalObservance} from "@/lib/festival-regional-observances";
@@ -58,6 +60,9 @@ export default async function Page({params}:{params:Promise<{festival:string;yea
 
   const date=new Date(`${festival.date}T06:00:00Z`);
   const data=await getPanchang(date,city);
+  const nightKind=festival.slug==="janmashtami"||festival.slug==="diwali"?festival.slug:null;
+  const nextNightDay=nightKind?await getPanchang(new Date(`${addIsoDays(festival.date,1)}T06:00:00Z`),city):null;
+  const nightEvidence=nightKind&&nextNightDay?festivalNightEligibility(nightKind,data,nextNightDay):null;
   const lunar=getLunarMonthConventions(date,city,data);
   const semantics=getFestivalSemantics(festival);
   const localReference=getFestivalLocalReference(festival,data);
@@ -107,6 +112,20 @@ export default async function Page({params}:{params:Promise<{festival:string;yea
       {rakhiEvidence.status==="purnima-bhadra-cleared"
         ?<p>Rakhi planning reference for {festival.date}: {rakhiEvidence.start}–{rakhiEvidence.end}. This local interval is derived from sunrise, Purnima ending and Bava Karana; it is not a generic Choghadiya period or a substitute for full ritual eligibility checks.</p>
         :<p>The required Karana/Tithi evidence does not establish a Bhadra-free Rakhi interval for this date.</p>}
+    </div></section>:null}
+
+    {nightEvidence?<section className="wide-panel"><div className="seo-copy">
+      <small>{nightEvidence.kind==="diwali"?"DIWALI · AMAVASYA / PRADOSH":"JANMASHTAMI · ASHTAMI / NISHITA"} · {city.name.toUpperCase()}</small>
+      <h2>{nightEvidence.label} and {nightEvidence.tithiLabel} in {city.name}</h2>
+      <div className="data-grid">
+        <div className="data-card"><small>{nightEvidence.label}</small><strong>{formatDatedTime(nightEvidence.period.start,nightEvidence.period.startDate,festival.date)} – {formatDatedTime(nightEvidence.period.end,nightEvidence.period.endDate,festival.date)}</strong></div>
+        <div className="data-card"><small>Relevant Tithi ends</small><strong>{nightEvidence.tithiEnd??"Not verified"}</strong></div>
+        <div className="data-card"><small>{nightEvidence.status==="none"?"Tithi overlap":"Verified Tithi overlap"}</small><strong>{nightEvidence.overlap?`${formatDatedTime(nightEvidence.overlap.start,nightEvidence.overlap.startDate,festival.date)} – ${formatDatedTime(nightEvidence.overlap.end,nightEvidence.overlap.endDate,festival.date)}`:nightEvidence.status==="none"?"No overlap":"Not established"}</strong></div>
+      </div>
+      <p>{nightEvidence.explanation}</p>
+      <p>{nightEvidence.kind==="diwali"
+        ?"This is the calculated Amavasya–Pradosh intersection, not an exact Lakshmi Puja Muhurat: Sthir Lagna is not yet evaluated."
+        :"The Janmashtami observance date and fasting may depend on Smarta/Vaishnava rules and Rohini. Nishita alone is not a certified Puja Muhurat."}</p>
     </div></section>:null}
 
     {nextChhathSunrise?<section className="wide-panel"><div className="seo-copy">
