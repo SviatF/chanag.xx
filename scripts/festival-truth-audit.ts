@@ -5,7 +5,7 @@ import {findCityBySlug} from "../lib/cities";
 import {activeIndexCitySlugs} from "../lib/seo-policy";
 import {getPanchang} from "../lib/panchang";
 import {getFestivalTithiEvidence} from "../lib/festival-lunar-evidence";
-import {festivalDateEvidence} from "../tests/fixtures/festival-date-evidence";
+import {festivalDateEvidence,festivalTraditionDateEvidence} from "../tests/fixtures/festival-date-evidence";
 import {chhathFollowingSunrise} from "../lib/festival-content-engine";
 import {getFestivalLocalReference,getFestivalRuleProfile} from "../lib/religious-integrity";
 
@@ -30,6 +30,10 @@ const sourceCoverage=[2026,2027].map(year=>{
   return {year,maintained:festivalsForYear(year).length,sourced:supported.length,
     distinctSourceUrls:new Set(supported.map(r=>r.source)).size};
 });
+const variants=festivalTraditionDateEvidence.map(({slug,year,tradition,date,source})=>({
+  slug,year,tradition,date,source,mainDate:festivalBySlugYear(slug,year)?.date??null,
+  isAlternativeDate:festivalBySlugYear(slug,year)?.date!==date
+}));
 const cities=activeIndexCitySlugs();
 const counts:Record<string,number>={};
 const flagged:Array<{city:string;festival:string;date:string;status:string;sunriseTithi:string;transition:string}>=[];
@@ -68,7 +72,7 @@ const report={
   checked,cityCount:cities.length,catalogSlugs:festivalCatalogSlugs.length,years:coverage,
   classificationCounts:counts,
   ritualScreening:{...ritualScreening,notCertifiedRituals:[...ritualScreening.notCertifiedRituals].sort()},
-  sourceComparison:{references:festivalDateEvidence.length,sourceCoverage,unreferencedDates,sourceDuplicateKeys,missingSourcedDates,authoritativeDisagreements},
+  sourceComparison:{references:festivalDateEvidence.length,sourceCoverage,unreferencedDates,sourceDuplicateKeys,missingSourcedDates,authoritativeDisagreements,traditionVariants:variants},
   indexabilityPreserved:{
     year2027Indexed:festivalCityPageIsIndexable("diwali",2027,"mumbai"),
     note:"Complete 2027 date ledger remains deliberately non-indexable under explicit release gate."
@@ -86,4 +90,4 @@ for(const flag of flagged.slice(0,12))console.log(`[festival-truth] REVIEW ${fla
 for(const m of missingSourcedDates)console.log(`[festival-truth] NOT PUBLISHED ${m.slug} ${m.year} expected=${m.expected} source=${m.source}`);
 for(const e of errors.slice(0,15))console.error(`[festival-truth] FAIL ${e.festival} ${e.city} ${e.error}`);
 console.log(`[festival-truth] report=${output}`);
-if(errors.length||authoritativeDisagreements.length||missingSourcedDates.length||sourceDuplicateKeys.length||sourceCoverage.find(x=>x.year===2027)?.sourced!==19||ritualScreening.unsupportedReference||ritualScreening.missingNextSunrise||festivalCityPageIsIndexable("diwali",2027,"mumbai"))process.exitCode=1;
+if(errors.length||authoritativeDisagreements.length||missingSourcedDates.length||sourceDuplicateKeys.length||unreferencedDates.length||sourceCoverage.some(x=>x.sourced!==x.maintained)||ritualScreening.unsupportedReference||ritualScreening.missingNextSunrise||festivalCityPageIsIndexable("diwali",2027,"mumbai"))process.exitCode=1;
