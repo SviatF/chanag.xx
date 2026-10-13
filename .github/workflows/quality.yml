@@ -79,6 +79,17 @@ jobs:
           path: artifacts/asta-heliacal-deep.json
           if-no-files-found: warn
 
+      - name: Reconcile published Asta conventions and visibility scenario uncertainty (research only)
+        run: npm run audit:asta-methodology
+
+      - name: Upload Wave 3Q methodology and uncertainty report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: asta-wave3q-methodology-uncertainty
+          path: artifacts/asta-wave3q-uncertainty-crosswalk.json
+          if-no-files-found: warn
+
       - name: Build Next.js reference
         run: npm run build:next
 
