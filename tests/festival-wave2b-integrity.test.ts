@@ -43,7 +43,8 @@ describe("Wave 2B complete date ledger with a separate publication gate",()=>{
       expect(profile.criteria.length).toBeGreaterThan(1);
       if(slug==="raksha-bandhan"){
         expect(profile.exactness).toBe("context-only");
-        expect(ref?.value).toBe("Bhadra check required");
+        expect(ref?.label).toBe("Bhadra-free Purnima reference");
+        expect(ref?.value).toContain(" — ");
       }
       if(slug==="diwali")expect(ref?.label).toBe("Pradosh reference");
       if(slug==="janmashtami")expect(ref?.label).toBe("Nishita reference");

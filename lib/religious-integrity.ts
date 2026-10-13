@@ -1,5 +1,6 @@
 import type {Festival} from "./festivals";
 import type {Panchang} from "./panchang";
+import {rakhiBhadraAtSunrise} from "./rakhi-bhadra-evidence";
 
 export type IntegritySource={label:string;note:string};
 export type FestivalRuleProfile={
@@ -35,9 +36,9 @@ const festivalProfiles:Record<string,FestivalRuleProfile>={
     title:"Rakhi timing rule profile",
     ruleSummary:"Raksha Bandhan is tied to Shravana Purnima. Bhadra is traditionally avoided; Aparahna is preferred, with Pradosh used when Aparahna is unavailable.",
     criteria:["Purnima observance","Avoid Bhadra","Prefer Aparahna","Pradosh can be used when Aparahna is unavailable"],
-    localReference:"Panchvani shows the local Panchang context but does not yet certify a Rakhi Muhurat because a full Bhadra interval engine is not exposed on this route.",
+    localReference:"When sunrise Purnima has Bava Karana, Panchvani can verify that Bhadra has already passed and show the remaining local daylight overlap with Purnima. Otherwise no Rakhi interval is declared.",
     exactness:"context-only",
-    limitations:["Exact Bhadra start/end is not certified here","No universal Rakhi window is generated from generic Choghadiya"],
+    limitations:["Exact Bhadra start/end are not independently calculated here","The sunrise Purnima/Bava screen is not a comprehensive ritual Muhurat","No Rakhi time is generated from generic Choghadiya"],
     sources:[sources.raksha],
   },
   janmashtami:{
@@ -101,7 +102,13 @@ export function getFestivalLocalReference(festival:Festival,data:Panchang):Festi
     return {label:"Fasting reference",value:`Sunrise ${data.sunrise} → Moonrise ${moonrise}`,note:"Local astronomical reference for the fasting span; actual moon sighting and Puja practice remain tradition-dependent."};
   }
   if(festival.slug==="raksha-bandhan"){
-    return {label:"Rakhi timing status",value:"Bhadra check required",note:"Panchvani does not certify a Rakhi Muhurat until the complete local Bhadra interval is available on this route."};
+    const evidence=rakhiBhadraAtSunrise(data);
+    if(evidence.status==="purnima-bhadra-cleared"){
+      return {label:"Bhadra-free Purnima reference",value:`${evidence.start} — ${evidence.end}`,
+        note:"Local daylight/Purnima overlap. Bava at sunrise establishes Bhadra had already ended; this is not a complete individualized Muhurat."};
+    }
+    return {label:"Rakhi timing status",value:"Bhadra check required",
+      note:evidence.explanation};
   }
   return null;
 }
