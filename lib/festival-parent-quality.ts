@@ -4,6 +4,7 @@ import {getFestivalSemantics} from "./festival-conventions";
 import type {Festival} from "./festivals";
 import {getPanchang,type Panchang} from "./panchang";
 import {getFestivalLocalReference,getFestivalRuleProfile} from "./religious-integrity";
+import {getFestivalTithiEvidence} from "./festival-lunar-evidence";
 
 type Fact={label:string;value:string;note?:string};
 type ReferenceRow={city:City;data:Panchang};
@@ -77,6 +78,7 @@ export async function buildFestivalYearQualityContext(festival:Festival):Promise
   const ruleProfile=getFestivalRuleProfile(festival);
   const lunar=getLunarMonthConventions(date,base.city,base.data);
   const localReference=getFestivalLocalReference(festival,base.data);
+  const tithiEvidence=getFestivalTithiEvidence(festival,base.data);
   const weekday=weekdayFormatter.format(date);
   const displayDate=longDateFormatter.format(date);
   const tithiStates=uniq(references.map(item=>`${item.data.paksha} ${item.data.tithi}`));
@@ -90,11 +92,11 @@ export async function buildFestivalYearQualityContext(festival:Festival):Promise
     ? `${localReference.label}: ${localReference.value}. ${localReference.note}`
     : `This parent page does not publish a universal ritual clock time. ${ruleProfile.localReference}`;
 
-  const directAnswer=`${festival.name} is maintained on ${weekday}, ${displayDate}. The parent page describes the observance rule and lunar context; exact city timing remains local. On the Mumbai reference calculation the day opens with ${base.data.paksha} ${base.data.tithi} under ${base.data.nakshatra}, while sunrise/sunset are recalculated for each city.`;
+  const directAnswer=`${festival.name} is maintained on ${weekday}, ${displayDate}. The Mumbai reference at sunrise has ${base.data.paksha} ${base.data.tithi} under ${base.data.nakshatra}. ${tithiEvidence.key==="begins-on-date"?tithiEvidence.explanation:""} Local timings are calculated individually for each city.`.trim();
 
   const contextBody=`${festival.meaning} For the ${festival.year} record, Panchvani treats ${festival.date} as the maintained festival date and keeps the astronomical context separate from ritual certification. ${anchorCopy[festival.pujaRule]} The active rule profile is “${ruleProfile.title}”. Its current criteria are ${list(ruleProfile.criteria)}. This distinction matters because a shared festival date can coexist with local timing boundaries and tradition-specific selection rules.`;
 
-  const lunarBody=`Across the reference cities used for this parent analysis, the sunrise-day Panchang resolves to ${list(tithiStates)} for Tithi/Paksha and ${list(nakshatraStates)} for Nakshatra. ${convention} The Mumbai reference carries Amanta ${lunar.amantaLabel} and Purnimanta ${lunar.purnimantaLabel}. These labels explain the calendar context of the maintained date; they do not replace the festival-specific rule profile or a sampradaya-specific observance decision.`;
+  const lunarBody=`${tithiEvidence.explanation??""} Across the reference cities used for this parent analysis, the sunrise-day Panchang resolves to ${list(tithiStates)} for Tithi/Paksha and ${list(nakshatraStates)} for Nakshatra. ${convention} The Mumbai reference carries Amanta ${lunar.amantaLabel} and Purnimanta ${lunar.purnimantaLabel}. These labels explain the calendar context of the maintained date; they do not replace the festival-specific rule profile or a sampradaya-specific observance decision.`;
 
   const cityVariationBody=`A single nationwide clock time is not copied onto the city pages. For this date the four reference cities span sunrise from ${sunriseRange} and sunset from ${sunsetRange}. The observed Tithi set is ${list(tithiStates)}, while the Nakshatra set is ${list(nakshatraStates)}. That local solar/lunar frame is why the city descendants calculate their own sunrise, sunset, moonrise and supported festival references instead of inheriting one parent-page timing value.`;
 
@@ -114,6 +116,7 @@ export async function buildFestivalYearQualityContext(festival:Festival):Promise
       {label:"Maintained date",value:festival.date,note:weekday},
       {label:"Observance anchor",value:festival.pujaRule,note:ruleProfile.title},
       {label:"Mumbai sunrise state",value:`${base.data.paksha} ${base.data.tithi}`,note:base.data.nakshatra},
+      ...(tithiEvidence.value?[{label:tithiEvidence.label??"Festival Tithi",value:tithiEvidence.value,note:"Mumbai sunrise or first transition"}]:[]),
       {label:"Lunar months",value:`${lunar.amantaLabel} / ${lunar.purnimantaLabel}`,note:"Amanta / Purnimanta"},
       {label:"Reference-city Tithi states",value:String(tithiStates.length),note:list(tithiStates)},
       {label:"Reference-city Nakshatras",value:String(nakshatraStates.length),note:list(nakshatraStates)},

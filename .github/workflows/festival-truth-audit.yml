@@ -1,0 +1,49 @@
+name: Festival Truth Audit
+
+on:
+  workflow_dispatch:
+  pull_request:
+    branches: [main]
+    paths:
+      - "lib/festivals.ts"
+      - "lib/festival-lunar-evidence.ts"
+      - "lib/festival-content-engine.ts"
+      - "lib/festival-parent-quality.ts"
+      - "scripts/festival-truth-audit.ts"
+      - "tests/fixtures/festival-date-evidence.ts"
+      - ".github/workflows/festival-truth-audit.yml"
+  push:
+    branches: [main]
+    paths:
+      - "lib/festivals.ts"
+      - "lib/festival-lunar-evidence.ts"
+      - "lib/festival-content-engine.ts"
+      - "lib/festival-parent-quality.ts"
+      - "scripts/festival-truth-audit.ts"
+      - "tests/fixtures/festival-date-evidence.ts"
+      - ".github/workflows/festival-truth-audit.yml"
+permissions:
+  contents: read
+jobs:
+  full-festival-matrix:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+          cache-dependency-path: package.json
+      - name: Install
+        run: npm install --legacy-peer-deps --no-audit --no-fund
+      - name: Audit every maintained festival against each active city
+        run: npm run audit:festivals
+      - name: Upload findings
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: festival-truth-audit
+          path: artifacts/festival-truth-audit.json
+          if-no-files-found: warn
+          retention-days: 30

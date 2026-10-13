@@ -21,7 +21,8 @@
     "audit:content:strict": "node scripts/content-quality-audit.mjs --enforce-similarity",
     "audit:gsc-export": "node scripts/gsc-indexing-export-audit.mjs",
     "audit:seo-live": "node scripts/seo-live-response-audit.mjs",
-    "audit:truth": "npx --yes tsx@4.23.13 scripts/content-integrity-audit.ts"
+    "audit:truth": "npx --yes tsx@4.23.13 scripts/content-integrity-audit.ts",
+    "audit:festivals": "npx --yes tsx@4.23.13 scripts/festival-truth-audit.ts"
   },
   "dependencies": {
     "@types/node": "^22.10.0",

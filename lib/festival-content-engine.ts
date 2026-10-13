@@ -3,6 +3,7 @@ import type {Festival} from "./festivals";
 import type {Panchang} from "./panchang";
 import type {LunarMonthConventions} from "./calendar-conventions";
 import type {FestivalLocalReference} from "./religious-integrity";
+import {getFestivalTithiEvidence} from "./festival-lunar-evidence";
 import {formatPanchangTime,formatWindow} from "./panchang";
 
 export type FestivalCityQualityContent={
@@ -131,23 +132,25 @@ export function buildFestivalCityQualityContent(festival:Festival,city:City,data
   const tithiEnd=formatPanchangTime(data.tithiEnd,data.tithiEndDate,data.date);
   const nakshatraEnd=formatPanchangTime(data.nakshatraEnd,data.nakshatraEndDate,data.date);
   const ritual=ritualCopy(festival,data,localReference);
+  const tithiEvidence=getFestivalTithiEvidence(festival,data);
   const regional=regionalContext[city.state]?.[festival.slug]??null;
-  const directAnswer=`${festival.name} ${festival.year} in ${city.name} falls on ${humanDate(festival.date)}. On the local calculation, sunrise is ${data.sunrise}, sunset is ${data.sunset}, ${data.tithi} Tithi continues until ${tithiEnd}, and ${data.nakshatra} Nakshatra continues until ${nakshatraEnd}.`;
+  const directAnswer=`${festival.name} ${festival.year} in ${city.name} falls on ${humanDate(festival.date)}. At local sunrise (${data.sunrise}), ${data.paksha} ${data.tithi} continues until ${tithiEnd}; sunset is ${data.sunset}, and ${data.nakshatra} Nakshatra continues until ${nakshatraEnd}. ${tithiEvidence.key==="begins-on-date"?tithiEvidence.explanation:""}`.trim();
   const directFacts=[
     {label:"Festival date",value:humanDate(festival.date),note:`${city.name}, ${city.state}`},
-    {label:"Tithi transition",value:`${data.tithi} → ${tithiEnd}`,note:`${data.paksha} Paksha`},
+    {label:"Tithi at sunrise",value:`${data.paksha} ${data.tithi} → ${tithiEnd}`,note:"Sunrise-state, not the whole day's lunar sequence"},
     {label:"Nakshatra transition",value:`${data.nakshatra} → ${nakshatraEnd}`,note:`Pada ${data.nakshatraPada}`},
     {label:"Local solar day",value:`${data.sunrise}–${data.sunset}`,note:`${daylight} minutes of daylight`},
     {label:"Rahu Kalam",value:formatWindow(data.rahu),note:`Calculated from ${city.name} daylight`},
     {label:"Lunar month",value:lunar.amantaLabel,note:`Purnimanta: ${lunar.purnimantaLabel}`},
   ];
+  if(tithiEvidence.value&&tithiEvidence.label)directFacts.push({label:tithiEvidence.label,value:tithiEvidence.value,note:"Calculated first Tithi transition"});
   if(localReference)directFacts.push({label:localReference.label,value:localReference.value,note:"Festival-specific local reference"});
 
   return {
     directAnswer,
     directFacts,
     ritualTitle:ritual.title,
-    ritualBody:ritual.body,
+    ritualBody:`${ritual.body} ${tithiEvidence.explanation??""}`.trim(),
     cityTitle:`What changes specifically in ${city.name}`,
     cityBody:`${city.name}'s festival page is calculated from its own sunrise, sunset, lunar transitions and local time windows. The daylight span on ${festival.date} is ${daylight} minutes. ${favorableSummary(data)} Moonrise is ${moonriseLabel(data)}. These values are the page's city fingerprint and should not be copied from another location.`,
     regionalTitle:`${festival.name} in ${city.state}`,
