@@ -31,7 +31,15 @@ describe("Panchang accuracy regression", () => {
       expect(data.hinduMonth).toBe(expected.hinduMonth);
       expect(data.vikramSamvat).toBe(expected.vikramSamvat);
       expect(data.shakaSamvat).toBe(expected.shakaSamvat);
-      expect(data.abhijit).toBe(expected.abhijit);
+      if(expected.abhijit===null){
+        expect(data.abhijit).toBeNull();
+      }else{
+        expect(data.abhijit).not.toBeNull();
+        if(data.abhijit){
+          expectTimeClose(data.abhijit.start,expected.abhijit[0]);
+          expectTimeClose(data.abhijit.end,expected.abhijit[1]);
+        }
+      }
       expect(data.sunriseConvention).toBe(PANCHANG_SUNRISE_CONVENTION);
 
       expectTimeClose(data.sunrise, expected.sunrise);
