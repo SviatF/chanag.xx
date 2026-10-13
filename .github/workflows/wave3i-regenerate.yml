@@ -1,0 +1,38 @@
+name: Regenerate Wave 3I Muhurat signatures
+on:
+  push:
+    branches:
+      - feat/wave3i-yoga-karana-transition-evidence-20261013
+    paths:
+      - ".github/workflows/wave3i-regenerate.yml"
+permissions:
+  contents: write
+jobs:
+  regenerate:
+    if: github.ref_name == 'feat/wave3i-yoga-karana-transition-evidence-20261013'
+    runs-on: ubuntu-latest
+    timeout-minutes: 70
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: true
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+          cache-dependency-path: package.json
+      - run: npm install --legacy-peer-deps --no-audit --no-fund
+      - name: Recalculate all 48 V3 shards with updated Panchang signature
+        run: npm run precompute:muhurat
+      - name: Check updated 338 datasets and signatures
+        run: npm run verify:muhurat-precompute
+      - name: Save only generated committed data on feature branch
+        shell: bash
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add generated/muhurat-panchang-shards.ts generated/muhurat-panchang-shard-*.ts
+          if ! git diff --cached --quiet; then
+            git commit -m "data(muhurat): refresh 48 shard signatures for dated Yoga/Karana engine"
+            git push origin HEAD:feat/wave3i-yoga-karana-transition-evidence-20261013
+          fi
