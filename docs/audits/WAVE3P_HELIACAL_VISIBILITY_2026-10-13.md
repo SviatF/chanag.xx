@@ -23,6 +23,15 @@ Runs `sweHeliacalUt` with assumed naked-eye adult (36 years; Snellen ratio 1), s
 
 **Crucial:** A publisher's traditional Guru/Shukra Asta can be defined by a conventional angular rule, invisibility interval, planet motion or custom scripture-specific onset. Swiss native heliacal *evening-last/morning-first* is **not automatically the same definition** as a Drik Panchang Asta timestamp. Venus can have morning/evening first/last behavior near an inferior conjunction and cannot always be mapped to a single interval. A multi-day deviation by itself does not tell us the publisher is wrong.
 
+## First observed native research run (PR #97, pre-merge)
+The first native search **executed** (8 scenarios), with no Swiss function exceptions. For a Mumbai observer and search start **2027-06-01**:
+- Jupiter **clear**: last evening **2027-08-07 19:41 IST**; next morning **2027-09-20 05:57 IST**.
+- Jupiter **hazy**: last evening **2027-07-17 19:52 IST**; next morning **2027-10-07 05:57 IST**.
+- Venus **clear**: next returned evening/morning events **2028-05-24 19:24** and **2028-06-10 05:41 IST**, respectively.
+- Venus **hazy**: next returned events **2028-05-17 19:29** and **2028-06-19 05:38 IST**.
+
+The Venus events are **not in target year 2027**. The data pipeline explicitly marks `native-event-outside-target-year` rather than projecting a 2028 clock back onto Shukra Asta 2027. The *first next heliacal event after the supplied search start* is not the same as asking for a traditional Asta interval around a known exact conjunction; the search definition must be reconciled before comparing residuals. The Jupiter evening-last + morning-first can span materially different periods under these hypothetical atmospheric assumptions. This proves sensitivity **within the model**, not a successful verification of Drik dates or physical naked-eye sighting.
+
 ## Coverage, evidence, and safeguards
 - 6 minute-precision source observations in the Wave 3N fixture; no invented city-bound Venus comparison.
 - Mumbai, Kolkata, Delhi are matched only by exact reviewed `coreCities` coordinates. Wardha, Latur, Alibag are skipped until **their own** coordinates exist in reviewed source metadata.
