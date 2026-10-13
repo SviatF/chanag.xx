@@ -119,14 +119,16 @@ function nativeHeliacal(
         serr?:string;error?:string
       };
     const raw=r.dret?.[0];
-    if(!Number.isFinite(raw)||raw!<=0)return{
+    if(typeof raw!=="number"||!Number.isFinite(raw)||raw<=0)return{
       status:"not-computed",detail:r.serr||r.error||"No finite native heliacal event",
       safeForCeremonyFiltering:false
     };
+    const predictedLocal=local(raw);
+    const withinTargetYear=predictedLocal.startsWith("2027-");
     return {
-      status:"predicted-native-swiss-heliacal",
-      eventType:event,
-      julianUt:raw,instantLocalIst:local(raw),
+      status:withinTargetYear?"predicted-native-swiss-heliacal":"native-event-outside-target-year",
+      eventType:event,targetYear:2027,withinTargetYear,
+      julianUt:raw,instantLocalIst:predictedLocal,
       method:"Swiss heliacal visibility search, assumed atmosphere + naked-eye observer",
       notComparableToDrikAstaWithoutMethodMapping:true,
       safeForCeremonyFiltering:false
@@ -228,6 +230,7 @@ const report={
   sourceReferenceCount:referenceRows.length,scenariosEvaluated,
   skippedLocations,geometryFailures,
   heliacalSearchCount:deepResults.length,
+  heliacalOutsideTargetYear:deepResults.filter(row=>row.status==="native-event-outside-target-year").length,
   geometryResults:results,
   nativeHeliacalResults:deepResults
 };
