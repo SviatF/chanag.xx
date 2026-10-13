@@ -10,7 +10,7 @@ export const astaEvidenceLedger:readonly AstaReference[]=[
   ...planetaryAsta2027Evidence.map(row=>({
     planet:row.planet,year:row.year,locality:row.locality,
     publisher:row.publisher,url:row.url,method:row.methodology,
-    sourceLocationMode:row.publisher==="Drik Panchang"?"geolocated-snapshot" as const:"publisher-pinned" as const,
+    sourceLocationMode:row.publisher==="Swarn Siddhi"?"publisher-pinned" as const:"geolocated-snapshot" as const,
     precision:row.precision,startLocal:row.startLocal,endLocal:row.endLocal,
     reviewedOn:row.reviewedOn
   })),
