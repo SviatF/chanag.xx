@@ -41,6 +41,7 @@ export function reconcileAstaScenarios(
     r.locality===locality&&r.precision==="minute");
   const eligibleRecords=records.filter(r=>r.locality===locality&&r.planet===planet);
   const buckets=new Map<string,Partial<Record<AstaNativeEvent,AstaNativeRecord>>>();
+  const duplicatedProfiles=new Set<string>();
   let rejectedNativeRecords=0;
   for(const record of eligibleRecords){
     if(!record.atmosphere?.id?.trim()||!eventTypes.includes(record.event)){
@@ -48,7 +49,7 @@ export function reconcileAstaScenarios(
       continue;
     }
     const entries=buckets.get(record.atmosphere.id)||{};
-    if(entries[record.event]){rejectedNativeRecords++;continue;}
+    if(entries[record.event]){rejectedNativeRecords++;duplicatedProfiles.add(record.atmosphere.id);continue;}
     entries[record.event]=record;
     buckets.set(record.atmosphere.id,entries);
   }
@@ -56,6 +57,10 @@ export function reconcileAstaScenarios(
   const excluded:Array<{profile:string;reason:string}>=[];
   let hasYearMismatch=false,hasInvalidOrder=false,hasUnpaired=false;
   for(const [profile,values] of buckets){
+    if(duplicatedProfiles.has(profile)){
+      excluded.push({profile,reason:"duplicate-native-event-type"});
+      hasInvalidOrder=true;continue;
+    }
     const evening=values["evening-last"];
     const morning=values["morning-first"];
     if(!evening||!morning){
