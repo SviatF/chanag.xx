@@ -5,8 +5,9 @@ import type {RecommendedMuhuratWindow} from "./muhurat";
  * These end instants only bound the same sunrise-active combination.
  * Neither this helper nor its score certifies Lagna or complete Panchang Shuddhi.
  *
- * V2 precomputed rows lack end instants: keep their existing clock references
- * explicitly classified as sunrise-only until V3 shards are generated.
+ * V3 precomputed rows persist end instants and clip timing windows accordingly.
+ * Older V2 snapshots are sunset-independent sunrise-only references, never
+ * accepted as V3, and must not be falsely presented as lunar-verified.
  */
 export type MuhuratLunarEvidence={
   date:string;
@@ -40,6 +41,14 @@ function endingMinutes(baseDate:string,endDate:unknown,endTime:unknown):number|n
   // A sunrise-active Tithi/Nakshatra should not have a past or distant end.
   if(!Number.isInteger(offset)||offset<0||offset>2)return null;
   return offset*1440+minutes;
+}
+
+export function hasCompleteMuhuratLunarBoundaries(evidence:MuhuratLunarEvidence):boolean{
+  const tithi=endingMinutes(evidence.date,evidence.tithiEndDate,evidence.tithiEnd);
+  const nakshatra=endingMinutes(evidence.date,evidence.nakshatraEndDate,evidence.nakshatraEnd);
+  // Local sunrise-active factors must end strictly after local sunrise,
+  // but the calendar-day clipping validates source clocks independently.
+  return tithi!==null&&nakshatra!==null&&tithi>0&&nakshatra>0;
 }
 
 export function boundMuhuratWindowsByLunarTransitions(

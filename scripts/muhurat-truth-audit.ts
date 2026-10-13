@@ -2,8 +2,9 @@ import {mkdirSync,writeFileSync} from "node:fs";
 import {MUHURAT_PANCHANG_SHARD_IDS} from "../generated/muhurat-panchang-shards";
 import {findCityBySlug} from "../lib/cities";
 import {loadMuhuratPrecomputedShard} from "../lib/muhurat-precomputed";
-import {getMonthlyMuhurat,muhuratRules,type MuhuratRow} from "../lib/muhurat";
+import {getMonthlyMuhurat,muhuratRules,buildRecommendedMuhuratWindows,type MuhuratRow} from "../lib/muhurat";
 import {getMuhuratScoreEvidence} from "../lib/muhurat-score-evidence";
+import {hasCompleteMuhuratLunarBoundaries,boundMuhuratWindowsByLunarTransitions} from "../lib/muhurat-lunar-transitions";
 const resultPath=process.argv.find(a=>a.startsWith("--report="))?.slice(9)??"artifacts/muhurat-truth-audit.json";
 const asMinutes=(s:string)=>{const m=/^([01][0-9]|2[0-3]):([0-5][0-9])$/.exec(s);return m?Number(m[1])*60+Number(m[2]):null;};
 const intersects=(a:{start:string,end:string},b:{start:string,end:string})=>{
@@ -13,6 +14,7 @@ const intersects=(a:{start:string,end:string},b:{start:string,end:string})=>{
 const failures:string[]=[];
 const issues=(message:string)=>{failures.push(message);if(failures.length<=12)console.error("[muhurat-truth] FAIL "+message);};
 let shards=0,datasets=0,screenedDates=0,windows=0,zeroWindowRows=0,grade100Rows=0,scoreEvidence=0;
+let boundedRows=0,invalidSnapshotDays=0,lunarClippedWindows=0;
 const eventCounts:Record<string,{screened:number;withWindows:number;score100:number}>={};
 for(const event of Object.keys(muhuratRules))eventCounts[event]={screened:0,withWindows:0,score100:0};
 for(const id of MUHURAT_PANCHANG_SHARD_IDS){
@@ -24,12 +26,26 @@ for(const id of MUHURAT_PANCHANG_SHARD_IDS){
     const slug=key.split("|")[0],city=findCityBySlug(slug);
     if(!city){issues(`Unknown city ${key}`);continue;}
     datasets++;
+    for(const day of shard.entries[key]??[]){
+      if(!hasCompleteMuhuratLunarBoundaries(day)){
+        invalidSnapshotDays++;
+        issues(key+" "+day.date+": invalid V3 Tithi/Nakshatra end");
+      }
+    }
     for(const event of Object.keys(muhuratRules)){
       const {rows}=await getMonthlyMuhurat(event,year,month,city);
       const rule=muhuratRules[event];
       let lastScore=Infinity;
       for(const row of rows){
         screenedDates++;eventCounts[event].screened++;
+        if(row.lunarEvidenceStatus!=="lunar-bounded")
+          issues(key+" "+event+" "+row.date+": lunar evidence not bounded: "+row.lunarEvidenceStatus);
+        else boundedRows++;
+        const originalWindows=buildRecommendedMuhuratWindows(row.data);
+        const clipped=boundMuhuratWindowsByLunarTransitions(row.data,originalWindows);
+        if(clipped.status!=="lunar-bounded"||JSON.stringify(clipped.windows)!==JSON.stringify(row.recommendedWindows))
+          issues(key+" "+event+" "+row.date+": windows differ from lunar-clipped sources");
+        lunarClippedWindows+=originalWindows.length-clipped.windows.length;
         if(!rule.goodTithi.includes(row.data.tithi)||!rule.goodNakshatra.includes(row.data.nakshatra))
           issues(`${key} ${event} ${row.date}: failed sunrise Tithi/Nakshatra eligibility`);
         if(row.planning.score>lastScore)issues(`${key} ${event} ${row.date}: ranking order broken`);
@@ -47,6 +63,8 @@ for(const id of MUHURAT_PANCHANG_SHARD_IDS){
         for(const w of row.recommendedWindows){
           windows++;
           const st=asMinutes(w.start),end=asMinutes(w.end);
+          if(clipped.limitMinutes===null||end===null||end>clipped.limitMinutes)
+            issues(key+" "+event+" "+row.date+": clock window crosses lunar end");
           if(st===null||end===null||end-st<15||end<=st)issues(`${key} ${event} ${row.date}: invalid reference window ${w.start}-${w.end}`);
           for(const avoid of row.avoidWindows){
             if(intersects(w,avoid.window))issues(`${key} ${event} ${row.date}: window overlaps ${avoid.label}`);
@@ -70,11 +88,10 @@ for(const id of MUHURAT_PANCHANG_SHARD_IDS){
     }
   }
 }
-const report={createdAt:new Date().toISOString(),scope:"all committed 48 month shards × 338 city-month targets × 6 event profiles; checks sunrise lunar eligibility + daytime source/block exclusions + score consistency",shards,datasets,screenedDates,windows,zeroWindowRows,grade100Rows,scoreEvidence,eventCounts,failures:failures.slice(0,300),limitations:[
-  "Snapshot version 2 includes sunrise Tithi and Nakshatra but not their ending time.",
-  "Passing daytime exclusion checks does not certify Tithi/Nakshatra remain active during a suggested window.",
+const report={createdAt:new Date().toISOString(),scope:"48 V3 shards × 338 city-months × 6 profiles: lunar ending dates, clock clipping, exclusions, scores and ranking",shards,datasets,screenedDates,boundedRows,invalidSnapshotDays,lunarClippedWindows,windows,zeroWindowRows,grade100Rows,scoreEvidence,eventCounts,failures:failures.slice(0,300),limitations:[
+  "V3 stores explicit dated lunar transitions and clipped daytime windows, not fully certified ritual Muhurat.",
   "The 0–100 score measures planning-window availability, not a probability or complete Panchang Shuddhi.",
-  "Full ritual eligibility needs ceremony-specific Vedic exclusions, ascendant, local traditions and lunar transitions."
+  "Full ritual eligibility still needs ceremony-specific Vedic exclusions, ascendant and local traditions."
 ]};
 mkdirSync(resultPath.split("/").slice(0,-1).join("/")||".",{recursive:true});
 writeFileSync(resultPath,JSON.stringify(report,null,2));
