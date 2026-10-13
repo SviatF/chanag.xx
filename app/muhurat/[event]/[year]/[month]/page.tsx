@@ -26,7 +26,7 @@ export async function generateMetadata({params}:{params:Promise<{event:string;ye
   const p=await params;const rule=muhuratRules[p.event];const year=parseRouteYear(p.year),month=parseRouteMonth(p.month);if(!rule||!year||!month)notFound();
   const monthName=monthLabel(year,month);
   const closure=getVerifiedMuhuratClosure(p.event,year,month,cityBySlug("mumbai"));
-  if(closure)return {title:`${rule.title} — No Traditional Marathi Dates, ${monthName} ${year} · Mumbai`,description:closure.headline+`. ${closure.reason} under the reviewed ${closure.convention} convention.`,alternates:{canonical:`/muhurat/${p.event}/${year}/${p.month}`},robots:robotsFor(isMonthlyMuhuratIndexable(p.event,year,month))};
+  if(closure)return {title:`${rule.title} — ${p.event==="wedding"?"No Traditional Marathi Wedding Dates":"No Customary Marathi House-Entry Dates"}, ${monthName} ${year} · Mumbai`,description:closure.headline+`. ${closure.reason} under the reviewed ${closure.convention} convention.`,alternates:{canonical:`/muhurat/${p.event}/${year}/${p.month}`},robots:robotsFor(isMonthlyMuhuratIndexable(p.event,year,month))};
   return {title:`${rule.title} — ${monthName} ${year} Candidate Dates`,description:`${rule.title} candidate dates for ${monthName} ${year} with Mumbai-baseline score spread, clean-time supply and event-specific continuity metrics.`,alternates:{canonical:`/muhurat/${p.event}/${year}/${p.month}`},robots:robotsFor(isMonthlyMuhuratIndexable(p.event,year,month))};
 }
 
