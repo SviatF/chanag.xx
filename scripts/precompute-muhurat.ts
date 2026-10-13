@@ -12,6 +12,7 @@ import {
   type MuhuratBuildDataShard,
 } from "../lib/muhurat-build-data-schema";
 import {clearMuhuratPanchangMonthCache,getMuhuratPanchangMonth} from "../lib/muhurat";
+import {hasCompleteMuhuratLunarBoundaries} from "../lib/muhurat-lunar-transitions";
 import {calendarMonthSsgPriority,muhuratCityMonthSsgPriority,muhuratMonthSsgPriority,muhuratYearSsgPriority} from "../lib/static-seo-routes";
 
 const root=resolve(process.cwd());
@@ -100,7 +101,7 @@ function isFreshShard(shard:MuhuratBuildDataShard|null,signature:string,shardId:
     const rows=shard.entries[target.key];
     const expectedDays=new Date(Date.UTC(target.year,target.month,0)).getUTCDate();
     if(!rows||rows.length!==expectedDays)return false;
-    if(rows.some(row=>!row.date||!row.tithi||!row.nakshatra||!row.rahu||!row.yamaganda||!row.gulika||!Array.isArray(row.dayChoghadiya)))return false;
+    if(rows.some(row=>!row.date||!row.tithi||!row.nakshatra||!row.rahu||!row.yamaganda||!row.gulika||!Array.isArray(row.dayChoghadiya)||!hasCompleteMuhuratLunarBoundaries(row)))return false;
   }
   return true;
 }
@@ -181,7 +182,11 @@ for(const [shardId,shardTargets] of grouped){
   for(const target of shardTargets){
     console.log(`[muhurat-precompute] calculating ${target.key}`);
     const month=await getMuhuratPanchangMonth(target.year,target.month,target.city);
-    entries[target.key]=month.map(toMuhuratPanchangSnapshot);
+    entries[target.key]=month.map(day=>{
+      const snapshot=toMuhuratPanchangSnapshot(day);
+      if(!hasCompleteMuhuratLunarBoundaries(snapshot))throw new Error(`Invalid lunar transitions for ${target.key} / ${day.date}`);
+      return snapshot;
+    });
   }
   const shard:MuhuratBuildDataShard={
     version:MUHURAT_BUILD_DATA_VERSION,
