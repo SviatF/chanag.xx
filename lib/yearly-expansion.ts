@@ -1,5 +1,6 @@
 import type {City} from "./cities";
-import {getMonthlyMuhurat,muhuratRules,type MuhuratRow} from "./muhurat";
+import {getMonthlyMuhurat,muhuratRules,buildRecommendedMuhuratWindows,type MuhuratRow} from "./muhurat";
+import {boundMuhuratWindowsByLunarTransitions} from "./muhurat-lunar-transitions";
 
 export const yearlyMonths=Array.from({length:12},(_,index)=>{
   const month=index+1;
@@ -21,6 +22,9 @@ export type YearlyMuhuratMonth={
   strong:number;
   averageScore:number;
   top:MuhuratRow|null;
+  /** Sum of source-specific reference window minutes removed by Vishti; overlaps may be counted twice. */
+  vishtiExcludedReferenceMinutes?:number;
+  vishtiAffectedDates?:number;
 };
 
 export type YearlyMuhuratSummary={
@@ -35,15 +39,29 @@ export type YearlyMuhuratSummary={
   strongCount:number;
   averageScore:number;
   strongestMonth:YearlyMuhuratMonth|null;
+  vishtiExcludedReferenceMinutes?:number;
+  vishtiAffectedDates?:number;
 };
 
+function sourceWindowMinutes(windows:ReadonlyArray<{start:string;end:string}>){
+  return windows.reduce((sum,w)=>{
+    const toMinutes=(v:string)=>Number(v.slice(0,2))*60+Number(v.slice(3));
+    return sum+Math.max(0,toMinutes(w.end)-toMinutes(w.start));
+  },0);
+}
 export async function buildYearlyMuhuratSummary(event:string,year:number,city:City):Promise<YearlyMuhuratSummary>{
   const rule=muhuratRules[event];
   if(!rule)throw new Error(`Unsupported Muhurat event: ${event}`);
   const results=await Promise.all(yearlyMonths.map(async item=>{
     const {rows}=await getMonthlyMuhurat(event,year,item.month,city);
     const total=rows.reduce((sum,row)=>sum+row.planning.score,0);
+    const vishtiChanges=event==="wedding"?rows.map(row=>{
+      const before=boundMuhuratWindowsByLunarTransitions(row.data,buildRecommendedMuhuratWindows(row.data)).windows;
+      return Math.max(0,sourceWindowMinutes(before)-sourceWindowMinutes(row.recommendedWindows));
+    }):[];
     return {
+      vishtiExcludedReferenceMinutes:vishtiChanges.reduce((a,b)=>a+b,0),
+      vishtiAffectedDates:vishtiChanges.filter(value=>value>0).length,
       ...item,
       qualified:rows.length,
       excellent:rows.filter(row=>row.planning.grade==="Excellent").length,
@@ -64,5 +82,7 @@ export async function buildYearlyMuhuratSummary(event:string,year:number,city:Ci
     strongCount:rows.filter(row=>row.planning.grade==="Strong").length,
     averageScore:rows.length?Math.round(totalScore/rows.length):0,
     strongestMonth,
+    vishtiExcludedReferenceMinutes:months.reduce((sum,m)=>sum+(m.vishtiExcludedReferenceMinutes??0),0),
+    vishtiAffectedDates:months.reduce((sum,m)=>sum+(m.vishtiAffectedDates??0),0),
   };
 }

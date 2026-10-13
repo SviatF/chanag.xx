@@ -37,7 +37,7 @@ describe("Muhurat precomputed build-data architecture",()=>{
     let totalTargets=0;
     for(const [index,file] of shardFiles.entries()){
       const {data,base64Length}=decodeShard(`generated/${file}`);
-      expect(data.version).toBe(3);
+      expect(data.version).toBe(4);
       expect(data.shardId).toBe(expectedShardIds[index]);
       expect(data.signature).toMatch(/^[a-f0-9]{64}$/);
       const expectedCities=new Set<string>();
@@ -61,7 +61,7 @@ describe("Muhurat precomputed build-data architecture",()=>{
         expect(rows.length===28||rows.length===29||rows.length===30||rows.length===31).toBe(true);
         for(const row of rows){
           expect(Object.keys(row).sort()).toEqual([
-            "abhijit","date","dayChoghadiya","gulika","nakshatra","nakshatraEnd","nakshatraEndDate","rahu","tithi","tithiEnd","tithiEndDate","yamaganda",
+            "abhijit","date","dayChoghadiya","gulika","karana","karanaEnd","karanaEndDate","nakshatra","nakshatraEnd","nakshatraEndDate","rahu","tithi","tithiEnd","tithiEndDate","yamaganda",
           ]);
           expect(hasCompleteMuhuratLunarBoundaries(row)).toBe(true);
         }

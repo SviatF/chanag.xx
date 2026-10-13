@@ -30,6 +30,15 @@ export default async function YearlyMuhurat({params}:{params:Promise<{event:stri
   const yearContext=buildMuhuratYearContext(summary);
   const verification=getMuhuratVerificationNotice(p.event,year,null,city);
   const highSimilarityContext=buildMuhuratYearHighSimilarityContext(summary);
+  // Evidence-first annual ledger: sample several independent lunar conditions
+  // per calendar month rather than repeating generic prose across years.
+  const weddingEvidenceRows=p.event==="wedding"?summary.months.flatMap(month=>
+    summary.rows.filter(row=>Number(row.date.slice(5,7))===month.month)
+      .sort((a,b)=>a.date.localeCompare(b.date)).slice(0,4)
+  ):[];
+  const datedWeekday=(iso:string)=>new Intl.DateTimeFormat("en-IN",{
+    weekday:"long",month:"long",day:"numeric",timeZone:"Asia/Kolkata"
+  }).format(new Date(iso+"T06:00:00Z"));
   const ld={"@context":"https://schema.org","@type":"CollectionPage","name":`${rule.title} ${year} analysis`,"url":`https://panchvani.com${muhuratYearPath(p.event,year)}`,"description":quality.directAnswer};
 
   return <main><Header city={city}/><div className="page-shell internal-visual internal-muhurat">
@@ -40,6 +49,12 @@ export default async function YearlyMuhurat({params}:{params:Promise<{event:stri
     <p className="page-subtitle"><strong>Candidate-only evidence:</strong> {verification.headline}. A 0–100 value measures window availability, not a verified ceremony or an override of month-level exclusions.</p>
 
     <div className="data-grid">{quality.facts.map(item=><div className="data-card" key={item.label}><small>{item.label}</small><strong>{item.value}</strong>{item.note?<small>{item.note}</small>:null}</div>)}</div>
+    {p.event==="wedding"?<section className="wide-panel"><div className="seo-copy">
+      <small>{year} · MUMBAI WEDDING KARANA SCREEN</small>
+      <h2>How Bhadra changed the {year} wedding candidate windows</h2>
+      <p>The {year} source-window check removed {summary.vishtiExcludedReferenceMinutes??0} total reference-window minutes on {summary.vishtiAffectedDates??0} screened dates where Vishti (Bhadra) overlapped a Wedding candidate clock. These are summed intervals and may overlap; they are not unique hours or fully certified Muhurat times.</p>
+      <p>Months where Bhadra changed the ranked source-clock supply: {summary.months.filter(m=>(m.vishtiExcludedReferenceMinutes??0)>0).map(m=>`${m.name}: ${m.vishtiExcludedReferenceMinutes} minutes affecting ${m.vishtiAffectedDates} dates`).join("; ")||"none in this year’s currently screened candidates"}. Other months still require their independent customary and planetary eligibility checks.</p>
+    </div></section>:null}
     <section className="wide-panel"><div className="seo-copy"><h2>{quality.fingerprintTitle}</h2><p>{quality.fingerprintBody}</p></div></section>
 
     <section className="wide-panel">
@@ -61,6 +76,21 @@ export default async function YearlyMuhurat({params}:{params:Promise<{event:stri
     <section className="wide-panel"><div className="seo-copy"><h2>{quality.ruleTitle}</h2><p>{quality.ruleBody}</p></div></section>
 
     <section className="wide-panel"><h2 className="page-title" style={{fontSize:32}}>Month-by-month {year}</h2><div className="city-directory">{summary.months.map(item=><Link href={`/muhurat/${p.event}/${year}/${item.slug}`} key={item.slug}><small>{item.qualified} candidates · avg {item.averageScore}/100</small><strong>{item.name}</strong><span>{item.top?`Top ${item.top.date} · ${item.top.planning.score}/100 · ${item.top.planning.longestWindowMinutes} min longest block`:"No configured-profile candidate"}</span></Link>)}</div></section>
+
+    {p.event==="wedding"&&weddingEvidenceRows.length?<section className="wide-panel">
+      <div className="seo-copy">
+        <h2>Monthly lunar and Karana evidence across {year}</h2>
+        <p>This yearly sample follows the earliest four screened candidates in each active month, not only the highest 0–100 scores. Their actual sunrise Karana, Tithi and Nakshatra are listed so changes in the marriage screening pattern can be checked against the city Panchang. Dates omitted by the reviewed traditional Marathi calendar are not silently restored. These are not certified wedding dates.</p>
+      </div>
+      <table className="table"><thead><tr><th>Local weekday and month</th><th>Sunrise Tithi · Nakshatra</th><th>Sunrise Karana</th><th>Retained reference source</th></tr></thead><tbody>
+        {weddingEvidenceRows.map(row=><tr key={row.date}>
+          <td><Link href={`/panchang/${city.slug}/${row.date}`}>{datedWeekday(row.date)}</Link></td>
+          <td>{row.data.tithi} · {row.data.nakshatra}</td>
+          <td>{row.data.karana}</td>
+          <td>{row.recommendedWindows[0]?.sources.join(" + ")??"No retained daytime source"}</td>
+        </tr>)}
+      </tbody></table>
+    </section>:null}
 
     <section className="wide-panel"><h2 className="page-title" style={{fontSize:32}}>Top planning fits of {year}</h2>{summary.topRows.length?<div className="wide-panel"><table className="table"><thead><tr><th>Rank / Date</th><th>Score</th><th>Lunar match</th><th>Clean time</th></tr></thead><tbody>{summary.topRows.map((row,index)=><tr key={row.date}><td>#{index+1} · <Link href={`/panchang/${city.slug}/${row.date}`}>{row.date}</Link></td><td><strong>{row.planning.score}/100 · {row.planning.grade}</strong></td><td>{row.reasons.join(" · ")}</td><td>{row.planning.longestWindowMinutes} min longest · {row.planning.totalCleanMinutes} min total</td></tr>)}</tbody></table></div>:<p className="page-subtitle">No dates matched the configured Tithi + Nakshatra profile in {year}.</p>}</section>
 
