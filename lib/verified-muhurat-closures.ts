@@ -14,14 +14,14 @@ type ReviewedYear=2025|2026|2027;
 
 export type VerifiedMuhuratClosure={
   code:string;
-  event:"wedding";
+  event:"wedding"|"griha-pravesh";
   year:ReviewedYear;
   month:ReviewedMonth;
   cityName:string;
-  convention:"Customary Marathi marriage calendar";
+  convention:"Customary Marathi marriage calendar"|"Reviewed Marathi house-entry calendar";
   /** Only populate when actual bounds have independent review. */
   observedPeriod?:{from:string;through:string};
-  reason:"Chaturmas";
+  reason:"Chaturmas"|"Restricted lunar months and planetary Asta";
   headline:string;
   explanation:string;
   alternativesNote:string;
@@ -39,8 +39,24 @@ function isReviewedMonth(value:number):value is ReviewedMonth{
 export function getVerifiedMuhuratClosure(
   event:string,year:number,month:number,city:Pick<City,"name"|"state"|"slug">
 ):VerifiedMuhuratClosure|null{
-  if(event!=="wedding"||city.state!=="Maharashtra"||!isReviewedYear(year)||!isReviewedMonth(month))return null;
+  if(city.state!=="Maharashtra"||!isReviewedMonth(month))return null;
   const monthName=MONTH_NAMES[month];
+  // Only 2026 has independently matched Pune + statewide Marathi Griha
+  // Pravesh month-level exclusions. Do not copy these into 2025 or 2027.
+  if(event==="griha-pravesh"&&year===2026){
+    return {
+      code:`marathi-griha-pravesh-2026-${monthName.toLowerCase()}`,
+      event:"griha-pravesh",year:2026,month,cityName:city.name,
+      convention:"Reviewed Marathi house-entry calendar",
+      reason:"Restricted lunar months and planetary Asta",
+      headline:`No customary Marathi Griha Pravesh Muhurat dates in ${city.name} in ${monthName} 2026`,
+      explanation:`The reviewed Marathi Griha Pravesh calendar lists no standard house-entry Muhurat dates in ${monthName} 2026. Independent Pune Panchang data likewise reports zero auspicious days for the month, screening restricted lunar months and relevant planetary Asta periods. A favorable sunrise Tithi, Nakshatra, Choghadiya or Abhijit period alone is not sufficient to approve a formal Griha Pravesh.`,
+      alternativesNote:`This result concerns formal Griha Pravesh according to the reviewed Marathi-calendar tradition, not a blanket prohibition on moving house, performing household puja or following another community's custom in ${city.name}. Individual family practices can differ.`,
+      periodNote:`The customary 2026 house-entry calendars exclude this full month. They apply multiple month/planetary rules, so we do not claim that every individual day was rejected by an independently computed Shukra or Guru Tara Asta interval.`,
+      reviewedOn:"2026-10-13",
+    };
+  }
+  if(event!=="wedding"||!isReviewedYear(year))return null;
   const observedPeriod=year===2026?{from:"2026-07-25",through:"2026-11-20"}:undefined;
   return {
     code:`marathi-chaturmas-${year}-${monthName.toLowerCase()}`,
