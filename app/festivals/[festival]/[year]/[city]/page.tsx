@@ -89,6 +89,12 @@ export default async function Page({params}:{params:Promise<{festival:string;yea
     </div>
 
     <section className="wide-panel"><div className="seo-copy">
+      <small>FESTIVAL OBSERVANCE · ${city.name.toUpperCase()}</small>
+      <h2>{content.ritualTitle}</h2>
+      <p>{content.ritualBody}</p>
+    </div></section>
+
+    <section className="wide-panel"><div className="seo-copy">
       <h2>{cityContext.focusTitle}</h2>
       <p>{cityContext.focusBody}</p>
     </div></section>
