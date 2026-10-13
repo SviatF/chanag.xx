@@ -14,3 +14,14 @@ The existing v2 compressed Muhurat monthly snapshots record only Tithi and Naksh
 To fully validate the **clock-time lunar match**, extend the v2 Muhurat snapshot schema with the Tithi/Nakshatra transition times and local dates, regenerate 48 shards using Swiss Ephemeris, and clip timing suggestions against the active lunar intervals. This is a real calculation change involving all 338 datasets, so do not falsely claim it was completed in Wave 3A.
 
 All page-count, indexation, canonical, robots, city and month rollout controls stay unchanged.
+
+
+## Ranking saturation finding
+The first full precomputed-matrix pass counted 3,921 score-100 rows out of
+11,657 sunrise-screened event-date rows (~33.6%). The existing score is
+an availability index and should not be read as unique ritual suitability.
+The score weights remain stable in Wave 3A for compatibility; tied scores
+and tied longest window are additionally ordered by *total unique clean time*,
+then timing-source diversity, Abhijit survival and finally local ISO date.
+A later score distribution redesign must be explicitly justified and tested,
+not silently reweight 100s as a claim of improved religious accuracy.

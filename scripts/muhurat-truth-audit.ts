@@ -52,11 +52,18 @@ for(const id of MUHURAT_PANCHANG_SHARD_IDS){
             if(intersects(w,avoid.window))issues(`${key} ${event} ${row.date}: window overlaps ${avoid.label}`);
           }
           for(const source of w.sources){
-            const sourceWindow=source==="Abhijit Muhurat"?row.data.abhijit:row.data.dayChoghadiya.find(p=>`${p.name} Choghadiya`===source&&p.effect==="good");
-            if(!sourceWindow){issues(`${key} ${event} ${row.date}: unsupported source ${source}`);continue;}
-            const srcStart=asMinutes(sourceWindow.start),srcEnd=asMinutes(sourceWindow.end);
-            if(st===null||end===null||srcStart===null||srcEnd===null||st<srcStart||end>srcEnd)
-              issues(`${key} ${event} ${row.date}: window exceeds source ${source}`);
+            const matchingSources=source==="Abhijit Muhurat"
+              ?(row.data.abhijit?[row.data.abhijit]:[])
+              :row.data.dayChoghadiya.filter(p=>`${p.name} Choghadiya`===source&&p.effect==="good");
+            if(!matchingSources.length){issues(`${key} ${event} ${row.date}: unsupported source ${source}`);continue;}
+            // The first and last daytime Choghadiya can share a name.
+            // Match ANY actual occurrence; .find() can mistake a valid
+            // evening Amrit/Labh period for an invalid morning extension.
+            const contained=matchingSources.some(sourceWindow=>{
+              const srcStart=asMinutes(sourceWindow.start),srcEnd=asMinutes(sourceWindow.end);
+              return st!==null&&end!==null&&srcStart!==null&&srcEnd!==null&&st>=srcStart&&end<=srcEnd;
+            });
+            if(!contained)issues(`${key} ${event} ${row.date}: window exceeds all occurrences of source ${source}`);
           }
         }
       }

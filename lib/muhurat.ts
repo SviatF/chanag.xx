@@ -207,6 +207,12 @@ export async function getMonthlyMuhurat(event:string,year:number,month:number,ci
       planning:buildMuhuratPlanningScore(event,recommendedWindows)
     });
   }
-  rows.sort((a,b)=>b.planning.score-a.planning.score||b.planning.longestWindowMinutes-a.planning.longestWindowMinutes||a.date.localeCompare(b.date));
+  rows.sort((a,b)=>
+    b.planning.score-a.planning.score||
+    b.planning.longestWindowMinutes-a.planning.longestWindowMinutes||
+    b.planning.totalCleanMinutes-a.planning.totalCleanMinutes||
+    b.planning.sourceCount-a.planning.sourceCount||
+    Number(b.planning.hasAbhijit)-Number(a.planning.hasAbhijit)||
+    a.date.localeCompare(b.date));
   return {rule,rows};
 }
