@@ -60,6 +60,13 @@ function removeBlocked(window:RecommendedMuhuratWindow,blocked:ReadonlyArray<Loc
  * Karana names leave the existing candidate clocks intact; we NEVER infer
  * suitability from a non-Vishti Karana.
  */
+const KNOWN_KARANAS=new Set(["Kimstughna","Bava","Balava","Kaulava","Taitila","Garaja","Vanija","Vishti","Shakuni","Chatushpada","Naga"]);
+export function hasCompleteWeddingKaranaEvidence(evidence:WeddingKaranaEvidence):boolean{
+  const k=muhuratRelativeEndMinutes(evidence.date,evidence.karanaEndDate,evidence.karanaEnd);
+  const t=muhuratRelativeEndMinutes(evidence.date,evidence.tithiEndDate,evidence.tithiEnd);
+  return typeof evidence.karana==="string"&&KNOWN_KARANAS.has(evidence.karana)&&
+    k!==null&&t!==null&&k>0&&t>0&&k<=t+1;
+}
 export function screenWeddingVishtiKarana(
   evidence:WeddingKaranaEvidence,
   windows:ReadonlyArray<RecommendedMuhuratWindow>
@@ -68,7 +75,7 @@ export function screenWeddingVishtiKarana(
     muhuratRelativeEndMinutes(evidence.date,evidence.karanaEndDate,evidence.karanaEnd);
   const t=evidence.tithiEnd===undefined?null:
     muhuratRelativeEndMinutes(evidence.date,evidence.tithiEndDate,evidence.tithiEnd);
-  if(!evidence.karana||k===null||t===null||k<=0||t<=0||k>t+1)
+  if(!hasCompleteWeddingKaranaEvidence(evidence)||k===null||t===null)
     return {status:"invalid-evidence",windows:[],blocked:[]};
 
   const ranges:LocalRange[]=[];
