@@ -6,7 +6,13 @@ import {festivalBySlugYear} from "../lib/festivals";
 import {checkAgainstReference,checkPanchangIntegrity} from "./content-truth-checks";
 import {festivalTruthReferences} from "../tests/fixtures/content-truth-references";
 
-const sampleDates=["2026-09-14","2026-10-11","2026-10-20","2026-10-29","2026-11-08"];
+const sampleDates=[
+  "2025-01-15","2025-03-21","2025-06-21","2025-09-09","2025-12-31",
+  "2026-01-14","2026-03-19","2026-06-21","2026-09-09","2026-09-14",
+  "2026-10-11","2026-10-20","2026-10-21","2026-10-29","2026-11-08","2026-12-31",
+  "2027-01-01","2027-03-21","2027-06-21","2027-10-29",
+  "2028-01-01","2028-02-29","2028-06-21","2028-12-31"
+];
 const output=process.argv.find(arg=>arg.startsWith("--report="))?.slice(9)??"artifacts/content-integrity-audit.json";
 const cities=activeIndexCitySlugs();
 const findings:Array<{type:string;city:string;date:string;field:string;explanation:string;source?:string}>=[];
@@ -36,6 +42,16 @@ for(const city of cities){
     }
   }
 }
+// Adjacent-day continuity catches local-date handoff errors at midnight and festival boundaries.
+for(const city of cities){
+  for(const [first,next] of [["2026-10-20","2026-10-21"],["2026-12-31","2027-01-01"]] as const){
+    const left=seen.get(`${city}|${first}`),right=seen.get(`${city}|${next}`);
+    if(!left||!right)continue;
+    const last=left.nightChoghadiya.at(-1);
+    if(!last||last.end!==right.sunrise||last.endDayOffset!==1)
+      record("day-rollover",city,first,"choghadiya",`Night ends ${last?.end??"missing"} offset ${last?.endDayOffset??"?"} but next sunrise is ${right.sunrise}`);
+  }
+}
 for(const fixture of festivalTruthReferences){
   const item=festivalBySlugYear(fixture.festival,Number(fixture.date.slice(0,4)));
   if(item?.date!==fixture.date)record("festival-date",fixture.city,fixture.date,fixture.festival,`Maintained festival date ${item?.date??"missing"} conflicts with sourced date`,fixture.source);
@@ -46,11 +62,11 @@ for(const fixture of festivalTruthReferences){
 }
 const report={
   startedAt:new Date().toISOString(),
-  stage:"wave-0 independent sources + internal chronology sample; NOT full corpus verification",
+  stage:"wave-1: 25 active cities × 24 seasonal/transition dates, chronology checks + sourced snapshots; NOT full corpus verification",
   counts:{activeCities:cities.length,sampleDates:sampleDates.length,calculatedPages:tested.length,independentFixtures:festivalTruthReferences.length,errors:findings.length},
   limitations:[
     "Source records are fixed observations on named dates; no automatic independent ephemeris is assumed.",
-    "The city×date sample does not imply the remaining sitemap URLs are factually certified.",
+    "24 sampled dates per active city do not certify all indexable days or independently prove astronomy.",
     "Content usefulness, ritual completeness, and human editorial value require family-specific reviews in subsequent waves."
   ],
   findings,tested

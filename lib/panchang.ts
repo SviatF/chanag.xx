@@ -3,6 +3,7 @@ import { createDefaultSweData } from "@typescriptify/sweph/dist/types.js";
 import { sweCalc, sweClose, sweSetSidMode } from "@typescriptify/sweph/dist/sweph.js";
 import { sweRiseTrans } from "@typescriptify/sweph/dist/swecl.js";
 import { julDay } from "@typescriptify/sweph/dist/swedate.js";
+import {requireSolarEvent,requireSolarSequence,requireTransition,requirePreviousNewMoon,requireFiniteLongitudes} from "./ephemeris-integrity";
 import {
   SE_SUN,
   SE_MOON,
@@ -203,9 +204,10 @@ export async function getPanchang(date: Date, city: City): Promise<Panchang> {
     // The current public reference fixtures are aligned with the common upper-limb,
     // refraction-aware sunrise convention used by DrikPanchang by default. We keep
     // that convention explicit rather than silently mixing sunrise definitions.
-    const sunriseJd = rise.retval >= 0 ? rise.tret : baseJd + 0.25;
-    const sunsetJd = set.retval >= 0 ? set.tret : baseJd + 0.75;
-    const nextSunriseJd = nextRise.retval >= 0 ? nextRise.tret : baseJd + 1.25;
+    const sunriseJd = requireSolarEvent(rise,city.slug,dateIso,"sunrise");
+    const sunsetJd = requireSolarEvent(set,city.slug,dateIso,"sunset");
+    const nextSunriseJd = requireSolarEvent(nextRise,city.slug,dateIso,"next sunrise");
+    requireSolarSequence(sunriseJd,sunsetJd,nextSunriseJd,city.slug,dateIso);
 
     // A Panchang day runs from local sunrise to the next sunrise. Searching lunar
     // rise/set from sunrise prevents a pre-sunrise civil event from being assigned
@@ -226,6 +228,7 @@ export async function getPanchang(date: Date, city: City): Promise<Panchang> {
       const moon = sweCalc(swed, jd, SE_MOON, tropicalFlags).xx[0];
       const sunSidereal = sweCalc(swed, jd, SE_SUN, siderealFlags).xx[0];
       const moonSidereal = sweCalc(swed, jd, SE_MOON, siderealFlags).xx[0];
+      requireFiniteLongitudes([sun,moon,sunSidereal,moonSidereal],city.slug,dateIso);
       const elongation = norm(moon - sun);
       return {
         elongation,
@@ -290,14 +293,14 @@ export async function getPanchang(date: Date, city: City): Promise<Panchang> {
         current = previous;
         currentIndex = previousIndex;
       }
-      return sunriseJd - 29.5;
+      throw new Error(`Swiss Ephemeris previous new moon search failed for ${city.slug} on ${dateIso}`);
     };
 
     const sunriseForIso = (iso: string) => {
       const parts = isoDateParts(iso);
       const start = indiaCivilDayStartJulian(parts.year, parts.month, parts.day);
       const result = sweRiseTrans(swed, start, SE_SUN, null, SEFLG_MOSEPH, SE_CALC_RISE, geopos, 1013.25, 25, null);
-      return result.retval >= 0 ? result.tret : null;
+      return requireSolarEvent(result,city.slug,iso,"sunrise");
     };
 
     const resolveSamvatYearStart = () => {
@@ -345,7 +348,7 @@ export async function getPanchang(date: Date, city: City): Promise<Panchang> {
       const nextDate = addIsoDays(startDate, 1);
       const startSunrise = sunriseForIso(startDate);
       const nextSunrise = sunriseForIso(nextDate);
-      const activeAt = (jd: number | null) => jd !== null && jd >= pratipadaStart && jd < pratipadaEnd;
+      const activeAt = (jd: number) => jd >= pratipadaStart && jd < pratipadaEnd;
 
       // Normal case: use the civil date whose local sunrise falls inside Pratipada.
       // Kshaya-style case: if Pratipada begins and ends between two sunrises, keep
@@ -360,9 +363,9 @@ export async function getPanchang(date: Date, city: City): Promise<Panchang> {
       return boundary;
     };
 
-    const tithiEndJd = findTransitionFrom(sunriseJd, (jd) => stateAt(jd).tithiIndex);
-    const nakshatraEndJd = findTransitionFrom(sunriseJd, (jd) => stateAt(jd).nakshatraIndex);
-    const previousNewMoonJd = findPreviousNewMoon();
+    const tithiEndJd = requireTransition(findTransitionFrom(sunriseJd, (jd) => stateAt(jd).tithiIndex),sunriseJd,city.slug,dateIso,"Tithi");
+    const nakshatraEndJd = requireTransition(findTransitionFrom(sunriseJd, (jd) => stateAt(jd).nakshatraIndex),sunriseJd,city.slug,dateIso,"Nakshatra");
+    const previousNewMoonJd = requirePreviousNewMoon(findPreviousNewMoon(),sunriseJd,city.slug,dateIso);
     const monthSunSign = Math.floor(stateAt(previousNewMoonJd + 0.001).sunSidereal / 30);
     const hinduMonth = amantaMonthByPreviousNewMoonSunSign[monthSunSign];
 
