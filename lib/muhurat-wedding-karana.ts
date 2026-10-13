@@ -125,7 +125,15 @@ export function screenWeddingVishtiKarana(
     if(k<1440)ranges.push({start:k,end:Math.min(1440,t)});
   }
   const normalized=ranges.filter(x=>x.end>x.start);
-  const screened=windows.flatMap(w=>removeBlocked(w,normalized));
+  // Recheck the parent Tithi here as defense in depth. A caller that omits
+  // upstream lunar clipping must not reopen a terminal Karana afterward.
+  const screened=windows.flatMap(w=>{
+    const start=mins(w.start),end=mins(w.end);
+    if(start===null||end===null||end<=start)return [];
+    const boundedEnd=Math.min(end,t);
+    if(boundedEnd-start<15)return [];
+    return removeBlocked({...w,end:clock(boundedEnd)},normalized);
+  });
   return {
     status:"vishti-screened",
     windows:screened,
