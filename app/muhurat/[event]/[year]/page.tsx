@@ -4,6 +4,7 @@ import {notFound} from "next/navigation";
 import Header from "@/components/Header";
 import {cityBySlug} from "@/lib/cities";
 import {muhuratRules} from "@/lib/muhurat";
+import {getMuhuratVerificationNotice} from "@/lib/muhurat-verification-notice";
 import {buildMuhuratYearQualityContent} from "@/lib/muhurat-content-engine";
 import {buildMuhuratYearContext} from "@/lib/muhurat-year-context";
 import {buildMuhuratYearHighSimilarityContext} from "@/lib/muhurat-year-high-similarity-context";
@@ -27,6 +28,7 @@ export default async function YearlyMuhurat({params}:{params:Promise<{event:stri
   const summary=await buildYearlyMuhuratSummary(p.event,year,city);
   const quality=buildMuhuratYearQualityContent(p.event,year,city,summary);
   const yearContext=buildMuhuratYearContext(summary);
+  const verification=getMuhuratVerificationNotice(p.event,year,null,city);
   const highSimilarityContext=buildMuhuratYearHighSimilarityContext(summary);
   const ld={"@context":"https://schema.org","@type":"CollectionPage","name":`${rule.title} ${year} analysis`,"url":`https://panchvani.com${muhuratYearPath(p.event,year)}`,"description":quality.directAnswer};
 
@@ -35,6 +37,7 @@ export default async function YearlyMuhurat({params}:{params:Promise<{event:stri
     <p className="page-kicker">YEARLY MUHURAT ANALYSIS · MUMBAI BASELINE</p>
     <h1 className="page-title">{rule.title}<br/>{year}</h1>
     <p className="page-subtitle">{quality.directAnswer}</p>
+    <section className="wide-panel"><div className="seo-copy"><small>YEARLY VERIFICATION · {p.event.toUpperCase()}</small><h2>{verification.headline}</h2><p>{verification.explanation}</p><p>Any separately reviewed month-level closure is shown on its corresponding monthly page; this yearly table does not override that tradition-specific exclusion.</p></div></section>
 
     <div className="data-grid">{quality.facts.map(item=><div className="data-card" key={item.label}><small>{item.label}</small><strong>{item.value}</strong>{item.note?<small>{item.note}</small>:null}</div>)}</div>
     <section className="wide-panel"><div className="seo-copy"><h2>{quality.fingerprintTitle}</h2><p>{quality.fingerprintBody}</p></div></section>
