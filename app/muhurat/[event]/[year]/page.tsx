@@ -40,6 +40,12 @@ export default async function YearlyMuhurat({params}:{params:Promise<{event:stri
     <p className="page-subtitle"><strong>Candidate-only evidence:</strong> {verification.headline}. A 0–100 value measures window availability, not a verified ceremony or an override of month-level exclusions.</p>
 
     <div className="data-grid">{quality.facts.map(item=><div className="data-card" key={item.label}><small>{item.label}</small><strong>{item.value}</strong>{item.note?<small>{item.note}</small>:null}</div>)}</div>
+    {p.event==="wedding"?<section className="wide-panel"><div className="seo-copy">
+      <small>{year} · MUMBAI WEDDING KARANA SCREEN</small>
+      <h2>How Bhadra changed the {year} wedding candidate windows</h2>
+      <p>The {year} source-window check removed {summary.vishtiExcludedReferenceMinutes??0} total reference-window minutes on {summary.vishtiAffectedDates??0} screened dates where Vishti (Bhadra) overlapped a Wedding candidate clock. These are summed intervals and may overlap; they are not unique hours or fully certified Muhurat times.</p>
+      <p>Month-by-month reference timing removed: {summary.months.map(m=>`${m.name}: ${m.vishtiExcludedReferenceMinutes??0} min over ${m.vishtiAffectedDates??0} dates`).join(" · ")}. A month with 0 removed minutes can still have other religious exclusions or lack a verified ceremony calendar.</p>
+    </div></section>:null}
     <section className="wide-panel"><div className="seo-copy"><h2>{quality.fingerprintTitle}</h2><p>{quality.fingerprintBody}</p></div></section>
 
     <section className="wide-panel">
