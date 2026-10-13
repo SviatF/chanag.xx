@@ -23,7 +23,8 @@
     "audit:seo-live": "node scripts/seo-live-response-audit.mjs",
     "audit:truth": "npx --yes tsx@4.23.13 scripts/content-integrity-audit.ts",
     "audit:festivals": "npx --yes tsx@4.23.13 scripts/festival-truth-audit.ts",
-    "audit:muhurat": "npx --yes tsx@4.23.13 scripts/muhurat-truth-audit.ts"
+    "audit:muhurat": "npx --yes tsx@4.23.13 scripts/muhurat-truth-audit.ts",
+    "audit:asta-evidence": "npx --yes tsx@4.23.13 scripts/asta-evidence-audit.ts"
   },
   "dependencies": {
     "@types/node": "^22.10.0",
