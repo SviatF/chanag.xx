@@ -56,6 +56,29 @@ jobs:
           path: artifacts/asta-observer-model-comparison.json
           if-no-files-found: warn
 
+      - name: Verify observer sky geometry and atmospheric sensitivity (research only)
+        run: npm run research:asta-visibility
+
+      - name: Upload observer sky visibility diagnostics
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: asta-wave3p-visibility-geometry
+          path: artifacts/asta-heliacal-visibility-research.json
+          if-no-files-found: warn
+
+      - name: Native heliacal event search with atmospheric sensitivity (research only)
+        timeout-minutes: 7
+        run: npm run research:asta-heliacal -- --report=artifacts/asta-heliacal-deep.json
+
+      - name: Upload native heliacal sensitivity report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: asta-wave3p-heliacal-sensitivity
+          path: artifacts/asta-heliacal-deep.json
+          if-no-files-found: warn
+
       - name: Build Next.js reference
         run: npm run build:next
 
