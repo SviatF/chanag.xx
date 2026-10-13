@@ -67,6 +67,15 @@ describe("Wave 3Q Asta method comparison is never ceremony eligibility",()=>{
     expect(other.sampleCount).toBe(0);
     expect(other.sameCityMinuteSourceCount).toBe(0);
   });
+  it("quarantines duplicate event types instead of trusting the first one",()=>{
+    const original=events("clear","2027-08-07T19:41","2027-09-20T05:57");
+    const contaminated=[...original,{...original[0],instantLocalIst:"2027-08-12T19:41"}];
+    const res=reconcileAstaScenarios("Jupiter",2027,reference.locality,contaminated,[reference]);
+    expect(res.status).toBe("invalid-native-pair");
+    expect(res.rejectedNativeRecords).toBe(1);
+    expect(res.usableProfiles).toBe(0);
+    expect(res.excluded).toContainEqual({profile:"clear",reason:"duplicate-native-event-type"});
+  });
   it("does not silently approve a matching same-city published timestamp",()=>{
     const predicted=events("clear",reference.startLocal,reference.endLocal);
     const res=reconcileAstaScenarios("Jupiter",2027,reference.locality,predicted,[reference]);
