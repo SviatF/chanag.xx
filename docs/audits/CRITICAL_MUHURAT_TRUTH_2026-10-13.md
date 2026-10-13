@@ -46,3 +46,21 @@ PR #83:
 
 ## SEO / data limitations
 The reported 99.81% Google visibility loss has not been causally attributed to this single defect; verify Search Console trends, indexed URL inventory, manual actions, updates, duplicate/soft 404 response, and crawl history separately. GSC Wizard connector returned `payment_required` (subscription/trial ended) at audit time, so the **716 noindex count cannot be verified from GSC**. Do not alter robots or sitemap based only on that reported count.
+
+
+## Wave 3C follow-up — documented additional 2026 Maharashtra Chaturmas closures
+
+PR #83 protected **Mumbai October 2026**, but a reviewed Marathi-year calendar and another Maharashtra-specific panchang both report no customary wedding Muhurat days in **August or September** as well. This is a distinct dated follow-up, not a blanket extrapolation to 2025/2027, other states or other wedding traditions.
+
+| URL | Category | Previous engine behavior | Expected customary Marathi result | Independent evidence | Action |
+|---|---|---|---|---|---|
+| `/muhurat/wedding/2026/08/mumbai` | Chaturmas and marriage eligibility | Generic Tithi/Nakshatra clock screen, ignoring customary marriage month exclusion | **0 customary wedding dates**, with why-and-tradition explanation | Hindu Blog 2026 Maharashtra month listing, Drik Panchang Chanda Maharashtra 2026 Aug | Explicit scope-only closure + SSR gate |
+| `/muhurat/wedding/2026/09/mumbai` | Chaturmas and marriage eligibility | Generic Tithi/Nakshatra clock screen, ignoring customary marriage month exclusion | **0 customary wedding dates**, with why-and-tradition explanation | Hindu Blog 2026 Maharashtra month listing, Drik Panchang Chanda Maharashtra 2026 Sep | Explicit scope-only closure + SSR gate |
+| `/muhurat/wedding/2026/10/mumbai` | Chaturmas and marriage eligibility | Prior 5 rows, best 100/100 from clock-only score | **0 customary wedding dates** | Hindu Blog, Drik Panchang Chanda, LivePanditJi Delhi; conflicting AstroSage | PR #83 + expanded SSR gate |
+
+Reference: [Marathi Vivah Muhurat 2026](https://www.hindu-blog.com/2025/05/marathi-vivah-muhurat-in-2026-marriage.html) and [Drik Maharashtra 2026](https://www.drikpanchang.com/shubh-dates/shubh-marriage-dates-with-muhurat.html?lang=en&rd=0), city **Chanda not Mumbai**. These independently support customary calendar-month exclusions, but do not validate minute-level Mumbai Panchang astronomy. [LivePanditJi August 2026](https://www.livepanditji.com/muhurat/marriage/august-2026/) is a third check with a **Delhi rather than Mumbai** calculation.
+
+Verified custom scope now covers Mumbai only, wedding only, 2026 months 08/09/10, no nationwide prohibition. Time-zone, Shukra/Guru Tara Asta, eclipse, Yoga/Karana and year-family eligibility audits remain **OPEN**. Next PR must rely on reviewed evidence rather than generic score-derived claims.
+
+### New CI regression guard
+`scripts/verify-reviewed-muhurat-ssr.mjs` checks actual local Next.js SSR on six routes (3 months × city/baseline) for HTTP 200, traditional date count 0, month-dependent Chaturmas explanation, tradition-specific nuance and absence of generic 100/100 or five-date ranking. It runs before the existing full sitemap content quality gate. This validates the built code **locally**, not publicly cached live HTML. Post-deployment fresh live inspection still required.
