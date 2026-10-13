@@ -31,3 +31,21 @@ specific-year rule to other years or unverified cities.
   Nishita/Ashtami, Pradosh+Amavasya+Lagna) are NOT yet certified.
 - Do not promote `festivalPujaReference` heuristic times to verified ritual Muhurat.
 - Maintain 3350 sitemap URLs, no new index years/cities, no disclaimer boilerplate.
+
+
+## Wave 2D — remaining 14 festival dates checked (2026-10-13)
+All 14 previously unreferenced 2026 festival dates were cross-checked against the
+Maham, Haryana, India 2026 annual Hindu calendar:
+https://www.drikpanchang.com/calendars/hindu/hinducalendar.html?geoname-id=1264455
+The maintained festival dates agree with that calendar; **no main dates changed**.
+The 2026 audit ledger now covers 19/19 dated records (5 festival-specific pages
+plus the same Haryana annual source for 14). The 2027 audit ledger still covers
+19/19 using the Delhi annual source. Coverage means documented comparison, NOT
+that each entry has a separate independent publisher or that 25 cities share the
+same ritual selection rules.
+
+A relevant tradition distinction from the Haryana calendar: Rama Navami Smarta
+is 2026-03-26 and Rama Navami ISKCON 2026-03-27. This belongs to a distinct
+tradition-rule task; do not globally shift the site's main 2026 festival date.
+Wave 2 still requires precise festival-window/ritual eligibility, and independent
+sources for location- and tradition-specific dates.
