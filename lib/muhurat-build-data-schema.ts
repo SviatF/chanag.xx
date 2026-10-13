@@ -1,7 +1,7 @@
 import type {City} from "./cities";
 import type {ChoghadiyaPeriod,Panchang,TimeWindow} from "./panchang";
 
-export const MUHURAT_BUILD_DATA_VERSION=3 as const;
+export const MUHURAT_BUILD_DATA_VERSION=4 as const;
 export const MUHURAT_BUILD_DATA_SHARD_MAX_BYTES=1_500_000;
 
 export type MuhuratPanchangSnapshot={
@@ -13,6 +13,10 @@ export type MuhuratPanchangSnapshot={
   tithiEndDate:string|null;
   nakshatraEnd:string;
   nakshatraEndDate:string|null;
+  /** Sunrise Karana transition; needed to remove prohibited Vishti wedding hours. */
+  karana:string;
+  karanaEnd:string;
+  karanaEndDate:string|null;
   rahu:TimeWindow;
   yamaganda:TimeWindow;
   gulika:TimeWindow;
@@ -46,6 +50,9 @@ export function toMuhuratPanchangSnapshot(data:Panchang):MuhuratPanchangSnapshot
     tithiEndDate:data.tithiEndDate,
     nakshatraEnd:data.nakshatraEnd,
     nakshatraEndDate:data.nakshatraEndDate,
+    karana:data.karana,
+    karanaEnd:data.karanaEnd,
+    karanaEndDate:data.karanaEndDate,
     rahu:{...data.rahu},
     yamaganda:{...data.yamaganda},
     gulika:{...data.gulika},
