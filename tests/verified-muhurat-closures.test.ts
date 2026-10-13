@@ -1,51 +1,72 @@
 import {readFileSync} from "node:fs";
 import {describe,expect,it} from "vitest";
-import {findCityBySlug} from "../lib/cities";
+import {findCityBySlug,supportedCities} from "../lib/cities";
 import {getVerifiedMuhuratClosure} from "../lib/verified-muhurat-closures";
 import {getMonthlyMuhurat} from "../lib/muhurat";
-import {reviewedMarathiMarriageOctober2026,reviewedMarathiMarriageAugustSeptember2026} from "./fixtures/muhurat-closure-2026-evidence";
-const mumbai=findCityBySlug("mumbai")!;
-const delhi=findCityBySlug("delhi")!;
-const pune=findCityBySlug("pune")!;
-describe("Conventional Marathi wedding calendar — August through October 2026",()=>{
-  it("records audited sources and limits the closure to the explicitly reviewed Mumbai city-month",()=>{
-    const closed=getVerifiedMuhuratClosure("wedding",2026,10,mumbai);
-    expect(closed?.reason).toBe("Chaturmas");
-    expect(reviewedMarathiMarriageOctober2026.sources).toHaveLength(4);
-    expect(reviewedMarathiMarriageOctober2026.sources.filter(s=>s.verdict==="zero")).toHaveLength(3);
-    expect(reviewedMarathiMarriageOctober2026.sources.some(s=>s.verdict.includes("conflict"))).toBe(true);
-    expect(closed?.observedPeriod).toEqual({from:"2026-07-25",through:"2026-11-20"});
-    for(const city of [delhi,pune]){
-      expect(getVerifiedMuhuratClosure("wedding",2026,10,city)).toBeNull();
-    }
-    for(const other of [[2025,10],[2026,7],[2026,11],[2027,10]]){
-      expect(getVerifiedMuhuratClosure("wedding",other[0],other[1],mumbai)).toBeNull();
-    }
-    expect(getVerifiedMuhuratClosure("vehicle-purchase",2026,10,mumbai)).toBeNull();
-    expect(getVerifiedMuhuratClosure("griha-pravesh",2026,10,mumbai)).toBeNull();
-  });
-  it("has independently documented August and September closure evidence",()=>{
-    expect(reviewedMarathiMarriageAugustSeptember2026.months).toEqual([8,9]);
-    expect(reviewedMarathiMarriageAugustSeptember2026.sources).toHaveLength(3);
-    for(const month of [8,9,10]){
-      const record=getVerifiedMuhuratClosure("wedding",2026,month,mumbai);
-      expect(record?.month).toBe(month);
-      expect(record?.headline).toContain(new Date(Date.UTC(2026,month-1,1)).toLocaleString("en-IN",{month:"long",timeZone:"UTC"}));
+import {marathiMarriage2025to2027} from "./fixtures/muhurat-closure-2025-27-evidence";
+
+const allMaharashtra=supportedCities.filter(city=>city.state==="Maharashtra");
+const reviewedYears=[2025,2026,2027] as const;
+const reviewedMonths=[8,9,10] as const;
+
+describe("Reviewed Marathi marriage calendar by state, year and month",()=>{
+  it("keeps each of 9 calendar closures in a sourced evidence ledger",()=>{
+    expect(allMaharashtra.length).toBeGreaterThanOrEqual(11);
+    for(const year of reviewedYears){
+      const sourceRows=marathiMarriage2025to2027.sourcesByYear[year];
+      expect(sourceRows.length).toBeGreaterThanOrEqual(2);
+      expect(new Set(sourceRows.map(source=>source.publisher)).size).toBeGreaterThanOrEqual(2);
+      for(const source of sourceRows){
+        expect(source.months).toEqual([8,9,10]);
+        expect(source.verdict).toContain("zero");
+      }
     }
   });
-  it("never promotes sunrise-screened August–October Mumbai wedding times as confirmed marriage dates",async()=>{
-    for(const month of [8,9,10]){
-      const {rows}=await getMonthlyMuhurat("wedding",2026,month,mumbai);
-      expect(rows).toHaveLength(0);
+  it("only applies a named community convention to supported Maharashtra localities",()=>{
+    for(const city of allMaharashtra){
+      for(const year of reviewedYears){
+        for(const month of reviewedMonths){
+          const closure=getVerifiedMuhuratClosure("wedding",year,month,city);
+          expect(closure?.headline).toContain(city.name);
+          expect(closure?.month).toBe(month);
+          expect(closure?.year).toBe(year);
+          expect(closure?.reason).toBe("Chaturmas");
+          expect(closure?.convention).toBe("Customary Marathi marriage calendar");
+          if(year===2026)expect(closure?.observedPeriod).toEqual({from:"2026-07-25",through:"2026-11-20"});
+          else expect(closure?.observedPeriod).toBeUndefined();
+        }
+      }
+    }
+    for(const slug of ["delhi","ahmedabad","chennai","kolkata","bengaluru","jaipur","surat"]){
+      const city=findCityBySlug(slug)!;
+      for(const year of reviewedYears)for(const month of reviewedMonths){
+        expect(getVerifiedMuhuratClosure("wedding",year,month,city)).toBeNull();
+      }
     }
   });
-  it("renders a reasoned zero-date page, not invented lunar-filter emptiness or a false ranking",()=>{
+  it("does not extrapolate into adjacent months, years or unrelated ceremony types",()=>{
+    const pune=findCityBySlug("pune")!;
+    for(const [year,month] of [[2024,9],[2028,9],[2025,7],[2026,7],[2026,11],[2027,11]]){
+      expect(getVerifiedMuhuratClosure("wedding",year,month,pune)).toBeNull();
+    }
+    for(const event of ["griha-pravesh","vehicle-purchase","gold-purchase","naming-ceremony"]){
+      expect(getVerifiedMuhuratClosure(event,2026,10,pune)).toBeNull();
+    }
+  });
+  it("does not promote any reviewed Maharashtra month to a wedding recommendation",async()=>{
+    for(const city of allMaharashtra){
+      for(const year of reviewedYears)for(const month of reviewedMonths){
+        const {rows}=await getMonthlyMuhurat("wedding",year,month,city);
+        expect(rows,city.slug+" "+year+"-"+month).toHaveLength(0);
+      }
+    }
+  });
+  it("renders non-generic city/year-specific zero-date explanations",()=>{
     const source=readFileSync("components/VerifiedMuhuratClosurePage.tsx","utf8");
-    expect(source).toContain("Why are no traditional Marathi wedding dates recommended?");
-    expect(source).toContain("monthName");
-    expect(source).not.toContain("All 31 civil dates of October");
-    expect(getVerifiedMuhuratClosure("wedding",2026,10,mumbai)?.explanation).toContain("does not override");
+    expect(source).toContain("closure.periodNote");
     expect(source).toContain("closure.alternativesNote");
+    expect(source).toContain("{city.name} Panchang for 12");
+    expect(source).not.toContain("All 31 civil dates of October");
     expect(source).not.toContain("scoreEvidence");
     for(const file of ["app/muhurat/[event]/[year]/[month]/page.tsx","app/muhurat/[event]/[year]/[month]/[city]/page.tsx"]){
       const page=readFileSync(file,"utf8");
