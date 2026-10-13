@@ -34,6 +34,17 @@ jobs:
       - name: Run Panchang regression tests
         run: npm test
 
+      - name: Audit independent Guru Shukra Asta evidence (research-only)
+        run: npm run audit:asta-evidence
+
+      - name: Upload Asta evidence gap report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: asta-evidence-gap-report
+          path: artifacts/asta-evidence-audit.json
+          if-no-files-found: warn
+
       - name: Build Next.js reference
         run: npm run build:next
 
