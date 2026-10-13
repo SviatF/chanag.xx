@@ -83,3 +83,18 @@ The independent 2025/2026/2027 reference ledger is in `tests/fixtures/muhurat-cl
 2. No external calibrated Shukra/Guru Asta / Adhika Maas + prohibited Yoga/Karana and Lagna eligibility algorithm (generic candidates therefore **unverified**).
 3. No independent 2–3-source city/date audit of every Panchang, Festival or Vrat URL.
 4. No GSC data for the 716 noindex URLs or historical performance causes; do not claim 99.81% recovery.
+
+
+## Wave 3F — Griha Pravesh Maharashtra Aug–Oct 2026 (event-specific)
+
+**Evidence-backed truth correction — NOT derived by copying Vivah Chaturmas rules.**
+- [Hindu Blog Marathi house-entry 2026](https://www.hindu-blog.com/2023/11/marathi-griha-pravesh-dates-2024.html) explicitly lists **0** Griha Pravesh days in August, September and October 2026 under customary Marathi calendar, with tradition/locality caveats.
+- [Drik Panchang Pune 2026](https://www.drikpanchang.com/shubh-dates/griha-pravesh-dates-with-muhurat.html?geoname-id=1259229) independently shows **no Shubh day** for all 3 months; notes adverse lunar months and varying Guru/Shukra Tara Asta on particular days (not a universal all-month combustion claim).
+- [LivePanditJi October 2026, Delhi](https://www.livepanditji.com/muhurat/griha-pravesh/october-2026/) also gives 0 October, **non-Maharashtra locality**, only secondary confirmation.
+- Source metadata retained in test-only `tests/fixtures/marathi-griha-pravesh-2026-evidence.ts`.
+
+**Scope:** only event=`griha-pravesh`, state=Maharashtra, year=2026, months=08–10, reviewed Marathi house-entry convention. Unrelated wedding traditions, vehicle/gold purchase, 2025/2027 Griha, or other states are *not* automatically blocked. In particular, published North Indian **October 2025 Griha Pravesh** can contain dates, therefore do not extrapolate a fixed Aug–Oct ban across years.
+
+**Release protection:** generic lunar-filter candidates are not promoted as a confirmed formal house-entry Muhurat for these sourced months; readable explanation, local Panchang link, named convention and community caveat appear instead of fabricated scores. Duplicate state-wide month explanations remain HTTP 200, followable, but only the Mumbai city representative is index-eligible; generic baseline and other Maharashtra municipalities do not enter sitemap. Other page families unchanged.
+
+**Independent verification still required:** precise Guru/Shukra Asta intervals for each city, Yoga/Karana transition windows, Adhika and permitted lunar month rule sets by tradition, 2025/2027 Griha month-by-month dates. Successful CI is not external blanket correctness.
