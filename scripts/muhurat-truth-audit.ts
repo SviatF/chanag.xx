@@ -6,6 +6,7 @@ import {getMonthlyMuhurat,muhuratRules,buildRecommendedMuhuratWindows,type Muhur
 import {getMuhuratScoreEvidence} from "../lib/muhurat-score-evidence";
 import {getVerifiedMuhuratClosure} from "../lib/verified-muhurat-closures";
 import {hasCompleteMuhuratLunarBoundaries,boundMuhuratWindowsByLunarTransitions} from "../lib/muhurat-lunar-transitions";
+import {hasCompleteWeddingKaranaEvidence,screenWeddingVishtiKarana} from "../lib/muhurat-wedding-karana";
 const resultPath=process.argv.find(a=>a.startsWith("--report="))?.slice(9)??"artifacts/muhurat-truth-audit.json";
 const asMinutes=(s:string)=>{const m=/^([01][0-9]|2[0-3]):([0-5][0-9])$/.exec(s);return m?Number(m[1])*60+Number(m[2]):null;};
 const intersects=(a:{start:string,end:string},b:{start:string,end:string})=>{
@@ -15,7 +16,7 @@ const intersects=(a:{start:string,end:string},b:{start:string,end:string})=>{
 const failures:string[]=[];
 const issues=(message:string)=>{failures.push(message);if(failures.length<=12)console.error("[muhurat-truth] FAIL "+message);};
 let shards=0,datasets=0,screenedDates=0,windows=0,zeroWindowRows=0,grade100Rows=0,scoreEvidence=0;
-let boundedRows=0,invalidSnapshotDays=0,lunarClippedWindows=0;
+let boundedRows=0,invalidSnapshotDays=0,lunarClippedWindows=0,vishtiScreenedRows=0,vishtiExcludedWindowMinutes=0;
 /** Keep independent ceremonial verification separate from engineering validity. */
 const ritualCoverage={
   reviewedBlockedEventCityMonths:0,
@@ -38,9 +39,9 @@ for(const id of MUHURAT_PANCHANG_SHARD_IDS){
     if(!city){issues(`Unknown city ${key}`);continue;}
     datasets++;
     for(const day of shard.entries[key]??[]){
-      if(!hasCompleteMuhuratLunarBoundaries(day)){
+      if(!hasCompleteMuhuratLunarBoundaries(day)||!hasCompleteWeddingKaranaEvidence(day)){
         invalidSnapshotDays++;
-        issues(key+" "+day.date+": invalid V3 Tithi/Nakshatra end");
+        issues(key+" "+day.date+": invalid V4 lunar/Karana transitions");
       }
     }
     for(const event of Object.keys(muhuratRules)){
@@ -72,8 +73,24 @@ for(const id of MUHURAT_PANCHANG_SHARD_IDS){
         else boundedRows++;
         const originalWindows=buildRecommendedMuhuratWindows(row.data);
         const clipped=boundMuhuratWindowsByLunarTransitions(row.data,originalWindows);
-        if(clipped.status!=="lunar-bounded"||JSON.stringify(clipped.windows)!==JSON.stringify(row.recommendedWindows))
-          issues(key+" "+event+" "+row.date+": windows differ from lunar-clipped sources");
+        const ceremony=event==="wedding"?screenWeddingVishtiKarana(row.data,clipped.windows):null;
+        const expectedWindows=ceremony?ceremony.windows:clipped.windows;
+        if(clipped.status!=="lunar-bounded"||JSON.stringify(expectedWindows)!==JSON.stringify(row.recommendedWindows))
+          issues(key+" "+event+" "+row.date+": windows differ from lunar + reviewed ceremony Karana sources");
+        if(ceremony){
+          vishtiScreenedRows++;
+          if(ceremony.status!=="vishti-screened"||row.karanaEvidenceStatus!=="vishti-screened")
+            issues(key+" "+event+" "+row.date+": invalid or absent wedding Karana boundary verification");
+          const minutes=(items:ReadonlyArray<{start:string;end:string}>)=>items.reduce((sum,w)=>{
+            const start=asMinutes(w.start),end=asMinutes(w.end);
+            return sum+(start===null||end===null?0:Math.max(0,end-start));
+          },0);
+          vishtiExcludedWindowMinutes+=Math.max(0,minutes(clipped.windows)-minutes(ceremony.windows));
+          for(const bad of ceremony.blocked){
+            for(const w of row.recommendedWindows)if(intersects(w,bad))
+              issues(key+" "+event+" "+row.date+": Wedding clock still overlaps prohibited Vishti/Bhadra");
+          }
+        }
         lunarClippedWindows+=originalWindows.length-clipped.windows.length;
         if(!rule.goodTithi.includes(row.data.tithi)||!rule.goodNakshatra.includes(row.data.nakshatra))
           issues(`${key} ${event} ${row.date}: failed sunrise Tithi/Nakshatra eligibility`);
@@ -117,16 +134,17 @@ for(const id of MUHURAT_PANCHANG_SHARD_IDS){
     }
   }
 }
-const report={createdAt:new Date().toISOString(),scope:"48 V3 shards × 338 city-months × 6 profiles: lunar ending dates, clock clipping, exclusions, scores and ranking",shards,datasets,screenedDates,boundedRows,invalidSnapshotDays,lunarClippedWindows,windows,zeroWindowRows,grade100Rows,scoreEvidence,eventCounts,ritualCoverage,failures:failures.slice(0,300),limitations:[
-  "V3 stores explicit dated lunar transitions and clipped daytime windows, not fully certified ritual Muhurat.",
+const report={createdAt:new Date().toISOString(),scope:"48 V4 shards × 338 city-months × 6 profiles: dated lunar/Karana evidence, wedding Vishti exclusion, clock clipping, scores and ranking",shards,datasets,screenedDates,boundedRows,invalidSnapshotDays,lunarClippedWindows,vishtiScreenedRows,vishtiExcludedWindowMinutes,windows,zeroWindowRows,grade100Rows,scoreEvidence,eventCounts,ritualCoverage,failures:failures.slice(0,300),limitations:[
+  "V4 stores explicit dated Tithi, Nakshatra and Karana transitions and source-reviewed time-scoped wedding Vishti exclusion; this is NOT complete ritual Muhurat certification.",
   "The 0–100 score measures planning-window availability, not a probability or complete Panchang Shuddhi.",
-  "Full ritual eligibility still needs ceremony-specific Vedic exclusions, ascendant and local traditions.",
+  "Full ritual eligibility still needs local Guru/Shukra Asta, Yoga exclusions, Lagna and regional/customary Vedic rules.",
   "All event-city-months except explicitly reviewed closures remain UNVERIFIED for complete religious eligibility. Do not claim a complete external correctness audit."
 ]};
 mkdirSync(resultPath.split("/").slice(0,-1).join("/")||".",{recursive:true});
 writeFileSync(resultPath,JSON.stringify(report,null,2));
 console.log(`[muhurat-truth] ${shards} shards; ${datasets} city-months; ${screenedDates} sunrise-screened event dates; ${windows} timing references; ${scoreEvidence} score reconstructions; ${zeroWindowRows} zero-window dates; ${grade100Rows} rows at score 100; issues=${failures.length}`);
 console.log(`[muhurat-truth] eventCounts=${JSON.stringify(eventCounts)}`);
+console.log(`[muhurat-truth] Wedding Vishti: screened rows=${vishtiScreenedRows}, removed candidate window-minutes=${vishtiExcludedWindowMinutes}`);
 console.log(`[muhurat-truth] ritual coverage: reviewed=${ritualCoverage.reviewedBlockedEventCityMonths}; unreviewed city-month-events=${ritualCoverage.unreviewedEventCityMonths}; unreviewed date rows=${ritualCoverage.unreviewedEventDateRows}; Maharashtra candidate risk=${ritualCoverage.riskExamples.length}`);
 console.log(`[muhurat-truth] report=${resultPath}`);
 if(failures.length)process.exitCode=1;
