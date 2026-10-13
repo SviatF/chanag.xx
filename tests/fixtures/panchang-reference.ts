@@ -114,4 +114,36 @@ export const referenceFixtures: ReferenceFixture[] = [
       moonriseDate: "2026-09-10",
     },
   },
+  // Cross-provider audit: values independently published on 2026-10-13.
+  // Drik times carry the city coordinate; second source supports sunrise,
+  // sunset, Tithi/Nakshatra, and local Rahu geometry. Exact ephemeris methods
+  // may differ by 1–2 minutes, so test a narrow tolerance rather than equality.
+  {
+    city:"mumbai",
+    date:"2026-10-13",
+    source:"https://www.drikpanchang.com/marathi/panchang/marathi-day-panchang.html?geoname-id=1275339 | https://vedicspace.com/panchang/mumbai/2026-10-13/",
+    expected:{
+      sunrise:"06:32",sunset:"18:17",
+      tithi:"Tritiya",tithiEnd:"23:27",
+      nakshatra:"Vishakha",nakshatraEnd:"01:43",
+      yoga:"Priti",karana:"Taitila",hinduMonth:"Ashwin",
+      vikramSamvat:2083,shakaSamvat:1948,
+      rahu:["15:21","16:49"],yamaganda:["09:28","10:56"],
+      gulika:["12:25","13:53"],abhijit:["12:01","12:48"]
+    }
+  },
+  {
+    city:"delhi",
+    date:"2026-10-13",
+    source:"https://www.drikpanchang.com/panchang/month-panchang.html?geoname-id=997719 | https://www.drikpanchang.com/panchang/day-panchang.html?geoname-id=934636",
+    expected:{
+      sunrise:"06:20",sunset:"17:54",
+      tithi:"Tritiya",tithiEnd:"23:27",
+      nakshatra:"Vishakha",nakshatraEnd:"01:43",
+      yoga:"Priti",karana:"Taitila",hinduMonth:"Ashwin",
+      vikramSamvat:2083,shakaSamvat:1948,
+      rahu:["15:00","16:27"],yamaganda:["09:14","10:40"],
+      gulika:["12:07","13:34"],abhijit:["11:44","12:30"]
+    }
+  },
 ];
