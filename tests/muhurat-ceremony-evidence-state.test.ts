@@ -55,7 +55,8 @@ describe("Wave 3J: full ceremony eligibility is never invented from a timing sco
       const source=readFileSync(path,"utf8");
       expect(source).toContain("getMuhuratVerificationNotice");
       expect(source).toContain("{verification.headline}");
-      expect(source).toContain("{verification.explanation}");
+      if(path.includes("[month]"))expect(source).toContain("{verification.explanation}");
+      else expect(source).toContain("Candidate-only evidence:");
     }
     expect(readFileSync("lib/muhurat.ts","utf8")).not.toContain("planetary-asta-2027-provenance");
     expect(readFileSync("lib/muhurat.ts","utf8")).not.toContain("planetary-asta-research");
