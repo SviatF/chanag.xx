@@ -46,10 +46,10 @@ for(const {path,year,month,name,city} of requests){
         ?`No customary Marathi Griha Pravesh Muhurat dates in ${city} in ${name} ${year}`
         :`No traditional Marathi wedding Muhurat dates in ${city} in ${name} ${year}`;
       if(response.status!==200)row.errors.push(`HTTP ${response.status}`);
-      if(!html.includes(title))row.errors.push(`missing reviewed ${name} 2026 zero-date headline`);
+      if(!html.includes(title))row.errors.push(`missing reviewed ${name} ${year} zero-date headline`);
       if(!html.includes(isGriha?"Traditional Marathi house-entry dates":"Traditional Marathi marriage dates"))row.errors.push("missing event-scoped 0-date statement");
       if(isGriha?(!html.includes("restricted lunar months")||!html.includes("planetary Asta")):!html.includes("Chaturmas"))row.errors.push("missing event-specific restriction reasons");
-      if(!html.includes("Marriage observances differ by community and tradition"))row.errors.push("missing community caveat");
+      if(!html.includes("not a blanket prohibition"))row.errors.push("missing convention/community caveat");
       if(/\b(\d+)\s+dates survive the lunar screen/i.test(html))row.errors.push("stale candidate-date content still published");
       if(/(?:100\/100|Why 2026-10-12 gets)/i.test(html))row.errors.push("stale or fictitious ceremony score still visible");
       if(!html.includes(`${isGriha?"Griha Pravesh Muhurat":"Wedding Muhurat"} in ${city}`))row.errors.push("unexpected city/event body");
