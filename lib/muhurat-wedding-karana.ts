@@ -80,7 +80,16 @@ export function screenWeddingVishtiKarana(
 
   const ranges:LocalRange[]=[];
   const prohibited=new Set(["Vishti","Shakuni","Chatushpada","Naga"]);
-  if(evidence.karana&&prohibited.has(evidence.karana)){
+  if(evidence.karana==="Chatushpada"){
+    // Amavasya has Chatushpada followed by Naga: BOTH are excluded.
+    // A sunrise-active Chatushpada must remain blocked until Amavasya
+    // (the parent Tithi) ends, not merely until its own Karana end.
+    ranges.push({start:0,end:Math.min(1440,t)});
+  }else if(evidence.karana&&prohibited.has(evidence.karana)){
+    // Shakuni ends with its Tithi; Naga is followed by Kimstughna.
+    // Never infer a second banned half-Tithi from Shakuni or Naga alone.
+    // Naga -> Kimstughna is NOT a continuously prohibited pair:
+    // resume only after the observed Naga transition.
     ranges.push({start:0,end:Math.min(1440,k)});
   }else if(evidence.karana==="Vanija"&&k<t-1){
     // The moveable Karana sequence is ... Garaja -> Vanija -> Vishti.
