@@ -7,6 +7,7 @@ import {findCityBySlug} from "@/lib/cities";
 import {getMonthlyMuhurat,muhuratRules} from "@/lib/muhurat";
 import {getMuhuratScoreEvidence} from "@/lib/muhurat-score-evidence";
 import {getVerifiedMuhuratClosure} from "@/lib/verified-muhurat-closures";
+import {getMuhuratVerificationNotice} from "@/lib/muhurat-verification-notice";
 import VerifiedMuhuratClosurePage from "@/components/VerifiedMuhuratClosurePage";
 import {buildMuhuratMonthlyQualityContent} from "@/lib/muhurat-content-engine";
 import {buildMuhuratCityContext} from "@/lib/muhurat-city-context";
@@ -40,6 +41,7 @@ export default async function Page({params}:{params:Promise<{event:string;year:s
   const {rows}=await getMonthlyMuhurat(p.event,year,month,city);
   const top=rows[0];
   const scoreEvidence=top?getMuhuratScoreEvidence(top):null;
+  const verification=getMuhuratVerificationNotice(p.event,year,month,city);
   const quality=buildMuhuratMonthlyQualityContent(p.event,year,month,city,rows,"city");
   const localContext=buildMuhuratCityContext(city,rows,rule.title);
   const similarityContext=buildMuhuratCitySimilarityContext(city,rows,rule.title,year,month);
@@ -53,6 +55,7 @@ export default async function Page({params}:{params:Promise<{event:string;year:s
     <p className="page-kicker">LOCAL MUHURAT ANALYSIS · {city.state}</p>
     <h1 className="page-title">{heading.primary}<br/>{heading.period}</h1>
     <p className="page-subtitle">{quality.directAnswer}</p>
+    <section className="wide-panel"><div className="seo-copy"><small>RITUAL VERIFICATION · {city.name.toUpperCase()} · {p.event.toUpperCase()}</small><h2>{verification.headline}</h2><p>{verification.explanation}</p></div></section>
 
     <div className="data-grid">{quality.facts.map(item=><div className="data-card" key={item.label}><small>{item.label}</small><strong>{item.value}</strong>{item.note?<small>{item.note}</small>:null}</div>)}</div>
     <section className="wide-panel"><div className="seo-copy"><h2>{quality.fingerprintTitle}</h2><p>{quality.fingerprintBody}</p></div></section>
