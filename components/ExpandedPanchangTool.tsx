@@ -19,6 +19,8 @@ import type {TopicalGraphGroup} from "@/lib/topical-types";
 function ResultCards({slug,data,lunar}:{slug:ExpandedToolSlug;data:Awaited<ReturnType<typeof getPanchang>>;lunar:LunarMonthConventions}){
   const tithiEnd=formatPanchangTime(data.tithiEnd,data.tithiEndDate,data.date);
   const nakshatraEnd=formatPanchangTime(data.nakshatraEnd,data.nakshatraEndDate,data.date);
+  const yogaEnd=formatPanchangTime(data.yogaEnd,data.yogaEndDate,data.date);
+  const karanaEnd=formatPanchangTime(data.karanaEnd,data.karanaEndDate,data.date);
   const moonrise=formatPanchangTime(data.moonrise,data.moonriseDate,data.date);
   const moonset=formatPanchangTime(data.moonset,data.moonsetDate,data.date);
 
@@ -51,8 +53,8 @@ function ResultCards({slug,data,lunar}:{slug:ExpandedToolSlug;data:Awaited<Retur
   return <div className="data-grid">
     <div className="data-card"><small>Tithi</small><strong>{data.tithi}</strong><small>{data.paksha} · until {tithiEnd}</small></div>
     <div className="data-card"><small>Nakshatra</small><strong>{data.nakshatra}</strong><small>Pada {data.nakshatraPada} · until {nakshatraEnd}</small></div>
-    <div className="data-card"><small>Yoga</small><strong>{data.yoga}</strong></div>
-    <div className="data-card"><small>Karana</small><strong>{data.karana}</strong></div>
+    <div className="data-card"><small>Yoga at sunrise</small><strong>{data.yoga}</strong><small>until {yogaEnd} IST</small></div>
+    <div className="data-card"><small>Karana at sunrise</small><strong>{data.karana}</strong><small>until {karanaEnd} IST</small></div>
     <div className="data-card"><small>Sunrise</small><strong>{data.sunrise}</strong><small>Sunset {data.sunset}</small></div>
     <div className="data-card"><small>Rahu Kalam</small><strong>{formatWindow(data.rahu)}</strong></div>
     <div className="data-card"><small>Amanta month</small><strong>{lunar.amantaLabel}</strong></div>
