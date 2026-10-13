@@ -183,11 +183,11 @@ async function mapLimit(items,limit,worker){
 function factualEvidenceSignals(html,text){
   // Evidence density != correctness; these counts only identify candidates for review.
   // Count unique concrete values instead of rewarding repetitions of the same clock.
-  const clocks=[...new Set(text.match(/\\b(?:[01]?\\d|2[0-3]):[0-5]\\d\\b/g)||[])];
-  const isoDates=[...new Set(text.match(/\\b20\\d{2}-\\d{2}-\\d{2}\\b/g)||[])];
-  const factualCards=[...html.matchAll(/<div\\b[^>]*class=["'][^"']*\\bdata-card\\b[^"']*["'][^>]*>/gi)].length;
-  const dataRows=[...html.matchAll(/<tr\\b/gi)].length;
-  const sections=[...html.matchAll(/<h[2-4]\\b/gi)].length;
+  const clocks=[...new Set(text.match(/\b(?:[01]?\d|2[0-3]):[0-5]\d\b/g)||[])];
+  const isoDates=[...new Set(text.match(/\b20\d{2}-\d{2}-\d{2}\b/g)||[])];
+  const factualCards=[...html.matchAll(/<div\b[^>]*class=["'][^"']*\bdata-card\b[^"']*["'][^>]*>/gi)].length;
+  const dataRows=[...html.matchAll(/<tr\b/gi)].length;
+  const sections=[...html.matchAll(/<h[2-4]\b/gi)].length;
   return {distinctClockValues:clocks.length,distinctIsoDates:isoDates.length,factualCards,dataRows,sections};
 }
 
