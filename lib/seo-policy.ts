@@ -135,9 +135,11 @@ export function isMonthlyMuhuratIndexable(event:string,year:number,month:number,
   // STATEWIDE calendar fact, not 25 independent time-sensitive city discoveries.
   // Keep the full 200-HTML pages followable for local users, but avoid indexing
   // semantically indistinguishable duplicate titles/bodies. The only indexed
-  // regional representative is /muhurat/wedding/YYYY/MM/mumbai, not the
-  // generic India-baseline route. Distinct daily Panchang pages are unaffected.
-  if(event==="wedding"&&[2025,2026,2027].includes(year)&&[8,9,10].includes(month)){
+  // regional representative is the city-specific Mumbai route, not a
+  // generic India-baseline route, for the source-reviewed convention. Distinct daily Panchang pages are unaffected.
+  const statewideSharedCalendar=(event==="wedding"&&[2025,2026,2027].includes(year)&&[8,9,10].includes(month))
+    ||(event==="griha-pravesh"&&year===2026&&[8,9,10].includes(month));
+  if(statewideSharedCalendar){
     if(!citySlug)return false;
     if(citySlug!=="mumbai"&&supportedCities.some(city=>city.slug===citySlug&&city.state==="Maharashtra"))return false;
   }
