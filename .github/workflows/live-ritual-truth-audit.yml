@@ -1,6 +1,11 @@
 name: Live Ritual Truth (read only)
 on:
   workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - "scripts/live-ritual-truth-audit.mjs"
+      - ".github/workflows/live-ritual-truth-audit.yml"
   schedule:
     - cron: '25 3 * * *'
 permissions:
