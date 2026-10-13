@@ -80,8 +80,8 @@ export default async function PanchangPage({params}:{params:Promise<{city:string
     <div className="data-grid">
       <div className="data-card"><small>Tithi</small><strong>{data.tithi}</strong><small>{data.paksha} Paksha · until {tithiEnd}</small></div>
       <div className="data-card"><small>Nakshatra</small><strong>{data.nakshatra}</strong><small>Pada {data.nakshatraPada} · until {nakshatraEnd}</small></div>
-      <div className="data-card"><small>Yoga at sunrise</small><strong>{data.yoga}</strong><small>until {yogaEnd} IST</small></div>
-      <div className="data-card"><small>Karana at sunrise</small><strong>{data.karana}</strong><small>until {karanaEnd} IST</small></div>
+      <div className="data-card"><small>Yoga</small><strong>{data.yoga}</strong><small>Ends {yogaEnd}</small></div>
+      <div className="data-card"><small>Karana</small><strong>{data.karana}</strong><small>Ends {karanaEnd}</small></div>
       <div className="data-card"><small>Sunrise</small><strong>{data.sunrise}</strong></div>
       <div className="data-card"><small>Sunset</small><strong>{data.sunset}</strong></div>
       <div className="data-card"><small>Moonrise</small><strong>{moonrise}</strong></div>
