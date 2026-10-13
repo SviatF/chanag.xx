@@ -1,0 +1,33 @@
+name: Research — Guru and Shukra Asta (not production)
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - research/wave3h-swiss-asta-experiment-20261013
+    paths:
+      - "scripts/planetary-asta-research.ts"
+      - ".github/workflows/planetary-asta-research.yml"
+permissions:
+  contents: read
+jobs:
+  compute-uncertainty-benchmark:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+          cache-dependency-path: package.json
+      - run: npm install --legacy-peer-deps --no-audit --no-fund
+      - name: Research-only geocentric Swiss Ephemeris versus single publisher
+        run: npx --yes tsx@4.23.13 scripts/planetary-asta-research.ts
+      - name: Save computed events and methodology limitations
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: planetary-asta-research-only
+          path: artifacts/planetary-asta-research.json
+          retention-days: 30
+          if-no-files-found: warn
