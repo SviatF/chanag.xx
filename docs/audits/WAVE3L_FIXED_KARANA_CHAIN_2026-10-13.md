@@ -1,22 +1,22 @@
-# Wave 3L — wedding fixed-Karana continuity correction
-**Date:** 2026-10-13. Source: established 11-Karana cyclic order and the existing reviewed wedding exclusion policy in PANCHVANI.
+# Wave 3L — wedding Chatushpada → Naga continuity correction
+**Date:** 2026-10-13. The fix is scoped to the traditional fixed Karana order and the currently reviewed wedding-only prohibition.
 
-## Confirmed algorithmic error
-Wave 3K correctly removed a sunrise-active forbidden Karana until its own transition but reopened later clock windows **even if the next half-Tithi was another forbidden Karana**. This affects the fixed terminal sequence:
-`Shakuni → Chatushpada → Naga → Kimstughna`.
+## Confirmed defect
+Wave 3K stopped a sunrise-active **Chatushpada** prohibition at its own end, thereby potentially reopening a reference wedding window for the subsequent **Naga**, which is likewise prohibited **within the same Amavasya Tithi**. This could create incorrect clean-time recommendations.
 
-The prior implementation treated **Shakuni** and **Chatushpada** as if each were followed by an eligible Karana. Within the **same sunrise-active Tithi**, the following Karana in these cases is **also excluded**, so reopening intervals between the first Karana boundary and the current Tithi end was a false wedding-candidate window.
+The four terminal Karana positions occur as: **Shakuni (Krishna Chaturdashi second half) → Chatushpada (Amavasya first half) → Naga (Amavasya second half) → Kimstughna (Shukla Pratipada first half)**.
 
-## Scoped fix
-- For sunrise **Shakuni**, block through the **Tithi end** (Shakuni + Chatushpada).
-- For sunrise **Chatushpada**, block through the **Tithi end** (Chatushpada + Naga).
-- For sunrise **Naga**, block only until the observed **Naga end** (next is Kimstughna, not prohibited by this narrow filter).
-- Keep **Vanija → Vishti** and sunrise-active **Vishti** behavior unchanged.
-- Respect midnight: if the reviewed Tithi runs into tomorrow, all current-day clocks remain blocked where both halves are prohibited.
-- Zero retained intervals yield score 0; this is **only** the Karana constraint, not complete ceremony eligibility.
+Importantly **Shakuni and Chatushpada are in different Tithis**; the ordinary Tithi clipping already prevents carrying Shakuni wedding windows across that boundary. Do not extend Shakuni's exclusion into Amavasya based on stale sunrise Tithi evidence.
 
-## Regression
-Added cases checking each pair, the terminal Naga exception, after-midnight Tithi, and zero surviving intervals. No alterations to Swiss Ephemeris / V4 snapshot schema, city coverage, sitemap, or indexation. This should not be generalized to other ceremonies without event-specific verified sources.
+## Safe scoped algorithm
+- **Chatushpada at sunrise:** with verified Karana end and Tithi end, exclude until the **current Amavasya Tithi end**; Naga is still prohibited in the same Tithi.
+- **Shakuni at sunrise:** exclude until actual Shakuni end, which is also the Tithi boundary; never infer an intra-Tithi second prohibited Karana.
+- **Naga at sunrise:** exclude until Naga end; the next Kimstughna belongs to a new Tithi, whose eligibility must be independently evaluated.
+- **Vishti** and **Vanija→Vishti** remain unchanged.
+- If Amavasya ends next civil day, blocked current-day hours remain blocked through the last available minute.
+- This rule filters *time windows*, not full wedding ceremony approval; additional planetary and tradition-specific checks remain open.
 
-## Remaining limitations
-Guru/Shukra Asta, Yoga, Lagna, region-specific monthly exclusions, and complete Shuddhi are not certified by this change. The Shakuni/Chatushpada/Naga subset is one explicit Karana filtering rule, not a source-verified full Vivah Muhurat approval.
+## Tests
+Deterministic regression checks Chatushpada→Naga full-Tithi exclusion, distinct Shakuni/Tithi boundary, Naga terminal handling, after-midnight Tithi, old Vishti behavior and invalid evidence. Both Chatushpada and Naga must not reappear as certified windows.
+
+No astronomical engine, generated V4 snapshots, event types beyond Wedding, index policy or city expansion is modified.
