@@ -8,7 +8,7 @@ import {astaEvidenceLedger} from "./fixtures/asta-evidence-ledger";
 const one:AstaReference={
   planet:"Jupiter",year:2027,locality:"Mumbai, Maharashtra",
   publisher:"Drik Panchang",url:"https://www.drikpanchang.com/example/a",
-  method:"observer-sensitive",precision:"minute",
+  method:"observer-sensitive",precision:"minute",sourceLocationMode:"publisher-pinned",
   startLocal:"2027-08-19T19:34",endLocal:"2027-09-13T05:46",
   reviewedOn:"2026-10-13"
 };
@@ -43,6 +43,14 @@ describe("Wave 3N: independently reviewed Asta evidence, never ritual approval",
       expect(a.safeForCeremonyFiltering).toBe(false);
       expect(a.independentMinuteSourceCount).toBe(1);
     }
+  });
+  it("does not trust location-reactive publication URLs as pinned observer proof",()=>{
+    const dynamic={...one,sourceLocationMode:"geolocated-snapshot" as const};
+    const r=evaluateAstaReferences([dynamic,two],"Jupiter",2027,"Mumbai, Maharashtra");
+    expect(r.status).toBe("location-not-reproducible");
+    expect(r.independentMinuteSourceCount).toBe(2);
+    expect(r.reproducibleMinuteSourceCount).toBe(1);
+    expect(r.safeForCeremonyFiltering).toBe(false);
   });
   it("never promotes a source agreement directly to wedding eligibility",()=>{
     const a=evaluateAstaReferences([one,two],"Jupiter",2027,"Mumbai, Maharashtra");
@@ -91,6 +99,7 @@ describe("Wave 3N: independently reviewed Asta evidence, never ritual approval",
     expect(comparisons).toBe(24);
     const m=evaluateAstaReferences(astaEvidenceLedger,"Jupiter",2027,"Mumbai, Maharashtra");
     expect(m.independentMinuteSourceCount).toBe(1);
+    expect(m.reproducibleMinuteSourceCount).toBe(0);
     const d=evaluateAstaReferences(astaEvidenceLedger,"Jupiter",2027,"New Delhi");
     expect(d.sourceCount).toBe(2);
     expect(d.independentMinuteSourceCount).toBe(0);
