@@ -66,8 +66,8 @@ export function astaReferenceErrors(r:AstaReference):string[]{
   if(!domain(r.url))issues.push("invalid-source-url");
   if(!["observer-sensitive","fixed-angular-threshold","not-disclosed"].includes(r.method))issues.push("invalid-method");
   if(!["minute","day"].includes(r.precision))issues.push("invalid-precision");
-  const start=r.precision==="minute"?astaLocalMinute(r.startLocal):civilUtc(r.startLocal);
-  const end=r.precision==="minute"?astaLocalMinute(r.endLocal):civilUtc(r.endLocal);
+  const start=r.precision==="minute"?astaLocalMinute(r.startLocal):(DATE.test(r.startLocal)?civilUtc(r.startLocal):null);
+  const end=r.precision==="minute"?astaLocalMinute(r.endLocal):(DATE.test(r.endLocal)?civilUtc(r.endLocal):null);
   if(start===null||end===null)issues.push("invalid-civil-time-or-precision");
   else{
     if(start>=end)issues.push("non-positive-interval");
