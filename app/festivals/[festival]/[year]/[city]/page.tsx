@@ -13,6 +13,7 @@ import {getFestivalSemantics} from "@/lib/festival-conventions";
 import {festivalCityPageIsIndexable,festivalYearSiblings} from "@/lib/festival-expansion";
 import {formatPanchangTime,getPanchang} from "@/lib/panchang";
 import {getFestivalLocalReference} from "@/lib/religious-integrity";
+import {getRegionalFestivalObservance} from "@/lib/festival-regional-observances";
 import {robotsFor} from "@/lib/seo-policy";
 import {parseRouteYear} from "@/lib/route-validation";
 import {buildFestivalTopicalGraph} from "@/lib/topical-links";
@@ -65,6 +66,7 @@ export default async function Page({params}:{params:Promise<{festival:string;yea
   const vrat=vratSlugForTithi(data.tithi);
   const siblingYears=festivalYearSiblings(festival.slug,year);
   const moonrise=formatPanchangTime(data.moonrise,data.moonriseDate,data.date);
+  const regionalObservance=getRegionalFestivalObservance(festival,city);
   const nextChhathSunrise=festival.slug==="chhath-puja"?chhathFollowingSunrise(data):null;
 
   const ld={"@context":"https://schema.org","@graph":[
@@ -85,9 +87,16 @@ export default async function Page({params}:{params:Promise<{festival:string;yea
     <div className="data-grid">
       {content.directFacts.map(item=><div className="data-card" key={item.label}><small>{item.label}</small><strong>{item.value}</strong>{item.note?<small>{item.note}</small>:null}</div>)}
       <div className="data-card"><small>Moonrise</small><strong>{moonrise}</strong></div>
+      {regionalObservance?<div className="data-card"><small>{regionalObservance.label}</small><strong>{regionalObservance.date}</strong><small>Regional observance date</small></div>:null}
       {semantics.aliases.length?<div className="data-card"><small>Regional names</small><strong>{semantics.aliases.join(" · ")}</strong></div>:null}
       {semantics.relatedObservances.length?<div className="data-card"><small>Related observances</small><strong>{semantics.relatedObservances.join(" · ")}</strong></div>:null}
     </div>
+
+    {regionalObservance?<section className="wide-panel"><div className="seo-copy">
+      <small>VERIFIED REGIONAL DATE · {city.name.toUpperCase()}</small>
+      <h2>{regionalObservance.label} in {city.name}</h2>
+      <p>{regionalObservance.message}</p>
+    </div></section>:null}
 
     {nextChhathSunrise?<section className="wide-panel"><div className="seo-copy">
       <small>CHHATH SOLAR OBSERVANCE · {city.name.toUpperCase()}</small>

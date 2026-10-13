@@ -1,9 +1,35 @@
-/** Independent, date-scoped festival references. Audit-only; not rendered. */
-export const festivalDateEvidence=[
-  {slug:"ganesh-chaturthi",year:2026,date:"2026-09-14",source:"https://www.drikpanchang.com/festivals/ganesh-chaturthi/ganesh-chaturthi-date-time.html?geoname-id=1278685"},
-  {slug:"makar-sankranti",year:2027,date:"2027-01-15",source:"https://www.drikpanchang.com/sankranti/makar-sankranti-date-time.html?geoname-id=1258352"},
-  {slug:"dussehra",year:2027,date:"2027-10-09",source:"https://www.drikpanchang.com/calendars/hindu/hinducalendar.html?geoname-id=1261481&year=2027"},
-  {slug:"dhanteras",year:2027,date:"2027-10-27",source:"https://www.drikpanchang.com/festivals/month/festivals-october.html?year=2027"},
-  {slug:"diwali",year:2027,date:"2027-10-29",source:"https://www.drikpanchang.com/diwali/diwali-puja-calendar.html?geoname-id=1261481&year=2027"},
-  {slug:"chhath-puja",year:2027,date:"2027-11-04",source:"https://www.drikpanchang.com/chhath/chhath-puja-calendar.html?geoname-id=1261481&year=2027"}
+/** Audit-only dated references, transcribed from specified Indian localities on 2026-10-13.
+ * 2027: one Delhi annual calendar source for 19 dates (NOT 19 independent publishers).
+ * 2026: five specific ritual-date sources. Store source provenance with every row.
+ * A date matching a snapshot does not establish regional timing eligibility.
+ */
+export type FestivalDateReference={
+  slug:string;year:number;date:string;source:string;sourceLocality:string;observedOn:string;
+};
+const delhi2027="https://www.drikpanchang.com/calendars/hindu/hinducalendar.html?geoname-id=1273294&year=2027";
+export const festivalDateEvidence:readonly FestivalDateReference[]=[
+  {slug:"chaitra-navratri",year:2026,date:"2026-03-19",source:"https://www.drikpanchang.com/navratri/chaitra-navratri-ghatasthapana.html?lang=en&year=2026",sourceLocality:"India, festival-specific local calendar",observedOn:"2026-10-13"},
+  {slug:"akshaya-tritiya",year:2026,date:"2026-04-19",source:"https://www.drikpanchang.com/festivals/akshaya-tritiya/akshaya-tritiya-date-time.html?geoname-id=1261481&year=2026",sourceLocality:"India, festival-specific local calendar",observedOn:"2026-10-13"},
+  {slug:"ganesh-chaturthi",year:2026,date:"2026-09-14",source:"https://www.drikpanchang.com/festivals/ganesh-chaturthi/ganesh-chaturthi-date-time.html?geoname-id=1278685&year=2026",sourceLocality:"India, festival-specific local calendar",observedOn:"2026-10-13"},
+  {slug:"dussehra",year:2026,date:"2026-10-20",source:"https://www.drikpanchang.com/festivals/vijayadashami/vijayadashami-date-time.html?geoname-id=1273294&year=2026",sourceLocality:"India, festival-specific local calendar",observedOn:"2026-10-13"},
+  {slug:"diwali",year:2026,date:"2026-11-08",source:"https://www.drikpanchang.com/festivals/lakshmipuja/festivals-lakshmipuja-timings.html?geoname-id=1273294&year=2026",sourceLocality:"India, festival-specific local calendar",observedOn:"2026-10-13"},
+  {slug:"makar-sankranti",year:2027,date:"2027-01-15",source:delhi2027,sourceLocality:"Delhi, NCT, India",observedOn:"2026-10-13"},
+  {slug:"maha-shivaratri",year:2027,date:"2027-03-06",source:delhi2027,sourceLocality:"Delhi, NCT, India",observedOn:"2026-10-13"},
+  {slug:"holi",year:2027,date:"2027-03-22",source:delhi2027,sourceLocality:"Delhi, NCT, India",observedOn:"2026-10-13"},
+  {slug:"chaitra-navratri",year:2027,date:"2027-04-07",source:delhi2027,sourceLocality:"Delhi, NCT, India",observedOn:"2026-10-13"},
+  {slug:"rama-navami",year:2027,date:"2027-04-15",source:delhi2027,sourceLocality:"Delhi, NCT, India",observedOn:"2026-10-13"},
+  {slug:"hanuman-jayanti",year:2027,date:"2027-04-20",source:delhi2027,sourceLocality:"Delhi, NCT, India",observedOn:"2026-10-13"},
+  {slug:"akshaya-tritiya",year:2027,date:"2027-05-09",source:delhi2027,sourceLocality:"Delhi, NCT, India",observedOn:"2026-10-13"},
+  {slug:"guru-purnima",year:2027,date:"2027-07-18",source:delhi2027,sourceLocality:"Delhi, NCT, India",observedOn:"2026-10-13"},
+  {slug:"raksha-bandhan",year:2027,date:"2027-08-17",source:delhi2027,sourceLocality:"Delhi, NCT, India",observedOn:"2026-10-13"},
+  {slug:"janmashtami",year:2027,date:"2027-08-25",source:delhi2027,sourceLocality:"Delhi, NCT, India",observedOn:"2026-10-13"},
+  {slug:"ganesh-chaturthi",year:2027,date:"2027-09-04",source:delhi2027,sourceLocality:"Delhi, NCT, India",observedOn:"2026-10-13"},
+  {slug:"shardiya-navratri",year:2027,date:"2027-09-30",source:delhi2027,sourceLocality:"Delhi, NCT, India",observedOn:"2026-10-13"},
+  {slug:"dussehra",year:2027,date:"2027-10-09",source:delhi2027,sourceLocality:"Delhi, NCT, India",observedOn:"2026-10-13"},
+  {slug:"karwa-chauth",year:2027,date:"2027-10-18",source:delhi2027,sourceLocality:"Delhi, NCT, India",observedOn:"2026-10-13"},
+  {slug:"dhanteras",year:2027,date:"2027-10-27",source:delhi2027,sourceLocality:"Delhi, NCT, India",observedOn:"2026-10-13"},
+  {slug:"diwali",year:2027,date:"2027-10-29",source:delhi2027,sourceLocality:"Delhi, NCT, India",observedOn:"2026-10-13"},
+  {slug:"govardhan-puja",year:2027,date:"2027-10-30",source:delhi2027,sourceLocality:"Delhi, NCT, India",observedOn:"2026-10-13"},
+  {slug:"bhai-dooj",year:2027,date:"2027-10-31",source:delhi2027,sourceLocality:"Delhi, NCT, India",observedOn:"2026-10-13"},
+  {slug:"chhath-puja",year:2027,date:"2027-11-04",source:delhi2027,sourceLocality:"Delhi, NCT, India",observedOn:"2026-10-13"},
 ] as const;
