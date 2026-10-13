@@ -3,8 +3,8 @@ import {getPanchang} from "../lib/panchang";
 import {findCityBySlug} from "../lib/cities";
 import {activeIndexCitySlugs} from "../lib/seo-policy";
 import {festivalBySlugYear} from "../lib/festivals";
-import {checkAgainstReference,checkPanchangIntegrity} from "../lib/content-truth-checks";
-import {festivalTruthReferences} from "../lib/content-truth-references";
+import {checkAgainstReference,checkPanchangIntegrity} from "./content-truth-checks";
+import {festivalTruthReferences} from "../tests/fixtures/content-truth-references";
 
 const sampleDates=["2026-09-14","2026-10-11","2026-10-20","2026-10-29","2026-11-08"];
 const output=process.argv.find(arg=>arg.startsWith("--report="))?.slice(9)??"artifacts/content-integrity-audit.json";

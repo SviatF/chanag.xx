@@ -1,5 +1,5 @@
-import type {Panchang} from "./panchang";
-import type {TruthReference} from "./content-truth-references";
+import type {Panchang} from "../lib/panchang";
+import type {TruthReference} from "../tests/fixtures/content-truth-references";
 type Finding={field:string;severity:"error"|"warning";explanation:string};
 function clock(value:string):number|null{
   const m=/^([01]\d|2[0-3]):([0-5]\d)$/.exec(value);

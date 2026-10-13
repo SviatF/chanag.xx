@@ -47,11 +47,14 @@ export const festivalTruthReferences:readonly TruthReference[]=[
     toleranceMinutes:9
   },
   {
+    // On the festival date Chaturthi begins at ~07:06, AFTER Ahmedabad
+    // sunrise: Tritiya is the correct sunrise-state. The festival page must
+    // explain the handoff rather than mislabel this as a full-day Tritiya.
     id:"ganesh-chaturthi-ahmedabad-2026",
     city:"ahmedabad",date:"2026-09-14",festival:"ganesh-chaturthi",
     source:"https://www.drikpanchang.com/festivals/ganesh-chaturthi/ganesh-chaturthi-date-time.html?geoname-id=1278685",
     observedOn:"2026-10-12",
-    values:{tithi:"Chaturthi",tithiEnd:"07:44"},
+    values:{tithi:"Tritiya",tithiEnd:"07:06"},
     toleranceMinutes:6
   }
 ] as const;

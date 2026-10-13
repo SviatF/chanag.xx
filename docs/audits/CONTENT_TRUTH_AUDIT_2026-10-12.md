@@ -37,8 +37,8 @@ or meaningful value for users.
 - Unique wording is not proof of genuine unique information or decision-making value.
 
 ## Wave 0 controls
-`lib/content-truth-references.ts`: external source observations; don't update to satisfy a test.
-`lib/content-truth-checks.ts`: chronology/invariants and independent snapshot comparison.
+`tests/fixtures/content-truth-references.ts`: external source observations; don't update to satisfy a test.
+`scripts/content-truth-checks.ts`: chronology/invariants and independent snapshot comparison.
 `npm run audit:truth`: 25 city x 5 event dates plus source comparisons; JSON audit artifact.
 `Content Truth Audit` workflow: weekly + manual + changed-code push.
 A sampled PASS is NOT certification of 3,350 URLs; failures remain visible and actionable.
@@ -54,3 +54,12 @@ Public pages do not gain disclaimer-style boilerplate from this audit.
 Never bulk-create new URLs, expand cities, or globally change robots/canonical during
 content integrity work. Patch by family, with before/after tests, quality gate and
 controlled GSC outcome tracking. Report unresolved source conflicts explicitly.
+
+## First independently detected semantic conflict
+On 2026-09-14 Ahmedabad's Ganesh Chaturthi festival date, the source reports
+Chaturthi begins approximately 07:06 local time *after sunrise*. The actual
+sunrise-state is Tritiya, ending approximately 07:08 in Panchvani. This is not
+an astronomical mismatch. Festival pages that show only sunrise Tithi beside
+the festival date can mislead users without explicitly showing the transition.
+Follow up in Wave 2 with a general festival-rule-aware presentation of
+festival-Tithi transition (no per-city hardcoded SEO text).

@@ -2,8 +2,8 @@ import {describe,expect,it} from "vitest";
 import {findCityBySlug} from "../lib/cities";
 import {getPanchang} from "../lib/panchang";
 import {festivalBySlugYear} from "../lib/festivals";
-import {festivalTruthReferences} from "../lib/content-truth-references";
-import {checkAgainstReference,checkPanchangIntegrity} from "../lib/content-truth-checks";
+import {festivalTruthReferences} from "./fixtures/content-truth-references";
+import {checkAgainstReference,checkPanchangIntegrity} from "../scripts/content-truth-checks";
 
 describe("external-source integrity ledger (snapshots, not circular fixtures)",()=>{
   for(const source of festivalTruthReferences){

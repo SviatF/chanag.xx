@@ -9,7 +9,8 @@ on:
     paths:
       - "lib/panchang.ts"
       - "lib/festivals.ts"
-      - "lib/content-truth-*.ts"
+      - "scripts/content-truth-checks.ts"
+      - "tests/fixtures/content-truth-references.ts"
       - "scripts/content-integrity-audit.ts"
       - ".github/workflows/content-truth-audit.yml"
 
