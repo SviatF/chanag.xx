@@ -81,11 +81,17 @@ const comparisons=(["enter","exit"] as const).map(kind=>{
   const expected=reference[kind];
   const matching=events.filter(e=>e.planet===reference.planet&&e.kind===kind)
     .sort((a,b)=>Math.abs(localMinuteDelta(a.at,expected))-Math.abs(localMinuteDelta(b.at,expected)))[0];
-  return {kind,expected,calculated:matching?.at??null,deltaMinutes:matching?localMinuteDelta(matching.at,expected):null,methodMatchesPublisher:false};
+  const deltaMinutes=matching?localMinuteDelta(matching.at,expected):null;
+  return {kind,expected,calculated:matching?.at??null,deltaMinutes,
+    within30Minutes:deltaMinutes!==null&&Math.abs(deltaMinutes)<=30,
+    significantDisagreement:deltaMinutes===null||Math.abs(deltaMinutes)>720,
+    methodMatchesPublisher:false};
 });
 const report={
   createdAt:new Date().toISOString(),
   status:"RESEARCH-ONLY-NOT-CEREMONY-CERTIFIED",
+  safeForCeremonyFiltering:false,
+  statusReason:"Benchmark differs from Mumbai publisher by multiple days at both boundaries; this is not a validated location-specific observability calculation.",
   engine:"Swiss Ephemeris Moshier, geocentric equatorial angular separation",
   thresholdDegrees:{jupiter:11,venusDirect:10,venusRetrograde:8},
   methodLimitations:[
