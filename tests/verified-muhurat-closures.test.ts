@@ -28,7 +28,7 @@ describe("Conventional Marathi wedding calendar — October 2026",()=>{
   it("renders a reasoned zero-date page, not invented lunar-filter emptiness or a false ranking",()=>{
     const source=readFileSync("components/VerifiedMuhuratClosurePage.tsx","utf8");
     expect(source).toContain("Why are no traditional Marathi wedding dates recommended?");
-    expect(source).toContain("does not override");
+    expect(getVerifiedMuhuratClosure("wedding",2026,10,mumbai)?.explanation).toContain("does not override");
     expect(source).toContain("closure.alternativesNote");
     expect(source).not.toContain("scoreEvidence");
     for(const file of ["app/muhurat/[event]/[year]/[month]/page.tsx","app/muhurat/[event]/[year]/[month]/[city]/page.tsx"]){
