@@ -25,11 +25,11 @@ describe("Muhurat score evidence is a verifiable planning metric, not religious 
     candidate.planning.score+=5;
     expect(()=>getMuhuratScoreEvidence(candidate)).toThrow(/score mismatch/);
   });
-  it("does not claim sunrise match proves every later hour lunar-qualified",()=>{
+  it("displays explicit city-local transition time bounds without ritual certification",()=>{
     for(const file of ["app/muhurat/[event]/[year]/[month]/page.tsx","app/muhurat/[event]/[year]/[month]/[city]/page.tsx"]){
       const source=readFileSync(file,"utf8");
-      expect(source).toContain("Tithi and Nakshatra were screened at sunrise");
-      expect(source).toContain("not verified at each listed clock time");
+      expect(source).toContain("Every retained daytime window is clipped");
+      expect(source).toContain("not certify complete ritual suitability");
       expect(source).toContain("getMuhuratScoreEvidence");
       expect(source).not.toContain("muhuratScreeningStatement");
     }
