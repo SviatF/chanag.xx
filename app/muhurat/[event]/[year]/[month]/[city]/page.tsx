@@ -5,6 +5,7 @@ import Link from "next/link";
 import {notFound} from "next/navigation";
 import {findCityBySlug} from "@/lib/cities";
 import {getMonthlyMuhurat,muhuratRules} from "@/lib/muhurat";
+import {getMuhuratScoreEvidence} from "@/lib/muhurat-score-evidence";
 import {buildMuhuratMonthlyQualityContent} from "@/lib/muhurat-content-engine";
 import {buildMuhuratCityContext} from "@/lib/muhurat-city-context";
 import {buildMuhuratCitySimilarityContext} from "@/lib/muhurat-city-similarity-context";
@@ -32,6 +33,7 @@ export default async function Page({params}:{params:Promise<{event:string;year:s
   const heading=buildMuhuratCityMonthHeading(rule.title,city.name,year,month);
   const {rows}=await getMonthlyMuhurat(p.event,year,month,city);
   const top=rows[0];
+  const scoreEvidence=top?getMuhuratScoreEvidence(top):null;
   const quality=buildMuhuratMonthlyQualityContent(p.event,year,month,city,rows,"city");
   const localContext=buildMuhuratCityContext(city,rows,rule.title);
   const similarityContext=buildMuhuratCitySimilarityContext(city,rows,rule.title,year,month);
@@ -63,9 +65,22 @@ export default async function Page({params}:{params:Promise<{event:string;year:s
     <section className="wide-panel"><div className="seo-copy"><h2>{quality.timingTitle}</h2><p>{quality.timingBody}</p></div></section>
     <section className="wide-panel"><div className="seo-copy"><h2>{quality.ruleTitle}</h2><p>{quality.ruleBody}</p></div></section>
 
+    {top&&scoreEvidence?<section className="wide-panel"><div className="seo-copy">
+      <small>RANKING EVIDENCE · {rule.title.toUpperCase()} · {city.name.toUpperCase()}</small>
+      <h2>Why {top.date} gets {scoreEvidence.score}/100</h2>
+      <p>{scoreEvidence.summary}</p>
+      <div className="data-grid">
+        <div className="data-card"><small>Longest retained interval</small><strong>{scoreEvidence.continuity}/40</strong></div>
+        <div className="data-card"><small>Total retained clock time</small><strong>{scoreEvidence.availability}/25</strong></div>
+        <div className="data-card"><small>Favorable label types</small><strong>{scoreEvidence.sourceDiversity}/20</strong></div>
+        <div className="data-card"><small>Abhijit survives exclusions</small><strong>{scoreEvidence.abhijit}/15</strong></div>
+      </div>
+      <p>Tithi and Nakshatra were screened at sunrise on {top.date}, but their continuity is not verified at each listed clock time. Use the <Link href={`/panchang/${city.slug}/${top.date}`}>full Panchang for {city.name} on {top.date}</Link> to check the exact lunar transition times before choosing any ceremony time. The score ranks retained daytime planning windows, not a fully certified ritual Muhurat.</p>
+    </div></section>:null}
+
     {top?<section className="wide-panel"><div className="seo-copy"><small>TOP LOCAL FIT · {city.name.toUpperCase()}</small><h2>{top.date} · {top.planning.grade} · {top.planning.score}/100</h2><p>{top.reasons.join(" · ")}. Longest uninterrupted clean block: {top.planning.longestWindowMinutes} minutes. Total clean-time supply: {top.planning.totalCleanMinutes} minutes.</p><p>{top.recommendedWindows[0]?`First retained local window: ${top.recommendedWindows[0].start}–${top.recommendedWindows[0].end} from ${top.recommendedWindows[0].sources.join(" + ")}.`:"This row passes the lunar screen but has no retained favorable daytime block after local exclusions."}</p></div></section>:null}
 
-    <div className="wide-panel"><table className="table"><thead><tr><th>Rank / Date</th><th>Planning score</th><th>Lunar match</th><th>Local planning windows</th><th>Local exclusions</th></tr></thead><tbody>{rows.length?rows.map((r,index)=><tr key={r.date}><td><small>#{index+1}</small><br/><Link href={`/panchang/${city.slug}/${r.date}`}>{r.date}</Link></td><td><strong>{r.planning.score}/100 · {r.planning.grade}</strong><small style={{display:"block"}}>{r.planning.longestWindowMinutes} min longest · {r.planning.totalCleanMinutes} min clean</small></td><td>{r.reasons.join(" · ")}</td><td>{r.recommendedWindows.length?<>{r.recommendedWindows.slice(0,4).map(window=><span key={`${window.start}-${window.end}`} style={{display:"block",whiteSpace:"nowrap"}}><strong>{window.start}–{window.end}</strong> <small>{window.sources.join(" + ")}</small></span>)}{r.recommendedWindows.length>4?<small>+{r.recommendedWindows.length-4} more retained windows</small>:null}</>:"No retained favorable daytime window"}</td><td>{r.avoidWindows.map(item=><span key={item.label} style={{display:"block",whiteSpace:"nowrap"}}>{item.label}: {item.window.start}–{item.window.end}</span>)}</td></tr>):<tr><td colSpan={5}>No dates matched the configured Tithi + Nakshatra profile for this month.</td></tr>}</tbody></table></div>
+    <div className="wide-panel"><table className="table"><thead><tr><th>Rank / Date</th><th>Window score /100</th><th>Tithi + Nakshatra at sunrise</th><th>Local planning windows</th><th>Local exclusions</th></tr></thead><tbody>{rows.length?rows.map((r,index)=><tr key={r.date}><td><small>#{index+1}</small><br/><Link href={`/panchang/${city.slug}/${r.date}`}>{r.date}</Link></td><td><strong>{r.planning.score}/100 · {r.planning.grade}</strong><small style={{display:"block"}}>{r.planning.longestWindowMinutes} min longest · {r.planning.totalCleanMinutes} min clean</small></td><td>{r.reasons.join(" · ")}</td><td>{r.recommendedWindows.length?<>{r.recommendedWindows.slice(0,4).map(window=><span key={`${window.start}-${window.end}`} style={{display:"block",whiteSpace:"nowrap"}}><strong>{window.start}–{window.end}</strong> <small>{window.sources.join(" + ")}</small></span>)}{r.recommendedWindows.length>4?<small>+{r.recommendedWindows.length-4} more retained windows</small>:null}</>:"No retained favorable daytime window"}</td><td>{r.avoidWindows.map(item=><span key={item.label} style={{display:"block",whiteSpace:"nowrap"}}>{item.label}: {item.window.start}–{item.window.end}</span>)}</td></tr>):<tr><td colSpan={5}>No dates matched the configured Tithi + Nakshatra profile for this month.</td></tr>}</tbody></table></div>
 
     {p.event==="gold-purchase"?<section className="wide-panel"><div className="seo-copy"><small>PRICE CONTEXT · SEPARATE DATASET</small><h2>Gold price context for {city.name}</h2><p>The timing model and the market-price model are independent. Open the <Link href={`/gold-rate/${city.slug}`}>gold rate page for {city.name}</Link> to compare the local reference price separately from this timing analysis.</p></div></section>:null}
 

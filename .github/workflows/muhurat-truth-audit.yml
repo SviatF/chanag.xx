@@ -1,0 +1,46 @@
+name: Muhurat Truth Audit
+on:
+  workflow_dispatch:
+  pull_request:
+    branches: [main]
+    paths:
+      - "lib/muhurat.ts"
+      - "lib/muhurat-score-evidence.ts"
+      - "lib/muhurat-build-data-schema.ts"
+      - "scripts/muhurat-truth-audit.ts"
+      - "app/muhurat/**"
+      - ".github/workflows/muhurat-truth-audit.yml"
+  push:
+    branches: [main]
+    paths:
+      - "lib/muhurat.ts"
+      - "lib/muhurat-score-evidence.ts"
+      - "lib/muhurat-build-data-schema.ts"
+      - "scripts/muhurat-truth-audit.ts"
+      - "app/muhurat/**"
+      - ".github/workflows/muhurat-truth-audit.yml"
+permissions:
+  contents: read
+jobs:
+  audit-muhurat-precomputed:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+          cache-dependency-path: package.json
+      - run: npm install --legacy-peer-deps --no-audit --no-fund
+      - name: Verify committed Muhurat snapshots
+        run: npm run verify:muhurat-precompute
+      - name: Audit all precomputed city-months and ranking evidence
+        run: npm run audit:muhurat
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: muhurat-truth-report
+          path: artifacts/muhurat-truth-audit.json
+          retention-days: 30
+          if-no-files-found: warn
