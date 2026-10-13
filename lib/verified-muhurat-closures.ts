@@ -16,7 +16,6 @@ export type VerifiedMuhuratClosure={
   headline:string;
   explanation:string;
   alternativesNote:string;
-  sourceUrls:readonly string[];
   reviewedOn:string;
 };
 
@@ -31,11 +30,6 @@ const MUMBAI_OCTOBER_2026:VerifiedMuhuratClosure={
   headline:"No traditional Marathi wedding Muhurat dates in Mumbai in October 2026",
   explanation:"October 2026 falls wholly inside the Chaturmas period observed by the reviewed customary Marathi wedding calendar. Under that convention, the month has no recommended marriage dates. A favorable Tithi, Nakshatra, Choghadiya or Abhijit clock period does not override this month-level observance rule. The former five-date shortlist was a lunar/daytime screening result, not a verified Vivaha Muhurat.",
   alternativesNote:"Marriage observances differ by community and tradition. Some calendars publish October dates using different methods, and not every household follows this Chaturmas restriction. This result specifically describes the customary Marathi convention, not a prohibition for everyone in Mumbai or India.",
-  sourceUrls:[
-    "https://www.hindu-blog.com/2025/05/marathi-vivah-muhurat-in-2026-marriage.html",
-    "https://www.drikpanchang.com/shubh-dates/shubh-marriage-dates-with-muhurat.html?lang=en&rd=0",
-    "https://www.livepanditji.com/muhurat/marriage/october-2026/",
-  ],
   reviewedOn:"2026-10-13"
 };
 
