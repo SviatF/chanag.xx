@@ -51,7 +51,7 @@ export function getVerifiedMuhuratClosure(
       reason:"Restricted lunar months and planetary Asta",
       headline:`No customary Marathi Griha Pravesh Muhurat dates in ${city.name} in ${monthName} 2026`,
       explanation:`The reviewed Marathi Griha Pravesh calendar lists no standard house-entry Muhurat dates in ${monthName} 2026. Independent Pune Panchang data likewise reports zero auspicious days for the month, screening restricted lunar months and relevant planetary Asta periods. A favorable sunrise Tithi, Nakshatra, Choghadiya or Abhijit period alone is not sufficient to approve a formal Griha Pravesh.`,
-      alternativesNote:`This result concerns formal Griha Pravesh according to the reviewed Marathi-calendar tradition, not a blanket prohibition on moving house, performing household puja or following another community's custom in ${city.name}. Individual family practices can differ.`,
+      alternativesNote:`This result concerns formal Griha Pravesh according to the reviewed Marathi-calendar tradition, not a blanket prohibition on moving house, performing household puja or following another community's custom in ${city.name}. Individual family practices can differ. Other published general-purpose house-entry calendars list dates in these months under different methods; PANCHVANI has not reconciled those methods and does not assert that every tradition has zero auspicious dates.`,
       periodNote:`The customary 2026 house-entry calendars exclude this full month. They apply multiple month/planetary rules, so we do not claim that every individual day was rejected by an independently computed Shukra or Guru Tara Asta interval.`,
       reviewedOn:"2026-10-13",
     };

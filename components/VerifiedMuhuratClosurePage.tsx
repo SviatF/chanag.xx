@@ -42,12 +42,13 @@ export default function VerifiedMuhuratClosurePage({event,year,month,city,baseli
       <small>WHY THERE IS NO {monthName.toUpperCase()} SHORTLIST</small>
       <h2>Why are no customary Marathi {isWedding?"wedding":"house-entry"} Muhurat dates recommended?</h2>
       <p>{closure.explanation}</p>
-      <p>{closure.periodNote} All {new Date(Date.UTC(year,month,0)).getUTCDate()} civil dates of {monthName} are excluded under the named convention. This page does not promote an otherwise favorable hourly window to a confirmed marriage recommendation.</p>
+      <p>{closure.periodNote} All {new Date(Date.UTC(year,month,0)).getUTCDate()} civil dates of {monthName} are excluded under the named convention. This page does not promote an otherwise favorable hourly window to a confirmed {isWedding?"wedding":"Griha Pravesh"} recommendation.</p>
     </div></section>
     <section className="wide-panel"><div className="seo-copy">
       <small>REGIONAL AND COMMUNITY CONVENTIONS</small>
       <h2>Does the same rule apply to every {isWedding?"wedding":"house-entry"} ceremony?</h2>
       <p>{closure.alternativesNote}</p>
+      {!isWedding?<p>Why might another published calendar list dates for the same month? Different traditions and calculation methods can apply distinct month restrictions and ceremony selection rules. The zero-date count here is explicitly the reviewed Marathi house-entry calendar, not a universal prohibition or an independently verified reconciliation of those other methods.</p>:null}
       <p>{isWedding
         ?"Separate calculations such as Venus/Jupiter combustion, Yoga, Karana, Lagna and personalized compatibility are not independently certified here. The marriage closure follows the reviewed Marathi Chaturmas convention."
         :"The house-entry closure follows reviewed published calendars. Exact Guru/Shukra combustion instants, prohibited Yoga/Karana and Lagna have not been independently certified for every local day. This page must not claim an invented minute-level religious computation."}</p>

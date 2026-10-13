@@ -22,6 +22,16 @@ describe("Reviewed Marathi marriage calendar by state, year and month",()=>{
       }
     }
   });
+  it("includes an independently published 2026 and 2027 marriage calendar corroborating the three excluded months",()=>{
+    for(const year of [2026,2027] as const){
+      const sources=marathiMarriage2025to2027.sourcesByYear[year];
+      const independent=sources.find(s=>s.publisher.includes("GaneshaSpeaks"));
+      expect(independent).toBeDefined();
+      expect(independent?.months).toEqual([8,9,10]);
+      expect(independent?.verdict).toContain("zero");
+      expect(independent?.location).toContain("not city-specific");
+    }
+  });
   it("only applies a named community convention to supported Maharashtra localities",()=>{
     for(const city of allMaharashtra){
       for(const year of reviewedYears){

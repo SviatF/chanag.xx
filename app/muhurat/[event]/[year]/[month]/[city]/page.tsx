@@ -27,7 +27,7 @@ export async function generateMetadata({params}:{params:Promise<{event:string;ye
   if(!city||!rule||!year||!month)notFound();
   const heading=buildMuhuratCityMonthHeading(rule.title,city.name,year,month);
   const closure=getVerifiedMuhuratClosure(p.event,year,month,city);
-  if(closure)return {title:`${rule.title} — No Traditional Marathi Dates in ${city.name} · ${heading.period}`,description:closure.headline+`. ${closure.reason} under the reviewed ${closure.convention} convention.`,alternates:{canonical:`/muhurat/${p.event}/${year}/${p.month}/${city.slug}`},robots:robotsFor(isMonthlyMuhuratIndexable(p.event,year,month,city.slug))};
+  if(closure)return {title:`${rule.title} — ${p.event==="wedding"?"No Traditional Marathi Wedding Dates":"No Customary Marathi House-Entry Dates"} in ${city.name} · ${heading.period}`,description:closure.headline+`. ${closure.reason} under the reviewed ${closure.convention} convention.`,alternates:{canonical:`/muhurat/${p.event}/${year}/${p.month}/${city.slug}`},robots:robotsFor(isMonthlyMuhuratIndexable(p.event,year,month,city.slug))};
   return {title:`${heading.full} Candidate Dates`,description:`${heading.full}: local clean-time rankings, score spread, timing-source coverage and event-specific continuity metrics.`,alternates:{canonical:`/muhurat/${p.event}/${year}/${p.month}/${city.slug}`},robots:robotsFor(isMonthlyMuhuratIndexable(p.event,year,month,city.slug))};
 }
 
