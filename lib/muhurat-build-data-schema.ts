@@ -1,13 +1,18 @@
 import type {City} from "./cities";
 import type {ChoghadiyaPeriod,Panchang,TimeWindow} from "./panchang";
 
-export const MUHURAT_BUILD_DATA_VERSION=2 as const;
+export const MUHURAT_BUILD_DATA_VERSION=3 as const;
 export const MUHURAT_BUILD_DATA_SHARD_MAX_BYTES=1_500_000;
 
 export type MuhuratPanchangSnapshot={
   date:string;
   tithi:string;
   nakshatra:string;
+  /** Local end clock and explicit India civil date; required for V3 fail-closed clipping. */
+  tithiEnd:string;
+  tithiEndDate:string|null;
+  nakshatraEnd:string;
+  nakshatraEndDate:string|null;
   rahu:TimeWindow;
   yamaganda:TimeWindow;
   gulika:TimeWindow;
@@ -37,6 +42,10 @@ export function toMuhuratPanchangSnapshot(data:Panchang):MuhuratPanchangSnapshot
     date:data.date,
     tithi:data.tithi,
     nakshatra:data.nakshatra,
+    tithiEnd:data.tithiEnd,
+    tithiEndDate:data.tithiEndDate,
+    nakshatraEnd:data.nakshatraEnd,
+    nakshatraEndDate:data.nakshatraEndDate,
     rahu:{...data.rahu},
     yamaganda:{...data.yamaganda},
     gulika:{...data.gulika},
