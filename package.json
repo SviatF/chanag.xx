@@ -27,7 +27,8 @@
     "audit:asta-evidence": "npx --yes tsx@4.23.13 scripts/asta-evidence-audit.ts",
     "research:asta-models": "npx --yes tsx@4.23.13 scripts/asta-observer-model-comparison.ts",
     "research:asta-visibility": "npx --yes tsx@4.23.13 scripts/asta-heliacal-visibility-research.ts",
-    "research:asta-heliacal": "npx --yes tsx@4.23.13 scripts/asta-heliacal-visibility-research.ts --deep-heliacal"
+    "research:asta-heliacal": "npx --yes tsx@4.23.13 scripts/asta-heliacal-visibility-research.ts --deep-heliacal",
+    "audit:asta-methodology": "npx --yes tsx@4.23.13 scripts/asta-wave3q-reconciliation.ts"
   },
   "dependencies": {
     "@types/node": "^22.10.0",
