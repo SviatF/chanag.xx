@@ -58,3 +58,28 @@ The **unreviewed** state is mandatory; do not interpret 0 internal test errors a
 - Live semantic audit: 6/6 pages 200 + "0 customary Marathi wedding dates" and Chaturmas explanation; no generic old scores; worker/cache headers retained for diagnostics.
 - Full 3,350 URL structural/similarity CI stays clean, but factual certification remains separate.
 - Source citations are stored in test fixtures/documents, not customer-facing brand claims in lib or app code.
+
+
+## Wave 3E: 2025–2027 traditional Marathi Chaturmas month-level source reconciliation (2026-10-13)
+
+### Verified scope and conflicts
+The independent 2025/2026/2027 reference ledger is in `tests/fixtures/muhurat-closure-2025-27-evidence.ts`. A conventional **Marathi marriage-calendar** closure is now source-supported for **August, September and October of all three years**, covering the supported **Maharashtra** city pages with an explicit community caveat. This is a **month-level calendrical rule**, not an equivalence between astronomical clock values across distant cities.
+
+| Calendar year | State-specific source | Independently published cross-check | Full months excluded | Caution |
+|---|---|---|---|---|
+| 2025 | [Marathi 2025 (Hindu Blog)](https://www.hindu-blog.com/2024/09/marathi-vivah-muhurat-in-2025-marriage-wedding-dates-maharashtra.html) | [Drik 2025 Selu, Maharashtra](https://www.drikpanchang.com/shubh-dates/shubh-marriage-dates-with-muhurat.html?time-format=24hour&year=2025) | Aug, Sep, Oct | Selu is NOT all Maharashtra; result applied only to the **named customary tradition**, not all wedding calendars |
+| 2026 | [Marathi 2026 (Hindu Blog)](https://www.hindu-blog.com/2025/05/marathi-vivah-muhurat-in-2026-marriage.html) | [Drik 2026 Chanda, Maharashtra](https://www.drikpanchang.com/shubh-dates/shubh-marriage-dates-with-muhurat.html?lang=en&rd=0); [Kalnirnay Online 2026](https://kalnirnayonline.com/) (under-verification note) | Aug, Sep, Oct | Reviewed approximately 25 Jul–20 Nov for 2026 only; 31 July and partial November NOT automatically excluded |
+| 2027 | [Mahalakshmi Calendar 2027](https://mahalakshmicalendar.com/mahalakshmi-calendar-2027/) | [Drik New Delhi 2027](https://www.drikpanchang.com/shubh-dates/shubh-marriage-dates-with-muhurat.html?geoname-id=1261481&year=2027); [Hindu Blog North 2027](https://www.hindu-blog.com/2026/02/hindu-marriage-dates-in-2027-good-dates.html); [Marathi Calendar 2027](https://marathicalendar.com/kalnirnay-2027/) | Aug, Sep, Oct | Some sources are North-Indian not Maharashtra-local; accurate **partial** Chaturmas dates and combustion boundaries not encoded without city/tradition review |
+
+### Correction and factual acceptance
+- `getVerifiedMuhuratClosure()` identifies `wedding × state=Maharashtra × year in 2025–2027 × month in 08–10` for the **customary Marathi marriage convention** and suppresses generic sunrise-screened wedding candidate rows before ranking. It explicitly says some communities follow different rules.
+- The closure component displays actual city, year and month, a zero **customary** calendar count, why this named tradition excludes the period, and a correct local Panchang link. It **does not invent** exact 2025 or 2027 Chaturmas start/end instants.
+- No convention is imposed on Gujarat, Rajasthan, Delhi, Karnataka, Kerala, Tamil Nadu, Bengal or other event types; July/November partial intervals, Shukra/Guru Asta, Yoga/Karana/Adhika and Lagna remain separate open tasks.
+- A release gate exercises year × months × six Maharashtra city pilots + October 2026 for five additional Maharashtra cities; a widened daily read-only production probe checks 28 URLs. These do not certify every unsupported tradition's wedding calculation.
+- Existing index/noindex and sitemap rules are unchanged pending actual GSC evidence. Site quality CI still verifies structural and duplicate policy, NOT universal religious truth.
+
+### Open release blockers for global certification
+1. No source-confirmed **full year×city×tradition** wedding date matrix for all other years, partial months, North/Gujarat/South/Bengal calendars.
+2. No external calibrated Shukra/Guru Asta / Adhika Maas + prohibited Yoga/Karana and Lagna eligibility algorithm (generic candidates therefore **unverified**).
+3. No independent 2–3-source city/date audit of every Panchang, Festival or Vrat URL.
+4. No GSC data for the 716 noindex URLs or historical performance causes; do not claim 99.81% recovery.
