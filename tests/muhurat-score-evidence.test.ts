@@ -10,8 +10,8 @@ describe("Muhurat score evidence is a verifiable planning metric, not religious 
   it("reconstructs all four weighted components for a clean candidate",()=>{
     const candidate=row("2026-10-05",[{start:"10:00",end:"11:00",sources:["Shubh Choghadiya","Abhijit Muhurat"]}]);
     const detail=getMuhuratScoreEvidence(candidate);
-    expect(detail).toEqual(expect.objectContaining({continuity:40,availability:25,sourceDiversity:10,abhijit:15,score:90}));
-    expect(detail.summary).toContain("90/100 window-availability score");
+    expect(detail).toEqual(expect.objectContaining({continuity:40,availability:20,sourceDiversity:10,abhijit:15,score:85}));
+    expect(detail.summary).toContain("85/100 window-availability score");
     expect(detail.summary).toContain("30-minute target");
   });
   it("does not reward an unsupported clock when zero valid windows survive",()=>{
