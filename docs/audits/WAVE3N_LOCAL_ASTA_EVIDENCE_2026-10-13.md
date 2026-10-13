@@ -5,7 +5,7 @@
 ## What was checked
 The existing geocentric 11-degree Jupiter / 10- or 8-degree Venus prototype does **not** reproduce the Drik Mumbai Jupiter 2027 observer-relative Asta interval. This is a methodological mismatch rather than an excuse to smooth or average dates. Per-city astronomical visibility and an independently verified ceremony convention remain open.
 
-Published evidence added alongside the existing Wave 3J ledger:
+Published evidence added alongside the existing Wave 3J ledger (Drik URLs can resolve to a different visitor-selected city, so exact locality is a captured source observation, not guaranteed by the URL alone):
 - [Drik, Alibag 2026 Guru Asta](https://www.drikpanchang.com/planet/asta/guru-asta-date-time.html?time-format=24plushour) — July 17 at 19:52 to **August 11 at 05:39**. Original page displayed **Aug 10 29:39+**, normalized to the following civil date.
 - [Swarn Siddhi, New Delhi 2026](https://swarnsiddhi.com/griha-pravesh-muhurat/2026) — July 14 at 18:04 to August 13 at 15:53, **fixed 11° separation**, not local visibility.
 - [Swarn Siddhi, New Delhi 2027 Shukra](https://swarnsiddhi.com/vivah-muhurat/2027) — July 6 to September 17, **date only** and 10°/8°-type angular convention, not an independent minute reference.
@@ -17,8 +17,8 @@ Published evidence added alongside the existing Wave 3J ledger:
 ## What is now enforced
 - Every snapshot must have a valid date/time (including real Gregorian day), year overlap, city, planet, HTTPS publisher URL and declared method/precision.
 - The Drik **24+ hour** clock must be normalized to an explicit next civil date.
-- Only **two distinct publisher domains with same city, same planet, same year, minute precision and declared compatible methods** can be evaluated for a model benchmark.
-- Even independent minute publications remain **method-disagreement** if one is fixed-angular and the other location-sensitive/undisclosed. They remain **boundary-disagreement** if their starts/ends differ by more than five minutes. The five-minute threshold is a *conservative source screening policy*, not an established physical measurement tolerance.
+- Only **two distinct publisher domains with same city, same planet, same year, minute precision and declared compatible methods** can be evaluated for a model benchmark. Each source must also **pin the named observer reproducibly**; a Drik page that reverts to a visitor-dependent location is only a dated geolocated snapshot, not self-verifying city evidence.
+- Two minute sources including a dynamic geolocated page remain **location-not-reproducible** until the original city binding can be reproduced/archived.\n- Even independent minute publications remain **method-disagreement** if one is fixed-angular and the other location-sensitive/undisclosed. They remain **boundary-disagreement** if their starts/ends differ by more than five minutes. The five-minute threshold is a *conservative source screening policy*, not an established physical measurement tolerance.
 - A hypothetical perfectly corroborated pair may reach `comparison-ready`; this means *run an independent physical-model benchmark*, **never** automatic `allowed` / `blocked` wedding dates.
 - For the current source ledger, **no priority city/year/planet pair is comparison-ready**. Do not implement ceremony filtering or 100% suitability claims.
 - CI now runs `npm run audit:asta-evidence` and preserves `artifacts/asta-evidence-audit.json`, alongside dedicated negative-control tests.
