@@ -13,6 +13,7 @@ import {getFestivalSemantics} from "@/lib/festival-conventions";
 import {festivalCityPageIsIndexable,festivalYearSiblings} from "@/lib/festival-expansion";
 import {formatPanchangTime,getPanchang} from "@/lib/panchang";
 import {getFestivalLocalReference} from "@/lib/religious-integrity";
+import {rakhiBhadraAtSunrise} from "@/lib/rakhi-bhadra-evidence";
 import {getRegionalFestivalObservance} from "@/lib/festival-regional-observances";
 import {robotsFor} from "@/lib/seo-policy";
 import {parseRouteYear} from "@/lib/route-validation";
@@ -68,6 +69,7 @@ export default async function Page({params}:{params:Promise<{festival:string;yea
   const moonrise=formatPanchangTime(data.moonrise,data.moonriseDate,data.date);
   const regionalObservance=getRegionalFestivalObservance(festival,city);
   const nextChhathSunrise=festival.slug==="chhath-puja"?chhathFollowingSunrise(data):null;
+  const rakhiEvidence=festival.slug==="raksha-bandhan"?rakhiBhadraAtSunrise(data):null;
 
   const ld={"@context":"https://schema.org","@graph":[
     {"@type":"WebPage","name":`${festival.name} ${year} in ${city.name}`,"url":`https://panchvani.com/festivals/${festival.slug}/${year}/${city.slug}`,"description":content.directAnswer,"about":{"@type":"Thing","name":festival.name}},
@@ -96,6 +98,15 @@ export default async function Page({params}:{params:Promise<{festival:string;yea
       <small>VERIFIED REGIONAL DATE · {city.name.toUpperCase()}</small>
       <h2>{regionalObservance.label} in {city.name}</h2>
       <p>{regionalObservance.message}</p>
+    </div></section>:null}
+
+    {rakhiEvidence?<section className="wide-panel"><div className="seo-copy">
+      <small>RAKHI · LOCAL BHADRA SCREEN · {city.name.toUpperCase()}</small>
+      <h2>Raksha Bandhan: Purnima and Bhadra in {city.name}</h2>
+      <p>{rakhiEvidence.explanation}</p>
+      {rakhiEvidence.status==="purnima-bhadra-cleared"
+        ?<p>Rakhi planning reference for {festival.date}: {rakhiEvidence.start}–{rakhiEvidence.end}. This local interval is derived from sunrise, Purnima ending and Bava Karana; it is not a generic Choghadiya period or a substitute for full ritual eligibility checks.</p>
+        :<p>The required Karana/Tithi evidence does not establish a Bhadra-free Rakhi interval for this date.</p>}
     </div></section>:null}
 
     {nextChhathSunrise?<section className="wide-panel"><div className="seo-copy">

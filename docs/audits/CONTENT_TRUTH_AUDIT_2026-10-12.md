@@ -78,3 +78,20 @@ an astronomical mismatch. Festival pages that show only sunrise Tithi beside
 the festival date can mislead users without explicitly showing the transition.
 Follow up in Wave 2 with a general festival-rule-aware presentation of
 festival-Tithi transition (no per-city hardcoded SEO text).
+
+
+## Wave 2E — Raksha Bandhan Bhadra / Vishti (2026-10-13)
+- In Shukla Purnima, Vishti = Bhadra occupies the first half;
+  Bava is the second half. Thus Purnima + Bava **at sunrise** confirms
+  Bhadra finished before that sunrise. The code does NOT infer Bhadra start/end.
+- Conservative planning interval is sunrise to earlier of Purnima end
+  and local sunset, and only when the Purnima end date/clock is valid.
+  On Vishti sunrise, non-Purnima or unknown Karana, **no Rakhi window** is shown.
+- Verify Delhi, Mumbai, Pune, Hyderabad, Kolkata 2026 and Delhi 2027
+  against dated Rakhi observations; 25-city × both years matrix must
+  verify status and not claim contradictory generic Choghadiya Muhurat.
+- This is a *source-constrained Rakhi planning interval*, NOT an exact
+  Bhadra start/end engine, Mukha/Puchha calculation or personalised
+  eligibility certificate.
+- Drik source Rakhi 2026: https://www.drikpanchang.com/hindu-festivals/rakhi/rakhi.html?time-format=24hour
+- Drik source New Delhi 2027: https://www.drikpanchang.com/festivals/raksha-bandhan/raksha-bandhan-date-time.html?geoname-id=1261481&year=2027
