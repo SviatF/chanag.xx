@@ -6,6 +6,8 @@ import {notFound} from "next/navigation";
 import {findCityBySlug} from "@/lib/cities";
 import {getMonthlyMuhurat,muhuratRules} from "@/lib/muhurat";
 import {getMuhuratScoreEvidence} from "@/lib/muhurat-score-evidence";
+import {getVerifiedMuhuratClosure} from "@/lib/verified-muhurat-closures";
+import VerifiedMuhuratClosurePage from "@/components/VerifiedMuhuratClosurePage";
 import {buildMuhuratMonthlyQualityContent} from "@/lib/muhurat-content-engine";
 import {buildMuhuratCityContext} from "@/lib/muhurat-city-context";
 import {buildMuhuratCitySimilarityContext} from "@/lib/muhurat-city-similarity-context";
@@ -24,6 +26,8 @@ export async function generateMetadata({params}:{params:Promise<{event:string;ye
   const p=await params;const city=findCityBySlug(p.city);const rule=muhuratRules[p.event];const year=parseRouteYear(p.year),month=parseRouteMonth(p.month);
   if(!city||!rule||!year||!month)notFound();
   const heading=buildMuhuratCityMonthHeading(rule.title,city.name,year,month);
+  const closure=getVerifiedMuhuratClosure(p.event,year,month,city);
+  if(closure)return {title:`${rule.title} — No Traditional Marathi Dates in ${city.name} · ${heading.period}`,description:closure.headline+`. ${closure.reason} under the reviewed ${closure.convention} convention.`,alternates:{canonical:`/muhurat/${p.event}/${year}/${p.month}/${city.slug}`},robots:robotsFor(isMonthlyMuhuratIndexable(p.event,year,month,city.slug))};
   return {title:`${heading.full} Candidate Dates`,description:`${heading.full}: local clean-time rankings, score spread, timing-source coverage and event-specific continuity metrics.`,alternates:{canonical:`/muhurat/${p.event}/${year}/${p.month}/${city.slug}`},robots:robotsFor(isMonthlyMuhuratIndexable(p.event,year,month,city.slug))};
 }
 
@@ -31,6 +35,8 @@ export default async function Page({params}:{params:Promise<{event:string;year:s
   const p=await params;const city=findCityBySlug(p.city);const rule=muhuratRules[p.event];const year=parseRouteYear(p.year),month=parseRouteMonth(p.month);
   if(!city||!rule||!year||!month)notFound();
   const heading=buildMuhuratCityMonthHeading(rule.title,city.name,year,month);
+  const closure=getVerifiedMuhuratClosure(p.event,year,month,city);
+  if(closure)return <VerifiedMuhuratClosurePage event={p.event} year={year} month={month} city={city} baseline={false} closure={closure}/>;
   const {rows}=await getMonthlyMuhurat(p.event,year,month,city);
   const top=rows[0];
   const scoreEvidence=top?getMuhuratScoreEvidence(top):null;
