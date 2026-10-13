@@ -13,6 +13,7 @@ import {
 } from "../lib/muhurat-build-data-schema";
 import {clearMuhuratPanchangMonthCache,getMuhuratPanchangMonth} from "../lib/muhurat";
 import {hasCompleteMuhuratLunarBoundaries} from "../lib/muhurat-lunar-transitions";
+import {hasCompleteWeddingKaranaEvidence} from "../lib/muhurat-wedding-karana";
 import {calendarMonthSsgPriority,muhuratCityMonthSsgPriority,muhuratMonthSsgPriority,muhuratYearSsgPriority} from "../lib/static-seo-routes";
 
 const root=resolve(process.cwd());
@@ -101,7 +102,7 @@ function isFreshShard(shard:MuhuratBuildDataShard|null,signature:string,shardId:
     const rows=shard.entries[target.key];
     const expectedDays=new Date(Date.UTC(target.year,target.month,0)).getUTCDate();
     if(!rows||rows.length!==expectedDays)return false;
-    if(rows.some(row=>!row.date||!row.tithi||!row.nakshatra||!row.rahu||!row.yamaganda||!row.gulika||!Array.isArray(row.dayChoghadiya)||!hasCompleteMuhuratLunarBoundaries(row)))return false;
+    if(rows.some(row=>!row.date||!row.tithi||!row.nakshatra||!row.rahu||!row.yamaganda||!row.gulika||!Array.isArray(row.dayChoghadiya)||!hasCompleteMuhuratLunarBoundaries(row)||!hasCompleteWeddingKaranaEvidence(row)))return false;
   }
   return true;
 }
@@ -184,7 +185,7 @@ for(const [shardId,shardTargets] of grouped){
     const month=await getMuhuratPanchangMonth(target.year,target.month,target.city);
     entries[target.key]=month.map(day=>{
       const snapshot=toMuhuratPanchangSnapshot(day);
-      if(!hasCompleteMuhuratLunarBoundaries(snapshot))throw new Error(`Invalid lunar transitions for ${target.key} / ${day.date}`);
+      if(!hasCompleteMuhuratLunarBoundaries(snapshot)||!hasCompleteWeddingKaranaEvidence(snapshot))throw new Error(`Invalid lunar or Karana transitions for ${target.key} / ${day.date}`);
       return snapshot;
     });
   }
