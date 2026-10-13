@@ -5,7 +5,7 @@ import {findCityBySlug} from "../lib/cities";
 import {activeIndexCitySlugs} from "../lib/seo-policy";
 import {getPanchang} from "../lib/panchang";
 import {getFestivalTithiEvidence} from "../lib/festival-lunar-evidence";
-import {festivalDateEvidence,festivalTraditionDateEvidence} from "../tests/fixtures/festival-date-evidence";
+import {festivalDateEvidence,festivalTraditionDateEvidence,independentFestivalDateChecks} from "../tests/fixtures/festival-date-evidence";
 import {chhathFollowingSunrise} from "../lib/festival-content-engine";
 import {getFestivalLocalReference,getFestivalRuleProfile} from "../lib/religious-integrity";
 import {rakhiBhadraAtSunrise} from "../lib/rakhi-bhadra-evidence";
@@ -28,6 +28,28 @@ const sourceDuplicateKeys=festivalDateEvidence.map(recordKey).filter((key,i,a)=>
 const unreferencedDates=[2026,2027].flatMap(year=>festivalsForYear(year)
   .filter(f=>!sourceKeys.has(recordKey(f)))
   .map(f=>({slug:f.slug,year,date:f.date})));
+// Independently corroborated festival-year keys must match both maintained
+// dates and the first publisher, not merely each other. Regional observance
+// and minute-level Puja accuracy still require their own sources.
+const independentDisagreements:Array<Record<string,string>>=[];
+const independentDuplicateKeys:string[]=[];
+const corroborated=new Set<string>();
+for(const row of independentFestivalDateChecks){
+  const key=recordKey(row);
+  if(corroborated.has(key))independentDuplicateKeys.push(key);
+  corroborated.add(key);
+  const primary=festivalDateEvidence.find(p=>recordKey(p)===key);
+  const maintained=festivalBySlugYear(row.slug,row.year);
+  const independentHost=new URL(row.source).hostname.replace(/^www\./,"");
+  const primaryHost=primary?new URL(primary.source).hostname.replace(/^www\./,""):null;
+  if(!primary||!maintained||maintained.date!==row.date||primary.date!==row.date||primaryHost===independentHost){
+    independentDisagreements.push({
+      slug:row.slug,year:String(row.year),independent:row.date,
+      maintained:maintained?.date??"missing",primary:primary?.date??"missing",
+      primaryHost:primaryHost??"missing",independentHost
+    });
+  }
+}
 const sourceCoverage=[2026,2027].map(year=>{
   const supported=festivalDateEvidence.filter(r=>r.year===year);
   return {year,maintained:festivalsForYear(year).length,sourced:supported.length,
@@ -97,7 +119,7 @@ const report={
   checked,cityCount:cities.length,catalogSlugs:festivalCatalogSlugs.length,years:coverage,
   classificationCounts:counts,
   ritualScreening:{...ritualScreening,notCertifiedRituals:[...ritualScreening.notCertifiedRituals].sort()},rakhiChecks,nightChecks,
-  sourceComparison:{references:festivalDateEvidence.length,sourceCoverage,unreferencedDates,sourceDuplicateKeys,missingSourcedDates,authoritativeDisagreements,traditionVariants:variants},
+  sourceComparison:{references:festivalDateEvidence.length,sourceCoverage,independentSecondPublisherChecks:independentFestivalDateChecks.length,independentlyCorroboratedFestivalYears:corroborated.size,independentDisagreements,independentDuplicateKeys,unreferencedDates,sourceDuplicateKeys,missingSourcedDates,authoritativeDisagreements,traditionVariants:variants},
   indexabilityPreserved:{
     year2027Indexed:festivalCityPageIsIndexable("diwali",2027,"mumbai"),
     note:"Complete 2027 date ledger remains deliberately non-indexable under explicit release gate."
@@ -108,7 +130,7 @@ const report={
 mkdirSync(output.split("/").slice(0,-1).join("/")||".",{recursive:true});
 writeFileSync(output,JSON.stringify(report,null,2));
 console.log(`[festival-truth] checked=${checked}; sourced dates=${festivalDateEvidence.length}; unsourced=${unreferencedDates.length}; duplicates=${sourceDuplicateKeys.length}; missing=${missingSourcedDates.length}; source disagreements=${authoritativeDisagreements.length}`);
-console.log(`[festival-truth] sourceCoverage=${JSON.stringify(sourceCoverage)}`);
+console.log(`[festival-truth] sourceCoverage=${JSON.stringify(sourceCoverage)}; independentSecondPublisherChecks=${independentFestivalDateChecks.length}; independentDisagreements=${independentDisagreements.length}`);
 console.log(`[festival-truth] statuses=${JSON.stringify(counts)}; humanReview=${flagged.length}; calculationFailures=${errors.length}`);
 console.log(`[festival-truth] ritualScreening=${ritualScreening.checked} unsupported=${ritualScreening.unsupportedReference} missingNextSunrise=${ritualScreening.missingNextSunrise}`);
 console.log(`[festival-truth] rakhiBhadra=${rakhiChecks.bhadraCleared}/${rakhiChecks.checked} cleared, unresolved=${rakhiChecks.unresolved.length}`);
@@ -117,4 +139,4 @@ for(const flag of flagged.slice(0,12))console.log(`[festival-truth] REVIEW ${fla
 for(const m of missingSourcedDates)console.log(`[festival-truth] NOT PUBLISHED ${m.slug} ${m.year} expected=${m.expected} source=${m.source}`);
 for(const e of errors.slice(0,15))console.error(`[festival-truth] FAIL ${e.festival} ${e.city} ${e.error}`);
 console.log(`[festival-truth] report=${output}`);
-if(errors.length||authoritativeDisagreements.length||missingSourcedDates.length||sourceDuplicateKeys.length||unreferencedDates.length||sourceCoverage.some(x=>x.sourced!==x.maintained)||ritualScreening.unsupportedReference||ritualScreening.missingNextSunrise||rakhiChecks.unresolved.length||nightChecks.unverified.length||festivalCityPageIsIndexable("diwali",2027,"mumbai"))process.exitCode=1;
+if(errors.length||authoritativeDisagreements.length||independentDisagreements.length||independentDuplicateKeys.length||missingSourcedDates.length||sourceDuplicateKeys.length||unreferencedDates.length||sourceCoverage.some(x=>x.sourced!==x.maintained)||ritualScreening.unsupportedReference||ritualScreening.missingNextSunrise||rakhiChecks.unresolved.length||nightChecks.unverified.length||festivalCityPageIsIndexable("diwali",2027,"mumbai"))process.exitCode=1;
