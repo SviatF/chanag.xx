@@ -68,10 +68,12 @@ export function hasCompleteWeddingKaranaEvidence(evidence:WeddingKaranaEvidence)
   if(typeof evidence.karana!=="string"||!KNOWN_KARANAS.has(evidence.karana)||
     k===null||t===null||k<=0||t<=0||k>t+1)return false;
 
-  // Every Vishti is the second Karana of its Tithi, as are the fixed
-  // Shakuni and Naga. They cannot finish hours before their parent Tithi.
-  // One minute compensates for independently rounded displayed clocks.
-  if(["Vishti","Shakuni","Naga"].includes(evidence.karana)&&Math.abs(k-t)>1)return false;
+  // Shakuni and Naga are the fixed SECOND halves of their respective
+  // Tithis. Only they must end with the parent Tithi (±1 clock minute).
+  // Important: movable Vishti can be FIRST or SECOND half depending on
+  // its position in the repeating 7-Karana cycle. Never force k == t for
+  // Vishti: a first-half Vishti may legitimately end before Tithi end.
+  if(["Shakuni","Naga"].includes(evidence.karana)&&Math.abs(k-t)>1)return false;
   // Chatushpada is the FIRST half of Amavasya, followed by prohibited Naga.
   if(evidence.karana==="Chatushpada"&&t-k<=1)return false;
 
