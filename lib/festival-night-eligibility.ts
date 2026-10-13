@@ -27,7 +27,7 @@ const clock=(value:string):number|null=>{
 };
 function minutes(value:string,eventDate:string|null|undefined,baseDate:string):number|null{
   const time=clock(value);
-  if(time===null||!eventDate||!/^\\d{4}-\\d{2}-\\d{2}$/.test(eventDate))return null;
+  if(time===null||!eventDate||!/^[0-9]{4}-[0-9]{2}-[0-9]{2}$/.test(eventDate))return null;
   const days=(Date.parse(eventDate+"T00:00:00Z")-Date.parse(baseDate+"T00:00:00Z"))/86400000;
   if(!Number.isInteger(days)||days<0||days>2)return null;
   return days*1440+time;
