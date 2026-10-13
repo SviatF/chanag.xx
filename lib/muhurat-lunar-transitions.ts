@@ -33,7 +33,7 @@ function clockMinutes(clock:string):number|null{
   const match=CLOCK_RE.exec(clock);
   return match?Number(match[1])*60+Number(match[2]):null;
 }
-function endingMinutes(baseDate:string,endDate:unknown,endTime:unknown):number|null{
+export function muhuratRelativeEndMinutes(baseDate:string,endDate:unknown,endTime:unknown):number|null{
   if(typeof endDate!=="string"||typeof endTime!=="string")return null;
   const base=civilDay(baseDate),end=civilDay(endDate),minutes=clockMinutes(endTime);
   if(base===null||end===null||minutes===null)return null;
@@ -44,8 +44,8 @@ function endingMinutes(baseDate:string,endDate:unknown,endTime:unknown):number|n
 }
 
 export function hasCompleteMuhuratLunarBoundaries(evidence:MuhuratLunarEvidence):boolean{
-  const tithi=endingMinutes(evidence.date,evidence.tithiEndDate,evidence.tithiEnd);
-  const nakshatra=endingMinutes(evidence.date,evidence.nakshatraEndDate,evidence.nakshatraEnd);
+  const tithi=muhuratRelativeEndMinutes(evidence.date,evidence.tithiEndDate,evidence.tithiEnd);
+  const nakshatra=muhuratRelativeEndMinutes(evidence.date,evidence.nakshatraEndDate,evidence.nakshatraEnd);
   // Local sunrise-active factors must end strictly after local sunrise,
   // but the calendar-day clipping validates source clocks independently.
   return tithi!==null&&nakshatra!==null&&tithi>0&&nakshatra>0;
@@ -59,8 +59,8 @@ export function boundMuhuratWindowsByLunarTransitions(
   if(fields.every(field=>field===undefined)){
     return {status:"sunrise-only",windows:references.map(w=>({...w,sources:[...w.sources]})),limitMinutes:null};
   }
-  const tithiEnd=endingMinutes(evidence.date,evidence.tithiEndDate,evidence.tithiEnd);
-  const nakshatraEnd=endingMinutes(evidence.date,evidence.nakshatraEndDate,evidence.nakshatraEnd);
+  const tithiEnd=muhuratRelativeEndMinutes(evidence.date,evidence.tithiEndDate,evidence.tithiEnd);
+  const nakshatraEnd=muhuratRelativeEndMinutes(evidence.date,evidence.nakshatraEndDate,evidence.nakshatraEnd);
   if(tithiEnd===null||nakshatraEnd===null){
     return {status:"invalid-evidence",windows:[],limitMinutes:null};
   }
