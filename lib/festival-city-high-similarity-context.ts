@@ -103,7 +103,7 @@ export function buildFestivalCityHighSimilarityContext(festival:Festival,city:Ci
   const locality=festivalCityLocalityBySlug[city.slug]??`${profile.dailyContext} This festival page retains ${profile.geoContext} as its local comparison frame instead of substituting a nearby city's timetable.`;
   const abhijit=data.abhijit?`${data.abhijit.start}–${data.abhijit.end}`:"not retained on this date";
 
-  const timingBody=`For ${festival.name}, this ${frame} opens in a ${sunriseBand(data.sunrise)} and spans a ${daylightBand(daylight)} before local sunset at ${data.sunset}. The ${data.tithi} transition falls in ${tithiPart}, while ${data.nakshatra} turns in ${nakshatraPart}, producing a ${transitionOrder}. Rahu begins in ${rahuPart}; Abhijit is ${abhijit}. Moon illumination sits on the ${illuminationBand(data.moonIllumination)} of the cycle. These are calculated festival-day signals from ${city.name}'s Panchang, so the comparison lens changes with the local clock rather than with a city token alone.`;
+  const timingBody=`For ${festival.name}, this ${frame} opens in a ${sunriseBand(data.sunrise)} and spans a ${daylightBand(daylight)} before local sunset at ${data.sunset}. The ${data.tithi} transition occurs during ${tithiPart}, while ${data.nakshatra} turns during ${nakshatraPart}, producing a ${transitionOrder}. Rahu begins in ${rahuPart}; Abhijit is ${abhijit}. Moon illumination sits on the ${illuminationBand(data.moonIllumination)} of the cycle. These are calculated festival-day signals from ${city.name}'s Panchang, so the comparison lens changes with the local clock rather than with a city token alone.`;
 
   return {
     title:`${festival.name} city-comparison lens for ${city.name}`,
