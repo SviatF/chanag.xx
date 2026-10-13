@@ -80,7 +80,16 @@ export function screenWeddingVishtiKarana(
 
   const ranges:LocalRange[]=[];
   const prohibited=new Set(["Vishti","Shakuni","Chatushpada","Naga"]);
-  if(evidence.karana&&prohibited.has(evidence.karana)){
+  if(evidence.karana==="Shakuni"||evidence.karana==="Chatushpada"){
+    // Fixed end-of-Paksha sequence:
+    // Shakuni -> Chatushpada -> Naga -> Kimstughna.
+    // The NEXT half-Tithi is also prohibited after Shakuni/Chatushpada.
+    // Do not reopen a wedding clock after only the first transition.
+    // A sunrise-active Tithi contains at most the current and next Karana.
+    ranges.push({start:0,end:Math.min(1440,t)});
+  }else if(evidence.karana&&prohibited.has(evidence.karana)){
+    // Naga -> Kimstughna is NOT a continuously prohibited pair:
+    // resume only after the observed Naga transition.
     ranges.push({start:0,end:Math.min(1440,k)});
   }else if(evidence.karana==="Vanija"&&k<t-1){
     // The moveable Karana sequence is ... Garaja -> Vanija -> Vishti.
