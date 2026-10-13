@@ -5,7 +5,7 @@ import Header from "@/components/Header";
 import TopicalGraph from "@/components/TopicalGraph";
 import {findCityBySlug} from "@/lib/cities";
 import {getLunarMonthConventions} from "@/lib/calendar-conventions";
-import {buildFestivalCityQualityContent} from "@/lib/festival-content-engine";
+import {buildFestivalCityQualityContent,chhathFollowingSunrise} from "@/lib/festival-content-engine";
 import {buildFestivalCityContext} from "@/lib/festival-city-context";
 import {buildFestivalCityHighSimilarityContext} from "@/lib/festival-city-high-similarity-context";
 import {festivalBySlugYear} from "@/lib/festivals";
@@ -65,6 +65,7 @@ export default async function Page({params}:{params:Promise<{festival:string;yea
   const vrat=vratSlugForTithi(data.tithi);
   const siblingYears=festivalYearSiblings(festival.slug,year);
   const moonrise=formatPanchangTime(data.moonrise,data.moonriseDate,data.date);
+  const nextChhathSunrise=festival.slug==="chhath-puja"?chhathFollowingSunrise(data):null;
 
   const ld={"@context":"https://schema.org","@graph":[
     {"@type":"WebPage","name":`${festival.name} ${year} in ${city.name}`,"url":`https://panchvani.com/festivals/${festival.slug}/${year}/${city.slug}`,"description":content.directAnswer,"about":{"@type":"Thing","name":festival.name}},
@@ -87,6 +88,12 @@ export default async function Page({params}:{params:Promise<{festival:string;yea
       {semantics.aliases.length?<div className="data-card"><small>Regional names</small><strong>{semantics.aliases.join(" · ")}</strong></div>:null}
       {semantics.relatedObservances.length?<div className="data-card"><small>Related observances</small><strong>{semantics.relatedObservances.join(" · ")}</strong></div>:null}
     </div>
+
+    {nextChhathSunrise?<section className="wide-panel"><div className="seo-copy">
+      <small>CHHATH SOLAR OBSERVANCE · {city.name.toUpperCase()}</small>
+      <h2>Sandhya Arghya and next-day Usha Arghya in {city.name}</h2>
+      <p>Sandhya Arghya falls at local sunset, {data.sunset} on {festival.date}. The following Usha Arghya is at local sunrise, {nextChhathSunrise.time} on {nextChhathSunrise.date}. These are two different solar events on consecutive dates.</p>
+    </div></section>:null}
 
     <section className="wide-panel"><div className="seo-copy">
       <h2>{cityContext.focusTitle}</h2>
