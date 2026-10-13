@@ -2,6 +2,7 @@ import {describe,expect,it} from "vitest";
 import {cityBySlug} from "../lib/cities";
 import {getMonthlyMuhurat,buildRecommendedMuhuratWindows} from "../lib/muhurat";
 import {screenWeddingVishtiKarana,hasCompleteWeddingKaranaEvidence} from "../lib/muhurat-wedding-karana";
+import {buildYearlyMuhuratSummary} from "../lib/yearly-expansion";
 import {boundMuhuratWindowsByLunarTransitions} from "../lib/muhurat-lunar-transitions";
 
 const date="2026-05-06";
@@ -66,6 +67,13 @@ describe("Wave 3K: Wedding Vishti is a time interval, not a false all-day ban",(
     ]);
     expect(r.blocked).toHaveLength(0);
     expect(r.windows).toEqual([]);
+  });
+  it("publishes year-specific Bhadra changes derived from real candidates, not fabricated SEO prose",async()=>{
+    const summary=await buildYearlyMuhuratSummary("wedding",2026,cityBySlug("mumbai"));
+    const monthTotal=summary.months.reduce((sum,m)=>sum+(m.vishtiExcludedReferenceMinutes??0),0);
+    expect(summary.vishtiExcludedReferenceMinutes).toBe(monthTotal);
+    expect(summary.vishtiAffectedDates).toBe(summary.months.reduce((sum,m)=>sum+(m.vishtiAffectedDates??0),0));
+    expect(monthTotal).toBeGreaterThan(0);
   });
   it("wedding candidate dates in a real precomputed month never overlap reviewed Vishti blocks",async()=>{
     const city=cityBySlug("mumbai");
