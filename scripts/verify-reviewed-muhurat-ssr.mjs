@@ -23,6 +23,14 @@ for(const year of YEARS)for(const month of MONTHS){
     for(const [city,cityName] of Object.entries(extraMaharashtraCities))
       paths.push({path:`/muhurat/wedding/${year}/${slug}/${city}`,year,month,city:cityName,baseline:false});
 }
+// Same source-reviewed month-level closure applies to customary Marathi
+// Griha Pravesh ONLY in 2026 (not 2025/2027).
+for(const month of MONTHS){
+  const mm=String(month).padStart(2,"0");
+  paths.push({path:`/muhurat/griha-pravesh/2026/${mm}`,year:2026,month,city:"Mumbai",baseline:true});
+  for(const [slug,name] of Object.entries(pilotCities))
+    paths.push({path:`/muhurat/griha-pravesh/2026/${mm}/${slug}`,year:2026,month,city:name,baseline:false});
+}
 const failures=[];
 let passes=0;
 for(const item of paths){
@@ -33,12 +41,17 @@ for(const item of paths){
   const html=await response.text();
   // React SSR emits comment separators between dynamic text nodes; normalize only those.
   const readableHtml=html.replace(/<!--\s*-->/g,"");
+  const isGriha=item.path.includes("/griha-pravesh/");
+  const expectedTitle=isGriha
+    ?`No customary Marathi Griha Pravesh Muhurat dates in ${item.city} in ${monthName} ${item.year}`
+    :`No traditional Marathi wedding Muhurat dates in ${item.city} in ${monthName} ${item.year}`;
+  const expectedDateLabel=isGriha?"Traditional Marathi house-entry dates":"Traditional Marathi marriage dates";
   const required=[
     [response.status===200,"HTTP "+response.status],
-    [html.includes(`No traditional Marathi wedding Muhurat dates in ${item.city} in ${monthName} ${item.year}`),"incorrect city/year zero-date headline"],
-    [html.includes("Traditional Marathi marriage dates"),"missing customary-calendar data card"],
-    [/Traditional Marathi marriage dates<\/small><strong>0<\/strong>/.test(html),"nonzero or missing customary-calendar date count"],
-    [html.includes("Chaturmas"),"missing Chaturmas reasoning"],
+    [html.includes(expectedTitle),"incorrect city/year/event zero-date headline"],
+    [html.includes(expectedDateLabel),"missing event-specific customary-calendar data card"],
+    [html.includes(`<small>${expectedDateLabel}</small><strong>0</strong>`),"nonzero or missing event-specific zero count"],
+    [isGriha?(html.includes("restricted lunar months")&&html.includes("planetary Asta")):html.includes("Chaturmas"),"missing accurate event-specific restriction reasoning"],
     [html.includes("not a blanket prohibition"),"missing community/tradition caveat"],
     [!html.includes("Why 2026-10-12 gets")&&!html.includes("dates survive the lunar screen"),"old unqualified ranking"],
     [!html.includes("100/100 window-availability score"),"fictitious certainty remains"],
@@ -53,5 +66,5 @@ for(const item of paths){
   if(errors.length)failures.push(item.path+": "+errors.join("; "));
   else passes++;
 }
-console.log("[marathi-vivah-ssr] "+passes+"/"+paths.length+" paths passed: 2025–2027, Aug–Oct, 6 city pilots + 5 additional 2026 October Maharashtra towns + Mumbai baseline");
-if(failures.length){for(const failure of failures.slice(0,35))console.error("[marathi-vivah-ssr] FAIL "+failure);process.exitCode=1;}
+console.log("[marathi-ritual-ssr] "+passes+"/"+paths.length+" paths passed: Vivah 2025–27 and Griha 2026; source-reviewed month-level Maharashtra routes");
+if(failures.length){for(const failure of failures.slice(0,35))console.error("[marathi-ritual-ssr] FAIL "+failure);process.exitCode=1;}

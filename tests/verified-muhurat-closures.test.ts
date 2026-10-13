@@ -49,7 +49,7 @@ describe("Reviewed Marathi marriage calendar by state, year and month",()=>{
     for(const [year,month] of [[2024,9],[2028,9],[2025,7],[2026,7],[2026,11],[2027,11]]){
       expect(getVerifiedMuhuratClosure("wedding",year,month,pune)).toBeNull();
     }
-    for(const event of ["griha-pravesh","vehicle-purchase","gold-purchase","naming-ceremony"]){
+    for(const event of ["vehicle-purchase","gold-purchase","naming-ceremony"]){
       expect(getVerifiedMuhuratClosure(event,2026,10,pune)).toBeNull();
     }
   });

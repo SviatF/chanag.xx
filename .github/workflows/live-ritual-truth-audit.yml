@@ -11,7 +11,7 @@ on:
 permissions:
   contents: read
 jobs:
-  verify-live-wedding-closures:
+  verify-live-ritual-closures:
     runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:
@@ -19,8 +19,24 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: 24
-      - name: Check six production Marathi wedding HTML routes
-        run: node scripts/live-ritual-truth-audit.mjs --strict
+      - name: Wait for Cloudflare rollout and inspect real public HTML
+        shell: bash
+        run: |
+          # push/Cloudflare builds trigger separately; a first stale 200 can be
+          # the previous Worker deployment, never evidence of broken ephemeris.
+          # Retry the *same* user-facing URLs without cache-busting query strings.
+          for attempt in 1 2 3 4; do
+            echo "[live-ritual-truth] production check attempt $attempt/4"
+            if node scripts/live-ritual-truth-audit.mjs --strict; then
+              echo "[live-ritual-truth] release HTML confirmed"
+              exit 0
+            fi
+            if [ "$attempt" -eq 4 ]; then
+              echo "[live-ritual-truth] still stale or incorrect after delayed retries"
+              exit 1
+            fi
+            sleep 60
+          done
       - name: Upload evidence (including failures)
         if: always()
         uses: actions/upload-artifact@v4

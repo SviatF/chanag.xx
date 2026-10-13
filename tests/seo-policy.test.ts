@@ -95,7 +95,11 @@ describe("SEO launch guardrails",()=>{
     expect(robotsFor(isMonthlyMuhuratIndexable("wedding",year,month,city))).toMatchObject({index:false,follow:true});
     expect(isMonthlyMuhuratIndexable("wedding",year,month,"mumbai")).toBe(true);
     expect(isMonthlyMuhuratIndexable("wedding",year,month)).toBe(false);
-    expect(isMonthlyMuhuratIndexable("griha-pravesh",year,month,city)).toBe(true);
+    expect(isMonthlyMuhuratIndexable("griha-pravesh",year,month,city)).toBe(false);
+    expect(isMonthlyMuhuratIndexable("griha-pravesh",year,month,"mumbai")).toBe(true);
+    expect(isMonthlyMuhuratIndexable("griha-pravesh",year,month)).toBe(false);
+    expect(isMonthlyMuhuratIndexable("griha-pravesh",2025,10,city)).toBe(false); // already outside current index window, not religious closure
+    expect(isMonthlyMuhuratIndexable("griha-pravesh",year,month,"delhi")).toBe(true);
     expect(isMonthlyMuhuratIndexable("vehicle-purchase",year,month,city)).toBe(true);
     expect(isMonthlyMuhuratIndexable("wedding",year,month,"jaipur")).toBe(true);
   });
