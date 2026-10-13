@@ -70,7 +70,14 @@ describe("SEO launch guardrails",()=>{
     const city=phase1PriorityCities[0];
     const months=rollingMonths(0,12);
     for(const item of months){
-      expect(isMonthlyMuhuratIndexable("wedding",item.year,item.month)).toBe(true);
+      const duplicatedMarathiClosure=[2025,2026,2027].includes(item.year)&&[8,9,10].includes(item.month);
+      expect(isMonthlyMuhuratIndexable("wedding",item.year,item.month)).toBe(!duplicatedMarathiClosure);
+      if(duplicatedMarathiClosure){
+        expect(isMonthlyMuhuratIndexable("wedding",item.year,item.month,"mumbai")).toBe(true);
+        expect(isMonthlyMuhuratIndexable("wedding",item.year,item.month,"pune")).toBe(false);
+        expect(isMonthlyMuhuratIndexable("wedding",item.year,item.month,"thane")).toBe(false);
+        expect(isMonthlyMuhuratIndexable("wedding",item.year,item.month,"delhi")).toBe(true);
+      }
       expect(isMonthlyMuhuratIndexable("griha-pravesh",item.year,item.month,city)).toBe(true);
     }
 
@@ -82,4 +89,15 @@ describe("SEO launch guardrails",()=>{
     const afterWindow=new Date(Date.UTC(last.year,last.month,1));
     expect(isMonthlyMuhuratIndexable("wedding",afterWindow.getUTCFullYear(),afterWindow.getUTCMonth()+1)).toBe(false);
   });
+  it("keeps documented duplicate Marathi closure cities crawlable but noindex, without touching other traditions",()=>{
+    const city="pune";
+    const year=2026,month=10;
+    expect(robotsFor(isMonthlyMuhuratIndexable("wedding",year,month,city))).toMatchObject({index:false,follow:true});
+    expect(isMonthlyMuhuratIndexable("wedding",year,month,"mumbai")).toBe(true);
+    expect(isMonthlyMuhuratIndexable("wedding",year,month)).toBe(false);
+    expect(isMonthlyMuhuratIndexable("griha-pravesh",year,month,city)).toBe(true);
+    expect(isMonthlyMuhuratIndexable("vehicle-purchase",year,month,city)).toBe(true);
+    expect(isMonthlyMuhuratIndexable("wedding",year,month,"jaipur")).toBe(true);
+  });
+
 });
