@@ -15,13 +15,15 @@ export type AstaReference={
   url:string;
   method:AstaMethod;
   precision:"minute"|"day";
+  /** A dynamic location picker is NOT a reproducible city-bound source. */
+  sourceLocationMode:"publisher-pinned"|"geolocated-snapshot";
   /** Civil dates/times in Asia/Kolkata; no hidden 24+ clock notation. */
   startLocal:string;
   endLocal:string;
   reviewedOn:string;
 };
 export type AstaEvaluationStatus=
-  "insufficient-independent-minute-sources"|"method-disagreement"|
+  "insufficient-independent-minute-sources"|"location-not-reproducible"|"method-disagreement"|
   "boundary-disagreement"|"comparison-ready";
 
 const DATE=/^\d{4}-\d{2}-\d{2}$/;
@@ -66,6 +68,7 @@ export function astaReferenceErrors(r:AstaReference):string[]{
   if(!domain(r.url))issues.push("invalid-source-url");
   if(!["observer-sensitive","fixed-angular-threshold","not-disclosed"].includes(r.method))issues.push("invalid-method");
   if(!["minute","day"].includes(r.precision))issues.push("invalid-precision");
+  if(!["publisher-pinned","geolocated-snapshot"].includes(r.sourceLocationMode))issues.push("unbound-location-provenance");
   const start=r.precision==="minute"?astaLocalMinute(r.startLocal):(DATE.test(r.startLocal)?civilUtc(r.startLocal):null);
   const end=r.precision==="minute"?astaLocalMinute(r.endLocal):(DATE.test(r.endLocal)?civilUtc(r.endLocal):null);
   if(start===null||end===null)issues.push("invalid-civil-time-or-precision");
@@ -92,9 +95,11 @@ export function evaluateAstaReferences(
   const independent=new Map<string,AstaReference>();
   for(const row of exact)independent.set(domain(row.url)!,row);
   const accepted=[...independent.values()];
+  const reproducible=accepted.filter(r=>r.sourceLocationMode==="publisher-pinned");
   const methodSet=new Set(accepted.map(r=>r.method));
   const comparisons=accepted.map(r=>({
     publisher:r.publisher,url:r.url,method:r.method,
+    sourceLocationMode:r.sourceLocationMode,
     startLocal:r.startLocal,endLocal:r.endLocal
   }));
   let startSpreadMinutes:null|number=null,endSpreadMinutes:null|number=null;
@@ -105,6 +110,7 @@ export function evaluateAstaReferences(
     endSpreadMinutes=Math.max(...ends)-Math.min(...ends);
   }
   const status:AstaEvaluationStatus=accepted.length<2?"insufficient-independent-minute-sources":
+    reproducible.length<2?"location-not-reproducible":
     methodSet.size!==1||methodSet.has("not-disclosed")?"method-disagreement":
     startSpreadMinutes!>toleranceMinutes||endSpreadMinutes!>toleranceMinutes?"boundary-disagreement":
     "comparison-ready";
@@ -112,6 +118,7 @@ export function evaluateAstaReferences(
     planet,year,locality,status,
     sourceCount:matched.length,invalidCount:invalid.length,
     independentMinuteSourceCount:accepted.length,
+    reproducibleMinuteSourceCount:reproducible.length,
     startSpreadMinutes,endSpreadMinutes,toleranceMinutes,
     methods:[...methodSet],comparisons,
     /** A source consensus only permits method benchmarking, not a ceremony verdict. */
