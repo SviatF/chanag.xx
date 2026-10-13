@@ -28,8 +28,8 @@ describe("fail-closed Swiss Ephemeris astronomical calculation",()=>{
   });
   it("preserves existing verified Indian city/day observations",async()=>{
     const observation=await getPanchang(new Date(date+"T06:00:00Z"),cityBySlug(city));
-    expect(observation.sunrise).toMatch(/^\\d{2}:\\d{2}$/);
-    expect(observation.sunset).toMatch(/^\\d{2}:\\d{2}$/);
+    expect(observation.sunrise).toMatch(/^[0-9]{2}:[0-9]{2}$/);
+    expect(observation.sunset).toMatch(/^[0-9]{2}:[0-9]{2}$/);
     expect(observation.tithiEndDate).not.toBeNull();
     expect(observation.nakshatraEndDate).not.toBeNull();
   });
