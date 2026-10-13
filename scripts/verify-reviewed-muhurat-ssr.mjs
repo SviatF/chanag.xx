@@ -31,6 +31,8 @@ for(const item of paths){
   try{response=await fetch(base+item.path,{headers:{"Accept":"text/html","Cache-Control":"no-cache"},signal:AbortSignal.timeout(25000)});}
   catch(error){failures.push(item.path+": fetch failed "+String(error));continue;}
   const html=await response.text();
+  // React SSR emits comment separators between dynamic text nodes; normalize only those.
+  const readableHtml=html.replace(/<!--\s*-->/g,"");
   const required=[
     [response.status===200,"HTTP "+response.status],
     [html.includes(`No traditional Marathi wedding Muhurat dates in ${item.city} in ${monthName} ${item.year}`),"incorrect city/year zero-date headline"],
@@ -42,7 +44,11 @@ for(const item of paths){
     [!html.includes("100/100 window-availability score"),"fictitious certainty remains"],
   ];
   if(item.year!==2026)required.push([html.includes("Exact Chaturmas boundary instants are not independently established"),"invented Chaturmas boundaries or missing uncertainty"]);
-  if(item.city!=="Mumbai")required.push([html.includes(`Panchang for 12 ${monthName} ${item.year}`),"missing correctly localized Panchang link"]);
+  if(item.city!=="Mumbai"){
+    const slug=item.path.split("/").at(-1);
+    const actualHref=`/panchang/${slug}/${item.year}-${String(item.month).padStart(2,"0")}-12`;
+    required.push([html.includes(`href="${actualHref}"`)&&readableHtml.includes(`${item.city} Panchang for 12 ${monthName} ${item.year}`),"missing correctly localized Panchang href/text"]);
+  }
   const errors=required.filter(x=>!x[0]).map(x=>x[1]);
   if(errors.length)failures.push(item.path+": "+errors.join("; "));
   else passes++;
