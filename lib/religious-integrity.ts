@@ -2,6 +2,7 @@ import type {Festival} from "./festivals";
 import type {Panchang} from "./panchang";
 import {rakhiBhadraAtSunrise} from "./rakhi-bhadra-evidence";
 
+
 export type IntegritySource={label:string;note:string};
 export type FestivalRuleProfile={
   title:string;
@@ -83,8 +84,13 @@ export type FestivalLocalReference={label:string;value:string;note:string}|null;
 
 export function getFestivalLocalReference(festival:Festival,data:Panchang):FestivalLocalReference{
   if(festival.slug==="diwali"){
-    const sunset=toMinutes(data.sunset);
-    return {label:"Pradosh reference",value:`${displayMinutes(sunset)} — ${displayMinutes(sunset+144)}`,note:"Local sunset-based Pradosh reference only. Exact Lakshmi Puja Muhurat still requires Amavasya overlap and Sthir Lagna validation."};
+    const first=data.nightChoghadiya[0],last=data.nightChoghadiya.at(-1);
+    if(!first||!last||first.start!==data.sunset||last.endDayOffset!==1)return null;
+    const sunset=toMinutes(data.sunset),nextRise=toMinutes(last.end)+1440;
+    const span=nextRise-sunset;
+    if(span<480||span>960)return null;
+    return {label:"Pradosh reference",value:`${displayMinutes(sunset)} — ${displayMinutes(sunset+span/5)}`,
+      note:"Local sunset to one-fifth of the calculated night. Exact Lakshmi Puja Muhurat additionally requires Amavasya overlap and Sthir Lagna."};
   }
   if(festival.slug==="janmashtami"){
     const sunset=toMinutes(data.sunset);

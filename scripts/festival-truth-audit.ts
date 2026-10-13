@@ -9,6 +9,8 @@ import {festivalDateEvidence,festivalTraditionDateEvidence} from "../tests/fixtu
 import {chhathFollowingSunrise} from "../lib/festival-content-engine";
 import {getFestivalLocalReference,getFestivalRuleProfile} from "../lib/religious-integrity";
 import {rakhiBhadraAtSunrise} from "../lib/rakhi-bhadra-evidence";
+import {festivalNightEligibility} from "../lib/festival-night-eligibility";
+import {addIsoDays} from "../lib/india-time";
 
 const output=process.argv.find(x=>x.startsWith("--report="))?.slice(9)??"artifacts/festival-truth-audit.json";
 const coverage=festivalCoverageSnapshot();
@@ -41,6 +43,7 @@ const flagged:Array<{city:string;festival:string;date:string;status:string;sunri
 const errors:Array<{city:string;festival:string;date:string;error:string}>=[];
 const ritualScreening={checked:0,unsupportedReference:0,missingNextSunrise:0,notCertifiedRituals:new Set<string>()};
 const rakhiChecks={checked:0,bhadraCleared:0,unresolved:[] as Array<{city:string;year:number;date:string;reason:string}>};
+const nightChecks:{checked:number,verified:number,unverified:Array<{city:string;slug:string;date:string}>,statuses:Record<string,number>}={checked:0,verified:0,unverified:[],statuses:{}};
 let checked=0;
 for(const year of [2026,2027]){
   for(const festival of festivalsForYear(year)){
@@ -50,6 +53,15 @@ for(const year of [2026,2027]){
       try{
         const data=await getPanchang(new Date(festival.date+"T06:00:00Z"),city);
         const e=getFestivalTithiEvidence(festival,data);
+        if(festival.slug==="janmashtami"||festival.slug==="diwali"){
+          const next=await getPanchang(new Date(`${addIsoDays(festival.date,1)}T06:00:00Z`),city);
+          const night=festivalNightEligibility(festival.slug,data,next);
+          nightChecks.checked++;
+          const status=night?.status??"unverified";
+          nightChecks.statuses[`${festival.slug}:${year}:${status}`]=(nightChecks.statuses[`${festival.slug}:${year}:${status}`]??0)+1;
+          if(!night||night.status==="unverified")nightChecks.unverified.push({city:slug,slug:festival.slug,date:festival.date});
+          else nightChecks.verified++;
+        }
         if(["diwali","janmashtami","raksha-bandhan","karwa-chauth","chhath-puja"].includes(festival.slug)){
           ritualScreening.checked++;
           const profile=getFestivalRuleProfile(festival);
@@ -84,7 +96,7 @@ const report={
   scope:"all maintained 2026/2027 festival dates × all 25 active cities; not a certification of ritual selection",
   checked,cityCount:cities.length,catalogSlugs:festivalCatalogSlugs.length,years:coverage,
   classificationCounts:counts,
-  ritualScreening:{...ritualScreening,notCertifiedRituals:[...ritualScreening.notCertifiedRituals].sort()},rakhiChecks,
+  ritualScreening:{...ritualScreening,notCertifiedRituals:[...ritualScreening.notCertifiedRituals].sort()},rakhiChecks,nightChecks,
   sourceComparison:{references:festivalDateEvidence.length,sourceCoverage,unreferencedDates,sourceDuplicateKeys,missingSourcedDates,authoritativeDisagreements,traditionVariants:variants},
   indexabilityPreserved:{
     year2027Indexed:festivalCityPageIsIndexable("diwali",2027,"mumbai"),
@@ -100,8 +112,9 @@ console.log(`[festival-truth] sourceCoverage=${JSON.stringify(sourceCoverage)}`)
 console.log(`[festival-truth] statuses=${JSON.stringify(counts)}; humanReview=${flagged.length}; calculationFailures=${errors.length}`);
 console.log(`[festival-truth] ritualScreening=${ritualScreening.checked} unsupported=${ritualScreening.unsupportedReference} missingNextSunrise=${ritualScreening.missingNextSunrise}`);
 console.log(`[festival-truth] rakhiBhadra=${rakhiChecks.bhadraCleared}/${rakhiChecks.checked} cleared, unresolved=${rakhiChecks.unresolved.length}`);
+console.log(`[festival-truth] lunarNight=${nightChecks.verified}/${nightChecks.checked}, unverified=${nightChecks.unverified.length}; statuses=${JSON.stringify(nightChecks.statuses)}`);
 for(const flag of flagged.slice(0,12))console.log(`[festival-truth] REVIEW ${flag.festival}/${flag.date}/${flag.city} ${flag.status} ${flag.sunriseTithi}`);
 for(const m of missingSourcedDates)console.log(`[festival-truth] NOT PUBLISHED ${m.slug} ${m.year} expected=${m.expected} source=${m.source}`);
 for(const e of errors.slice(0,15))console.error(`[festival-truth] FAIL ${e.festival} ${e.city} ${e.error}`);
 console.log(`[festival-truth] report=${output}`);
-if(errors.length||authoritativeDisagreements.length||missingSourcedDates.length||sourceDuplicateKeys.length||unreferencedDates.length||sourceCoverage.some(x=>x.sourced!==x.maintained)||ritualScreening.unsupportedReference||ritualScreening.missingNextSunrise||rakhiChecks.unresolved.length||festivalCityPageIsIndexable("diwali",2027,"mumbai"))process.exitCode=1;
+if(errors.length||authoritativeDisagreements.length||missingSourcedDates.length||sourceDuplicateKeys.length||unreferencedDates.length||sourceCoverage.some(x=>x.sourced!==x.maintained)||ritualScreening.unsupportedReference||ritualScreening.missingNextSunrise||rakhiChecks.unresolved.length||nightChecks.unverified.length||festivalCityPageIsIndexable("diwali",2027,"mumbai"))process.exitCode=1;
