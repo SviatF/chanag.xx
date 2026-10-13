@@ -28,7 +28,7 @@ export function requireSolarSequence(
 }
 
 export function requireTransition(
-  jd:number|null,startingJd:number,citySlug:string,dateIso:string,kind:"Tithi"|"Nakshatra"
+  jd:number|null,startingJd:number,citySlug:string,dateIso:string,kind:"Tithi"|"Nakshatra"|"Yoga"|"Karana"
 ):number{
   if(jd===null||!Number.isFinite(jd)||jd<=startingJd||jd>startingJd+2)
     throw new Error(`Swiss Ephemeris ${kind} transition unavailable for ${citySlug} on ${dateIso}`);

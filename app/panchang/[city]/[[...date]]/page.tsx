@@ -57,6 +57,8 @@ export default async function PanchangPage({params}:{params:Promise<{city:string
   if(vratLink)topicalGroups.splice(1,0,{title:"Lunar observance",description:"This Tithi is part of a yearly sunrise-based lunar reference cluster.",links:[vratLink]});
   const tithiEnd=formatPanchangTime(data.tithiEnd,data.tithiEndDate,data.date);
   const nakshatraEnd=formatPanchangTime(data.nakshatraEnd,data.nakshatraEndDate,data.date);
+  const yogaEnd=formatPanchangTime(data.yogaEnd,data.yogaEndDate,data.date);
+  const karanaEnd=formatPanchangTime(data.karanaEnd,data.karanaEndDate,data.date);
   const moonrise=formatPanchangTime(data.moonrise,data.moonriseDate,data.date);
   const moonset=formatPanchangTime(data.moonset,data.moonsetDate,data.date);
   const faq=[
@@ -78,8 +80,8 @@ export default async function PanchangPage({params}:{params:Promise<{city:string
     <div className="data-grid">
       <div className="data-card"><small>Tithi</small><strong>{data.tithi}</strong><small>{data.paksha} Paksha · until {tithiEnd}</small></div>
       <div className="data-card"><small>Nakshatra</small><strong>{data.nakshatra}</strong><small>Pada {data.nakshatraPada} · until {nakshatraEnd}</small></div>
-      <div className="data-card"><small>Yoga</small><strong>{data.yoga}</strong></div>
-      <div className="data-card"><small>Karana</small><strong>{data.karana}</strong></div>
+      <div className="data-card"><small>Yoga</small><strong>{data.yoga}</strong><small>Ends {yogaEnd}</small></div>
+      <div className="data-card"><small>Karana</small><strong>{data.karana}</strong><small>Ends {karanaEnd}</small></div>
       <div className="data-card"><small>Sunrise</small><strong>{data.sunrise}</strong></div>
       <div className="data-card"><small>Sunset</small><strong>{data.sunset}</strong></div>
       <div className="data-card"><small>Moonrise</small><strong>{moonrise}</strong></div>

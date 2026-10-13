@@ -60,7 +60,11 @@ export type Panchang = {
   rashi: string;
   solarRashi: string;
   yoga: string;
+  yogaEnd: string;
+  yogaEndDate: string | null;
   karana: string;
+  karanaEnd: string;
+  karanaEndDate: string | null;
   sunrise: string;
   sunset: string;
   moonrise: string;
@@ -237,6 +241,7 @@ export async function getPanchang(date: Date, city: City): Promise<Panchang> {
         tithiIndex: Math.floor(elongation / 12),
         nakshatraIndex: Math.floor(norm(moonSidereal) / (360 / 27)),
         yogaIndex: Math.floor(norm(sunSidereal + moonSidereal) / (360 / 27)),
+        karanaIndex: Math.floor(elongation / 6),
       };
     };
 
@@ -272,7 +277,7 @@ export async function getPanchang(date: Date, city: City): Promise<Panchang> {
     const rashi = rashis[Math.floor(atSunrise.moonSidereal / 30)];
     const solarRashi = rashis[Math.floor(atSunrise.sunSidereal / 30)];
     const yoga = yogas[atSunrise.yogaIndex];
-    const karana = karanaName(Math.floor(atSunrise.elongation / 6));
+    const karana = karanaName(atSunrise.karanaIndex);
 
     const findPreviousNewMoon = () => {
       let current = sunriseJd;
@@ -365,6 +370,12 @@ export async function getPanchang(date: Date, city: City): Promise<Panchang> {
 
     const tithiEndJd = requireTransition(findTransitionFrom(sunriseJd, (jd) => stateAt(jd).tithiIndex),sunriseJd,city.slug,dateIso,"Tithi");
     const nakshatraEndJd = requireTransition(findTransitionFrom(sunriseJd, (jd) => stateAt(jd).nakshatraIndex),sunriseJd,city.slug,dateIso,"Nakshatra");
+    // Sunrise Yoga and Karana do not remain valid all day. Calculate their
+    // FIRST subsequent transitions with the same validated ephemeris/bisection
+    // path as Tithi/Nakshatra; preserve tomorrow's civil date explicitly.
+    const yogaEndJd = requireTransition(findTransitionFrom(sunriseJd,(jd)=>stateAt(jd).yogaIndex),sunriseJd,city.slug,dateIso,"Yoga");
+    const karanaEndJd = requireTransition(findTransitionFrom(sunriseJd,(jd)=>stateAt(jd).karanaIndex),sunriseJd,city.slug,dateIso,"Karana");
+    if(karanaEndJd > tithiEndJd + 1/1440)throw new Error(`Karana transition exceeds its parent Tithi for ${city.slug} on ${dateIso}`);
     const previousNewMoonJd = requirePreviousNewMoon(findPreviousNewMoon(),sunriseJd,city.slug,dateIso);
     const monthSunSign = Math.floor(stateAt(previousNewMoonJd + 0.001).sunSidereal / 30);
     const hinduMonth = amantaMonthByPreviousNewMoonSunSign[monthSunSign];
@@ -400,6 +411,8 @@ export async function getPanchang(date: Date, city: City): Promise<Panchang> {
 
     const tithiEnd = localEventFromJulian(tithiEndJd);
     const nakshatraEnd = localEventFromJulian(nakshatraEndJd);
+    const yogaEnd = localEventFromJulian(yogaEndJd);
+    const karanaEnd = localEventFromJulian(karanaEndJd);
     const moonrise = moonRise.retval >= 0 ? localEventFromJulian(moonRise.tret) : { time: "—", date: null };
     const moonset = moonSet.retval >= 0 ? localEventFromJulian(moonSet.tret) : { time: "—", date: null };
 
@@ -417,7 +430,11 @@ export async function getPanchang(date: Date, city: City): Promise<Panchang> {
       rashi,
       solarRashi,
       yoga,
+      yogaEnd:yogaEnd.time,
+      yogaEndDate:yogaEnd.date,
       karana,
+      karanaEnd:karanaEnd.time,
+      karanaEndDate:karanaEnd.date,
       sunrise: localEventFromJulian(sunriseJd).time,
       sunset: localEventFromJulian(sunsetJd).time,
       moonrise: moonrise.time,
