@@ -36,6 +36,21 @@ or meaningful value for users.
   all 25 active cities and all listed dates.
 - Unique wording is not proof of genuine unique information or decision-making value.
 
+## Wave 1: fail-closed astronomical calculations
+- Solar rise/set and next sunrise are validated for success, finite Julian time, expected
+  India-local civil date, event ordering and plausible night/day length.
+- Missing sunrise, sunset, next sunrise, Tithi or Nakshatra transitions and previous
+  new moon can no longer be silently replaced with invented fallback Julian times.
+- Moonrise/moonset may remain explicitly unavailable; no invented time is substituted.
+- Independent source facts remain separated from production app logic.
+- The audit expands from 5 dates per active city to 24 dates spanning seasonal extremes,
+  calendar rollover, leap day and festival transitions. Night Choghadiya handoff is
+  checked for adjacent-day continuity.
+- Choghadiya weekday sequences are independently cross-checked against
+  https://www.drikpanchang.com/tutorials/muhurat/daily/choghadiya-muhurat.html?lang=en
+  (audit-only source, not reproduced on public pages).
+- Passing Wave 1 does not certify every single city/date/festival observance.
+
 ## Wave 0 controls
 `tests/fixtures/content-truth-references.ts`: external source observations; don't update to satisfy a test.
 `scripts/content-truth-checks.ts`: chronology/invariants and independent snapshot comparison.
