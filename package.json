@@ -20,7 +20,8 @@
     "audit:content": "node scripts/content-quality-audit.mjs",
     "audit:content:strict": "node scripts/content-quality-audit.mjs --enforce-similarity",
     "audit:gsc-export": "node scripts/gsc-indexing-export-audit.mjs",
-    "audit:seo-live": "node scripts/seo-live-response-audit.mjs"
+    "audit:seo-live": "node scripts/seo-live-response-audit.mjs",
+    "audit:truth": "npx --yes tsx@4.23.13 scripts/content-integrity-audit.ts"
   },
   "dependencies": {
     "@types/node": "^22.10.0",

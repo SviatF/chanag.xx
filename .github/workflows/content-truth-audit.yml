@@ -1,0 +1,41 @@
+name: Content Truth Audit
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: "33 5 * * 3"
+  push:
+    branches: [main]
+    paths:
+      - "lib/panchang.ts"
+      - "lib/festivals.ts"
+      - "lib/content-truth-*.ts"
+      - "scripts/content-integrity-audit.ts"
+      - ".github/workflows/content-truth-audit.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  integrity-sample:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+          cache-dependency-path: package.json
+      - name: Install dependencies
+        run: npm install --legacy-peer-deps --no-audit --no-fund
+      - name: Run independent-source and chronology matrix
+        run: npm run audit:truth
+      - name: Upload source-truth audit
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: content-integrity-audit
+          path: artifacts/content-integrity-audit.json
+          if-no-files-found: warn
+          retention-days: 30
