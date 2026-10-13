@@ -24,7 +24,7 @@ describe("religious content integrity",()=>{
     expect(reference?.note).toContain("Exact Lakshmi Puja Muhurat");
   });
 
-  it("does not certify Raksha Bandhan without a complete Bhadra interval",async()=>{
+  it("exposes Bhadra-cleared Purnima at sunrise without certifying an exact ritual Muhurat",async()=>{
     const festival=festivalBySlugYear("raksha-bandhan",2026)!;
     const city=cityBySlug("delhi");
     const data=await getPanchang(new Date(festival.date+"T06:00:00Z"),city);
@@ -33,7 +33,10 @@ describe("religious content integrity",()=>{
 
     expect(profile.exactness).toBe("context-only");
     expect(profile.criteria.join(" ")).toContain("Avoid Bhadra");
-    expect(reference?.value).toBe("Bhadra check required");
+    expect(reference?.label).toBe("Bhadra-free Purnima reference");
+    expect(reference?.value).toContain(" — ");
+    expect(reference?.note).toContain("not a complete individualized Muhurat");
+    expect(profile.limitations.join(" ")).toContain("Exact Bhadra start/end");
   });
 
   it("derives only a Nishita reference for Janmashtami and keeps tradition caveats",async()=>{
