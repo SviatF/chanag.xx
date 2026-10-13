@@ -67,7 +67,7 @@ describe("Wave 2 controlled city activation",()=>{
     for(const city of wave2ControlledCities){
       for(const event of primaryMuhuratEvents){
         const allowed=months.filter(item=>isMonthlyMuhuratIndexable(event,item.year,item.month,city));
-        const isReviewedDuplicate=event==="wedding"&&["pimpri-chinchwad","nashik"].includes(city);
+        const isReviewedDuplicate=["wedding","griha-pravesh"].includes(event)&&["pimpri-chinchwad","nashik"].includes(city);
         expect(allowed).toEqual(isReviewedDuplicate?[]:[{year:2026,month:10,slug:"10"}]);
       }
       for(const vrat of primaryVratTypes){
