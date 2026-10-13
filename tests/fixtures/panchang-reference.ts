@@ -135,7 +135,7 @@ export const referenceFixtures: ReferenceFixture[] = [
   {
     city:"delhi",
     date:"2026-10-13",
-    source:"https://www.drikpanchang.com/panchang/month-panchang.html?geoname-id=997719 | https://www.drikpanchang.com/panchang/day-panchang.html?geoname-id=934636",
+    source:"https://www.drikpanchang.com/panchang/month-panchang.html?geoname-id=997719 | https://www.livepanditji.com/panchang-in/delhi/october-2026/13/",
     expected:{
       sunrise:"06:20",sunset:"17:54",
       tithi:"Tritiya",tithiEnd:"23:27",
