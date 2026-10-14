@@ -41,7 +41,7 @@ for(const check of CHECKS){
   const path=check.path;
   const item={path,reason:check.reason,httpStatus:null,canonical:null,
     staleV4Indicators:[],missingIndicators:[],sourceReviewNoticePresent:null,
-    verified:false,errors:[],workerVersion:null};
+    verified:false,errors:[],workerVersion:null,robotsNoindex:null};
   try{
     const r=await fetch(BASE+path,{
       headers:{"accept":"text/html","user-agent":"Panchvani-Live-V5-Astronomy-Audit/1.0"},
@@ -69,8 +69,9 @@ for(const check of CHECKS){
     if(item.canonical!==BASE+path)item.errors.push("wrong canonical "+item.canonical);
     if(item.missingIndicators.length)item.errors.push("missing expected V5 body markers");
     if(item.staleV4Indicators.length)item.errors.push("stale V4 / wrong-day markers present");
-    if(/<meta\b[^>]*name=["']robots["'][^>]*content=["'][^"']*\bnoindex\b/i.test(html))
-      item.errors.push("unexpected noindex on named publicly accessible route");
+    // A dated astronomical page may deliberately be noindex under the
+    // rolling SEO release policy. Report, don't classify as incorrect astronomy.
+    item.robotsNoindex=/<meta\b[^>]*name=["']robots["'][^>]*content=["'][^"']*\bnoindex\b/i.test(html);
     item.verified=item.errors.length===0;
   }catch(e){item.errors.push("live fetch failure "+String(e))}
   results.push(item);
@@ -79,6 +80,7 @@ for(const check of CHECKS){
 const report={
   checkedAt:new Date().toISOString(),environment:BASE,scope:"eight fixed high-risk city/route cases only",
   checked:results.length,verified:results.filter(x=>x.verified).length,
+  pagesNoindexUnderSeparateSEOReleasePolicy:results.filter(x=>x.robotsNoindex).length,
   failed:results.filter(x=>!x.verified).length,results,
   limitations:[
     "This checks only eight selected end-user URLs, not every city/date, and a single edge region cannot certify CDN-wide release.",
