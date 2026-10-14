@@ -1,6 +1,7 @@
 import {readFileSync} from "node:fs";
 import {describe,expect,it} from "vitest";
 import {cityBySlug} from "../lib/cities";
+import {calculateVratCalendar} from "../lib/vrat";
 import {compareEkadashiArunodaya,ARUNODAYA_MINUTES_BEFORE_SUNRISE} from "../lib/ekadashi-observance-research";
 import {wave3zSourceObservations,wave3zMethodSources} from "./fixtures/wave3z-source-observations";
 
@@ -42,6 +43,23 @@ describe("Wave 3Z: research-only tradition and dawn decision boundary",()=>{
     expect(wave3zSourceObservations.filter(s=>s.city==="delhi").map(s=>s.observedFastingDate))
       .toEqual(["2027-01-18","2027-01-19"]);
     expect(new Set(wave3zSourceObservations.map(s=>new URL(s.url).hostname))).toHaveProperty("size",1);
+  });
+  it("can scan actual annual sunrise-Ekadashi candidates without claiming fasting eligibility",()=>{
+    const city=cityBySlug("mumbai");
+    const rows=calculateVratCalendar("ekadashi",2027,city);
+    expect(rows.length).toBeGreaterThan(20);
+    const checked=rows.slice(0,4).map(row=>compareEkadashiArunodaya(city,row.date));
+    expect(checked.length).toBe(4);
+    for(const caseResult of checked){
+      expect([10,25]).toContain(caseResult.sunriseTithiIndex);
+      expect(caseResult.chosenVaishnavaFastDate).toBeNull();
+      expect(caseResult.paranaWindowCertified).toBe(false);
+      expect(caseResult.safeForCeremonyFiltering).toBe(false);
+    }
+    const audit=readFileSync("scripts/wave3z-ekadashi-observance-audit.ts","utf8");
+    expect(audit).toContain("annualSunriseEkadashiDaysScreened");
+    expect(audit).toContain("annualDashamiArunodayaCandidates");
+    expect(audit).toContain("skippedEkadashiWithoutSunriseNotSearched:true");
   });
   it("does not treat an astronomical Hari Vasara quarter as approved Parana",()=>{
     const x=compareEkadashiArunodaya(cityBySlug("delhi"),"2027-01-03");
