@@ -222,13 +222,14 @@ jobs:
           test "$(stat -c %s "$KERNEL")" -gt 25000000
           echo "Downloaded JPL DE440s SHA-256:"
           sha256sum "$KERNEL"
+          echo "c1c7feeab882263fc493a9d5a5b2ddd71b54826cdf65d8d17a76126b260a49f2  $KERNEL" | sha256sum --check --status
 
       - name: Export checked Swiss UT source clocks for JPL comparison
         run: npm run audit:jpl-swiss-baseline
 
       - name: Calculate JPL DE440s Patna, other disputed dawn boundaries and eight Vedha cases
         timeout-minutes: 5
-        run: python scripts/wave3ad-jpl-de440s-oracle.py --kernel=artifacts/jpl-kernels/de440s.bsp
+        run: python scripts/wave3ad-jpl-de440s-oracle.py --kernel=artifacts/jpl-kernels/de440s.bsp --expected-sha256=c1c7feeab882263fc493a9d5a5b2ddd71b54826cdf65d8d17a76126b260a49f2
 
       - name: Upload Wave 3AD third-ephemeris comparison
         if: always()
