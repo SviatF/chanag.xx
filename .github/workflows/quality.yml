@@ -145,6 +145,17 @@ jobs:
           path: artifacts/festival-truth-audit.json
           if-no-files-found: warn
 
+      - name: Independently compare UT versus ET sunrise Tithi and Janmashtami convention (research-only)
+        run: npm run audit:vrat-time-scale
+
+      - name: Upload Wave 3U UT-ET Vrat and Janmashtami diagnostic
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: wave3u-ut-et-janmashtami
+          path: artifacts/wave3u-ut-et-janmashtami-diagnostic.json
+          if-no-files-found: warn
+
       - name: Build Next.js reference
         run: npm run build:next
 
