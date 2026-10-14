@@ -178,6 +178,17 @@ jobs:
           path: artifacts/wave3z-ekadashi-tradition-parana-evidence.json
           if-no-files-found: warn
 
+      - name: Reconcile Patna exact UT sunrise convention and eight Vedha research cases
+        run: npm run audit:sunrise-conventions
+
+      - name: Upload Wave 3AB sunrise-source method discrepancy report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: wave3ab-patna-convention-differential
+          path: artifacts/wave3ab-patna-method-reconciliation.json
+          if-no-files-found: warn
+
       - name: Build Next.js reference
         run: npm run build:next
 
