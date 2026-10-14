@@ -45,8 +45,8 @@ describe("Wave 3T ritual certification must never follow from generic published 
     const result=rows.map(f=>festivalDateEvidenceStatus(
       f.slug,f.year,f.date,festivalDateEvidence,independentFestivalDateChecks));
     expect(result).toHaveLength(38);
-    expect(result.filter(x=>x.status==="two-publisher-date-corroboration")).toHaveLength(6);
-    expect(result.filter(x=>x.status==="one-publisher-date-only")).toHaveLength(32);
+    expect(result.filter(x=>x.status==="two-publisher-date-corroboration")).toHaveLength(7);
+    expect(result.filter(x=>x.status==="one-publisher-date-only")).toHaveLength(31);
     expect(result.every(x=>!x.localRitualDateCertified&&!x.exactPujaTimeCertified)).toBe(true);
     expect(festivalTraditionDateEvidence.some(x=>x.tradition==="ISKCON")).toBe(true);
   });
