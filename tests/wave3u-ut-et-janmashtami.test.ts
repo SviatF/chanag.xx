@@ -55,7 +55,9 @@ describe("Wave 3U UT/ET and Janmashtami event definitions",()=>{
   it("does not allow the non-certified 3U audit to change precomputed calendar routes",()=>{
     const audit=readFileSync("scripts/wave3u-time-scale-audit.ts","utf8");
     expect(audit).toContain("safeForCeremonyFiltering:false");
-    expect(audit).toContain("productionSunriseTithiCorrectionsApplied:0");
+    expect(audit).toContain('productionTimeScaleMode:"UT-correct"');
+    expect(audit).toContain("currentVratVsCorrectUtMismatches");
+    expect(audit).not.toContain("productionSunriseTithiCorrectionsApplied:0");
     const ci=readFileSync(".github/workflows/quality.yml","utf8");
     expect(ci).toContain("npm run audit:vrat-time-scale");
     expect(ci).toContain("wave3u-ut-et-janmashtami");

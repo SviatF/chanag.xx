@@ -37,7 +37,7 @@ describe("Muhurat precomputed build-data architecture",()=>{
     let totalTargets=0;
     for(const [index,file] of shardFiles.entries()){
       const {data,base64Length}=decodeShard(`generated/${file}`);
-      expect(data.version).toBe(4);
+      expect(data.version).toBe(5);
       expect(data.shardId).toBe(expectedShardIds[index]);
       expect(data.signature).toMatch(/^[a-f0-9]{64}$/);
       const expectedCities=new Set<string>();

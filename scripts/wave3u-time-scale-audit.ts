@@ -1,6 +1,8 @@
 /**
  * Wave 3U: reproducible UT-vs-ET and Janmashtami night/observance diagnostic.
- * No public Vrat, daily Panchang, precompute shard or festival date changes.
+ * After Wave 3V, production Sun/Moon reads are UT-correct; the legacy ET
+ * sample is kept only to quantify the historical time-scale mistake.
+ * Never treats a correctly calculated sunrise Tithi as certified fasting.
  */
 import {mkdirSync,writeFileSync} from "node:fs";
 import {findCityBySlug} from "../lib/cities";
@@ -10,6 +12,7 @@ import {getPanchang} from "../lib/panchang";
 import {festivalNightEligibility} from "../lib/festival-night-eligibility";
 import {festivalBySlugYear} from "../lib/festivals";
 import {addIsoDays} from "../lib/india-time";
+import {MUHURAT_BUILD_DATA_VERSION} from "../lib/muhurat-build-data-schema";
 
 const output=process.argv.find(v=>v.startsWith("--report="))?.slice(9)||
   "artifacts/wave3u-ut-et-janmashtami-diagnostic.json";
@@ -31,11 +34,13 @@ for(const slug of citySlugs){
         "purnima",Number(date.slice(0,4)),city
       ).filter(r=>r.date===date);
       compared.push({
-        ...comparison,legacySunrisePurnimaPublishedInVrat:rows.length>0,
+        ...comparison,currentSunrisePurnimaInVrat:rows.length>0,
+        currentVratMatchesUtCorrectAtSunrise:(rows.length>0)===(comparison.utCorrectTithiIndex===14),
         correctedPurnimaAtSunrise:comparison.utCorrectTithiIndex===14,
         sameTargetPurnima:comparison.utCorrectTithiIndex===14&&
           comparison.legacyTithiIndex===14,
-        pendingProductionCorrection:"full-Panchang-Vrat-UT-normalization-requires-shard-regeneration-and-independent-local-sources"
+        productionTimeScaleMode:"UT-correct",
+        ritualObservanceCertified:false
       });
     }catch(error){issues.push(slug+"/"+date+": "+String(error))}
   }
@@ -72,9 +77,11 @@ const disagreements=compared.filter(x=>x.localDateSelectionPotentiallyChanges);
 const jan2027=janmashtami.filter(x=>x.year===2027);
 const report={
   generatedAt:new Date().toISOString(),wave:"3U",
-  status:"RESEARCH-ONLY-UT-ET-AND-JANMASHTAMI-CONVENTION-GAP",
+  status:"RESEARCH-ONLY-LEGACY-UT-ET-DIFFERENTIAL-POST-V5-MIGRATION",
   safeForCeremonyFiltering:false,
-  productionSunriseTithiCorrectionsApplied:0,
+  productionTimeScaleMode:"UT-correct",
+  productionSnapshotVersion:MUHURAT_BUILD_DATA_VERSION,
+  currentVratVsCorrectUtMismatches:compared.filter(x=>!x.currentVratMatchesUtCorrectAtSunrise).length,
   sourceMethod:"Swiss Ephemeris sweRiseTrans UT, sweCalcUt vs sweCalc (ET)",
   sunriseDatesChecked:compared.length,
   sampledCityCount:citySlugs.length,
@@ -108,12 +115,12 @@ const report={
     note:"Publisher's Janmashtami date and next-day Nishita interval coexist with Ashtami having ended before Nishita. This is not a validated fast-selection algorithm."
   },
   gates:[
-    "The legacy sweCalc() receives UTC/UT Julian days from sweRiseTrans, although sweCalc expects ET. The correct Swiss API for UT is sweCalcUt.",
-    "Do not switch only Vrat or only Panchang to UT-correct; they share dates and the 48-shard/338-dataset V4 snapshot contract.",
+    "Wave 3V fixed the historical wrong sweCalc(ET) use for Julian UT by switching production Panchang and Vrat to sweCalcUt.",
+    "All 48 shards/338 datasets migrated from V4 to V5 together. Do not reintroduce mixed-version ephemeris semantics.",
     "A near-sunrise Tithi transition must use subminute UT instants, not an equality of two rounded HH:mm clock strings.",
     "Drik Nishita time in 2027 does not assert the Ashtami Tithi is active at Nishita; a festival-date selection is a different rule-family.",
     "Smarta and Vaishnava Janmashtami traditions and Rohini preference still require separately source-reviewed selectors.",
-    "Any corrected public date requires a migration/versioned V4 data rebuild and external city-pinned regression sources. No automatic ritual approval."
+    "A corrected astronomical sunrise Tithi does not independently certify a tradition-specific festival or fasting date. No automatic ritual approval."
   ],
   errors:issues
 };
@@ -130,7 +137,9 @@ console.log("[festival-3u] 2027 Janmashtami: "+
   "/"+jan2027.length+" no Ashtami/Nishita overlap in sampled cities; NOT proof of invalid Janmashtami date");
 console.log("[vrat-3u] report="+output+" errors="+issues.length);
 for(const error of issues.slice(0,8))console.error("[vrat-3u] FAIL "+error);
-if(issues.length||compared.length!==citySlugs.length*dates.length||
+if(issues.length||MUHURAT_BUILD_DATA_VERSION!==5||
+  compared.some(x=>!x.currentVratMatchesUtCorrectAtSunrise)||
+  compared.length!==citySlugs.length*dates.length||
   janmashtami.length!==citySlugs.length*2||
   deltaSamples.length===0||jan2027.some(x=>x.nishitaAshtamiOverlapStatus==="unverified"))
     process.exitCode=1;

@@ -1,6 +1,6 @@
 import { City } from "./cities";
 import { createDefaultSweData } from "@typescriptify/sweph/dist/types.js";
-import { sweCalc, sweClose, sweSetSidMode } from "@typescriptify/sweph/dist/sweph.js";
+import { sweCalcUt, sweClose, sweSetSidMode } from "@typescriptify/sweph/dist/sweph.js";
 import { sweRiseTrans } from "@typescriptify/sweph/dist/swecl.js";
 import { julDay } from "@typescriptify/sweph/dist/swedate.js";
 import {requireSolarEvent,requireSolarSequence,requireTransition,requirePreviousNewMoon,requireFiniteLongitudes} from "./ephemeris-integrity";
@@ -225,13 +225,16 @@ export async function getPanchang(date: Date, city: City): Promise<Panchang> {
     let nextSunriseMinutes = localMinutesFromJulian(nextSunriseJd) + 1440;
     if (nextSunriseMinutes <= sunsetMinutes) nextSunriseMinutes += 1440;
 
+    // All event instants (sunrise, transitions, previous new moon) use Julian UT.
+    // sweCalcUt performs the mandatory UT→ET/TT Delta-T conversion; sweCalc
+    // expects ET and previously shifted Tithi boundaries by about 69 s.
     const stateAt = (jd: number) => {
       const tropicalFlags = SEFLG_MOSEPH | SEFLG_SPEED;
       const siderealFlags = SEFLG_MOSEPH | SEFLG_SPEED | SEFLG_SIDEREAL;
-      const sun = sweCalc(swed, jd, SE_SUN, tropicalFlags).xx[0];
-      const moon = sweCalc(swed, jd, SE_MOON, tropicalFlags).xx[0];
-      const sunSidereal = sweCalc(swed, jd, SE_SUN, siderealFlags).xx[0];
-      const moonSidereal = sweCalc(swed, jd, SE_MOON, siderealFlags).xx[0];
+      const sun = sweCalcUt(swed, jd, SE_SUN, tropicalFlags).xx[0];
+      const moon = sweCalcUt(swed, jd, SE_MOON, tropicalFlags).xx[0];
+      const sunSidereal = sweCalcUt(swed, jd, SE_SUN, siderealFlags).xx[0];
+      const moonSidereal = sweCalcUt(swed, jd, SE_MOON, siderealFlags).xx[0];
       requireFiniteLongitudes([sun,moon,sunSidereal,moonSidereal],city.slug,dateIso);
       const elongation = norm(moon - sun);
       return {
