@@ -241,6 +241,24 @@ jobs:
             artifacts/wave3ad-swiss-baseline.json
           if-no-files-found: warn
 
+      - name: Exhaustively screen committed V5 city-day shards for sunrise-near Tithi
+        timeout-minutes: 5
+        run: npm run audit:near-sunrise-shards
+
+      - name: Independently evaluate every near-sunrise V5 candidate using JPL DE440s
+        timeout-minutes: 7
+        run: python scripts/wave3ae-jpl-full-impact.py --kernel=artifacts/jpl-kernels/de440s.bsp --expected-sha256=c1c7feeab882263fc493a9d5a5b2ddd71b54826cdf65d8d17a76126b260a49f2
+
+      - name: Upload Wave 3AE full committed-calendar model impact report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: wave3ae-all-committed-city-days-jpl-impact
+          path: |
+            artifacts/wave3ae-swiss-shard-screen.json
+            artifacts/wave3ae-jpl-full-impact.json
+          if-no-files-found: error
+
       - name: Build Next.js reference
         run: npm run build:next
 
