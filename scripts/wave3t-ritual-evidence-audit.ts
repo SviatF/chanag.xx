@@ -131,6 +131,11 @@ const report={
   vratSunriseRecords:vratResults.reduce((n,r)=>n+Number(r.sunriseRows),0),
   vratRepeatedSunriseRecords:vratResults.reduce((n,r)=>n+Number(r.repeatedAtSunrise),0),
   vratUnresolvedTransitions:vratResults.reduce((n,r)=>n+Number(r.unresolvedTransitions),0),
+  vratNearSunriseBoundaryCount:vratResults.reduce((n,r)=>n+Number(r.boundarySensitiveCount),0),
+  nearSunriseCases:vratResults.filter(r=>Number(r.boundarySensitiveCount)>0).map(r=>({
+    city:r.city,year:r.year,slug:r.slug,boundaries:r.nearSunriseBoundaryRows,
+    actualVratDateCertified:false
+  })),
   vratResults,
   monthEventCityReviews:closures.length,
   customaryMonthClosures:customaryReviews,
@@ -140,6 +145,7 @@ const report={
     "Janmashtami's Smarta versus Vaishnava/Rohini conventions remain separate; sunrise Tithi is not alone enough to adjudicate the correct fast day.",
     "Rakhi requires a Bhadra-free overlap, not a generic afternoon Choghadiya label.",
     "Ekadashi Vrat is a sunrise-based Tithi list; Dashami Vedha, special sampradaya exceptions, and next-day Parana have NOT been independently approved.",
+    "If a Tithi boundary and local sunrise are within five displayed minutes, the observation is marked needs-independent-minute-review; never treat a rounded same-minute endpoint as certain.",
     "Purnima/Amavasya are sunrise Panchang observations; Sraddha/night ritual date may require another temporal rule.",
     "Maharashtra wedding and Griha Pravesh reviewed monthly closures are convention-scoped and must not become India-wide restrictions, exact daily Asta dates or full personal Shuddhi.",
     "A Muhurat planning score of 100/100 is availability of daytime windows, not 100% auspicious or ceremonial validity.",
@@ -152,7 +158,8 @@ writeFileSync(result,JSON.stringify(report,null,2)+"\n");
 console.log("[ritual-3t] festival="+festivalEvidence.length+" two-publisher-DATE="+
   verifiedByTwo.length+" primary-only="+primaryOnly.length+" conflicts="+festivalConflicts.length);
 console.log("[ritual-3t] vrat city-year-type="+vratResults.length+" sunrise="+report.vratSunriseRecords+
-  " repeated="+report.vratRepeatedSunriseRecords+" missing-transition="+report.vratUnresolvedTransitions);
+  " repeated="+report.vratRepeatedSunriseRecords+" missing-transition="+report.vratUnresolvedTransitions+
+  " near-sunrise-uncertain="+report.vratNearSunriseBoundaryCount);
 console.log("[ritual-3t] closure reviews="+closures.length+" customary closures="+customaryReviews+
   " regions="+mahCity.length+" MH-supported-city-count");
 console.log("[ritual-3t] RESEARCH ONLY; never ceremony permission: "+result);
