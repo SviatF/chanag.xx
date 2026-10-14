@@ -4,6 +4,7 @@ import {sweCalcUt,sweClose} from "@typescriptify/sweph/dist/sweph.js";
 import {sweRiseTrans} from "@typescriptify/sweph/dist/swecl.js";
 import {SE_SUN,SE_MOON,SEFLG_MOSEPH,SE_CALC_RISE} from "@typescriptify/sweph/dist/constants.js";
 import {addIsoDays,indiaCivilDayStartJulian,indiaLocalPartsFromJulian} from "./india-time";
+import {requireSolarEvent,requireTransition,requireFiniteLongitudes} from "./ephemeris-integrity";
 
 export const vratSlugs=["ekadashi","purnima","amavasya"] as const;
 export type VratSlug=typeof vratSlugs[number];
@@ -98,6 +99,7 @@ function calculateAllVratCalendars(year:number,city:City):VratCalendarMap{
   const tithiIndexAt=(jd:number)=>{
     const sun=sweCalcUt(swed,jd,SE_SUN,SEFLG_MOSEPH).xx[0];
     const moon=sweCalcUt(swed,jd,SE_MOON,SEFLG_MOSEPH).xx[0];
+    requireFiniteLongitudes([sun,moon],city.slug,indiaLocalPartsFromJulian(jd).date);
     return Math.floor(norm(moon-sun)/12);
   };
 
@@ -119,19 +121,22 @@ function calculateAllVratCalendars(year:number,city:City):VratCalendarMap{
       const y=cursor.getUTCFullYear(),m=cursor.getUTCMonth()+1,d=cursor.getUTCDate();
       const baseJd=indiaCivilDayStartJulian(y,m,d);
       const rise=sweRiseTrans(swed,baseJd,SE_SUN,null,SEFLG_MOSEPH,SE_CALC_RISE,[city.lng,city.lat,0],1013.25,25,null);
-      const sunriseJd=rise.retval>=0?rise.tret:baseJd+0.25;
+      // Never fabricate a 06:00 IST sunrise when Swiss Ephemeris fails.
+      // Vrat and daily Panchang must share the same fail-closed solar contract.
+      const expectedDate=`${String(y).padStart(4,"0")}-${String(m).padStart(2,"0")}-${String(d).padStart(2,"0")}`;
+      const sunriseJd=requireSolarEvent(rise,city.slug,expectedDate,"sunrise");
       const sunrise=indiaLocalPartsFromJulian(sunriseJd);
 
       // Guard the civil-date invariant: each loop iteration represents exactly one
       // India-local date, including eastern cities whose sunrise is before 05:30 IST.
-      const expectedDate=`${String(y).padStart(4,"0")}-${String(m).padStart(2,"0")}-${String(d).padStart(2,"0")}`;
       if(sunrise.date!==expectedDate)throw new Error(`Vrat sunrise date mismatch for ${city.slug}: expected ${expectedDate}, got ${sunrise.date}`);
 
       const index=tithiIndexAt(sunriseJd);
       const target=targetForIndex(index);
       if(!target)continue;
-      const transition=transitionAfter(sunriseJd);
-      const endParts=transition?indiaLocalPartsFromJulian(transition):{date:sunrise.date,time:"—",minutes:0};
+      // A missing lunar boundary invalidates this row; "—" is not evidence.
+      const transition=requireTransition(transitionAfter(sunriseJd),sunriseJd,city.slug,expectedDate,"Tithi");
+      const endParts=indiaLocalPartsFromJulian(transition);
       raw[target].push({
         date:sunrise.date,
         weekday:new Intl.DateTimeFormat("en-IN",{weekday:"long",timeZone:"UTC"}).format(new Date(`${sunrise.date}T12:00:00Z`)),
