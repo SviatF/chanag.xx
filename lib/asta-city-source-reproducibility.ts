@@ -19,7 +19,7 @@ export type AstaSourceCapture={
   renderedTimeZone:string;
   startLocal:string;
   endLocal:string;
-  captureContext:"indexed-result"|"anonymous-page-fetch";
+  captureContext:"indexed-result"|"page-fetch";
   capturedOn:string;
 };
 /** A time-stamped snapshot is NOT a verified fixed-location permalink. */
@@ -51,7 +51,7 @@ export function sourceCaptureErrors(s:AstaSourceCapture):string[]{
   if(s.renderedYear!==Number(s.startLocal.slice(0,4))||
     s.renderedYear!==Number(s.endLocal.slice(0,4)))
     errors.push("unexpected-event-year");
-  if(!["indexed-result","anonymous-page-fetch"].includes(s.captureContext))
+  if(!["indexed-result","page-fetch"].includes(s.captureContext))
     errors.push("invalid-capture-context");
   if(!validDate(s.capturedOn))errors.push("invalid-capture-date");
   return errors;
