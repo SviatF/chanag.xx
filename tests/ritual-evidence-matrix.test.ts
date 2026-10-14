@@ -59,6 +59,22 @@ describe("Wave 3T ritual certification must never follow from generic published 
     expect(checked.paranaTimeCalculated).toBe(false);
     expect(checked.smarthaVaishnavaConventionResolved).toBe(false);
   });
+  it("quarantines Delhi-like Purnima endpoints equal to the rounded sunrise minute",()=>{
+    const row:RitualVratObservation={
+      date:"2026-06-30",paksha:"Shukla",tithi:"Purnima",
+      sunrise:"05:27",tithiEnd:"05:27",tithiEndDate:"2026-06-30",
+      sequence:1,repeatedAtSunrise:false
+    };
+    const report=auditVratSunriseRows("purnima",2026,[row]);
+    expect(report.errors).toEqual([]);
+    expect(report.boundarySensitiveCount).toBe(1);
+    expect(report.nearSunriseBoundaryRows[0].status).toBe("needs-independent-minute-review");
+    expect(report.actualFastDayCertified).toBe(false);
+    expect(report.paranaTimeCalculated).toBe(false);
+    const farEarlier=auditVratSunriseRows("purnima",2026,[{...row,tithiEnd:"05:10"}]);
+    expect(farEarlier.errors).toContain("transition-before-sunrise:2026-06-30");
+    expect(farEarlier.boundarySensitiveCount).toBe(0);
+  });
   it("fails closed on duplicate, backward, malformed and unsupported Vrat transitions",()=>{
     const rows=[
       sunrise("2026-08-21",1),
