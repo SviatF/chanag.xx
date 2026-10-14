@@ -34,7 +34,8 @@
     "audit:ritual-evidence": "npx --yes tsx@4.23.13 scripts/wave3t-ritual-evidence-audit.ts",
     "audit:vrat-time-scale": "npx --yes tsx@4.23.13 scripts/wave3u-time-scale-audit.ts",
     "audit:boundary-integrity": "npx --yes tsx@4.23.13 scripts/wave3w-boundary-integrity-audit.ts",
-    "audit:ekadashi-observance": "npx --yes tsx@4.23.13 scripts/wave3z-ekadashi-observance-audit.ts"
+    "audit:ekadashi-observance": "npx --yes tsx@4.23.13 scripts/wave3z-ekadashi-observance-audit.ts",
+    "audit:sunrise-conventions": "npx --yes tsx@4.23.13 scripts/wave3ab-sunrise-source-audit.ts"
   },
   "dependencies": {
     "@types/node": "^22.10.0",
