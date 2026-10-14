@@ -117,7 +117,7 @@ def main():
         "fullyScannedCommittedCityDays":meta["cityDays"],
         "fullyScannedCommittedCityMonths":meta["cityMonthDatasets"],
         "shards":meta["shardCount"],
-        "allDynamicCityDateRoutesScanned":False,
+        "allDynamicDailyCityDateRoutesScanned":False,
         "candidateScreenWindowMinutesEachSide":15,
         "swissBoundaryCandidates":len(candidates),
         "jplComputedCandidates":len(rows),
