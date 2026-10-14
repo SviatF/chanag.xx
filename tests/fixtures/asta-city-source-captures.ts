@@ -26,7 +26,7 @@ export const unstableAstaCitySourceCaptures:readonly AstaSourceCapture[]=[
     renderedLocality:"Washington, D.C., Washington, D.C., United States",
     renderedTimeZone:"America/New_York",
     startLocal:"2027-08-12T20:46",endLocal:"2027-09-13T05:58",
-    captureContext:"anonymous-page-fetch",
+    captureContext:"page-fetch",
     capturedOn:"2026-10-13"
   },
   {
