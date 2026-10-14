@@ -37,8 +37,15 @@ describe("Wave 3AD: independent JPL DE440s clock evidence integrity",()=>{
     const ci=readFileSync(".github/workflows/quality.yml","utf8");
     expect(ci).toContain('"skyfield==1.55"');
     expect(ci).toContain("de440s.bsp");
+    expect(ci).toContain("c1c7feeab882263fc493a9d5a5b2ddd71b54826cdf65d8d17a76126b260a49f2");
+    expect(ci).toContain("sha256sum --check --status");
+    expect(ci).toContain("--expected-sha256=");
     expect(ci).toContain("python scripts/wave3ad-jpl-de440s-oracle.py");
     expect(ci).toContain("wave3ad-jpl-de440s-third-ephemeris");
+    const warnings=readFileSync("lib/critical-boundary-notices.ts","utf8");
+    expect(warnings).toContain("JPL DE440s 06:34:15.581");
+    expect(warnings).toContain("JPL DE440s calculates the boundary at 06:32:01.530");
+    expect(warnings).toContain("only about 0.8 seconds apart");
     for(const f of ["lib/panchang.ts","lib/vrat.ts","lib/muhurat.ts","lib/festivals.ts","lib/seo-policy.ts"]){
       const c=readFileSync(f,"utf8");
       expect(c).not.toContain("wave3ad");
