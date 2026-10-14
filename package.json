@@ -36,7 +36,8 @@
     "audit:boundary-integrity": "npx --yes tsx@4.23.13 scripts/wave3w-boundary-integrity-audit.ts",
     "audit:ekadashi-observance": "npx --yes tsx@4.23.13 scripts/wave3z-ekadashi-observance-audit.ts",
     "audit:sunrise-conventions": "npx --yes tsx@4.23.13 scripts/wave3ab-sunrise-source-audit.ts",
-    "audit:independent-astronomy": "npx --yes tsx@4.23.13 scripts/wave3ac-independent-ephemeris-compare.ts"
+    "audit:independent-astronomy": "npx --yes tsx@4.23.13 scripts/wave3ac-independent-ephemeris-compare.ts",
+    "audit:jpl-swiss-baseline": "npx --yes tsx@4.23.13 scripts/wave3ad-swiss-baseline.ts"
   },
   "dependencies": {
     "@types/node": "^22.10.0",
