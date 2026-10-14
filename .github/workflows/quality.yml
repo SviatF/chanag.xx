@@ -90,6 +90,17 @@ jobs:
           path: artifacts/asta-wave3q-uncertainty-crosswalk.json
           if-no-files-found: warn
 
+      - name: Audit fixed-angle publication independence and NPT/IST normalization (research-only)
+        run: npm run audit:asta-angular-sources
+
+      - name: Upload Wave 3R fixed-angle publisher evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: asta-wave3r-independent-sources
+          path: artifacts/asta-wave3r-independent-angular-sources.json
+          if-no-files-found: warn
+
       - name: Build Next.js reference
         run: npm run build:next
 
