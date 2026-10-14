@@ -36,6 +36,14 @@ describe("Wave 3T ritual evidence taxonomy does not falsely approve dates",()=>{
     const ci=readFileSync(".github/workflows/quality.yml","utf8");
     expect(ci).toContain("npm run audit:ritual-evidence");
     expect(ci).toContain("wave3t-ritual-evidence-matrix");
+    expect(ci).toContain("npm run audit:muhurat");
+    expect(ci).toContain("npm run audit:festivals");
+    expect(ci).toContain("wave3t-full-muhurat-truth");
+    expect(ci).toContain("wave3t-full-festival-truth");
+    expect(ci.indexOf("npm run audit:ritual-evidence")).toBeLessThan(
+      ci.indexOf("npm run audit:muhurat"));
+    expect(ci.indexOf("npm run audit:muhurat")).toBeLessThan(
+      ci.indexOf("npm run audit:festivals"));
     const pkg=JSON.parse(readFileSync("package.json","utf8"));
     expect(pkg.scripts["audit:ritual-evidence"]).toContain("wave3t-ritual-evidence-audit.ts");
     expect(pkg.scripts.build).not.toContain("ritual-evidence-audit");
