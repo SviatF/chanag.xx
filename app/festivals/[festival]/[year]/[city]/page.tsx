@@ -2,6 +2,7 @@ import type {Metadata} from "next";
 import Link from "next/link";
 import {notFound} from "next/navigation";
 import Header from "@/components/Header";
+import CalendarEvidenceNotice from "@/components/CalendarEvidenceNotice";
 import TopicalGraph from "@/components/TopicalGraph";
 import {findCityBySlug} from "@/lib/cities";
 import {getLunarMonthConventions} from "@/lib/calendar-conventions";
@@ -45,7 +46,7 @@ export async function generateMetadata({params}:{params:Promise<{festival:string
   const data=await getPanchang(new Date(`${festival.date}T06:00:00Z`),city);
   return {
     title:`${festival.name} ${year} in ${city.name} — ${festival.date} Panchang`,
-    description:`${festival.name} ${year} in ${city.name} falls on ${festival.date}. Local sunrise ${data.sunrise}, sunset ${data.sunset}, ${data.tithi} Tithi and ${data.nakshatra} Nakshatra.`,
+    description:`${festival.name} ${year} is listed for ${festival.date}. Calculated ${city.name} sunrise ${data.sunrise}, sunset ${data.sunset}, ${data.tithi} Tithi and ${data.nakshatra} Nakshatra; local observance rules may differ.`,
     alternates:{canonical:`/festivals/${festival.slug}/${year}/${city.slug}`},
     robots:robotsFor(festivalCityPageIsIndexable(festival.slug,year,city.slug)),
   };
@@ -90,6 +91,7 @@ export default async function Page({params}:{params:Promise<{festival:string;yea
     <p className="page-kicker">LOCAL FESTIVAL PANCHANG · {city.state}</p>
     <h1 className="page-title">{festival.name} {year}<br/>in {city.name}</h1>
     <p className="page-subtitle">{content.directAnswer}</p>
+    <CalendarEvidenceNotice scope="maintained-festival-date" cityName={city.name} subject={festival.name} year={year}/>
 
     <div className="data-grid">
       {content.directFacts.map(item=><div className="data-card" key={item.label}><small>{item.label}</small><strong>{item.value}</strong>{item.note?<small>{item.note}</small>:null}</div>)}
@@ -100,7 +102,7 @@ export default async function Page({params}:{params:Promise<{festival:string;yea
     </div>
 
     {regionalObservance?<section className="wide-panel"><div className="seo-copy">
-      <small>VERIFIED REGIONAL DATE · {city.name.toUpperCase()}</small>
+      <small>SOURCE-REVIEWED REGIONAL OBSERVANCE · {city.name.toUpperCase()}</small>
       <h2>{regionalObservance.label} in {city.name}</h2>
       <p>{regionalObservance.message}</p>
     </div></section>:null}
