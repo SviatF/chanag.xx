@@ -124,14 +124,14 @@ jobs:
           if-no-files-found: warn
 
       - name: Verify full precomputed Muhurat lunar and Karana integrity
-        run: npm run audit:muhurat
+        run: npm run audit:muhurat -- --report=wave3t-ritual-window-truth.json
 
       - name: Upload comprehensive Muhurat truth report
         if: always()
         uses: actions/upload-artifact@v4
         with:
           name: wave3t-full-muhurat-truth
-          path: artifacts/muhurat-truth-audit.json
+          path: wave3t-ritual-window-truth.json
           if-no-files-found: warn
 
       - name: Verify Festival dates and local ritual rule engines across active cities
