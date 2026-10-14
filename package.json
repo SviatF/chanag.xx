@@ -30,7 +30,8 @@
     "research:asta-heliacal": "npx --yes tsx@4.23.13 scripts/asta-heliacal-visibility-research.ts --deep-heliacal",
     "audit:asta-methodology": "npx --yes tsx@4.23.13 scripts/asta-wave3q-reconciliation.ts",
     "audit:asta-angular-sources": "npx --yes tsx@4.23.13 scripts/asta-wave3r-angular-source-audit.ts",
-    "audit:asta-city-sources": "npx --yes tsx@4.23.13 scripts/asta-wave3s-source-reproducibility.ts"
+    "audit:asta-city-sources": "npx --yes tsx@4.23.13 scripts/asta-wave3s-source-reproducibility.ts",
+    "audit:ritual-evidence": "npx --yes tsx@4.23.13 scripts/wave3t-ritual-evidence-audit.ts"
   },
   "dependencies": {
     "@types/node": "^22.10.0",
