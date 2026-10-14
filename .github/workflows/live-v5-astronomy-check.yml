@@ -4,6 +4,7 @@ on:
     branches: [audit/wave3x-live-v5-truth-regression-20261014]
     paths:
       - ".github/workflows/live-v5-astronomy-check.yml"
+      - "scripts/live-v5-astronomy-audit.mjs"
   workflow_dispatch:
   schedule:
     - cron: '40 4 * * *'
