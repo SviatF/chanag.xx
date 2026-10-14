@@ -17,6 +17,14 @@ describe("Wave 3AC real independent Sun/Moon calculation and release boundaries"
     expect(alt.independentBoundaryChronologyValid).toBe(true);
     expect(alt.independentPhase288Boundary).not.toBeNull();
     expect(alt.phaseDegreesAtBoundary).toBeCloseTo(288,1);
+    // Reproducible independent-vs-Swiss *disagreement* at Patna's ten-second
+    // sunrise margin, not a reason to silently promote either model.
+    expect(alt.independentlyCalculatedTithiAtRise).toBe("Krishna Navami");
+    expect(swiss.defaultApparentUpperLimb.tithi).toBe("Krishna Dashami");
+    const secondsDelta=(alt.independentPhase288Boundary!.unixMs-
+      Date.parse(swiss.defaultApparentUpperLimb.previousTithiEnds.utc))/1000;
+    expect(secondsDelta).toBeGreaterThan(60);
+    expect(secondsDelta).toBeLessThan(120);
     expect(Math.abs(alt.independentRise.unixMs-Date.parse(swiss.defaultApparentUpperLimb.sunrise.utc))).toBeLessThan(900_000);
     expect(Math.abs(alt.independentPhase288Boundary!.unixMs-
       Date.parse(swiss.defaultApparentUpperLimb.previousTithiEnds.utc))).toBeLessThan(3_600_000);
@@ -46,6 +54,9 @@ describe("Wave 3AC real independent Sun/Moon calculation and release boundaries"
     expect(audit).toContain("astronomicalEngineChanged:false");
     expect(audit).toContain("PatnaSourceConflictClosed:false");
     expect(audit).toContain("certifiedISKCONFasts:0");
+    const publicNotice=readFileSync("lib/critical-boundary-notices.ts","utf8");
+    expect(publicNotice).toContain("independently implemented Astronomy Engine computes Navami");
+    expect(publicNotice).toContain("neither result is independently certified");
     for(const source of ["lib/panchang.ts","lib/vrat.ts","lib/muhurat.ts","lib/festivals.ts","lib/seo-policy.ts"]){
       expect(readFileSync(source,"utf8")).not.toContain("wave3ac-independent-astronomy");
       expect(readFileSync(source,"utf8")).not.toContain("astronomy-engine");
