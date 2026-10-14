@@ -62,8 +62,11 @@ export function assessAstaEvidenceForFiltering(
     sourceCount:matching.length,
     independentMinuteSourceCount:publisherCount,
     conflictingMethods:incompatibleMethods,
-    /** Require at least two independently sourced, same-locality minute references. */
-    readyForCeremonyFiltering:publisherCount>=2&&!incompatibleMethods,
-    status:publisherCount>=2&&!incompatibleMethods?"needs-model-agreement":"insufficient-local-minute-evidence"
+    /** Raw publisher count can NEVER certify ceremony eligibility.
+     * Missing pinned city URL replay + observer-method matching + ritual Shuddhi. */
+    readyForCeremonyFiltering:false as const,
+    safeForCeremonyFiltering:false as const,
+    status:publisherCount>=2&&!incompatibleMethods?
+      "publisher-count-only-not-ritual-certified":"insufficient-local-minute-evidence"
   } as const;
 }
