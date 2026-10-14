@@ -22,7 +22,7 @@ export const criticalBoundaryNotices:readonly CriticalBoundaryNotice[]=[
   {
     city:"patna",date:"2027-01-31",
     kind:"published-clock-boundary-disagreement",
-    summary:"Navami changes to Dashami very close to Patna sunrise. A published local minute-level Panchang indicates Navami still active at dawn, while PANCHVANI's UT-based calculation selects Dashami. The publisher methods and exact-second boundary have not been independently reconciled.",
+    summary:"Patna sunrise falls within a disputed Navami-to-Dashami boundary. PANCHVANI's Swiss/Moshier UT model computes Dashami at 06:33:40 IST sunrise (Tithi changed around 06:33:30), while independently implemented Astronomy Engine computes Navami at 06:33:33 IST sunrise (Tithi changes around 06:34:54). Published city calendars also report Navami at minute precision. The two astronomical models disagree by about 84 seconds on the boundary; neither result is independently certified against a high-precision reference or complete publisher method. Do not use this sunrise Tithi as a certified ritual/fast decision.",
     mathematicalCalculationChanged:false,fastOrCeremonyDateCertified:false
   },
   {
