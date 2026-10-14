@@ -18,6 +18,11 @@ export type FestivalNightEvidence={
   overlap:{start:string;end:string;startDate:string;endDate:string}|null;
   status:TithiOverlapStatus;
   explanation:string;
+  /** Calculation is not certification of a regional observance or a ritual time. */
+  observanceDateCertified:false;
+  fastingDayCertified:false;
+  pujaWindowCertified:false;
+  paranaCertified:false;
 };
 type Interval={start:number;end:number};
 type DatedInterval={start:string;end:string;startDate:string;endDate:string};
@@ -43,6 +48,12 @@ function readable(interval:Interval,baseDate:string):DatedInterval{
   const a=instant(interval.start,baseDate),b=instant(interval.end,baseDate);
   return {start:a.time,end:b.time,startDate:a.date,endDate:b.date};
 }
+const unverifiedRitualClaims={
+  observanceDateCertified:false,
+  fastingDayCertified:false,
+  pujaWindowCertified:false,
+  paranaCertified:false
+} as const;
 const tithiByKind:Record<FestivalNightKind,{paksha:"Krishna";tithi:"Ashtami"}|{paksha:"Krishna";tithi:"Amavasya"}>={
   janmashtami:{paksha:"Krishna",tithi:"Ashtami"},
   diwali:{paksha:"Krishna",tithi:"Amavasya"}
@@ -91,7 +102,7 @@ export function festivalNightEligibility(kind:FestivalNightKind,data:Panchang,ne
   const tithiLabel=kind==="diwali"?"Krishna Amavasya":"Krishna Ashtami";
   const label=kind==="diwali"?"Pradosh Kaal":"Nishita Kaal";
   if(!lunar){
-    return {kind,label,period,tithiLabel,tithiEnd:null,overlap:null,status:"unverified",
+    return {...unverifiedRitualClaims,kind,label,period,tithiLabel,tithiEnd:null,overlap:null,status:"unverified",
       explanation:`${label} is ${formatDatedTime(period.start,period.startDate,data.date)}–${formatDatedTime(period.end,period.endDate,data.date)}. The exact ${tithiLabel} interval could not be established from the two sunrise records.`};
   }
   const endClock=instant(lunar.end,data.date);
@@ -103,7 +114,10 @@ export function festivalNightEligibility(kind:FestivalNightKind,data:Panchang,ne
   const result=status==="full"
     ?` ${tithiLabel} covers the entire calculated ${label}.`
     :status==="partial"&&overlap
-      ?` Their confirmed overlap is ${formatDatedTime(overlap.start,overlap.startDate,data.date)}–${formatDatedTime(overlap.end,overlap.endDate,data.date)}.`
+      ?` Their calculated overlap is ${formatDatedTime(overlap.start,overlap.startDate,data.date)}–${formatDatedTime(overlap.end,overlap.endDate,data.date)}.`
       :` ${tithiLabel} does not overlap this ${label}.`;
-  return {kind,label,period,tithiLabel,tithiEnd,overlap,status,explanation:context+result};
+  const methodCaution=kind==="janmashtami"&&status==="none"
+    ?" This non-overlap does not invalidate the published Janmashtami date or determine the Smarta/Vaishnava fast day; Rohini and tradition-specific selection remain unverified."
+    :"";
+  return {...unverifiedRitualClaims,kind,label,period,tithiLabel,tithiEnd,overlap,status,explanation:context+result+methodCaution};
 }

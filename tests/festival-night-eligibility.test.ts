@@ -34,6 +34,11 @@ describe("festival-specific lunar night eligibility backed by independent Delhi 
     expect(result.status).toBe("none");
     expect(result.overlap).toBeNull();
     expect(result.tithiEnd).toContain("19:");
+    expect(result.explanation).toContain("does not invalidate the published Janmashtami date");
+    expect(result.observanceDateCertified).toBe(false);
+    expect(result.fastingDayCertified).toBe(false);
+    expect(result.pujaWindowCertified).toBe(false);
+    expect(result.paranaCertified).toBe(false);
   });
   it("Diwali 2026 Delhi: Amavasya covers the entire Pradosh and next sunrise",async()=>{
     const {festival,data,result}=await evidence("diwali",2026);
@@ -55,6 +60,20 @@ describe("festival-specific lunar night eligibility backed by independent Delhi 
     expect(result.overlap?.endDate).toBe("2027-10-29");
     expect(result.period.endDate).toBe("2027-10-29");
   });
+  it("all resolved local night calculations remain explicitly non-ritual-certified",async()=>{
+    const scenarios=[
+      await evidence("janmashtami",2026),await evidence("janmashtami",2027),
+      await evidence("diwali",2026),await evidence("diwali",2027)
+    ];
+    expect(scenarios.map(s=>s.result.status)).toEqual(["partial","none","full","partial"]);
+    for(const {result} of scenarios){
+      expect(result.observanceDateCertified).toBe(false);
+      expect(result.fastingDayCertified).toBe(false);
+      expect(result.pujaWindowCertified).toBe(false);
+      expect(result.paranaCertified).toBe(false);
+      expect(result.explanation).not.toContain("confirmed overlap");
+    }
+  });
   it("with inconsistent Tithi data, no fictional overlap is generated",async()=>{
     const {data}=await evidence("janmashtami",2026);
     const next=(await evidence("janmashtami",2027)).data;
@@ -64,11 +83,15 @@ describe("festival-specific lunar night eligibility backed by independent Delhi 
     const unresolved=festivalNightEligibility("janmashtami",impossible,matchingNext);
     expect(unresolved?.status).toBe("unverified");
     expect(unresolved?.overlap).toBeNull();
+    expect(unresolved?.pujaWindowCertified).toBe(false);
   });
   it("the city UI displays the actual Tithi overlap, not generic SEO ritual copy",()=>{
     const page=readFileSync("app/festivals/[festival]/[year]/[city]/page.tsx","utf8");
     expect(page).toContain("nightEvidence.explanation");
     expect(page).toContain("nightEvidence.overlap");
+    expect(page).toContain("Calculated Tithi overlap");
+    expect(page).not.toContain("Verified Tithi overlap");
+    expect(page).toContain("No calculated Ashtami/Nishita overlap can still coexist with a published Janmashtami date");
     expect(page).toContain("Sthir Lagna is not yet evaluated");
     expect(page).not.toContain("content.ritualBody");
   });

@@ -120,9 +120,12 @@ export default async function Page({params}:{params:Promise<{festival:string;yea
       <div className="data-grid">
         <div className="data-card"><small>{nightEvidence.label}</small><strong>{formatDatedTime(nightEvidence.period.start,nightEvidence.period.startDate,festival.date)} – {formatDatedTime(nightEvidence.period.end,nightEvidence.period.endDate,festival.date)}</strong></div>
         <div className="data-card"><small>Relevant Tithi ends</small><strong>{nightEvidence.tithiEnd??"Not verified"}</strong></div>
-        <div className="data-card"><small>{nightEvidence.status==="none"?"Tithi overlap":"Verified Tithi overlap"}</small><strong>{nightEvidence.overlap?`${formatDatedTime(nightEvidence.overlap.start,nightEvidence.overlap.startDate,festival.date)} – ${formatDatedTime(nightEvidence.overlap.end,nightEvidence.overlap.endDate,festival.date)}`:nightEvidence.status==="none"?"No overlap":"Not established"}</strong></div>
+        <div className="data-card"><small>Calculated Tithi overlap</small><strong>{nightEvidence.overlap?`${formatDatedTime(nightEvidence.overlap.start,nightEvidence.overlap.startDate,festival.date)} – ${formatDatedTime(nightEvidence.overlap.end,nightEvidence.overlap.endDate,festival.date)}`:nightEvidence.status==="none"?"No overlap":"Not established"}</strong></div>
       </div>
       <p>{nightEvidence.explanation}</p>
+      {nightEvidence.kind==="janmashtami"&&nightEvidence.status==="none"
+        ?<p>No calculated Ashtami/Nishita overlap can still coexist with a published Janmashtami date. This is not a rejection of that date: Smarta and Vaishnava rules, Rohini and Parana need separate review.</p>
+        :null}
       <p>{nightEvidence.kind==="diwali"
         ?"This is the calculated Amavasya–Pradosh intersection, not an exact Lakshmi Puja Muhurat: Sthir Lagna is not yet evaluated."
         :"The Janmashtami observance date and fasting may depend on Smarta/Vaishnava rules and Rohini. Nishita alone is not a certified Puja Muhurat."}</p>
