@@ -6,6 +6,7 @@ import {mkdirSync,writeFileSync} from "node:fs";
 import {findCityBySlug} from "../lib/cities";
 import {compareEkadashiArunodaya,ARUNODAYA_MINUTES_BEFORE_SUNRISE} from "../lib/ekadashi-observance-research";
 import {getPanchang} from "../lib/panchang";
+import {calculateVratCalendar} from "../lib/vrat";
 import {festivalNightEligibility} from "../lib/festival-night-eligibility";
 import {festivalBySlugYear} from "../lib/festivals";
 import {addIsoDays} from "../lib/india-time";
@@ -47,6 +48,36 @@ for(const slug of cities){
         independentAstronomicalMethodVerified:x.independentlyMethodCertified
       })),publisherFastDateVsSunriseTithiIsNotAutomaticContradiction:true});
     }catch(e){errors.push(slug+"/"+date+" "+String(e));}
+  }
+}
+// Annual coverage is intentionally sunrise-Ekadashi-only: it does not identify
+// Kshaya Ekadashi or select traditions' fast days.
+const annualArunodaya=[];
+for(const slug of cities){
+  const city=findCityBySlug(slug);
+  if(!city)continue;
+  for(const year of [2026,2027]){
+    const rows=calculateVratCalendar("ekadashi",year,city);
+    const screens=rows.map(row=>compareEkadashiArunodaya(city,row.date));
+    const mismatches=screens.filter(x=>x.sunriseTithiIndex!==10&&x.sunriseTithiIndex!==25);
+    if(mismatches.length)errors.push(slug+"/"+year+" annual Ekadashi-at-sunrise mismatch");
+    const vedhaCandidates=screens.filter(x=>x.dashamiArunodayaScreen==="dashami-at-arunodaya");
+    if(screens.some(x=>x.independentlyCertifiedFast||x.paranaWindowCertified||x.safeForCeremonyFiltering))
+      errors.push(slug+"/"+year+" annual research result improperly certified");
+    annualArunodaya.push({
+      city:slug,year,sunriseEkadashiDays:rows.length,
+      arunodayaDashamiCandidateCount:vedhaCandidates.length,
+      arunodayaDashamiCandidateDays:vedhaCandidates.map(x=>({
+        date:x.date,sunrise:x.sunrise,arunodaya:x.arunodaya,
+        tithiAtArunodaya:x.arunodayaTithi,
+        closestArunodayaBoundarySeconds:x.closestArunodayaBoundarySeconds,
+        independentlyCertifiedFast:false
+      })),
+      sunriseVsArunodayaDisagreementCount:screens.filter(x=>x.sunriseAndArunodayaDisagree).length,
+      nearFiveMinuteBoundaryCount:screens.filter(x=>x.nearFiveMinuteAstronomicalBoundary).length,
+      skippedEkadashiWithoutSunriseNotSearched:true,
+      approvedFastingDays:0,approvedParanaTimes:0
+    });
   }
 }
 const janmashtami=[];
@@ -91,6 +122,10 @@ const report={
   dashamiAtArunodayaCount:ekadashiCases.filter(x=>x.dashamiArunodayaScreen==="dashami-at-arunodaya").length,
   sunriseArunodayaTithiDisagreements:ekadashiCases.filter(x=>x.sunriseAndArunodayaDisagree).length,
   nextSunriseDwadashiCases:ekadashiCases.filter(x=>x.dwadashiNextSunrise).length,
+  annualSunriseEkadashiCityYears:annualArunodaya.length,
+  annualSunriseEkadashiDaysScreened:annualArunodaya.reduce((n,r)=>n+r.sunriseEkadashiDays,0),
+  annualDashamiArunodayaCandidates:annualArunodaya.reduce((n,r)=>n+r.arunodayaDashamiCandidateCount,0),
+  annualResults:annualArunodaya,
   sourceCaseCount:wave3zSourceObservations.length,
   publisherDomainCount:publisherDomains.size,
   independentlyMatchedCalendarImplementations:0,
@@ -117,10 +152,13 @@ writeFileSync(target,JSON.stringify(report,null,2)+"\n");
 console.log("[wave3z] cases="+ekadashiCases.length+" dates="+sampleDates.length+
   " cities="+cities.length+" arunodaya-dashami="+report.dashamiAtArunodayaCount+
   " mathematical-dawn-disagreements="+report.sunriseArunodayaTithiDisagreements+
+  " annual-sunrise-days="+report.annualSunriseEkadashiDaysScreened+
+  " annual-dashami-at-arunodaya="+report.annualDashamiArunodayaCandidates+
   " publisher-domains="+publisherDomains.size);
 console.log("[wave3z] Janmashtami="+janmashtami.length+
   " ritual-certified=0 parana-approved=0 report="+target+" errors="+errors.length);
 for(const error of errors.slice(0,12))console.error("[wave3z] FAIL "+error);
 if(errors.length||ekadashiCases.length!==cities.length*sampleDates.length||
-  janmashtami.length!==cities.length*2||report.sourceCaseCount!==3)
+  janmashtami.length!==cities.length*2||annualArunodaya.length!==cities.length*2||
+  report.annualSunriseEkadashiDaysScreened<150||report.sourceCaseCount!==3)
   process.exitCode=1;
