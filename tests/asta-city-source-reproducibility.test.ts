@@ -10,7 +10,7 @@ describe("Wave 3S same Drik URL can show different observer cities",()=>{
     expect(unstableAstaCitySourceCaptures).toHaveLength(4);
     for(const c of unstableAstaCitySourceCaptures){
       expect(sourceCaptureErrors(c)).toEqual([]);
-      expect(c.url).toMatch(/^https:///);
+      expect(c.url.startsWith("https://")).toBe(true);
     }
   });
   it("detects 2 different observer cities rendered by exactly 1 Drik URL",()=>{
