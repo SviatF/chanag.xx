@@ -45,7 +45,7 @@ export async function generateMetadata({params}:{params:Promise<{festival:string
   const data=await getPanchang(new Date(`${festival.date}T06:00:00Z`),city);
   return {
     title:`${festival.name} ${year} in ${city.name} — ${festival.date} Panchang`,
-    description:`${festival.name} ${year} in ${city.name} falls on ${festival.date}. Local sunrise ${data.sunrise}, sunset ${data.sunset}, ${data.tithi} Tithi and ${data.nakshatra} Nakshatra.`,
+    description:`${festival.name} ${year} is listed for ${festival.date}. Calculated ${city.name} sunrise ${data.sunrise}, sunset ${data.sunset}, ${data.tithi} Tithi and ${data.nakshatra} Nakshatra; local observance rules may differ.`,
     alternates:{canonical:`/festivals/${festival.slug}/${year}/${city.slug}`},
     robots:robotsFor(festivalCityPageIsIndexable(festival.slug,year,city.slug)),
   };
@@ -100,7 +100,7 @@ export default async function Page({params}:{params:Promise<{festival:string;yea
     </div>
 
     {regionalObservance?<section className="wide-panel"><div className="seo-copy">
-      <small>VERIFIED REGIONAL DATE · {city.name.toUpperCase()}</small>
+      <small>SOURCE-REVIEWED REGIONAL OBSERVANCE · {city.name.toUpperCase()}</small>
       <h2>{regionalObservance.label} in {city.name}</h2>
       <p>{regionalObservance.message}</p>
     </div></section>:null}

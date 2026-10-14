@@ -2,6 +2,7 @@ import type {Metadata} from "next";
 import Link from "next/link";
 import {notFound} from "next/navigation";
 import Header from "@/components/Header";
+import CalendarEvidenceNotice from "@/components/CalendarEvidenceNotice";
 import MethodologyNote from "@/components/MethodologyNote";
 import {cities} from "@/lib/cities";
 import {festivalBySlugYear} from "@/lib/festivals";
@@ -55,6 +56,7 @@ export default async function FestivalPage({params}:{params:Promise<{festival:st
     <p className="page-kicker">HINDU FESTIVAL · {year}</p>
     <h1 className="page-title">{f.name}<br/>{year}</h1>
     <p className="page-subtitle">{quality.directAnswer}</p>
+    <CalendarEvidenceNotice scope="maintained-festival-date" cityName="the selected city" subject={f.name} year={year}/>
 
     <div className="data-grid">
       {quality.facts.map(item=><div className="data-card" key={item.label}><small>{item.label}</small><strong>{item.value}</strong>{item.note?<small>{item.note}</small>:null}</div>)}

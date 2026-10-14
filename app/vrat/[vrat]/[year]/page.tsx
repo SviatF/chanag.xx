@@ -2,6 +2,7 @@ import type {Metadata} from "next";
 import Link from "next/link";
 import {notFound} from "next/navigation";
 import Header from "@/components/Header";
+import CalendarEvidenceNotice from "@/components/CalendarEvidenceNotice";
 import TopicalGraph from "@/components/TopicalGraph";
 import {findCityBySlug} from "@/lib/cities";
 import {parseRouteYear} from "@/lib/route-validation";
@@ -41,6 +42,7 @@ export default async function VratYearPage({params}:{params:Promise<{vrat:string
     <p className="page-kicker">YEARLY LUNAR REFERENCE · INDIA BASELINE</p>
     <h1 className="page-title">{vrat.name} {year}<br/>Tithi Dates</h1>
     <p className="page-subtitle">{quality.directAnswer}</p>
+    <CalendarEvidenceNotice scope="sunrise-tithi-reference" cityName={referenceCity.name} subject={vrat.name} year={year}/>
 
     <div className="data-grid"><div className="data-card"><small>Sunrise observations</small><strong>{summary.count}</strong><small>{summary.first??"—"} → {summary.last??"—"}</small></div>{quality.facts.map(item=><div className="data-card" key={item.label}><small>{item.label}</small><strong>{item.value}</strong>{item.note?<small>{item.note}</small>:null}</div>)}</div>
 
