@@ -1,6 +1,6 @@
 import type {City} from "./cities";
 import {createDefaultSweData} from "@typescriptify/sweph/dist/types.js";
-import {sweCalc,sweClose} from "@typescriptify/sweph/dist/sweph.js";
+import {sweCalcUt,sweClose} from "@typescriptify/sweph/dist/sweph.js";
 import {sweRiseTrans} from "@typescriptify/sweph/dist/swecl.js";
 import {SE_SUN,SE_MOON,SEFLG_MOSEPH,SE_CALC_RISE} from "@typescriptify/sweph/dist/constants.js";
 import {addIsoDays,indiaCivilDayStartJulian,indiaLocalPartsFromJulian} from "./india-time";
@@ -93,9 +93,11 @@ function calculateAllVratCalendars(year:number,city:City):VratCalendarMap{
   const start=new Date(Date.UTC(year,0,1,12));
   const end=new Date(Date.UTC(year+1,0,1,12));
 
+  // sweRiseTrans returns sunrise JD(UT). Must use sweCalcUt here, never the
+  // ET/TT-only sweCalc. Keep the same UTC convention as daily Panchang.
   const tithiIndexAt=(jd:number)=>{
-    const sun=sweCalc(swed,jd,SE_SUN,SEFLG_MOSEPH).xx[0];
-    const moon=sweCalc(swed,jd,SE_MOON,SEFLG_MOSEPH).xx[0];
+    const sun=sweCalcUt(swed,jd,SE_SUN,SEFLG_MOSEPH).xx[0];
+    const moon=sweCalcUt(swed,jd,SE_MOON,SEFLG_MOSEPH).xx[0];
     return Math.floor(norm(moon-sun)/12);
   };
 
