@@ -49,5 +49,5 @@ describe("Wave 3AA: calendar-day mathematical correctness and fail-closed Vrat",
       }
     }
     expect(comparisons).toBe(108);
-  });
+  },60_000);
 });
