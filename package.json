@@ -31,7 +31,8 @@
     "audit:asta-methodology": "npx --yes tsx@4.23.13 scripts/asta-wave3q-reconciliation.ts",
     "audit:asta-angular-sources": "npx --yes tsx@4.23.13 scripts/asta-wave3r-angular-source-audit.ts",
     "audit:asta-city-sources": "npx --yes tsx@4.23.13 scripts/asta-wave3s-source-reproducibility.ts",
-    "audit:ritual-evidence": "npx --yes tsx@4.23.13 scripts/wave3t-ritual-evidence-audit.ts"
+    "audit:ritual-evidence": "npx --yes tsx@4.23.13 scripts/wave3t-ritual-evidence-audit.ts",
+    "audit:vrat-time-scale": "npx --yes tsx@4.23.13 scripts/wave3u-time-scale-audit.ts"
   },
   "dependencies": {
     "@types/node": "^22.10.0",
