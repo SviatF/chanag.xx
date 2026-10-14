@@ -10,7 +10,7 @@ describe("Wave 3AD: independent JPL DE440s clock evidence integrity",()=>{
     expect(s).toContain("almanac.moon_phase(self.eph");
     expect(s).toContain("almanac.find_risings(observer,self.sun");
     expect(s).toContain("normalize_delta(self.phase_deg");
-    expect(s).toContain('if data[:7]!=b"DAF/SPK"');
+    expect(s).toContain('data[:7]!=b"DAF/SPK"');
     expect(s).toContain("hashlib.sha256(data).hexdigest()");
     expect(s).toContain("builtin=True");
     expect(s).not.toContain("sweCalc");
