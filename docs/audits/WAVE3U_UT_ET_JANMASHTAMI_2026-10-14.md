@@ -13,6 +13,18 @@ Correcting just Vrat without daily Panchang and the generated 48 shards/338 city
 - CI adds mandatory npm run audit:vrat-time-scale and an artifact wave3u-ut-et-janmashtami. Tests ensure public runtime never imports this diagnostic.
 - A positive local sunrise Tithi is not an Ekadashi fast day, a Parana time, a certified Purnima ritual date, or a wedding Muhurat.
 
+## Observed scientific differential on actual repository calculations
+The first successful research CI head (run 38606430463) returned **32 sunrise locality/date samples**, **one opposite Tithi classification at sunrise** and **one near-boundary sample**. Across the other 31 comparable next-boundary events, the *UT-correct minus legacy transition offset was −69 seconds* (reported min/max/mean all −69 s under identical numerical rounding). This is an actual call-level measurement from Swiss, not a heuristic constant to subtract from times.
+
+**Delhi 2026-06-30** is a reproducible counterexample:
+- In the existing public legacy Vrat output, `sunrise=05:27`, `TithiEnd=05:27`, and **Purnima** is included.
+- Correct UT call calculates Tithi index **15** (next Krishna Pratipada) at sunrise; the Purnima boundary is **40 seconds before sunrise**.
+- Legacy ET-as-UT calculates Tithi index **14** (Purnima) at sunrise; the lunar boundary is **29 seconds after sunrise**.
+- The divergent classification is therefore a **real false positive for the mathematical Purnima-at-sunrise list** caused by the time-scale mismatch. It does not automatically establish the preferred full-moon ritual observance day.
+- Corrected sunrise-time astronomical reference is still **research-only**. User-facing Vrat pages, shared daily Panchang, Festival dates and 48 precomputed Muhurat shards have **not** been changed. Synchronizing all callers plus a source-reviewed rebuild is required.
+
+The reported −69 seconds concerns the sampled lunar transition, **not** an instruction to adjust every public clock by a hardcoded 69 seconds, and not a calibrated observer/horizon confidence interval.
+
 ## Verified Janmashtami 2027 method mismatch
 [Drik Panchang city-pinned Kalyan 2027 entry](https://www.drikpanchang.com/dashavatara/lord-krishna/krishna-janmashtami-date-time.html?geoname-id=1268295) prints:
 - Janmashtami **August 25, 2027** (Wednesday).
