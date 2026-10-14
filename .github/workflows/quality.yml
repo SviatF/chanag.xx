@@ -167,6 +167,17 @@ jobs:
           path: artifacts/wave3w-boundary-evidence-consistency.json
           if-no-files-found: warn
 
+      - name: Check Ekadashi sunrise, arunodaya, Dwadashi and Janmashtami method boundaries (research only)
+        run: npm run audit:ekadashi-observance
+
+      - name: Upload Wave 3Z source and astronomical tradition gap report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: wave3z-ekadashi-tradition
+          path: artifacts/wave3z-ekadashi-tradition-parana-evidence.json
+          if-no-files-found: warn
+
       - name: Build Next.js reference
         run: npm run build:next
 
