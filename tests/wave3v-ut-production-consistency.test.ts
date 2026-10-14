@@ -1,5 +1,5 @@
 import {describe,expect,it} from "vitest";
-import {readFileSync} from "node:fs";
+import {existsSync,readFileSync} from "node:fs";
 import {cityBySlug} from "../lib/cities";
 import {getPanchang} from "../lib/panchang";
 import {calculateVratCalendar} from "../lib/vrat";
@@ -38,11 +38,15 @@ describe("Wave 3V: synchronized UT-correct lunar calendar release",()=>{
     expect(pkg.scripts.build).toContain("verify:muhurat-precompute");
   });
   it("preserves 3V migration provenance and does not permit precompute in live Next build",()=>{
-    const migration=readFileSync(".github/workflows/wave3v-one-time-shard-migration.yml","utf8");
-    expect(migration).toContain("npm run precompute:muhurat");
-    expect(migration).toContain("npm run verify:muhurat-precompute");
-    expect(migration).toContain("wave3v-shard-migration-diff.mjs");
-    expect(migration).not.toContain("npm run deploy");
+    expect(existsSync(".github/workflows/wave3v-one-time-shard-migration.yml")).toBe(false);
+    expect(existsSync(".github/workflows/wave3v-one-time-diff-review.yml")).toBe(false);
+    const migrationDocumentation=readFileSync(
+      "docs/audits/WAVE3V_UT_TIME_SCALE_MIGRATION_2026-10-14.md","utf8");
+    expect(migrationDocumentation).toContain("338");
+    expect(migrationDocumentation).toContain("10,299");
+    expect(migrationDocumentation).toContain("independent");
+    const diff=readFileSync("scripts/wave3v-shard-migration-diff.mjs","utf8");
+    expect(diff).toContain("solarOnlyFieldDifferences");
     const quality=readFileSync(".github/workflows/quality.yml","utf8");
     expect(quality).toContain("Verify committed Muhurat build data");
     expect(quality).not.toContain("Generate Muhurat pilot build data");
