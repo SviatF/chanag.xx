@@ -55,8 +55,11 @@ describe("Wave 3AC real independent Sun/Moon calculation and release boundaries"
     expect(audit).toContain("PatnaSourceConflictClosed:false");
     expect(audit).toContain("certifiedISKCONFasts:0");
     const publicNotice=readFileSync("lib/critical-boundary-notices.ts","utf8");
-    expect(publicNotice).toContain("independently implemented Astronomy Engine computes Navami");
-    expect(publicNotice).toContain("neither result is independently certified");
+    // Wave 3AD adds a third, JPL-backed reference to the public scientific
+    // uncertainty note; do not regress to an obsolete two-model assertion.
+    expect(publicNotice).toContain("Astronomy Engine 06:34:54");
+    expect(publicNotice).toContain("high-precision JPL DE440s 06:34:15.581");
+    expect(publicNotice).toContain("production date is NOT independently certified");
     for(const source of ["lib/panchang.ts","lib/vrat.ts","lib/muhurat.ts","lib/festivals.ts","lib/seo-policy.ts"]){
       expect(readFileSync(source,"utf8")).not.toContain("wave3ac-independent-astronomy");
       expect(readFileSync(source,"utf8")).not.toContain("astronomy-engine");
