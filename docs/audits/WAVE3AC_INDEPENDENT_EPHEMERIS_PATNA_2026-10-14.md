@@ -48,3 +48,17 @@ These tests show if a 3AB **mathematical screen** survives an independently impl
 Even if the two models agree on Dashami, **the Patna source-method dispute is unresolved** until a reliable external observer/clock/ephemeris source gives reproducible UT-second results. If the two models differ near the 10-second boundary, **do not claim V5 is 100% correct**, and obtain high-precision JPL/other independent corroboration before touching any city/date/day assignment.
 
 **No production calendar dates, ritual approvals, Muhurat selection, 2027 index gates or SEO routes changed by this wave.**
+
+
+## Actual CI-run findings (GitHub Quality run 38652466360)
+
+- Source independent of Swiss and executed under pinned \`astronomy-engine@2.1.19\` in GitHub CI, not manually invented or extrapolated.
+- Patna city-core geographic coordinates and zero elevation: Swiss upper-limb sunrise **06:33:40 IST**; independent upper-limb sunrise **06:33:33 IST**, **independent − Swiss = −7 seconds**.
+- Navami → Dashami (geocentric Moon–Sun elongation 288°): Swiss/Moshier UT **06:33:30 IST**; Astronomy Engine Brown theory **06:34:54 IST**, **independent − Swiss = +84 seconds**.
+- **Different sunrise-Tithi classification:** Swiss at both Swiss and independent sunrise = **Krishna Dashami**; Astronomy Engine at both Swiss and independent sunrise = **Krishna Navami**.
+- Conclusion: A distinct implemented lunar theory supports Navami at both sunrise instants while the Swiss/Moshier implementation supports Dashami. This is real model disagreement at a 10-second sunrise boundary, not merely a publisher-minute rounding issue. **No winner is yet independently established as the high-accuracy reference**; do not call PANCHVANI V5's Patna result verified.
+- All **8/8** previous Dashami-at-Arunodaya mathematical cases retained their respective Dashami-at-dawn and Ekadashi-at-sunrise screens with *both* independent Sun/Moon and Swiss models. These are **two underlying dates × four cities**, not eight independently ritual-certified fasts. ISKCON/Smarta and Parana release remain blocked.
+- Full test suite at initial Wave 3AC PR head reached **136/136 test files** and the 3326-page content gate passed. Final updated-head exact CI must be checked again before merge.
+
+### Reader-facing correction
+The already-present three-city boundary notice registry now explicitly reports this **independent 84-second Patna disagreement** on the matching Patna daily URL, instead of describing it only as an unresolved comparison to rounded outside sites. It does not rewrite the calculated daily Tithi: resolving a near-sunrise model conflict requires a demonstrably higher-accuracy third reference, not automatic majority voting.
