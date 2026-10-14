@@ -20,6 +20,7 @@ import {regionalAlternates} from "@/lib/regional-seo";
 import {datedPanchangSsgPriority} from "@/lib/static-seo-routes";
 import {buildDailyTopicalGraph} from "@/lib/topical-links";
 import {vratLinkForTithi} from "@/lib/vrat-topical-links";
+import {criticalBoundaryNotice} from "@/lib/critical-boundary-notices";
 
 export const dynamicParams=true;
 export const revalidate=3600;
@@ -51,6 +52,7 @@ export default async function PanchangPage({params}:{params:Promise<{city:string
   const qualityContent=buildDailyPanchangQualityContent(city,data,lunar);
   const localContext=buildDailyCityContext(city,data);
   const guidance=getDailyGuidance(data,city);
+  const boundaryNotice=criticalBoundaryNotice(city.slug,data.date);
   const festival=nextValidatedFestival(date);
   const topicalGroups=buildDailyTopicalGraph(city,date,festival);
   const vratLink=vratLinkForTithi(city,date,data.tithi);
@@ -92,6 +94,7 @@ export default async function PanchangPage({params}:{params:Promise<{city:string
       <div className="data-card"><small>Shaka Samvat</small><strong>{data.shakaSamvat}</strong></div>
       <div className="data-card"><small>Day Lord</small><strong>{data.dayLord}</strong></div>
     </div>
+    {boundaryNotice?<section className="wide-panel" aria-label="Sunrise Tithi source review"><div className="seo-copy"><small>SUNRISE BOUNDARY · SOURCE REVIEW</small><h2>Minute-sensitive Tithi evidence for {city.name}</h2><p>{boundaryNotice.summary}</p><p>Independent publications are included for comparison, not as verified second-level astronomical measurements. A sunrise-based Tithi is not automatically a tradition-approved Vrat or Muhurat date.</p><ul>{boundaryNotice.evidence.map(e=><li key={e.url}><a href={e.url} target="_blank" rel="noopener noreferrer">{e.publisher} source</a> — {e.observation}</li>)}</ul></div></section>:null}
     <div className="wide-panel"><h2 className="page-title" style={{fontSize:32}}>Auspicious & avoid periods</h2><div className="timing-row">
       <div className="timing-chip good"><small>Abhijit Muhurat</small><strong>{formatWindow(data.abhijit)}</strong></div>
       <div className="timing-chip bad"><small>Rahu Kalam</small><strong>{formatWindow(data.rahu)}</strong></div>
