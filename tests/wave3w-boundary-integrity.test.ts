@@ -1,6 +1,7 @@
 import {readFileSync} from "node:fs";
 import {describe,expect,it} from "vitest";
 import {criticalBoundaryNotice,criticalBoundaryNotices} from "../lib/critical-boundary-notices";
+import {criticalBoundarySourceEvidence} from "./fixtures/critical-boundary-source-evidence";
 import {getPanchang} from "../lib/panchang";
 import {cityBySlug} from "../lib/cities";
 import {calculateVratCalendar} from "../lib/vrat";
@@ -10,8 +11,10 @@ describe("Wave 3W honest source evidence and astronomical sunrise semantics",()=
   it("flags exactly three genuinely documented publisher/clock-sensitive city dates",()=>{
     expect(criticalBoundaryNotices).toHaveLength(3);
     for(const n of criticalBoundaryNotices){
-      expect(n.evidence.length).toBeGreaterThanOrEqual(2);
-      expect(n.evidence.every(e=>e.url.startsWith("https://"))).toBe(true);
+      const source=criticalBoundarySourceEvidence.find(s=>s.city===n.city&&s.date===n.date);
+      expect(source?.observations.length).toBeGreaterThanOrEqual(2);
+      expect(source?.observations.every(e=>e.url.startsWith("https://"))).toBe(true);
+      expect(source?.observations.some(e=>e.exactSecondTithiEnd)).toBe(false);
       expect(n.fastOrCeremonyDateCertified).toBe(false);
       expect(n.mathematicalCalculationChanged).toBe(false);
     }
@@ -26,7 +29,8 @@ describe("Wave 3W honest source evidence and astronomical sunrise semantics",()=
     expect(page).toContain("criticalBoundaryNotice(city.slug,data.date)");
     expect(page).toContain("SUNRISE BOUNDARY · SOURCE REVIEW");
     expect(page).toContain("A sunrise-based Tithi is not automatically");
-    expect(page).toContain("rel=\"noopener noreferrer\"");
+    expect(page).toContain('href="/accuracy"');
+    expect(page).toContain('href="/corrections"');
     expect(page).not.toContain("approved Ekadashi fast day");
   });
   it("does not advertise 38/38 festival-year publication dates as independently validated",()=>{
