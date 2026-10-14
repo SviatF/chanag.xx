@@ -35,7 +35,8 @@
     "audit:vrat-time-scale": "npx --yes tsx@4.23.13 scripts/wave3u-time-scale-audit.ts",
     "audit:boundary-integrity": "npx --yes tsx@4.23.13 scripts/wave3w-boundary-integrity-audit.ts",
     "audit:ekadashi-observance": "npx --yes tsx@4.23.13 scripts/wave3z-ekadashi-observance-audit.ts",
-    "audit:sunrise-conventions": "npx --yes tsx@4.23.13 scripts/wave3ab-sunrise-source-audit.ts"
+    "audit:sunrise-conventions": "npx --yes tsx@4.23.13 scripts/wave3ab-sunrise-source-audit.ts",
+    "audit:independent-astronomy": "npx --yes tsx@4.23.13 scripts/wave3ac-independent-ephemeris-compare.ts"
   },
   "dependencies": {
     "@types/node": "^22.10.0",
@@ -52,6 +53,7 @@
     "react-server-dom-webpack": "19.2.7"
   },
   "devDependencies": {
+    "astronomy-engine": "2.1.19",
     "vitest": "^5.0.0",
     "vite": "^8.2.2",
     "@cloudflare/vite-plugin": "^1.50.0",

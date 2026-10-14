@@ -189,6 +189,17 @@ jobs:
           path: artifacts/wave3ab-patna-method-reconciliation.json
           if-no-files-found: warn
 
+      - name: Compare independent Sun/Moon ephemeris for Patna and Vedha
+        run: npm run audit:independent-astronomy
+
+      - name: Upload Wave 3AC independent model proof
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: wave3ac-independent-astronomy-evidence
+          path: artifacts/wave3ac-independent-astronomy-evidence.json
+          if-no-files-found: warn
+
       - name: Build Next.js reference
         run: npm run build:next
 
