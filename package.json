@@ -52,6 +52,7 @@
     "react-server-dom-webpack": "19.2.7"
   },
   "devDependencies": {
+    "astronomy-engine": "2.1.19",
     "vitest": "^5.0.0",
     "vite": "^8.2.2",
     "@cloudflare/vite-plugin": "^1.50.0",
