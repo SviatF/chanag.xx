@@ -101,6 +101,17 @@ jobs:
           path: artifacts/asta-wave3r-independent-angular-sources.json
           if-no-files-found: warn
 
+      - name: Verify city-specific Asta source URL replay and locality conflicts (research only)
+        run: npm run audit:asta-city-sources
+
+      - name: Upload Asta city source reproducibility failures
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: asta-wave3s-city-source-reproducibility
+          path: artifacts/asta-wave3s-local-source-reproducibility.json
+          if-no-files-found: warn
+
       - name: Build Next.js reference
         run: npm run build:next
 
