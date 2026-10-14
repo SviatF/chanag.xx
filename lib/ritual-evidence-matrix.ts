@@ -70,6 +70,7 @@ export function auditVratSunriseRows(
   const errors:string[]=[];
   const duplicateDates=new Set<string>();
   let repeatedAtSunrise=0,unresolvedTransitions=0;
+  const nearSunriseBoundaryRows:Array<{date:string;sunrise:string;tithiEnd:string;deltaMinutes:number;status:"needs-independent-minute-review"}>=[];
   for(let i=0;i<rows.length;i++){
     const r=rows[i];
     const key=r.date;
@@ -94,13 +95,24 @@ export function auditVratSunriseRows(
         r.tithiEndDate<key||
         r.tithiEndDate>new Date(Date.parse(key+"T00:00:00Z")+2*86400000).toISOString().slice(0,10))
         errors.push("invalid-transition:"+key);
-      else if(r.tithiEndDate===key&&r.tithiEnd<=r.sunrise)
-        errors.push("transition-not-after-sunrise:"+key);
+      else if(r.tithiEndDate===key){
+        const clockMinutes=(s:string)=>Number(s.slice(0,2))*60+Number(s.slice(3,5));
+        const difference=clockMinutes(r.tithiEnd)-clockMinutes(r.sunrise);
+        // Minute-formatted sunrise and Tithi-end can collapse onto the same
+        // minute. This is UNKNOWN, not a confirmed sunrise observance day.
+        // Do NOT silently accept transitions >5 min before sunrise.
+        if(Math.abs(difference)<=5)nearSunriseBoundaryRows.push({
+          date:key,sunrise:r.sunrise,tithiEnd:r.tithiEnd,
+          deltaMinutes:difference,status:"needs-independent-minute-review"
+        });
+        else if(difference<0)errors.push("transition-before-sunrise:"+key);
+      }
     }
   }
   return{
     slug,year,sunriseRows:rows.length,repeatedAtSunrise,
-    unresolvedTransitions,errors,
+    unresolvedTransitions,nearSunriseBoundaryRows,
+    boundarySensitiveCount:nearSunriseBoundaryRows.length,errors,
     actualFastDayCertified:false as const,
     paranaTimeCalculated:false as const,
     smarthaVaishnavaConventionResolved:false as const,
