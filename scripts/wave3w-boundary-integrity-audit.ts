@@ -9,6 +9,7 @@ import {getPrecomputedMuhuratPanchangMonth} from "../lib/muhurat-precomputed";
 import {calculateVratCalendar} from "../lib/vrat";
 import {compareVratTimeScales} from "../lib/vrat-ut-et-diagnostic";
 import {criticalBoundaryNotice,criticalBoundaryNotices} from "../lib/critical-boundary-notices";
+import {criticalBoundarySourceEvidence} from "../tests/fixtures/critical-boundary-source-evidence";
 import {MUHURAT_BUILD_DATA_VERSION} from "../lib/muhurat-build-data-schema";
 
 const CHECKS=[
@@ -75,10 +76,13 @@ for(const c of CHECKS){
     " sourceCaution="+Boolean(risk)+" diff="+mismatch);
 }
 function boolToStatus(v:boolean){return v?"publisher-review-notice-live":"source-review-no-warning" as const}
-const errors=criticalBoundaryNotices.filter(n=>
-  !CHECKS.some(x=>x.city===n.city&&x.date===n.date)||
-  n.mathematicalCalculationChanged!==false||n.fastOrCeremonyDateCertified!==false||
-  n.evidence.some(e=>!e.url.startsWith("https://")||!e.publisher));
+const errors=criticalBoundaryNotices.filter(n=>{
+  const sources=criticalBoundarySourceEvidence.find(s=>s.city===n.city&&s.date===n.date);
+  return !CHECKS.some(x=>x.city===n.city&&x.date===n.date)||
+    n.mathematicalCalculationChanged!==false||n.fastOrCeremonyDateCertified!==false||
+    !sources||sources.observations.length<2||
+    sources.observations.some(e=>!e.url.startsWith("https://")||!e.publisher);
+});
 for(const bad of errors)issues.push("Invalid curated source warning "+bad.city+"/"+bad.date);
 const report={
   executedAt:new Date().toISOString(),wave:"3W",
