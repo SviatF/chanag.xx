@@ -28,6 +28,10 @@ const solarOnly=new Set(["rahu","yamaganda","gulika","abhijit","dayChoghadiya"])
 const counts=Object.fromEntries(fields.map(x=>[x,0]));
 let targets=0,rows=0,changedRows=0,changedTithiRows=0,solarDifferences=0;
 const examples=[];
+const tithiNameChanges=[];
+const nakshatraNameChanges=[];
+const karanaNameChanges=[];
+const lunarEndDayChanges=[];
 let versionMismatch=0;
 for(const file of oldFiles){
   const old=load(before,file),next=load(after,file);
@@ -45,7 +49,13 @@ for(const file of oldFiles){
       const changes=fields.filter(field=>JSON.stringify(a[field])!==JSON.stringify(b[field]));
       if(changes.length){
         changedRows++;
-        if(changes.includes("tithi"))changedTithiRows++;
+        if(changes.includes("tithi")){
+          changedTithiRows++;
+          tithiNameChanges.push({cityMonth:key,date:a.date,before:a.tithi,after:b.tithi});
+        }
+        if(changes.includes("nakshatra"))nakshatraNameChanges.push({cityMonth:key,date:a.date,before:a.nakshatra,after:b.nakshatra});
+        if(changes.includes("karana"))karanaNameChanges.push({cityMonth:key,date:a.date,before:a.karana,after:b.karana});
+        if(changes.includes("tithiEndDate")||changes.includes("nakshatraEndDate"))lunarEndDayChanges.push({cityMonth:key,date:a.date,tithiEndDateBefore:a.tithiEndDate,tithiEndDateAfter:b.tithiEndDate,nakshatraEndDateBefore:a.nakshatraEndDate,nakshatraEndDateAfter:b.nakshatraEndDate});
         if(changes.some(field=>solarOnly.has(field)))solarDifferences++;
         for(const field of changes)counts[field]++;
         if(examples.length<50)examples.push({
@@ -68,7 +78,7 @@ const report={
   stagedSourceChangesCommitted:false,
   sourceAstronomicalAccuracyEstablishedByCI:false,
   independentCeremonyEligibilityValidated:false,
-  examples,verificationErrors:[]
+  examples,tithiNameChanges,nakshatraNameChanges,karanaNameChanges,lunarEndDayChanges,verificationErrors:[]
 };
 mkdirSync("artifacts",{recursive:true});
 writeFileSync("artifacts/wave3v-shard-migration-diff.json",JSON.stringify(report,null,2)+"\n");
@@ -78,5 +88,8 @@ console.log("[3v-migration] changes="+changedRows+" TithiNames="+changedTithiRow
   " solar-geometry-differences="+solarDifferences);
 console.log("[3v-migration] fieldCounts="+JSON.stringify(counts));
 console.log("[3v-migration] examples="+JSON.stringify(examples.slice(0,4)));
+console.log("[3v-migration] TITHI NAME DIFFS="+JSON.stringify(tithiNameChanges));
+console.log("[3v-migration] NAKSHATRA NAME DIFFS="+JSON.stringify(nakshatraNameChanges));
+console.log("[3v-migration] KARANA NAME DIFFS="+JSON.stringify(karanaNameChanges));
 if(versionMismatch||targets!==338||!changedRows||solarDifferences)
   throw Error("Precompute migration correctness gate failed; do NOT commit shards");
