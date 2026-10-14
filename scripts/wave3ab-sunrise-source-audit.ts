@@ -30,7 +30,10 @@ const exactIndependent=patnaJan2027PublishedClocks.filter(x=>
 if(panchang.tithi!=="Dashami"||panchang.paksha!=="Krishna"||
    patna.defaultApparentUpperLimb.tithi!==panchang.paksha+" "+panchang.tithi)
   issues.push("Patna corrected exact UT Panchang disagrees with model differential");
-if(patna.defaultApparentUpperLimb.sunrise.ist.slice(11,16)!==panchang.sunrise)
+const minuteRoundedIst=(jdUT:number)=>new Date(
+  Math.round(((jdUT-2440587.5)*86400000+330*60000)/60000)*60000
+).toISOString().slice(11,16);
+if(minuteRoundedIst(patna.defaultApparentUpperLimb.sunrise.jdUT)!==panchang.sunrise)
   issues.push("Patna sunrise second clock does not round identically to daily Panchang");
 if(patna.sunriseTithiChangesByConvention&&patna.safeToSwitchProductionConvention)
   issues.push("Unreviewed sunrise convention was promoted to production");
