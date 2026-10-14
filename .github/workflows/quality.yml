@@ -156,6 +156,17 @@ jobs:
           path: artifacts/wave3u-ut-et-janmashtami-diagnostic.json
           if-no-files-found: warn
 
+      - name: Verify UT-correct V5 daily Panchang, yearly Vrat and source-disputed dawn boundaries
+        run: npm run audit:boundary-integrity
+
+      - name: Upload source-disputed astronomical boundary comparison (research only)
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: wave3w-boundary-integrity
+          path: artifacts/wave3w-boundary-evidence-consistency.json
+          if-no-files-found: warn
+
       - name: Build Next.js reference
         run: npm run build:next
 
