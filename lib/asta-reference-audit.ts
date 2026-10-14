@@ -17,6 +17,12 @@ export type AstaReference={
   precision:"minute"|"day";
   /** A dynamic location picker is NOT a reproducible city-bound source. */
   sourceLocationMode:"publisher-pinned"|"geolocated-snapshot";
+  /** Manual reviewer evidence for a stable observer ID embedded in the URL. */
+  observerUrlProof?:{
+    cityToken:string;
+    independentlyRepeatedAnonymousFetches:number;
+    reviewedCity:string;
+  };
   /** Civil dates/times in Asia/Kolkata; no hidden 24+ clock notation. */
   startLocal:string;
   endLocal:string;
@@ -24,7 +30,7 @@ export type AstaReference={
 };
 export type AstaEvaluationStatus=
   "insufficient-independent-minute-sources"|"location-not-reproducible"|"method-disagreement"|
-  "boundary-disagreement"|"comparison-ready";
+  "boundary-disagreement"|"publisher-internal-conflict"|"comparison-ready";
 
 const DATE=/^\d{4}-\d{2}-\d{2}$/;
 const MINUTE=/^\d{4}-\d{2}-\d{2}T([01]\d|2[0-3]):[0-5]\d$/;
@@ -92,10 +98,27 @@ export function evaluateAstaReferences(
   const valid=matched.filter(r=>astaReferenceErrors(r).length===0);
   const exact=valid.filter(r=>r.precision==="minute");
   // A site publishing two differently formatted copies counts ONCE.
-  const independent=new Map<string,AstaReference>();
-  for(const row of exact)independent.set(domain(row.url)!,row);
-  const accepted=[...independent.values()];
-  const reproducible=accepted.filter(r=>r.sourceLocationMode==="publisher-pinned");
+  const independent=new Map<string,AstaReference[]>();
+  for(const row of exact){
+    const publisherDomain=domain(row.url)!;
+    independent.set(publisherDomain,[...(independent.get(publisherDomain)??[]),row]);
+  }
+  // Multiple conflicting extracts from ONE publisher are not independent.
+  const publisherInternalConflicts=[...independent.entries()].filter(([,rows])=>
+    rows.length>1&&rows.some(r=>r.startLocal!==rows[0].startLocal||
+      r.endLocal!==rows[0].endLocal||r.method!==rows[0].method||
+      r.sourceLocationMode!==rows[0].sourceLocationMode)
+  ).map(([publisherDomain])=>publisherDomain);
+  const accepted=[...independent.values()].map(rows=>rows[0]);
+  const reproducible=accepted.filter(r=>{
+    const proof=r.observerUrlProof;
+    if(r.sourceLocationMode!=="publisher-pinned"||!proof)return false;
+    const u=new URL(r.url);
+    const cityToken=proof.cityToken.toLowerCase().trim();
+    return cityToken.length>=3&&u.toString().toLowerCase().includes(cityToken)&&
+      proof.independentlyRepeatedAnonymousFetches>=2&&
+      proof.reviewedCity===r.locality;
+  });
   const methodSet=new Set(accepted.map(r=>r.method));
   const comparisons=accepted.map(r=>({
     publisher:r.publisher,url:r.url,method:r.method,
@@ -110,8 +133,9 @@ export function evaluateAstaReferences(
     endSpreadMinutes=Math.max(...ends)-Math.min(...ends);
   }
   const status:AstaEvaluationStatus=accepted.length<2?"insufficient-independent-minute-sources":
+    publisherInternalConflicts.length?"publisher-internal-conflict":
     reproducible.length<2?"location-not-reproducible":
-    methodSet.size!==1||methodSet.has("not-disclosed")?"method-disagreement":
+    methodSet.size!==1||!methodSet.has("observer-sensitive")?"method-disagreement":
     startSpreadMinutes!>toleranceMinutes||endSpreadMinutes!>toleranceMinutes?"boundary-disagreement":
     "comparison-ready";
   return {
@@ -119,6 +143,7 @@ export function evaluateAstaReferences(
     sourceCount:matched.length,invalidCount:invalid.length,
     independentMinuteSourceCount:accepted.length,
     reproducibleMinuteSourceCount:reproducible.length,
+    publisherInternalConflicts,
     startSpreadMinutes,endSpreadMinutes,toleranceMinutes,
     methods:[...methodSet],comparisons,
     /** A source consensus only permits method benchmarking, not a ceremony verdict. */
