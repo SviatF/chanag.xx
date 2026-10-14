@@ -18,14 +18,12 @@ describe("Wave 3AA public evidence honesty and release scope",()=>{
     }
   });
   it("marks curated festivals as published records, not automatically validated observances",()=>{
-    for(const path of [
-      "app/festivals/[festival]/[year]/page.tsx",
-      "app/festivals/[festival]/[year]/[city]/page.tsx"
-    ]){
-      const src=readFileSync(path,"utf8");
-      expect(src).toContain('<CalendarEvidenceNotice scope="maintained-festival-date"');
-    }
+    const yearPage=readFileSync("app/festivals/[festival]/[year]/page.tsx","utf8");
+    expect(yearPage).toContain('<CalendarEvidenceNotice scope="maintained-festival-date"');
     const city=readFileSync("app/festivals/[festival]/[year]/[city]/page.tsx","utf8");
+    // City-specific astronomy and observance paragraphs already supply the
+    // evidence caveats; don't add templated near-duplicate explanations.
+    expect(city).not.toContain('<CalendarEvidenceNotice scope="maintained-festival-date"');
     expect(city).not.toContain("VERIFIED REGIONAL DATE");
     expect(city).toContain("SOURCE-REVIEWED REGIONAL OBSERVANCE");
     expect(city).toContain("is listed for ");
