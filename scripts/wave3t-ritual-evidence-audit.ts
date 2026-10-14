@@ -52,7 +52,15 @@ for(const slug of cities){
       const checked=auditVratSunriseRows(vrat,year,rows);
       vratResults.push({...checked,city:slug,
         explanation:vratDefinitions[vrat].ritualCaution});
-      if(checked.errors.length)failures.push(slug+"/"+year+"/"+vrat+": "+checked.errors.slice(0,3).join("|"));
+      if(checked.errors.length){
+        const details=checked.errors.slice(0,3).map(err=>{
+          const date=err.split(":").slice(-1)[0];
+          const sourceRow=rows.find(r=>r.date===date);
+          return err+" [sunrise="+sourceRow?.sunrise+
+            " end="+sourceRow?.tithiEnd+" endDate="+sourceRow?.tithiEndDate+"]";
+        });
+        failures.push(slug+"/"+year+"/"+vrat+": "+details.join("|"));
+      }
     }
   }
 }
