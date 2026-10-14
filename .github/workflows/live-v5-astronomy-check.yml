@@ -1,0 +1,42 @@
+name: PANCHVANI Live V5 Astronomy Checks
+on:
+  push:
+    branches: [audit/wave3x-live-v5-truth-regression-20261014]
+    paths:
+      - ".github/workflows/live-v5-astronomy-check.yml"
+      - "scripts/live-v5-astronomy-audit.mjs"
+  workflow_dispatch:
+  schedule:
+    - cron: '40 4 * * *'
+permissions:
+  contents: read
+jobs:
+  public-v5-truth:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+      - name: Check real live astronomical timestamps, source cautions and canonicals
+        shell: bash
+        run: |
+          for retry in 1 2 3; do
+            if node scripts/live-v5-astronomy-audit.mjs --strict; then
+              exit 0
+            fi
+            if [ "$retry" -eq 3 ]; then
+              echo "Public V5 astronomy regression; report contains failed cases"
+              exit 1
+            fi
+            sleep 35
+          done
+      - name: Archive human-readable proof, not user data
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: live-v5-source-and-clock-integrity
+          path: artifacts/live-v5-astronomy-evidence.json
+          retention-days: 21
+          if-no-files-found: warn
