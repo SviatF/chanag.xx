@@ -1,7 +1,7 @@
 import type {City} from "./cities";
 import type {ChoghadiyaPeriod,Panchang,TimeWindow} from "./panchang";
 
-export const MUHURAT_BUILD_DATA_VERSION=4 as const;
+export const MUHURAT_BUILD_DATA_VERSION=5 as const;
 export const MUHURAT_BUILD_DATA_SHARD_MAX_BYTES=1_500_000;
 
 export type MuhuratPanchangSnapshot={
