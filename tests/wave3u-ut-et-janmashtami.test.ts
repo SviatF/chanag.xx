@@ -15,6 +15,18 @@ describe("Wave 3U UT/ET and Janmashtami event definitions",()=>{
     expect(d.sunriseUtJd).toBeGreaterThan(2460000);
     expect(d.utCorrectTithiIndex).toBeGreaterThanOrEqual(0);
     expect(d.utCorrectTithiIndex).toBeLessThan(30);
+    // This is an observed *different* Tithi state, not a formatting issue:
+    // UT-correct ends Purnima before sunrise, while legacy ET-as-UT
+    // incorrectly retains it beyond sunrise.
+    expect(d.legacyTithiIndex).toBe(14); // Shukla Purnima
+    expect(d.utCorrectTithiIndex).toBe(15); // following Krishna Pratipada
+    expect(d.sameTithiAtSunrise).toBe(false);
+    expect(d.localDateSelectionPotentiallyChanges).toBe(true);
+    expect(d.utLastTransitionSecondsBeforeSunrise).toBeGreaterThan(20);
+    expect(d.utLastTransitionSecondsBeforeSunrise).toBeLessThan(70);
+    expect(d.legacyNextTransitionSecondsAfterSunrise).toBeGreaterThan(10);
+    expect(d.legacyNextTransitionSecondsAfterSunrise).toBeLessThan(60);
+    expect(d.withinFiveMinutesOfUtBoundary).toBe(true);
     expect(d.closestUtBoundaryDistanceSeconds).toBeGreaterThanOrEqual(0);
     expect(d.utLastTransitionSecondsBeforeSunrise).toBeGreaterThanOrEqual(0);
     expect(d.utNextTransitionSecondsAfterSunrise).toBeGreaterThanOrEqual(0);
