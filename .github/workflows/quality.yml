@@ -359,6 +359,21 @@ jobs:
         timeout-minutes: 3
         run: python scripts/wave3as-native-lahiri-jpl-counterfactual.py
 
+      - name: Type-check 454-city 36-Sankranti native Lahiri source candidate research
+        run: npx tsc --noEmit -p tsconfig.wave3at.json
+
+      - name: Quantify source-frame changes at exact city sunrises near all 36 Sankranti transitions
+        timeout-minutes: 8
+        run: npm run audit:jpl-v6-sankranti-impact
+
+      - name: Archive Wave 3AT geographic Sankranti date impact (research only)
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: wave3at-all-india-sankranti-native-lahiri-research-only
+          path: artifacts/wave3at-native-lahiri-sankranti-sunrise-impact.json
+          if-no-files-found: error
+
       - name: Archive Wave 3AS ephemeris-versus-Lahiri cause evidence (not a release)
         if: always()
         uses: actions/upload-artifact@v4
