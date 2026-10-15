@@ -1,6 +1,7 @@
 import {writeFileSync} from "node:fs";
 import {createHash} from "node:crypto";
 import {extractSeoIdentity,auditSeoIdentity} from "./seo-identity-quality.mjs";
+import {inspectDailyVisibleFacts,summarizeDailyFactIntegrity} from "./daily-fact-integrity.mjs";
 
 const args=process.argv.slice(2);
 function arg(name,fallback){
@@ -203,6 +204,7 @@ function auditPage(pathname,html){
   const robots=extractRobots(html);
   const h1=extractH1(html);
   const seo=extractSeoIdentity(html);
+  const dailyFact=inspectDailyVisibleFacts(pathname,html);
   const issues=[];
   const warnings=[];
   if(!canonical)issues.push("missing canonical");
@@ -226,6 +228,7 @@ function auditPage(pathname,html){
     robots,
     h1,
     seo,
+    dailyFact,
     factualEvidence,
     wordCount:words.length,
     normalizedHash:sha(words.join(" ")),
@@ -289,6 +292,7 @@ for(const page of pages){
 for(const [canonical,owners] of canonicalOwners)if(owners.length>1)duplicateCanonicals.push({canonical,owners});
 
 const seoIdentity=auditSeoIdentity(pages);
+const dailyFactIntegrity=summarizeDailyFactIntegrity(pages.map(page=>page.dailyFact));
 const similarityPairs=pairwiseSimilarity(pages);
 const exactNormalizedDuplicates=[];
 const hashGroups=new Map();
@@ -323,6 +327,8 @@ const report={
     sitemapUrls:paths.length,fetched:pages.length,fetchErrors:fetchErrors.length,
     structuralIssues:structuralIssues.length,hreflangIssues:hreflangIssues.length,
     duplicateCanonicals:duplicateCanonicals.length,exactNormalizedDuplicateGroups:exactNormalizedDuplicates.length,
+    dailyFactFailures:dailyFactIntegrity.failures.length,
+    dailyFactIdenticalGroups:dailyFactIntegrity.identicalLocalFactGroups.length,
     seoIdentityIssues:seoIdentity.issues.length,
     duplicateSeoTitles:seoIdentity.duplicateTitles.length,
     duplicateMetaDescriptions:seoIdentity.duplicateDescriptions.length,
@@ -331,6 +337,7 @@ const report={
   },
   familySummary,
   seoIdentity,
+  dailyFactIntegrity,
   evidenceNote:"Quantitative evidence counts are observation and prioritization only, not independent fact verification.",
   fetchErrors,
   structuralIssues,
@@ -346,6 +353,7 @@ console.log(`[content-audit] fetched=${pages.length}/${paths.length}`);
 console.log(`[content-audit] structural=${structuralIssues.length} hreflang=${hreflangIssues.length} duplicateCanonicals=${duplicateCanonicals.length}`);
 console.log(`[content-audit] similarity high=${similarityPairs.length} severe=${report.totals.severeSimilarityPairs} exact=${exactNormalizedDuplicates.length}`);
 console.log(`[content-audit] SEO identity audited=${seoIdentity.programmaticPages} issues=${seoIdentity.issues.length} duplicateTitles=${seoIdentity.duplicateTitles.length} duplicateDescriptions=${seoIdentity.duplicateDescriptions.length}`);
+console.log(`[content-audit] rendered daily facts=${dailyFactIntegrity.dailyPages} errors=${dailyFactIntegrity.failures.length} identicalLocalVectors=${dailyFactIntegrity.identicalLocalFactGroups.length} (human review, not presumed error)`);
 console.log(`[content-audit] disclaimerPages=${report.totals.disclaimerPages}`);
 console.log(`[content-audit] report=${reportPath}`);
 if(similarityPairs.length)console.log("[content-audit] top similarity risks:\n"+similarityPairs.slice(0,20).map(pair=>`  ${pair.score} ${pair.left} <> ${pair.right}`).join("\n"));
@@ -355,6 +363,7 @@ if(fetchErrors.length)fatal.push(`${fetchErrors.length} fetch error(s)`);
 if(structuralIssues.length)fatal.push(`${structuralIssues.length} structural issue(s)`);
 if(hreflangIssues.length)fatal.push(`${hreflangIssues.length} hreflang reciprocity issue(s)`);
 if(duplicateCanonicals.length)fatal.push(`${duplicateCanonicals.length} duplicate canonical owner(s)`);
+if(dailyFactIntegrity.failures.length)fatal.push(`${dailyFactIntegrity.failures.length} invalid rendered daily fact(s)`);
 if(seoIdentity.issues.length)fatal.push(`${seoIdentity.issues.length} indexed page identity problem(s)`);
 if(seoIdentity.duplicateTitles.length)fatal.push(`${seoIdentity.duplicateTitles.length} duplicate SEO title group(s)`);
 if(seoIdentity.duplicateDescriptions.length)fatal.push(`${seoIdentity.duplicateDescriptions.length} duplicate meta description group(s)`);
