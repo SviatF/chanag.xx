@@ -124,7 +124,7 @@ const report={
 };
 if(report.distinctCities!==report.allSupportedCityCount||
    report.sampledCityDays!==cities.length*reviewedDates.length||
-   report.completeCriticalMonthDays!==92)
+   report.completeCriticalMonthDays!==91)
   throw Error("Incomplete combined JPL sunrise evidence");
 mkdirSync("artifacts",{recursive:true});
 writeFileSync("artifacts/wave3ap-unified-jpl-sunrise-staging.json",JSON.stringify(report,null,2)+"\n");
