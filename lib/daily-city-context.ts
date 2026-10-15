@@ -1,4 +1,4 @@
-import type {City} from "./cities";
+import {findCityBySlug,type City} from "./cities";
 import {buildCityContentProfile} from "./city-content-profile";
 import type {Panchang} from "./panchang";
 
@@ -59,6 +59,24 @@ const cityLens:Record<string,string>={
   nashik:"Nashik brings an upper-Godavari inland clock to northern Maharashtra. It shares western India's later civil solar tendency, but sits north of Pune and away from the Mumbai-Thane coast, giving it a different latitude, seasonal daylight span and local dawn sequence. The useful comparison is an inland triangle: Pune and Pimpri-Chinchwad to the south, the Konkan metros to the west and Nashik's own more northerly basin position. Daily Panchang boundaries are therefore computed as a separate northern-Maharashtra inland timeline."
 };
 
+/**
+ * Latitude is the material Ahmedabad–Surat distinction: both observers share
+ * IST and nearly the same longitude. Do not claim a major longitude-induced
+ * clock difference to disguise near-equal lunar values. These paragraphs are
+ * grounded in the city catalog and this date's actual sunrise/phase windows.
+ */
+function gujaratLatitudeContrast(city:City,data:Panchang,dayMinutes:number,rahuOffset:number,tithiBand:string,nakshatraBand:string){
+  if(city.slug!=="ahmedabad"&&city.slug!=="surat")return null;
+  const ahmedabad=findCityBySlug("ahmedabad"),surat=findCityBySlug("surat");
+  if(!ahmedabad||!surat)throw Error("Missing Gujarat reference city for daily context");
+  const latitudeGap=Math.abs(ahmedabad.lat-surat.lat).toFixed(2);
+  const longitudeTimeGap=(Math.abs(ahmedabad.lng-surat.lng)*4).toFixed(1);
+  if(city.slug==="ahmedabad"){
+    return `For an Ahmedabad versus Surat comparison, start with the actual observer geometry rather than assuming a different time zone: Ahmedabad lies ${latitudeGap}° farther north, while their longitude difference amounts to only about ${longitudeTimeGap} minutes of mean solar time. Ahmedabad's Sabarmati inland setting is the northern reference; on ${data.date} its own daylight spans ${dayMinutes} minutes and Rahu begins ${rahuOffset} minutes after local sunrise. The listed Tithi turnover belongs to the ${tithiBand} part of this calendar timeline, and Nakshatra to ${nakshatraBand}. These observations establish which local clocks the reader should use, without claiming that a regional holiday or ritual date automatically differs from Surat's.`;
+  }
+  return `Surat's Tapi-estuary day should not be treated as a copy of the inland Sabarmati calendar. Its observer latitude is ${latitudeGap}° south of Ahmedabad, although the longitudes differ by only about ${longitudeTimeGap} mean solar minutes; seasonal daylight geometry is therefore a more relevant contrast than an imagined time-zone shift. For ${data.date}, Surat's observed daylight is ${dayMinutes} minutes. Its Rahu interval begins ${rahuOffset} minutes from dawn; Tithi ends in the ${tithiBand} part of the local calendar timeline, while the Nakshatra boundary is in ${nakshatraBand}. Those specific readings belong to the Tapi-basin sunrise and sunset, not to a recycled Ahmedabad timing grid.`;
+}
+
 export function buildDailyCityContext(city:City,data:Panchang):DailyCityContext{
   const profile=buildCityContentProfile(city);
   const key=hash(city.slug);
@@ -75,6 +93,7 @@ export function buildDailyCityContext(city:City,data:Panchang):DailyCityContext{
   const bodyVariant=key%8;
   const secondVariant=Math.floor(key/8)%8;
   const nativeLens=cityLens[city.slug]??profile.dailyContext;
+  const groundedRegionalContrast=gujaratLatitudeContrast(city,data,dayMinutes,rahuOffset,tithiBand,nakshatraBand);
 
   const bodies=[
     `For ${city.name}, the useful local reading starts with ${profile.geoContext}. This is not just a label on a national table: ${profile.solarClockContext}, and that changes where sunrise-derived intervals sit on the IST clock. This date's ${sunrisePhase} opens a ${dayShape} daylight span. The Tithi boundary falls in the ${tithiBand} band, while the Nakshatra boundary falls in the ${nakshatraBand} band, so the two lunar clocks occupy different positions on the local calendar timeline.`,
@@ -100,7 +119,7 @@ export function buildDailyCityContext(city:City,data:Panchang):DailyCityContext{
 
   return {
     title:`${city.name} local-day interpretation`,
-    body:`${nativeLens} ${bodies[bodyVariant]}`,
+    body:`${nativeLens} ${groundedRegionalContrast??bodies[bodyVariant]}`,
     secondaryBody:secondary[secondVariant],
     facts:[
       {label:"Geographic frame",value:profile.geoContext,note:profile.latitudeContext},
