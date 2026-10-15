@@ -337,6 +337,26 @@ jobs:
         timeout-minutes: 3
         run: python scripts/wave3ar-pyswisseph-native-parity.py
 
+      - name: Type-check exact-UT JavaScript Swiss coordinate source baseline
+        run: npx tsc --noEmit -p tsconfig.wave3as.json
+
+      - name: Record shared UTC tropical and sidereal coordinates, Moon/Sun and effective Lahiri
+        run: npm run audit:jpl-v6-coordinate-js
+
+      - name: Diagnose root cause using native Swiss C coordinate and Delta-T decomposition
+        timeout-minutes: 3
+        run: python scripts/wave3as-native-coordinate-decomposition.py
+
+      - name: Archive Wave 3AS ephemeris-versus-Lahiri cause evidence (not a release)
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: wave3as-exact-ut-native-js-coordinate-root-cause
+          path: |
+            artifacts/wave3as-js-swiss-coordinate-baseline.json
+            artifacts/wave3as-native-swiss-coordinate-decomposition.json
+          if-no-files-found: error
+
       - name: Archive Wave 3AR physical event-clock residuals (review only)
         if: always()
         uses: actions/upload-artifact@v4
