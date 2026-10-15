@@ -38,7 +38,8 @@
     "audit:sunrise-conventions": "npx --yes tsx@4.23.13 scripts/wave3ab-sunrise-source-audit.ts",
     "audit:independent-astronomy": "npx --yes tsx@4.23.13 scripts/wave3ac-independent-ephemeris-compare.ts",
     "audit:jpl-swiss-baseline": "npx --yes tsx@4.23.13 scripts/wave3ad-swiss-baseline.ts",
-    "audit:near-sunrise-shards": "npx --yes tsx@4.23.13 scripts/wave3ae-swiss-full-shard-screen.ts"
+    "audit:near-sunrise-shards": "npx --yes tsx@4.23.13 scripts/wave3ae-swiss-full-shard-screen.ts",
+    "audit:jpl-v6-all-dynamic-city-days": "npx --yes tsx@4.23.13 scripts/wave3af-dynamic-all-city-days-v6-canary.ts"
   },
   "dependencies": {
     "@types/node": "^22.10.0",
