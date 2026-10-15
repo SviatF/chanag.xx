@@ -85,6 +85,10 @@ def main():
             "beforeJplMinusNativeSwissCSeconds":round(old_residual,3),
             "afterJplMinusNativeSwissCSeconds":round(new_residual,3),
             "candidateImprovesNativeSwissCClockAgreement":abs(new_residual)<abs(old_residual)})
+    if improved!=36 or worse!=0 or \
+      metrics(errors_new)["maxAbsSeconds"]>3 or \
+      metrics(errors_new)["meanAbsSeconds"]>1:
+        raise RuntimeError("Native-C Lahiri source no longer reproduces all 36 Solar Rashi UTC roots within measured 3-second scientific gate")
     candidate["lahiriSource"]="native Swiss Ephemeris C 2.10.03 UT tropical-minus-sidereal Lahiri apparent Sun"
     candidate["wave3asAlternateResearchOnly"]=True
     ALTERNATE.write_text(json.dumps(candidate,separators=(",",":"))+"\n")
@@ -103,6 +107,7 @@ def main():
             "closerToNativeC":improved,"furtherFromNativeC":worse,
             "rootComparison":solar
         },
+        "full36SolarRashiRootClockParityWithinThreeSeconds":True,
         "fullyIndependentAyanamsaCertified":False,
         "ritualCalendarReleaseAllowed":False,
         "sourcePolicyMustBeApprovedBeforeUsingCandidate":True
