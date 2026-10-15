@@ -30,6 +30,17 @@ describe("Wave 3AJ: truthful local chronology & dated SEO prose",()=>{
     expect(context.facts.find(f=>f.label==="Tithi transition band")?.value)
       .toBe("before sunrise (requires source review)");
   });
+  it("uses source catalog latitude and observed day clocks for Ahmedabad–Surat, not randomized town names",()=>{
+    const inland=buildDailyCityContext(cityBySlug("ahmedabad"),data("2027-02-01","2027-01-31"));
+    const estuary=buildDailyCityContext(cityBySlug("surat"),data("2027-02-01","2027-01-31"));
+    expect(inland.body).toContain("Sabarmati");
+    expect(inland.body).toContain("farther north");
+    expect(estuary.body).toContain("Tapi");
+    expect(estuary.body).toContain("south of Ahmedabad");
+    expect(inland.body).toContain("following civil date");
+    expect(estuary.body).toContain("following civil date");
+    expect(inland.body).not.toEqual(estuary.body);
+  });
   it("keeps visible and JSON-LD FAQ scoped to selected date instead of today",()=>{
     const source=readFileSync("app/panchang/[city]/[[...date]]/page.tsx","utf8");
     expect(source).toContain("What is Rahu Kalam in ${city.name} on ${data.date}?");
