@@ -28,6 +28,8 @@ The first reproducible native C vs pure TypeScript Swiss measurement across 99 s
 | Sun sidereal longitude | **37.850182 arcseconds** |
 | Moon sidereal longitude | **17.284842 arcseconds** |
 
+**Further direct source-code and native mean-ayanamsa test:** for all 99 UTC measurements, the `@typescriptify/sweph` *effective* Lahiri correction matches `pyswisseph.get_ayanamsa_ut(jd)`, i.e. the **native MEAN Lahiri**, to floating-point numerical precision (maximum discrepancy less than 1e-6 arcseconds in the initial evidence). By contrast, native C `tropical - sidereal apparent` differs from native mean by **5.421327–17.284824 arcseconds**. This establishes a specific **mean-versus-apparent sidereal-reference convention mismatch** contributing to Solar Rashi / Nakshatra / Yoga. It does **not** explain the separately measured **up to 54.872393 arcseconds tropical solar-position drift**; that remains an independent ephemeris/coordinate-model discrepancy.
+
 **Delta-T is identical** at the measured instants; an UT↔ET correction cannot explain 929 seconds of root-clock divergence. Real differences exist in both the tropical sky-position output and in the Lahiri transformation. Therefore one cannot simply subtract 929 seconds or shift the event timestamps of all Solar Rashi dates.
 
 ### Implemented parallel frame-correction experiment
