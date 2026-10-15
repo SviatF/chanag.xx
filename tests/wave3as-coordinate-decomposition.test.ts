@@ -8,10 +8,12 @@ describe("Wave 3AS: do not conflate UT, coordinate frame and physical ephemeris 
    expect(ts).toContain("sweCalcUt(swed,jd,target,flags)");
    expect(ts).toContain("sweCalcUt(swed,jd,target,flags|SEFLG_SIDEREAL)");
    expect(ts).toContain("sameFrameOffsetArcsec");
+   expect(ts).toContain("sweDeltatEx(jd,SEFLG_MOSEPH,swed)");
    expect(py).toContain("swe.calc_ut(jd,body,flags)");
    expect(py).toContain("swe.calc_ut(jd,body,flags|swe.FLG_SIDEREAL)");
    expect(py).toContain("swe.deltat_ex(jd,swe.FLG_MOSEPH)");
    expect(py).toContain("nativeEtVsUtConsistent");
+   expect(py).toContain("jsMinusNativeDeltaTSeconds");
    expect(py).toContain("jsMinusNativeTropicalArcsec");
    expect(py).toContain("jsMinusNativeEffectiveLahiriArcsec");
    expect(py).toContain("jsMinusNativeSiderealArcsec");
