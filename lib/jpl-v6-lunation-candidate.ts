@@ -120,7 +120,7 @@ export function jplNewYearCandidate(year:number,city:City,kind:"chaitra"|"gujara
   const startCivil=civil(newMoon),secondCivil=nextCivil(startCivil);
   const firstSunrise=Date.parse(getJplV6SunriseLunarCanary(startCivil,city,table).sunriseUtc);
   const secondSunrise=Date.parse(getJplV6SunriseLunarCanary(secondCivil,city,table).sunriseUtc);
-  const contains=ms=>ms>=newMoon&&ms<end;
+  const contains=(ms:number)=>ms>=newMoon&&ms<end;
   const effectiveStart=contains(firstSunrise)?startCivil:contains(secondSunrise)?secondCivil:startCivil;
   return {
     kind,year,city:city.slug,effectiveStart,
