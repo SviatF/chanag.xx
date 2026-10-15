@@ -45,11 +45,19 @@ def main():
     swe.set_sid_mode(swe.SIDM_LAHIRI)
     candidates=[]
     residuals=[]
+    body_offset_mismatches=[]
     for old in prev["samples"]:
         at=int(old[0])
         val=measured(at)
         candidates.append([at,val])
         residuals.append(signed(val,float(old[1]))*3600)
+        if (at-times[0])%(DAY*7)==0:
+            jd=2440587.5+at/DAY
+            mt=swe.calc_ut(jd,swe.MOON,swe.FLG_MOSEPH)[0][0]
+            ms=swe.calc_ut(jd,swe.MOON,swe.FLG_MOSEPH|swe.FLG_SIDEREAL)[0][0]
+            mismatch=abs(signed((mt-ms)%360,val))*3600
+            body_offset_mismatches.append(mismatch)
+            if mismatch>1:raise RuntimeError("Native C apparent Lahiri Moon/Sun frame disagreement")
     mid=[]
     for (start,previous),(end,following) in zip(candidates,candidates[1:]):
         at=(start+end)/2
@@ -67,7 +75,7 @@ def main():
        "coverageStartUtc":prev["coverageStartUtc"],
        "coverageEndUtc":prev["coverageEndUtc"],
        "maxMeasuredMidpointInterpolationErrorArcsec":max_mid,
-       "maxMeasuredSunMoonOffsetMismatchArcsec":0,
+       "maxMeasuredSunMoonOffsetMismatchArcsec":max(body_offset_mismatches),
        "fullyIndependentAyanamsa":False,
        "releaseApproved":False,
        "samples":candidates
@@ -86,6 +94,7 @@ def main():
          "medianAbs":round(statistics.median(abs(v) for v in residuals),6),
       },
       "nativeMidpointMaxArcsec":max_mid,
+      "nativeSunMoonFrameMismatchMaxArcsec":max(body_offset_mismatches),
       "independentAyanamsaApproved":False,
       "candidateProductionApproved":False,
       "originalV6Wave3AOSourceUnchanged":True
