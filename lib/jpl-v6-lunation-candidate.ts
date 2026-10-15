@@ -29,15 +29,20 @@ const isoDate=(s:string)=> {
   return s;
 };
 const nextCivil=(s:string)=>new Date(Date.parse(s+"T12:00:00Z")+DAY).toISOString().slice(0,10);
+const rootCache=new WeakMap<JplHalfTithiTable,number[]>();
+const solarSignCache=new Map<number,{sign:number;longitude:number}>();
 function jd(ms:number){return JD_UNIX+ms/DAY;}
 /** Select exact Amavasya→Shukla Pratipada roots, not an approximate synodic duration. */
 export function jplNewMoonBoundaries(table:JplHalfTithiTable){
+  const cached=rootCache.get(table);
+  if(cached)return cached;
   const roots=table.halfTithiTransitions.filter(row=>row[1]===0).map(row=>row[0]);
   for(let i=1;i<roots.length;i++){
     const span=(roots[i]-roots[i-1])/DAY;
     if(!(span>28.5&&span<30.9))throw Error("Missing, duplicate or impossible JPL new moon event");
   }
   if(roots.length<70)throw Error("Incomplete JPL monthly root sequence");
+  rootCache.set(table,roots);
   return roots;
 }
 export function jplLunationAtMs(table:JplHalfTithiTable,instant:number){
@@ -55,15 +60,23 @@ export function jplLunationAtMs(table:JplHalfTithiTable,instant:number){
     source:"JPL DE440s new moon root; half-phase index 0" as const};
 }
 function solarSignsAtRoots(ms:number[]){
-  const swed=createDefaultSweData();
-  sweSetSidMode(swed,SE_SIDM_LAHIRI,0,0);
-  try{
-    return ms.map(at=>{
-      const lon=sweCalcUt(swed,jd(at),SE_SUN,SEFLG_MOSEPH|SEFLG_SIDEREAL).xx[0];
-      if(!Number.isFinite(lon))throw Error("Swiss sidereal solar longitude unavailable at pinned JPL root");
-      return {sign:signIndex(lon),longitude:((lon%360)+360)%360};
-    });
-  }finally{sweClose(swed);}
+  const missing=[...new Set(ms.filter(at=>!solarSignCache.has(at)))];
+  if(missing.length){
+    const swed=createDefaultSweData();
+    sweSetSidMode(swed,SE_SIDM_LAHIRI,0,0);
+    try{
+      for(const at of missing){
+        const lon=sweCalcUt(swed,jd(at),SE_SUN,SEFLG_MOSEPH|SEFLG_SIDEREAL).xx[0];
+        if(!Number.isFinite(lon))throw Error("Swiss sidereal solar longitude unavailable at pinned JPL root");
+        solarSignCache.set(at,{sign:signIndex(lon),longitude:((lon%360)+360)%360});
+      }
+    }finally{sweClose(swed);}
+  }
+  return ms.map(at=>{
+    const result=solarSignCache.get(at);
+    if(!result)throw Error("Sidereal solar-sign cache incomplete");
+    return result;
+  });
 }
 export function jplLunarMonthCandidate(lunar:JplV6SunriseLunarCanary,table:JplHalfTithiTable){
   const at=Date.parse(lunar.sunriseUtc);
