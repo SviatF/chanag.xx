@@ -48,10 +48,10 @@ function extractVratRows(pathname,html){
     if(!strong||normalize(strong[1])!==target[2]||!small)continue;
     const paksha=normalize(small[1]).match(/\b(Shukla|Krishna) Paksha\b/)?.[1];
     if(!paksha)continue;
-    const span=anchor.inner.match(/<span\\b[^>]*>([\\s\\S]*?)<\\/span>/i);
+    const span=anchor.inner.match(/<span\b[^>]*>([\s\S]*?)<\/span>/i);
     const clockLine=normalize(span?.[1]??"");
-    const sunrise=clockLine.match(/\\bSunrise (\\d{2}:\\d{2})\\b/)?.[1]??null;
-    const tithiEndClock=clockLine.match(/\\bTithi until (\\d{2}:\\d{2})\\b/)?.[1]??null;
+    const sunrise=clockLine.match(/\bSunrise (\d{2}:\d{2})\b/)?.[1]??null;
+    const tithiEndClock=clockLine.match(/\bTithi until (\d{2}:\d{2})\b/)?.[1]??null;
     rows.push({city:target[1],date:target[2],vrat:match[1],paksha,sunrise,tithiEndClock});
   }
   return rows;
