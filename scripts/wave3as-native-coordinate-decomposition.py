@@ -39,6 +39,7 @@ def main():
     seen=set()
     rows=[]
     solar_root_samples=0
+    deltat_differences=[]
     for point in points:
         at=point["atUtc"]
         if at in seen or not at.endswith("Z"):raise RuntimeError("Duplicate/missing UTC sample")
@@ -46,6 +47,9 @@ def main():
         ms=datetime.datetime.fromisoformat(at.replace("Z","+00:00")).timestamp()*1000
         jd=JD0+ms/86_400_000
         native_dt_days=swe.deltat_ex(jd,swe.FLG_MOSEPH)
+        js_dt=point.get("jsDeltaTSeconds")
+        if not validate_float(js_dt):raise RuntimeError("Missing JS DeltaT at shared UT")
+        deltat_differences.append(js_dt-native_dt_days*86400)
         if not 50<native_dt_days*86400<100:raise RuntimeError("Unexpected astronomical Delta-T")
         native={}
         for name,body in (("sun",swe.SUN),("moon",swe.MOON)):
@@ -76,6 +80,8 @@ def main():
         if any("Solar Rashi JPL root" in r for r in point["roles"]):solar_root_samples+=1
         rows.append({"atUtc":at,"roles":point["roles"],
           "nativeDeltaTSeconds":native_dt_days*86400,
+          "jsDeltaTSeconds":js_dt,
+          "jsMinusNativeDeltaTSeconds":js_dt-native_dt_days*86400,
           "sun":native["sun"],"moon":native["moon"]})
     if solar_root_samples!=36 or len(rows)!=len(points):
         raise RuntimeError("Did not compare all 36 actual Solar Rashi JPL events")
@@ -102,6 +108,7 @@ def main():
       "nativeDeltaTSecondsRange":[round(min(r["nativeDeltaTSeconds"] for r in rows),6),
                                   round(max(r["nativeDeltaTSeconds"] for r in rows),6)],
       "nativeEtVsUtConsistent":True,
+      "jsMinusNativeDeltaTSeconds":stats(deltat_differences),
       "sourceComponentResidualArcsec":aggregates,
       "diagnostic":{
         "SunTropicalDriftOver1Arcsec":trop>1,
@@ -125,7 +132,9 @@ def main():
       "sunSiderealMaxArcsec":round(sid,4),
       "moonTropicalMaxArcsec":aggregates["moon"]["jsMinusNativeTropicalArcsec"]["maxAbs"],
       "moonLahiriMaxArcsec":aggregates["moon"]["jsMinusNativeEffectiveLahiriArcsec"]["maxAbs"],
-      "nativeEtUtValidated":True,"productionChange":False
+      "nativeEtUtValidated":True,
+      "DeltaTmaxDifferenceSeconds":round(max(abs(x) for x in deltat_differences),6),
+      "productionChange":False
     }),flush=True)
 
 if __name__=="__main__":
