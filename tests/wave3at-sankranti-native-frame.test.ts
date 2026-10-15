@@ -21,6 +21,8 @@ describe("Wave 3AT: source-separated solar ingress sunrise impact",()=>{
  it("requires every sign event and geographic census without approximated sunrise",()=>{
   const s=readFileSync("scripts/wave3at-sankranti-native-frame-impact.ts","utf8");
   expect(s).toContain("for(let event=0;event<36;event++)");
+  expect(s).toContain("[base-DAY,base,base+DAY]");
+  expect(s).toContain("old[1]!==next[1]");
   expect(s).toContain("canonical.size!==454");
   expect(s).toContain("examined<48000");
   expect(s).toContain("new Date(at+IST).toISOString().slice(0,10)!==date");
