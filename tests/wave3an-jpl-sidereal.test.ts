@@ -44,7 +44,7 @@ describe("Wave 3AN: JPL sidereal candidate mathematics and source guards",()=>{
     expect(x.moonSiderealDeg).toBeCloseTo(342.5,9);
     expect(x.moonRashi).toBe("Meena");
     expect(x.solarRashi).toBe("Meena");
-    expect(x.nakshatra).toBe("Revati");
+    expect(x.nakshatra).toBe("Uttara Bhadrapada");
     expect(x.nakshatraPada).toBeGreaterThanOrEqual(1);
     expect(x.nakshatraPada).toBeLessThanOrEqual(4);
   });
