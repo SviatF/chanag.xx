@@ -1,6 +1,6 @@
 import {readFileSync} from "node:fs";
 import {describe,it,expect} from "vitest";
-import {cityBySlug} from "../lib/cities";
+import {cityBySlug,supportedCities} from "../lib/cities";
 import {
   UNIFIED_V6_RESEARCH_SCHEMA,V6_UNIFIED_PINNED_SIDEREAL_SHA256,
   V6_UNIFIED_PINNED_LAHIRI_SHA256,
@@ -33,6 +33,22 @@ describe("Wave 3AP: exact-source research-only unified JPL sunrise engine",()=>{
     expect(()=>getV6UnifiedSunrise("2027-01-31",city,fake)).toThrow(/not SHA-pinned/);
     expect(()=>getV6UnifiedMonth(2027,1,city,fake)).toThrow(/not SHA-pinned/);
     expect(()=>unifiedV6ResearchKey(2027,1,city,fake)).toThrow(/not SHA-pinned/);
+  });
+  it("tracks repeated source city records without counting them as independent cities",()=>{
+    const bySlug=new Map<string,(typeof supportedCities)[number]>();
+    let identicalDuplicates=0;
+    for(const city of supportedCities){
+      const known=bySlug.get(city.slug);
+      if(known){
+        expect({name:city.name,lat:city.lat,lng:city.lng,state:city.state,language:city.language})
+          .toEqual({name:known.name,lat:known.lat,lng:known.lng,state:known.state,language:known.language});
+        identicalDuplicates++;
+      }else bySlug.set(city.slug,city);
+    }
+    expect(bySlug.size).toBeGreaterThanOrEqual(450);
+    expect(identicalDuplicates).toBe(supportedCities.length-bySlug.size);
+    const audit=readFileSync("scripts/wave3ap-verify-unified.ts","utf8");
+    expect(audit).toContain("repeatedButIdenticalSourceCitySlugs:repeatedCityRecords");
   });
   it("requires one coherent sunrise and source identity, never constructs mixed V5 snapshots",()=>{
     const s=readFileSync("lib/v6-unified-calendar-staging.ts","utf8");
