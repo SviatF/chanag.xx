@@ -21,7 +21,10 @@ import {openVerifiedV6SiderealSource,getV6UnifiedSunrise} from "../lib/v6-unifie
 import {siderealStateAtUtc,SIDEREAL_FAMILY_MODULUS,type SiderealFamily} from "../lib/jpl-v6-sidereal-transitions";
 import {assertProductionLunarEngine,PUBLIC_LUNAR_ENGINE_VERSION,STAGED_LUNAR_ENGINE_VERSION} from "../lib/v6-calendar-staging";
 
-const START=Date.UTC(2026,0,1),END=Date.UTC(2029,0,1);
+const requestedYear=Number(process.argv.find(x=>x.startsWith("--year="))?.slice(7));
+if(![2026,2027,2028].includes(requestedYear))
+  throw Error("Wave3AQ requires --year=2026, 2027 or 2028 to partition the exhaustive census");
+const START=Date.UTC(requestedYear,0,1),END=Date.UTC(requestedYear+1,0,1);
 const DAY=86_400_000, IST=330*60_000,JD_UNIX=2440587.5;
 const ONE_MIN=60_000;
 const families=["halfTithi","moonPada","nakshatra","yoga","moonRashi","sunRashi"] as const;
@@ -168,7 +171,7 @@ try{
         }
       }
       digest.update(city.slug+"|"+date+"|"+ms+"|"+families.map(f=>indices[f]).join(",")+"\n");
-      if(dayIndex===0||dayIndex===365||dayIndex===730){
+      if(dayIndex===0){
         const unified=getV6UnifiedSunrise(date,city,source);
         if(unified.sunriseUtc!==new Date(ms).toISOString()||
           unified.lunar.tithiIndex!==lunar.tithiIndex||
@@ -185,9 +188,9 @@ try{
         " near2="+within2+" near10="+within10);
   }
 }finally{sweClose(swed);}
-const years=3,daysPerCity=(END-START)/DAY,expected=cities.length*daysPerCity;
-if(daysPerCity!==1096||exactSunrises!==expected||allCount!==expected||
-   swissCompared<4000||referenceChecks!==cities.length*3)
+const daysPerCity=(END-START)/DAY,expected=cities.length*daysPerCity;
+if(daysPerCity!==(requestedYear===2028?366:365)||exactSunrises!==expected||allCount!==expected||
+   swissCompared<1000||referenceChecks!==cities.length)
   throw Error("Incomplete direct sunrise census "+JSON.stringify({
     expected,exactSunrises,allCount,swissCompared,referenceChecks}));
 assertProductionLunarEngine(PUBLIC_LUNAR_ENGINE_VERSION);
@@ -195,7 +198,7 @@ let productionDenied=false;
 try{assertProductionLunarEngine(STAGED_LUNAR_ENGINE_VERSION);}catch{productionDenied=true;}
 if(!productionDenied)throw Error("V6 production promotion was not blocked");
 const summary={
-  wave:"3AQ",schema:1,yearRange:[2026,2027,2028],uniqueCities:cities.length,
+  wave:"3AQ",schema:1,year:requestedYear,yearRange:[requestedYear],uniqueCities:cities.length,
   duplicatedIdenticalCityRecords:repeated,daysPerCity,
   expectedCityDays:expected,examinedCityDays:allCount,
   exactSwissUpperLimbSunrises:exactSunrises,sunriseModel,
@@ -226,8 +229,8 @@ const summary={
     publicEngineRemainsV5:true,productionV6ActivationDenied:productionDenied}
 };
 mkdirSync("artifacts",{recursive:true});
-writeFileSync("artifacts/wave3aq-full-city-day-jpl-sunrise-audit.json",JSON.stringify(summary,null,2)+"\n");
-console.log("[Wave3AQ] "+JSON.stringify({cities:cities.length,daysPerCity,
+writeFileSync("artifacts/wave3aq-full-city-day-jpl-sunrise-"+requestedYear+".json",JSON.stringify(summary,null,2)+"\n");
+console.log("[Wave3AQ] "+JSON.stringify({year:requestedYear,cities:cities.length,daysPerCity,
   exactSunrises,near2:within2,near10:within10,swissCompared,
   outsideRisk:swissComparedOutsideRisk,modelDifferences:familyDisagree,
   researchOnly:true,publicV5:true}));
