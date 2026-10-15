@@ -275,7 +275,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: wave3ag-jpl-v6-crossfamily-evidence
-          path: artifacts/wave3ag-v6-daily-vrat-muhurat-canary.json
+          path: artifacts/wave3ag-v6-lunar-crossfamily.json
           if-no-files-found: error
 
       - name: Scan all supported cities and all 2026–2028 daily dawn states with V6 canary
