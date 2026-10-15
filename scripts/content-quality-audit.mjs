@@ -3,6 +3,7 @@ import {createHash} from "node:crypto";
 import {extractSeoIdentity,auditSeoIdentity} from "./seo-identity-quality.mjs";
 import {inspectDailyVisibleFacts,summarizeDailyFactIntegrity} from "./daily-fact-integrity.mjs";
 import {inspectCrossPageCalendar,reconcileRenderedCalendar} from "./crosspage-calendar-integrity.mjs";
+import {chooseUnlistedDailyReferences} from "./unlisted-calendar-reference-sampler.mjs";
 
 const args=process.argv.slice(2);
 function arg(name,fallback){
@@ -16,6 +17,7 @@ const baseUrl=arg("base-url",process.env.CONTENT_AUDIT_BASE_URL||"http://127.0.0
 const reportPath=arg("report","content-quality-report.json");
 const concurrency=Math.max(1,Number(arg("concurrency","10"))||10);
 const maxPages=Math.max(0,Number(arg("max-pages","0"))||0);
+const unlistedLimit=Math.max(1,Math.min(512,Number(arg("unlisted-limit","192"))||192));
 const enforceSimilarity=flag("enforce-similarity")||process.env.CONTENT_AUDIT_ENFORCE_SIMILARITY==="1";
 const HIGH_RISK_SIMILARITY=Number(arg("high-risk","0.72"));
 const SEVERE_SIMILARITY=Number(arg("severe","0.86"));
@@ -295,7 +297,33 @@ for(const [canonical,owners] of canonicalOwners)if(owners.length>1)duplicateCano
 
 const seoIdentity=auditSeoIdentity(pages);
 const dailyFactIntegrity=summarizeDailyFactIntegrity(pages.map(page=>page.dailyFact));
-const crossPageCalendar=reconcileRenderedCalendar(pages.map(page=>page.crossPage));
+// Check non-sitemap Daily URLs directly, without adding low-value pages
+// to sitemap/index. All reference owners stay available for reconciliation.
+const preliminaryCrossPage=reconcileRenderedCalendar(pages.map(page=>page.crossPage));
+const unlistedSelection=chooseUnlistedDailyReferences(preliminaryCrossPage.missingCounterparts,unlistedLimit);
+console.log(`[content-audit] validating unlisted Daily references unique=${unlistedSelection.uniqueTargets} sample=${unlistedSelection.selected.length}`);
+const onDemandResults=await mapLimit(unlistedSelection.selected.map(item=>item.path),8,async pathname=>{
+  const html=await fetchText(`${baseUrl}${pathname}`,pathname);
+  const record=inspectCrossPageCalendar(pathname,html);
+  const detail=inspectDailyVisibleFacts(pathname,html);
+  if(!detail||detail.problems.length)throw new Error("invalid non-sitemap Daily visible facts: "+(detail?.problems.join(", ")??"missing"));
+  return record;
+});
+const onDemandErrors=onDemandResults.filter(item=>item?.fetchError).map(item=>({
+  pathname:item.pathname,error:item.fetchError
+}));
+const verifiedOnDemand=onDemandResults.filter(item=>item&&!item.fetchError);
+const crossPageCalendar=reconcileRenderedCalendar([...pages.map(page=>page.crossPage),...verifiedOnDemand]);
+const unlistedAudit={
+  uniqueTargets:unlistedSelection.uniqueTargets,
+  referencedRows:unlistedSelection.sourceReferences,
+  requested:unlistedSelection.selected.length,
+  verified:verifiedOnDemand.length,
+  fetchErrors:onDemandErrors,
+  sampledPaths:unlistedSelection.selected.map(x=>x.path),
+  policy:"Direct SSR validation only; sampled URLs NOT added to sitemap or approved for indexing",
+  sampleMethod:unlistedSelection.sampleMethod
+};
 const similarityPairs=pairwiseSimilarity(pages);
 const exactNormalizedDuplicates=[];
 const hashGroups=new Map();
@@ -330,6 +358,8 @@ const report={
     sitemapUrls:paths.length,fetched:pages.length,fetchErrors:fetchErrors.length,
     structuralIssues:structuralIssues.length,hreflangIssues:hreflangIssues.length,
     duplicateCanonicals:duplicateCanonicals.length,exactNormalizedDuplicateGroups:exactNormalizedDuplicates.length,
+    unlistedDailyVerified:unlistedAudit.verified,
+    unlistedDailyFailures:unlistedAudit.fetchErrors.length,
     crossPageCalendarContradictions:crossPageCalendar.contradictions.length,
     crossPageCalendarMatchedMonth:crossPageCalendar.matchedMonth,
     crossPageCalendarMatchedVrat:crossPageCalendar.matchedVrat,
@@ -345,6 +375,7 @@ const report={
   seoIdentity,
   dailyFactIntegrity,
   crossPageCalendar,
+  unlistedAudit,
   evidenceNote:"Quantitative evidence counts are observation and prioritization only, not independent fact verification.",
   fetchErrors,
   structuralIssues,
@@ -362,6 +393,7 @@ console.log(`[content-audit] similarity high=${similarityPairs.length} severe=${
 console.log(`[content-audit] SEO identity audited=${seoIdentity.programmaticPages} issues=${seoIdentity.issues.length} duplicateTitles=${seoIdentity.duplicateTitles.length} duplicateDescriptions=${seoIdentity.duplicateDescriptions.length}`);
 console.log(`[content-audit] rendered daily facts=${dailyFactIntegrity.dailyPages} errors=${dailyFactIntegrity.failures.length} identicalLocalVectors=${dailyFactIntegrity.identicalLocalFactGroups.length} (human review, not presumed error)`);
 console.log(`[content-audit] crossPage month=${crossPageCalendar.matchedMonth}/${crossPageCalendar.monthRows} vrat=${crossPageCalendar.matchedVrat}/${crossPageCalendar.vratRows} contradictions=${crossPageCalendar.contradictions.length} unmatched=${crossPageCalendar.missingCounterparts.length}`);
+console.log(`[content-audit] directUnlisted verified=${unlistedAudit.verified}/${unlistedAudit.requested} errors=${unlistedAudit.fetchErrors.length} uniqueTargetUniverse=${unlistedAudit.uniqueTargets}`);
 console.log(`[content-audit] disclaimerPages=${report.totals.disclaimerPages}`);
 console.log(`[content-audit] report=${reportPath}`);
 if(similarityPairs.length)console.log("[content-audit] top similarity risks:\n"+similarityPairs.slice(0,20).map(pair=>`  ${pair.score} ${pair.left} <> ${pair.right}`).join("\n"));
@@ -373,6 +405,7 @@ if(hreflangIssues.length)fatal.push(`${hreflangIssues.length} hreflang reciproci
 if(duplicateCanonicals.length)fatal.push(`${duplicateCanonicals.length} duplicate canonical owner(s)`);
 if(dailyFactIntegrity.failures.length)fatal.push(`${dailyFactIntegrity.failures.length} invalid rendered daily fact(s)`);
 if(crossPageCalendar.contradictions.length)fatal.push(`${crossPageCalendar.contradictions.length} cross-page lunar contradiction(s)`);
+if(onDemandErrors.length)fatal.push(`${onDemandErrors.length} failed direct non-sitemap Daily fact(s)`);
 if(seoIdentity.issues.length)fatal.push(`${seoIdentity.issues.length} indexed page identity problem(s)`);
 if(seoIdentity.duplicateTitles.length)fatal.push(`${seoIdentity.duplicateTitles.length} duplicate SEO title group(s)`);
 if(seoIdentity.duplicateDescriptions.length)fatal.push(`${seoIdentity.duplicateDescriptions.length} duplicate meta description group(s)`);
