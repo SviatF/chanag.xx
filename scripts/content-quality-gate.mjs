@@ -31,6 +31,10 @@ if(!report.dailyFactIntegrity||!Number.isInteger(report.dailyFactIntegrity.daily
 if((totals.dailyFactFailures??0)>0)failures.push(`${totals.dailyFactFailures} invalid rendered daily fact(s)`);
 if(!report.crossPageCalendar||!Number.isInteger(report.crossPageCalendar.monthRows))failures.push("rendered cross-page calendar audit missing");
 if((totals.crossPageCalendarContradictions??0)>0)failures.push(`${totals.crossPageCalendarContradictions} cross-page lunar contradictions`);
+if(!report.unlistedAudit||!Number.isInteger(report.unlistedAudit.requested)||
+   report.unlistedAudit.requested<1||report.unlistedAudit.verified!==report.unlistedAudit.requested)
+  failures.push("direct non-sitemap calendar validation missing or incomplete");
+if((totals.unlistedDailyFailures??0)>0)failures.push(`${totals.unlistedDailyFailures} non-sitemap Daily fetch/validation error(s)`);
 if(sitemapUrls<=0)failures.push("empty sitemap corpus");
 if(fetched!==sitemapUrls)failures.push(`rendered corpus incomplete (${fetched}/${sitemapUrls})`);
 if((totals.fetchErrors??0)>0)failures.push(`${totals.fetchErrors} fetch error(s)`);
@@ -49,6 +53,7 @@ if(programmaticWarnings>0)failures.push(`${programmaticWarnings} programmatic fa
 
 console.log(`[content-gate] sitemap=${sitemapUrls} fetched=${fetched}`);
 console.log(`[content-gate] structural=${totals.structuralIssues??0} hreflang=${totals.hreflangIssues??0} canonicals=${totals.duplicateCanonicals??0} disclaimers=${totals.disclaimerPages??0}`);
+console.log(`[content-gate] directUnlisted verified=${totals.unlistedDailyVerified??0} errors=${totals.unlistedDailyFailures??0}`);
 console.log(`[content-gate] crossPage month=${totals.crossPageCalendarMatchedMonth??0} vrat=${totals.crossPageCalendarMatchedVrat??0} contradictions=${totals.crossPageCalendarContradictions??0}`);
 console.log(`[content-gate] dailyFactErrors=${totals.dailyFactFailures??0} physically-identical-vectors=${totals.dailyFactIdenticalGroups??0} (review only)`);
 console.log(`[content-gate] seoIdentity issues=${totals.seoIdentityIssues??0} duplicateTitles=${totals.duplicateSeoTitles??0} duplicateDescriptions=${totals.duplicateMetaDescriptions??0}`);
