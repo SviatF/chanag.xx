@@ -84,5 +84,5 @@ const report={
 mkdirSync("artifacts",{recursive:true});
 writeFileSync("artifacts/wave3am-jpl-lunation-month-yearstart.json",JSON.stringify(report,null,2)+"\n");
 console.log("[Wave3AM] "+JSON.stringify({roots:roots.length,days:daily.length,
-  monthCandidateDisagreements,regionalYearStarts:years.length*2,
+  monthCandidateDisagreements:monthCandidateDifferences,regionalYearStarts:years.length*2,
   publicEngine:"V5",siderealUnified:false,approved:false}));
