@@ -79,8 +79,11 @@ for(const [shardId,targets] of [...grouped.entries()].sort(([a],[b])=>a.localeCo
         snapshot.karanaEnd!==daily.lunar.karanaEnd||
         snapshot.tithi!==candidate.tithi)
         fail("Daily/Muhurat JPL lunar divergence "+candidate.city+" "+candidate.date);
+      if(daily.baselineV5.tithi===snapshot.tithi&&daily.baselineV5.paksha===daily.lunar.paksha)
+        fail("Expected JPL/Swiss phase flip missing "+candidate.city+" "+candidate.date);
       flips.push({city:candidate.city,date:candidate.date,
-        v5:daily.simulatedPanchang.engine,v6:snapshot.tithi});
+        v5:daily.baselineV5.paksha+" "+daily.baselineV5.tithi,
+        v6:daily.lunar.paksha+" "+snapshot.tithi});
     }
   }
   const envelope={
