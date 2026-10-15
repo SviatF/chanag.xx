@@ -1,7 +1,11 @@
 name: PANCHVANI Live V5 Astronomy Checks
 on:
+  pull_request:
+    paths:
+      - ".github/workflows/live-v5-astronomy-check.yml"
+      - "scripts/live-v5-astronomy-audit.mjs"
   push:
-    branches: [audit/wave3x-live-v5-truth-regression-20261014]
+    branches: [main, audit/wave3x-live-v5-truth-regression-20261014]
     paths:
       - ".github/workflows/live-v5-astronomy-check.yml"
       - "scripts/live-v5-astronomy-audit.mjs"
