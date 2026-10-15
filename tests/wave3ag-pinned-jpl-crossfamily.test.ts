@@ -81,7 +81,8 @@ describe("Wave 3AG: real checked-in JPL V6 lunar canary",()=>{
     expect(check).toContain("EXPECTED_RAW_SHA");
     const workflow=readFileSync(".github/workflows/quality.yml","utf8");
     expect(workflow).toContain("wave3ag-check-committed-jpl.py");
-    expect(workflow).toContain("wave3ag-v6-crossfamily-canary-audit.ts");
+    expect(workflow).toContain("npm run audit:jpl-v6-crossfamily");
+    expect(JSON.parse(readFileSync("package.json","utf8")).scripts["audit:jpl-v6-crossfamily"]).toContain("wave3ag-v6-crossfamily-canary-audit.ts");
     for(const file of ["lib/panchang.ts","lib/vrat.ts","lib/muhurat.ts","lib/festivals.ts","lib/muhurat-build-data-schema.ts"]){
       const source=readFileSync(file,"utf8");
       expect(source).not.toContain("jpl-v6-pinned-data");
