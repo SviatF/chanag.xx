@@ -37,7 +37,7 @@ jobs:
           cache-dependency-path: package.json
       - run: npm install --legacy-peer-deps --no-audit --no-fund
       - name: Type-check V6 staging before expensive full-shard generation
-        run: npx tsc --noEmit
+        run: npx tsc --noEmit -p tsconfig.wave3ah.json
       - name: Verify V6 release staging contract and JPL cross-family regression
         run: npx vitest run tests/wave3ah-versioned-v6-staging.test.ts tests/wave3ag-pinned-jpl-crossfamily.test.ts
       - name: Rebuild three critical V6 staged city-months (never public assets)
