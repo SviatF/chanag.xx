@@ -94,7 +94,7 @@ const report={
   sourceIdentity:[...sources][0],sourceAnnualSHA:input.map(r=>({
     year:r.year,classificationSHA:r.allClassificationRowsSha256,
     sensitivitySHA:r.allSensitivityAndMismatchRowsSha256,
-    rawReportSHA256:sha(JSON.stringify(r))
+    canonicalReportSHA256:sha(JSON.stringify(r))
   })),
   totals:{
     exactCityDaysCensused:input.reduce((n,r)=>n+r.examinedCityDays,0),
