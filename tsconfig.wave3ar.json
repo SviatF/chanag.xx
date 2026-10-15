@@ -1,0 +1,8 @@
+{
+  "extends": "./tsconfig.json",
+  "include": [
+    "lib/v6-root-clock-reconciliation.ts",
+    "scripts/wave3ar-reconcile-jpl-swiss-event-clocks.ts"
+  ],
+  "exclude": ["node_modules","tests","app","components",".next","dist"]
+}
