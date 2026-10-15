@@ -27,14 +27,14 @@ const CHECKS=[
   {path:"/panchang/patna/2027-01-31",
    contains:["Dashami"],absent:["Navami Tithi"],
    reason:"City-source disagreement remains unresolved; disclosure should be visible",
-   notice:"Navami changes to Dashami"},
+   notice:"JPL DE440s 06:34:15.581"},
   {path:"/panchang/kolkata/2027-08-05",
    contains:["Chaturthi"],absent:["Tritiya Tithi"],
    reason:"UT V5 Kolkata corrected sunrise Tithi"},
   {path:"/panchang/lucknow/2027-09-17",
    contains:["Dvitiya"],absent:["Pratipada Tithi"],
    reason:"Second-rounded external Tithi boundary remains a source uncertainty",
-   notice:"Pratipada ends around Lucknow sunrise"},
+   notice:"JPL DE440s computes the transition at 05:52:18.899"},
 ];
 const results=[];
 for(const check of CHECKS){
@@ -62,7 +62,12 @@ for(const check of CHECKS){
     for(const token of check.absent)if(lower.includes(token.toLowerCase()))
       item.staleV4Indicators.push(token);
     if(check.notice){
-      item.sourceReviewNoticePresent=lower.includes(check.notice.toLowerCase());
+      // Match only the actual dedicated sunrise-source disclosure section,
+      // not an unrelated footer, script, tooltip or generic accuracy policy.
+      const sourcePanel=html.match(/<section\b[^>]*aria-label=["']Sunrise Tithi source review["'][^>]*>[\s\S]*?<\/section>/i)?.[0]??"";
+      const visiblePanel=sourcePanel.replace(/<script\b[^>]*>[\s\S]*?<\/script>/gi," ")
+        .replace(/<[^>]*>/g," ").replace(/\s+/g," ").toLowerCase();
+      item.sourceReviewNoticePresent=Boolean(sourcePanel)&&visiblePanel.includes(check.notice.toLowerCase());
       if(!item.sourceReviewNoticePresent)item.errors.push("missing explicit independent-source uncertainty notice");
     }
     if(r.status!==200)item.errors.push("HTTP "+r.status);
