@@ -74,7 +74,8 @@ for(const [shardId,targets] of [...grouped.entries()].sort(([a],[b])=>a.localeCo
     for(const candidate of candidates){
       const daily=await getStagedV6Daily(candidate.date,target.city);
       const snapshot=month.rows.find(r=>r.date===candidate.date);
-      if(!snapshot||snapshot.tithi!==daily.lunar.tithi||
+      if(!snapshot)throw Error("Missing V6 Muhurat day "+candidate.city+" "+candidate.date);
+      if(snapshot.tithi!==daily.lunar.tithi||
         snapshot.karana!==daily.lunar.karana||
         snapshot.tithiEnd!==daily.lunar.tithiEnd||
         snapshot.karanaEnd!==daily.lunar.karanaEnd||
