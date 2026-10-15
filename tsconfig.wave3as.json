@@ -1,0 +1,5 @@
+{
+  "extends": "./tsconfig.json",
+  "include": ["scripts/wave3as-js-coordinate-baseline.ts"],
+  "exclude": ["node_modules","tests","app","components",".next","dist"]
+}
