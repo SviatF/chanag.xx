@@ -48,7 +48,7 @@ describe("Wave 3AR direct physical Swiss-vs-JPL event clocks",()=>{
     expect(script).toContain("bisectSwissRoot(");
     expect(script).toContain("independentAyanamsaSourceApproved:false");
     expect(script).toContain("fullProductionV6Released:false");
-    expect(triage).toContain("caught");
+    expect(triage).toContain("mismatchesByFamily:totals");
     expect(readFileSync("lib/panchang.ts","utf8")).not.toContain("wave3ar");
     expect(readFileSync("lib/muhurat.ts","utf8")).not.toContain("wave3ar");
   });
