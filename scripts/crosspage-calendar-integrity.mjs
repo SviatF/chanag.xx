@@ -48,7 +48,11 @@ function extractVratRows(pathname,html){
     if(!strong||normalize(strong[1])!==target[2]||!small)continue;
     const paksha=normalize(small[1]).match(/\b(Shukla|Krishna) Paksha\b/)?.[1];
     if(!paksha)continue;
-    rows.push({city:target[1],date:target[2],vrat:match[1],paksha});
+    const span=anchor.inner.match(/<span\b[^>]*>([\s\S]*?)<\/span>/i);
+    const clockLine=normalize(span?.[1]??"");
+    const sunrise=clockLine.match(/\bSunrise (\d{2}:\d{2})\b/)?.[1]??null;
+    const tithiEndClock=clockLine.match(/\bTithi until (\d{2}:\d{2})\b/)?.[1]??null;
+    rows.push({city:target[1],date:target[2],vrat:match[1],paksha,sunrise,tithiEndClock});
   }
   return rows;
 }
@@ -86,6 +90,9 @@ export function reconcileRenderedCalendar(pages){
     if(!target){missingCounterparts.push({source:row.source,city:row.city,date:row.date,type:"vrat"});continue;}
     matchedVrat++;
     record(row,"Vrat sunrise Tithi",names[row.vrat],target.Tithi);
+    record(row,"Vrat Paksha",row.paksha,target.Paksha);
+    record(row,"Vrat sunrise clock",row.sunrise,target.Sunrise);
+    record(row,"Vrat Tithi end clock",row.tithiEndClock,target.TithiEndClock);
   }
   return {monthRows:monthRows.length,vratRows:vratRows.length,matchedMonth,matchedVrat,
     contradictions,missingCounterparts,
