@@ -5,6 +5,8 @@ on:
     branches: [main]
     paths:
       - "scripts/wave3aq-exhaustive-sunrise.ts"
+      - "scripts/wave3aq-aggregate-year-reports.mjs"
+      - "lib/v6-exhaustive-sunrise-evidence.ts"
       - "lib/v6-unified-calendar-staging.ts"
       - "lib/jpl-v6-*.ts"
       - "lib/cities.ts"
@@ -89,4 +91,31 @@ jobs:
         with:
           name: wave3aq-jpl-full-454-city-${{ matrix.year }}-research-only
           path: artifacts/wave3aq-full-city-day-jpl-sunrise-${{ matrix.year }}.json
+          if-no-files-found: error
+
+  merge-full-three-year-evidence:
+    name: Verify 497584 complete JPL city sunrises across 2026-2028
+    needs: [full-geographic-year-census]
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Download all three independent full-year audit artifacts
+        uses: actions/download-artifact@v4
+        with:
+          pattern: wave3aq-jpl-full-454-city-*-research-only
+          merge-multiple: true
+          path: artifacts
+
+      - name: Reject incomplete, duplicate or mixed-source three-year census
+        run: node scripts/wave3aq-aggregate-year-reports.mjs
+
+      - name: Publish research-only census proof (never deploy)
+        uses: actions/upload-artifact@v4
+        with:
+          name: wave3aq-all-497584-city-sunrises-summary-research-only
+          path: artifacts/wave3aq-497584-exact-jpl-sunrise-summary.json
           if-no-files-found: error
