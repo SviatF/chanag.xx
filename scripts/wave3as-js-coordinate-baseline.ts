@@ -7,6 +7,7 @@
 import {readFileSync,writeFileSync} from "node:fs";
 import {createDefaultSweData} from "@typescriptify/sweph/dist/types.js";
 import {sweCalcUt,sweClose,sweSetSidMode} from "@typescriptify/sweph/dist/sweph.js";
+import {sweDeltatEx} from "@typescriptify/sweph/dist/swephlib.js";
 import {SE_SUN,SE_MOON,SEFLG_MOSEPH,SEFLG_SPEED,SEFLG_SIDEREAL,SE_SIDM_LAHIRI} from "@typescriptify/sweph/dist/constants.js";
 import {openVerifiedV6SiderealSource} from "../lib/v6-unified-calendar-staging";
 
@@ -50,6 +51,9 @@ const samples=[];
 try{
   for(const row of [...observations.values()].sort((a,b)=>a.atUtc.localeCompare(b.atUtc))){
     const jd=JD0+Date.parse(row.atUtc)/DAY;
+    const jsDeltaTSeconds=sweDeltatEx(jd,SEFLG_MOSEPH,swed)*86400;
+    if(!Number.isFinite(jsDeltaTSeconds)||jsDeltaTSeconds<40||jsDeltaTSeconds>120)
+      throw Error("Invalid JavaScript Swiss UT-to-ET correction "+row.atUtc);
     const flags=SEFLG_MOSEPH|SEFLG_SPEED;
     const body=(target:number)=>{
       const tropical=sweCalcUt(swed,jd,target,flags).xx;
@@ -66,7 +70,7 @@ try{
     const sameFrameOffsetArcsec=Math.abs(signed(sun.effectiveLahiriDeg,moon.effectiveLahiriDeg))*3600;
     if(sameFrameOffsetArcsec>3)
       throw Error("Inconsistent same-UT Sun/Moon sidereal offset "+row.atUtc);
-    samples.push({...row,sun,moon,sameFrameOffsetArcsec});
+    samples.push({...row,sun,moon,sameFrameOffsetArcsec,jsDeltaTSeconds});
   }
 }finally{sweClose(swed);}
 if(samples.length<90)throw Error("Insufficient independent physical root/control instants");
