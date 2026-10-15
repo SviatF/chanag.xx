@@ -208,6 +208,9 @@ jobs:
       - name: Install research-only Skyfield
         run: python -m pip install --disable-pip-version-check "skyfield==1.55"
 
+      - name: Install independent Swiss Ephemeris C oracle (pyswisseph 2.10.3.2)
+        run: python -m pip install --disable-pip-version-check "pyswisseph==2.10.3.2"
+
       - name: Download JPL DE440s kernel for independent reference
         timeout-minutes: 5
         shell: bash
@@ -330,12 +333,18 @@ jobs:
         timeout-minutes: 7
         run: npm run audit:jpl-v6-root-clocks
 
+      - name: Independently contrast JavaScript Swiss root clocks against native Swiss C (same Lahiri mode)
+        timeout-minutes: 3
+        run: python scripts/wave3ar-pyswisseph-native-parity.py
+
       - name: Archive Wave 3AR physical event-clock residuals (review only)
         if: always()
         uses: actions/upload-artifact@v4
         with:
           name: wave3ar-swiss-jpl-exact-transition-clock-residuals
-          path: artifacts/wave3ar-swiss-jpl-transition-clock-reconciliation.json
+          path: |
+            artifacts/wave3ar-swiss-jpl-transition-clock-reconciliation.json
+            artifacts/wave3ar-pyswisseph-binding-parity.json
           if-no-files-found: error
 
       - name: Archive SHA-pinned Wave 3AO geocentric sidereal transition catalog
