@@ -19,7 +19,7 @@ import {createDefaultSweData} from "@typescriptify/sweph/dist/types.js";
 import {sweCalcUt,sweClose} from "@typescriptify/sweph/dist/sweph.js";
 import {sweRiseTrans} from "@typescriptify/sweph/dist/swecl.js";
 import {SE_SUN,SE_MOON,SEFLG_MOSEPH,SE_CALC_RISE} from "@typescriptify/sweph/dist/constants.js";
-import {supportedCities} from "../lib/cities";
+import {supportedCities,findCityBySlug} from "../lib/cities";
 import {validateJplHalfTithiTable,jplHalfTithiAtMs} from "../lib/jpl-v6-tithi-karana-canary";
 
 const tablePath=process.argv.find(x=>x.startsWith("--table="))?.slice(8)??"artifacts/wave3af-jpl-global-tithi-transitions.json";
@@ -78,10 +78,20 @@ function utcIso(ms:number){return new Date(ms).toISOString();}
 function istIso(ms:number){return new Date(ms+IST).toISOString().replace("Z","+05:30");}
 
 const swed=createDefaultSweData();
-const cityList=[...supportedCities].sort((a,b)=>a.slug.localeCompare(b.slug));
+// Multiple candidate records can share a slug. Dynamic routes resolve that
+// slug using the canonical findCityBySlug() Map (last candidate wins), so the
+// census MUST use the same observer coordinates as the actual URL runtime.
+const uniqueSlugs=[...new Set(supportedCities.map(city=>city.slug))];
+const cityList=uniqueSlugs.map(slug=>{
+  const city=findCityBySlug(slug);
+  if(!city)throw Error("Public runtime missing city slug "+slug);
+  return city;
+}).sort((a,b)=>a.slug.localeCompare(b.slug));
+const duplicateCandidateSlugCount=supportedCities.length-cityList.length;
 const observedCities=new Set();
-if(cityList.length<400||new Set(cityList.map(c=>c.slug)).size!==cityList.length)
-  throw Error("Incomplete or duplicated supported-city expansion");
+if(cityList.length<400||cityList.length!==uniqueSlugs.length||
+  new Set(cityList.map(c=>c.slug)).size!==cityList.length)
+  throw Error("Incomplete canonical route-city expansion");
 const details=[];
 let cityDays=0,screened=0,samples=0,calibrationMaxSeconds=0,changed=0,nearestFiveMin=0;
 let unfilteredControlAgreement=0;
@@ -187,6 +197,7 @@ const report={
   sunriseObserverConvention:"current V5 Swiss upper-limb + 1013.25 hPa, 25 C, sea-level",
   scope:{
     years:[2026,2027,2028],supportedCityCount:cityList.length,
+    duplicateCandidateSourceSlugsResolvedByCanonicalCityLookup:duplicateCandidateSlugCount,
     totalSupportedCityDaysEnumerated:cityDays,
     completeForArbitraryYearsOutside2026To2028:false,
     includesAllCurrentlySupportedCities:true,
