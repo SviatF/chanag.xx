@@ -263,6 +263,21 @@ jobs:
         timeout-minutes: 5
         run: python scripts/wave3af-build-jpl-tithi-table.py --kernel=artifacts/jpl-kernels/de440s.bsp
 
+      - name: Verify committed portable JPL V6 roots are byte-identical to regenerated DE440s
+        run: python scripts/wave3ag-check-committed-jpl.py
+
+      - name: Reconcile V6 Daily, annual Vrat and monthly Muhurat lunar values side by side
+        timeout-minutes: 5
+        run: npm run audit:jpl-v6-crossfamily
+
+      - name: Upload Wave 3AG verified runtime-asset and crossfamily audit
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: wave3ag-jpl-v6-crossfamily-evidence
+          path: artifacts/wave3ag-v6-lunar-crossfamily.json
+          if-no-files-found: error
+
       - name: Scan all supported cities and all 2026–2028 daily dawn states with V6 canary
         timeout-minutes: 8
         run: npm run audit:jpl-v6-all-dynamic-city-days
