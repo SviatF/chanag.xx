@@ -38,12 +38,14 @@ describe("Wave 3AH: versioned V6 lunar staging (NO public activation)",()=>{
     expect(()=>v6StagingCacheKey(2027,13,patna)).toThrow(/Invalid/);
   });
   it("stages the three known sunrise flips with a single JPL Tithi/Karana source",async()=>{
-    for(const [city,date,tithi,paksha] of [
-      ["kanpur","2026-11-21","Ekadashi","Shukla"],
-      ["patna","2027-01-31","Navami","Krishna"],
-      ["delhi","2026-06-30","Purnima","Shukla"]
+    for(const [city,date,tithi,paksha,oldTithi,oldPaksha] of [
+      ["kanpur","2026-11-21","Ekadashi","Shukla","Dwadashi","Shukla"],
+      ["patna","2027-01-31","Navami","Krishna","Dashami","Krishna"],
+      ["delhi","2026-06-30","Purnima","Shukla","Pratipada","Krishna"]
     ] as const){
       const stage=await getStagedV6Daily(date,cityBySlug(city));
+      expect(stage.baselineV5.tithi).toBe(oldTithi);
+      expect(stage.baselineV5.paksha).toBe(oldPaksha);
       expect(stage.lunar.tithi).toBe(tithi);
       expect(stage.lunar.paksha).toBe(paksha);
       expect(stage.simulatedPanchang.tithi).toBe(stage.lunar.tithi);
