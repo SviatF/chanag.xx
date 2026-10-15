@@ -347,6 +347,18 @@ jobs:
         timeout-minutes: 3
         run: python scripts/wave3as-native-coordinate-decomposition.py
 
+      - name: Generate separate native Swiss C Lahiri six-hour candidate without modifying original anchors
+        timeout-minutes: 3
+        run: python scripts/wave3as-native-lahiri-anchor-candidate.py
+
+      - name: Rebuild alternate JPL global sidereal roots using native-C Lahiri candidate only
+        timeout-minutes: 7
+        run: python scripts/wave3ao-build-sidereal-transitions.py --kernel=artifacts/jpl-kernels/de440s.bsp --anchors=artifacts/wave3as-native-swiss-lahiri-candidate.json --report=artifacts/wave3as-jpl-native-lahiri-root-candidate.json
+
+      - name: Compare all 7096 alternate sidereal roots and all 36 Solar Rashi clocks against native C
+        timeout-minutes: 3
+        run: python scripts/wave3as-native-lahiri-jpl-counterfactual.py
+
       - name: Archive Wave 3AS ephemeris-versus-Lahiri cause evidence (not a release)
         if: always()
         uses: actions/upload-artifact@v4
@@ -355,6 +367,10 @@ jobs:
           path: |
             artifacts/wave3as-js-swiss-coordinate-baseline.json
             artifacts/wave3as-native-swiss-coordinate-decomposition.json
+            artifacts/wave3as-native-swiss-lahiri-candidate.json
+            artifacts/wave3as-native-lahiri-grid-differences.json
+            artifacts/wave3as-jpl-native-lahiri-root-candidate.json
+            artifacts/wave3as-native-lahiri-jpl-root-counterfactual.json
           if-no-files-found: error
 
       - name: Archive Wave 3AR physical event-clock residuals (review only)
