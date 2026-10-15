@@ -35,15 +35,6 @@ export type LunarCanarySnapshot={
 const KERNEL_SHA="c1c7feeab882263fc493a9d5a5b2ddd71b54826cdf65d8d17a76126b260a49f2";
 const TIME_MIN=8*3600_000, TIME_MAX=18*3600_000;
 const range=(n:number)=>Number.isInteger(n)&&n>=0&&n<=59;
-function asMillis(iso:string):number{
-  const ms=Date.parse(iso);
-  if(!Number.isFinite(ms)||new Date(ms).toISOString()!==iso.replace(".000Z","Z").replace(/Z$/,s=>s).replace(/(?<!\.\d{3})Z$/,".000Z")){
-    // Accept ISO UTC with or without the explicit .000 precision.
-    if(!Number.isFinite(ms)||!/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d{3})?Z$/.test(iso))
-      throw Error("Invalid UTC civil instant "+iso);
-  }
-  return ms;
-}
 /** Strict structural and chronological proof before any canary lookup. */
 export function validateJplHalfTithiTable(input:unknown):JplHalfTithiTable{
   if(typeof input!=="object"||input===null)throw Error("JPL Tithi table missing");
@@ -95,7 +86,7 @@ export function jplHalfTithiAtMs(table:JplHalfTithiTable,atMs:number):LunarCanar
     throw Error("JPL transition table coverage exhausted; never infer future calendar days");
   const currentHalfPhase=rows[k][1];
   const nextKarana=rows[k+1][0];
-  const nextTithi=currentHalfPhase%2===0?nextKarana:rows[k+2][0];
+  const nextTithi=currentHalfPhase%2===0?rows[k+2][0]:nextKarana;
   if(nextKarana<=atMs||nextTithi<=atMs)
     throw Error("JPL future transition unavailable");
   const tithiIndex=Math.floor(currentHalfPhase/2);
