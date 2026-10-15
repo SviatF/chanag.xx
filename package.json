@@ -46,7 +46,8 @@
     "audit:jpl-v6-sidereal-baseline": "npx --yes tsx@4.23.13 scripts/wave3an-swiss-lahiri-baseline.ts",
     "audit:jpl-v6-sidereal-verify": "npx --yes tsx@4.23.13 scripts/wave3an-verify-sidereal.ts",
     "audit:jpl-v6-sidereal-anchors": "npx --yes tsx@4.23.13 scripts/wave3ao-lahiri-anchors.ts",
-    "audit:jpl-v6-sidereal-global": "npx --yes tsx@4.23.13 scripts/wave3ao-verify-global.ts"
+    "audit:jpl-v6-sidereal-global": "npx --yes tsx@4.23.13 scripts/wave3ao-verify-global.ts",
+    "audit:jpl-v6-unified-sunrise": "npx --yes tsx@4.23.13 scripts/wave3ap-verify-unified.ts"
   },
   "dependencies": {
     "@types/node": "^22.10.0",

@@ -1,0 +1,8 @@
+{
+  "extends": "./tsconfig.json",
+  "include": [
+    "lib/v6-unified-calendar-staging.ts",
+    "scripts/wave3ap-verify-unified.ts"
+  ],
+  "exclude": ["node_modules","tests","app","components",".next","dist"]
+}
