@@ -278,6 +278,18 @@ jobs:
           path: artifacts/wave3ag-v6-lunar-crossfamily.json
           if-no-files-found: error
 
+      - name: Verify JPL-rooted Hindu month and Samvat staging candidates (never published)
+        timeout-minutes: 5
+        run: npm run audit:jpl-v6-lunations
+
+      - name: Upload Wave 3AM pinned new moon and sidereal-source reconciliation evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: wave3am-jpl-lunation-month-yearstart-candidates
+          path: artifacts/wave3am-jpl-lunation-month-yearstart.json
+          if-no-files-found: error
+
       - name: Scan all supported cities and all 2026–2028 daily dawn states with V6 canary
         timeout-minutes: 8
         run: npm run audit:jpl-v6-all-dynamic-city-days
