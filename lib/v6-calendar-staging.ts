@@ -67,6 +67,7 @@ export type StagedV6Daily={
   engine:typeof STAGED_LUNAR_ENGINE_VERSION;
   provenanceSha256:typeof JPL_V6_ROOTS_ASSET_SHA256;
   lunar:JplV6SunriseLunarCanary;
+  baselineV5:{engine:Panchang["engine"];paksha:Panchang["paksha"];tithi:string};
   /** For research only. Five V5-derived fields are still mathematically mixed. */
   simulatedPanchang:Panchang;
   unreconciled:typeof UNRECONCILED_V6_DEPENDENCIES;
@@ -88,7 +89,8 @@ export async function getStagedV6Daily(dateIso:string,city:City):Promise<StagedV
   return {
     engine:STAGED_LUNAR_ENGINE_VERSION,
     provenanceSha256:JPL_V6_ROOTS_ASSET_SHA256,
-    lunar,simulatedPanchang,unreconciled:UNRECONCILED_V6_DEPENDENCIES,
+    lunar,baselineV5:{engine:v5.engine,paksha:v5.paksha,tithi:v5.tithi},
+    simulatedPanchang,unreconciled:UNRECONCILED_V6_DEPENDENCIES,
     publicReleaseAllowed:false
   };
 }
