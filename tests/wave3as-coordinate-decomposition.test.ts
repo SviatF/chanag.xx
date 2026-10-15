@@ -37,6 +37,7 @@ describe("Wave 3AS: do not conflate UT, coordinate frame and physical ephemeris 
    expect(py).toContain("Native C apparent Lahiri Moon/Sun frame disagreement");
    expect(compare).toContain("REVIEWED_SHA");
    expect(compare).toContain("checkedMatchingJplEventRoots");
+   expect(compare).toContain("Native-C Lahiri source no longer reproduces all 36 Solar Rashi UTC roots within measured 3-second scientific gate");
    expect(compare).toContain("ritualCalendarReleaseAllowed");
    expect(workflow).toContain("--anchors=artifacts/wave3as-native-swiss-lahiri-candidate.json");
    expect(workflow).toContain("--report=artifacts/wave3as-jpl-native-lahiri-root-candidate.json");
