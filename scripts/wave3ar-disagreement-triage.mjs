@@ -106,7 +106,7 @@ const report={
   mismatchesByFamily:totals,rootDistanceTierByFamily:histogram,
   referenceReviewQueues:{
     manualSolarRashiClusters:dates.filter(r=>r.family==="sunRashi"),
-    >120s:priority,
+    over120Seconds:priority,
     priorityClusters:priority.length,
     criticalCityDayExamples:[...grouped.values()].filter(x=>x.largestDistanceSeconds>120)
       .sort((a,b)=>b.largestDistanceSeconds-a.largestDistanceSeconds).slice(0,100)
