@@ -1,0 +1,1 @@
+{"extends":"./tsconfig.json","include":["scripts/wave3at-sankranti-native-frame-impact.ts"],"exclude":["node_modules","tests","app","components",".next","dist"]}
