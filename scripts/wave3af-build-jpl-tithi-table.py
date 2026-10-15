@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Wave 3AF: reproducible, compact, GLOBAL JPL DE440s Tithi transition table.
 
-Every change of geocentric apparent ecliptic Moon−Sun elongation by 12° is
+Every change of geocentric apparent ecliptic Moon−Sun elongation by 6° is
 global, not city-specific. Store UTC epoch milliseconds and the Tithi index
 *after* each transition. All geocentric events are from JPL DE440s using
 Skyfield moon_phase (true ecliptic and equinox of date, apparent position).
@@ -59,15 +59,15 @@ def main():
     delta=(phase[1:]-phase[:-1])%360.0
     if np.min(delta)<=0 or np.max(delta)>=8:
         raise RuntimeError("Sampling interval too sparse for a unique lunar phase crossing")
-    idx=np.floor(phase/12).astype(np.int16)
+    idx=np.floor(phase/6).astype(np.int16)
     crossing=np.flatnonzero(idx[1:]!=idx[:-1])
-    if len(crossing)<2100 or len(crossing)>2600:
+    if len(crossing)<4200 or len(crossing)>5000:
         raise RuntimeError("Unexpected lunar boundary count over 2025–2030")
-    if not np.all(idx[crossing+1]==(idx[crossing]+1)%30):
+    if not np.all(idx[crossing+1]==(idx[crossing]+1)%60):
         raise RuntimeError("Skipped or non-monotonic lunar transition")
     lo=samples[crossing].copy()
     hi=samples[crossing+1].copy()
-    target=12.0*idx[crossing+1].astype(np.float64)
+    target=6.0*idx[crossing+1].astype(np.float64)
     # One vectorized JPL phase computation for thousands of brackets per round.
     # 27 rounds over 8h gives much better than 1ms timestamp resolution.
     for _ in range(27):
@@ -78,21 +78,21 @@ def main():
         lo=np.where(keep_left,mid,lo)
         hi=np.where(keep_left,hi,mid)
     result_ms=np.rint((lo+hi)/2*1000.0).astype(np.int64)
-    if not np.all(np.diff(result_ms)>18*3600*1000):
+    if not np.all(np.diff(result_ms)>8*3600*1000):
         raise RuntimeError("Lunar boundaries overlap or are too close")
-    if not np.all(np.diff(result_ms)<35*3600*1000):
+    if not np.all(np.diff(result_ms)<18*3600*1000):
         raise RuntimeError("Lunar boundaries missing a day")
     # Prove each transition bracket is the actual phase root, not simple
     # astronomical tick interpolation or a shifted ET/UT convention.
     before=phases(eph,ts,(result_ms-4000)/1000.0)
     after=phases(eph,ts,(result_ms+4000)/1000.0)
-    if np.any(np.floor(before/12).astype(np.int16)!=idx[crossing]) or \
-       np.any(np.floor(after/12).astype(np.int16)!=idx[crossing+1]):
+    if np.any(np.floor(before/6).astype(np.int16)!=idx[crossing]) or \
+       np.any(np.floor(after/6).astype(np.int16)!=idx[crossing+1]):
         raise RuntimeError("±4-second JPL phase root classification check failed")
     transitions=[[int(ms),int(tithi)] for ms,tithi in zip(result_ms,idx[crossing+1])]
     expected={
-      "patna-2027-01-31":(datetime(2027,1,31,1,4,15,tzinfo=timezone.utc).timestamp()*1000,24),
-      "kanpur-2026-11-21":(datetime(2026,11,21,1,2,1,tzinfo=timezone.utc).timestamp()*1000,11),
+      "patna-2027-01-31":(datetime(2027,1,31,1,4,15,tzinfo=timezone.utc).timestamp()*1000,48),
+      "kanpur-2026-11-21":(datetime(2026,11,21,1,2,1,tzinfo=timezone.utc).timestamp()*1000,22),
     }
     for label,(near,expected_index) in expected.items():
         matches=[(t,i) for t,i in transitions if abs(t-near)<120000]
@@ -102,12 +102,12 @@ def main():
     payload={
       "wave":"3AF","ephemeris":"JPL DE440s",
       "kernelSha256":digest,"skyfieldVersion":EXPECTED_SKYFIELD,
-      "longitudeConvention":"geocentric apparent ecliptic of date Moon minus Sun; 12deg steps",
+      "longitudeConvention":"geocentric apparent ecliptic of date Moon minus Sun; 6deg half-Tithi/Karana steps",
       "timeScale":"UTC epoch milliseconds via Skyfield built-in timescale",
       "coverageStartUtc":START.isoformat().replace("+00:00","Z"),
       "coverageEndUtc":END.isoformat().replace("+00:00","Z"),
-      "tithiCount":len(transitions),"yearCounts":dict(sorted(by_year.items())),
-      "transitions":transitions,
+      "halfTithiBoundaryCount":len(transitions),"yearCounts":dict(sorted(by_year.items())),
+      "halfTithiTransitions":transitions,
       "ritualSelectionCertified":False,
       "canaryOnly":True
     }
