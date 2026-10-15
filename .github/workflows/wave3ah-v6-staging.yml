@@ -41,8 +41,8 @@ jobs:
       - name: Rebuild three critical V6 staged city-months (never public assets)
         if: github.event_name != 'workflow_dispatch' || inputs.mode != 'all'
         run: npm run stage:jpl-v6-release
-      - name: Rebuild every V5 target into isolated V6 staging artifacts (manual only)
-        if: github.event_name == 'workflow_dispatch' && inputs.mode == 'all'
+      - name: Rebuild all committed V5 targets as isolated V6 staging artifacts
+        if: github.event_name == 'pull_request' || (github.event_name == 'workflow_dispatch' && inputs.mode == 'all')
         run: npm run stage:jpl-v6-release -- --all
       - name: Upload source-versioned V6 research shards and release-gate manifest
         if: always()
