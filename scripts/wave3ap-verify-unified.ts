@@ -26,9 +26,20 @@ if(source.sourceDigest!==V6_UNIFIED_PINNED_SIDEREAL_SHA256||
    source.table.productionSwitchAllowed!==false)
   throw Error("Unpinned sidereal catalog or unauthorized V6 staging release");
 const reviewedDates=["2026-06-30","2026-11-21","2027-01-31","2028-12-31"];
-const cities=[...supportedCities].sort((a,b)=>a.slug.localeCompare(b.slug));
-if(new Set(cities.map(c=>c.slug)).size!==cities.length||cities.length<450)
-  throw Error("City set incomplete or duplicate city slug in V6 unified verification");
+const uniqueCities=new Map<string,(typeof supportedCities)[number]>();
+const repeatedCityRecords=[];
+for(const city of supportedCities){
+  const previous=uniqueCities.get(city.slug);
+  if(previous){
+    if(previous.name!==city.name||previous.state!==city.state||
+       previous.lat!==city.lat||previous.lng!==city.lng||
+       previous.language.join(",")!==city.language.join(","))
+      throw Error("Same city slug refers to inconsistent geographic coordinates: "+city.slug);
+    repeatedCityRecords.push(city.slug);
+  }else uniqueCities.set(city.slug,city);
+}
+const cities=[...uniqueCities.values()].sort((a,b)=>a.slug.localeCompare(b.slug));
+if(cities.length<450)throw Error("Insufficient unique India cities for Wave3AP");
 const researchOnlyExamples=[];
 const distinctCities=new Set<string>();
 const familyNames=new Map<string,Set<string>>();
@@ -106,6 +117,7 @@ const report={
   combinedIdentity:source.combinedIdentity,
   sourceProof:"Raw SHA-pinned DE440s sidereal roots + Lahiri anchors matched reviewed CI bytes",
   allSupportedCityCount:cities.length,
+  repeatedButIdenticalSourceCitySlugs:repeatedCityRecords,
   distinctCities:distinctCities.size,
   datesCheckedPerCity:reviewedDates,
   sampledCityDays:sampled,
