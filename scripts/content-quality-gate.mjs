@@ -26,12 +26,16 @@ const sitemapUrls=totals.sitemapUrls??0;
 const fetched=totals.fetched??0;
 
 const failures=[];
+if(!report.seoIdentity||!Number.isInteger(report.seoIdentity.programmaticPages))failures.push("SEO identity audit missing or incomplete");
 if(sitemapUrls<=0)failures.push("empty sitemap corpus");
 if(fetched!==sitemapUrls)failures.push(`rendered corpus incomplete (${fetched}/${sitemapUrls})`);
 if((totals.fetchErrors??0)>0)failures.push(`${totals.fetchErrors} fetch error(s)`);
 if((totals.structuralIssues??0)>0)failures.push(`${totals.structuralIssues} structural issue(s)`);
 if((totals.hreflangIssues??0)>0)failures.push(`${totals.hreflangIssues} hreflang issue(s)`);
 if((totals.duplicateCanonicals??0)>0)failures.push(`${totals.duplicateCanonicals} duplicate canonical owner(s)`);
+if((totals.seoIdentityIssues??0)>0)failures.push(`${totals.seoIdentityIssues} HTML identity issue(s)`);
+if((totals.duplicateSeoTitles??0)>0)failures.push(`${totals.duplicateSeoTitles} duplicate indexed SEO-title group(s)`);
+if((totals.duplicateMetaDescriptions??0)>0)failures.push(`${totals.duplicateMetaDescriptions} duplicate indexed meta-description group(s)`);
 if((totals.disclaimerPages??0)>0)failures.push(`${totals.disclaimerPages} disclaimer-style page(s)`);
 if((totals.exactNormalizedDuplicateGroups??0)>0)failures.push(`${totals.exactNormalizedDuplicateGroups} exact normalized duplicate group(s)`);
 if((totals.highSimilarityPairs??0)>0)failures.push(`${totals.highSimilarityPairs} high similarity pair(s)`);
@@ -41,6 +45,7 @@ if(programmaticWarnings>0)failures.push(`${programmaticWarnings} programmatic fa
 
 console.log(`[content-gate] sitemap=${sitemapUrls} fetched=${fetched}`);
 console.log(`[content-gate] structural=${totals.structuralIssues??0} hreflang=${totals.hreflangIssues??0} canonicals=${totals.duplicateCanonicals??0} disclaimers=${totals.disclaimerPages??0}`);
+console.log(`[content-gate] seoIdentity issues=${totals.seoIdentityIssues??0} duplicateTitles=${totals.duplicateSeoTitles??0} duplicateDescriptions=${totals.duplicateMetaDescriptions??0}`);
 console.log(`[content-gate] similarity exact=${totals.exactNormalizedDuplicateGroups??0} high=${totals.highSimilarityPairs??0} severe=${totals.severeSimilarityPairs??0}`);
 console.log(`[content-gate] programmatic issues=${programmaticIssues} warnings=${programmaticWarnings}`);
 
@@ -58,4 +63,4 @@ if(failures.length){
   process.exit(1);
 }
 
-console.log("[content-gate] PASS — full rendered corpus is clean: exact/high/severe similarity are zero, programmatic families have zero issues/warnings, and structural/canonical/hreflang/disclaimer checks are clean.");
+console.log("[content-gate] PASS — full rendered corpus passed structural, SEO metadata identity and exact/high/severe similarity gates, programmatic families have zero issues/warnings, and structural/canonical/hreflang/disclaimer checks are clean.");

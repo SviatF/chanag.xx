@@ -38,7 +38,7 @@ export async function generateMetadata({params}:{params:Promise<{city:string,dat
   const today=todayInIndia().toISOString().slice(0,10);
   const alternates:Metadata["alternates"]={canonical:`/panchang/${city.slug}/${ds}`};
   if(ds===today)alternates.languages=regionalAlternates(city,undefined,ds);
-  return {title:`Today Panchang in ${city.name} — ${ds}`,description:`Panchang for ${city.name}: Tithi, Nakshatra, sunrise, sunset, Rahu Kalam, Yamaganda, Gulika and Abhijit Muhurat for ${ds}.`,alternates,robots:robotsFor(isDailyIndexable(city.slug,ds))};
+  return {title:`${city.name} Panchang for ${ds} — Tithi, Nakshatra & Sunrise`,description:`Panchang for ${city.name}: Tithi, Nakshatra, sunrise, sunset, Rahu Kalam, Yamaganda, Gulika and Abhijit Muhurat for ${ds}.`,alternates,robots:robotsFor(isDailyIndexable(city.slug,ds))};
 }
 
 export default async function PanchangPage({params}:{params:Promise<{city:string,date?:string[]}>}){
