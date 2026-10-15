@@ -113,7 +113,7 @@ export function getDailyGuidance(data:Panchang,city:City):DailyGuidance{
   if(goodChoghadiya.length){
     auspicious[0]={
       ...auspicious[0],
-      detail:`${auspicious[0].detail} Today's early favorable Choghadiya includes ${goodChoghadiya.join(" and ")}.`,
+      detail:`${auspicious[0].detail} Favorable Choghadiya periods on this date include ${goodChoghadiya.join(" and ")}.`,
     };
   }
 
