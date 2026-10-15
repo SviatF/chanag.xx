@@ -27,6 +27,8 @@ const fetched=totals.fetched??0;
 
 const failures=[];
 if(!report.seoIdentity||!Number.isInteger(report.seoIdentity.programmaticPages))failures.push("SEO identity audit missing or incomplete");
+if(!report.dailyFactIntegrity||!Number.isInteger(report.dailyFactIntegrity.dailyPages)||report.dailyFactIntegrity.dailyPages===0)failures.push("rendered daily fact integrity audit missing or empty");
+if((totals.dailyFactFailures??0)>0)failures.push(`${totals.dailyFactFailures} invalid rendered daily fact(s)`);
 if(sitemapUrls<=0)failures.push("empty sitemap corpus");
 if(fetched!==sitemapUrls)failures.push(`rendered corpus incomplete (${fetched}/${sitemapUrls})`);
 if((totals.fetchErrors??0)>0)failures.push(`${totals.fetchErrors} fetch error(s)`);
@@ -45,6 +47,7 @@ if(programmaticWarnings>0)failures.push(`${programmaticWarnings} programmatic fa
 
 console.log(`[content-gate] sitemap=${sitemapUrls} fetched=${fetched}`);
 console.log(`[content-gate] structural=${totals.structuralIssues??0} hreflang=${totals.hreflangIssues??0} canonicals=${totals.duplicateCanonicals??0} disclaimers=${totals.disclaimerPages??0}`);
+console.log(`[content-gate] dailyFactErrors=${totals.dailyFactFailures??0} physically-identical-vectors=${totals.dailyFactIdenticalGroups??0} (review only)`);
 console.log(`[content-gate] seoIdentity issues=${totals.seoIdentityIssues??0} duplicateTitles=${totals.duplicateSeoTitles??0} duplicateDescriptions=${totals.duplicateMetaDescriptions??0}`);
 console.log(`[content-gate] similarity exact=${totals.exactNormalizedDuplicateGroups??0} high=${totals.highSimilarityPairs??0} severe=${totals.severeSimilarityPairs??0}`);
 console.log(`[content-gate] programmatic issues=${programmaticIssues} warnings=${programmaticWarnings}`);

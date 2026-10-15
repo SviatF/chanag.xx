@@ -64,9 +64,9 @@ export default async function PanchangPage({params}:{params:Promise<{city:string
   const moonrise=formatPanchangTime(data.moonrise,data.moonriseDate,data.date);
   const moonset=formatPanchangTime(data.moonset,data.moonsetDate,data.date);
   const faq=[
-    {q:`What is Rahu Kalam today in ${city.name}?`,a:`Rahu Kalam in ${city.name} is ${formatWindow(data.rahu)} for ${data.date}.`},
-    {q:`What is today's Tithi in ${city.name}?`,a:`Today's Tithi is ${data.tithi}, during ${data.paksha} Paksha.`},
-    {q:`What is today's Nakshatra in ${city.name}?`,a:`The Nakshatra calculated for the day is ${data.nakshatra}.`},
+    {q:`What is Rahu Kalam in ${city.name} on ${data.date}?`,a:`Rahu Kalam in ${city.name} is ${formatWindow(data.rahu)} for ${data.date}.`},
+    {q:`What is the sunrise Tithi in ${city.name} on ${data.date}?`,a:`At local sunrise on ${data.date}, the Tithi is ${data.tithi} during ${data.paksha} Paksha; the stated transition clock applies only until its end.`},
+    {q:`What is the sunrise Nakshatra in ${city.name} on ${data.date}?`,a:`At local sunrise on ${data.date}, the Nakshatra is ${data.nakshatra}; it ends at ${nakshatraEnd}.`},
     {q:`Why can Hindu month names differ?`,a:`Panchvani shows both Amanta and Purnimanta lunar month labels because these two month conventions are followed in different parts of India.`}
   ];
   const ld={ "@context":"https://schema.org","@graph":[
@@ -102,12 +102,12 @@ export default async function PanchangPage({params}:{params:Promise<{city:string
       <div className="timing-chip bad"><small>Gulika Kalam</small><strong>{formatWindow(data.gulika)}</strong></div>
     </div></div>
     <div className="wide-panel">
-      <h2 className="page-title" style={{fontSize:32}}>Auspicious today for</h2>
+      <h2 className="page-title" style={{fontSize:32}}>Traditional favorable signals · {data.date}</h2>
       <p className="page-subtitle">{guidance.summary}</p>
       <div className="data-grid">
         {guidance.auspicious.map(item=><div className="data-card" key={item.title}><small>Favorable signal</small><strong>{item.title}</strong><small>{item.detail}</small></div>)}
       </div>
-      <h2 className="page-title" style={{fontSize:32,marginTop:28}}>Avoid today</h2>
+      <h2 className="page-title" style={{fontSize:32,marginTop:28}}>Traditional timing cautions · {data.date}</h2>
       <div className="data-grid">
         {guidance.avoid.map(item=><div className="data-card" key={item.title}><small>Timing caution</small><strong>{item.title}</strong><small>{item.detail}</small></div>)}
       </div>
