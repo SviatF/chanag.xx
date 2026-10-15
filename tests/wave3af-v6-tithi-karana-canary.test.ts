@@ -71,7 +71,7 @@ describe("Wave 3AF V6 read-only JPL half-Tithi and Karana canary",()=>{
     expect(audit).toContain("supportedCities");
     expect(audit).toContain("sweRiseTrans");
     expect(audit).toContain("jplHalfTithiAtMs");
-    expect(audit).toContain("maxNOAAErrorSeconds").not.toBeDefined();
+    expect(audit).not.toContain("maxNOAAErrorSeconds");
     expect(audit).toContain("checkedApproximateSunriseErrorMaxSeconds");
     expect(audit).toContain("productionPanchangStillV5:true");
     expect(audit).toContain("muhuratSnapshotsStillV5:true");
