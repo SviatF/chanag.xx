@@ -73,7 +73,7 @@ export function getJplSiderealCandidate(x:JplSiderealObservation){
     ["Sun Rashi",dist(sun,30)],
     ["Yoga",dist(sum,STEP)]
   ] as const;
-  const nearBoundary=risk.filter(([,degrees])=>degrees<=DEGREE_WARNING)
+  const nearBoundary:Array<{field:string;angularDistanceDegrees:number}>=risk.filter(([,degrees])=>degrees<=DEGREE_WARNING)
     .map(([field,degrees])=>({field,angularDistanceDegrees:degrees}));
   // An offset mismatch between Swiss Sun/Moon can also make one label
   // ambiguous; treat it as a QA blocker, never choose an approval.
