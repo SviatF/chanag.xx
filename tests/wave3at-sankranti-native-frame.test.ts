@@ -7,7 +7,7 @@ describe("Wave 3AT: source-separated solar ingress sunrise impact",()=>{
   expect(s).toContain("openVerifiedV6SiderealSource(oldText,oldAnchors)");
   expect(s).toContain("validateSiderealTransitionTable(alt)");
   expect(s).toContain("counter.full36SolarRashiRootClockParityWithinThreeSeconds");
-  expect(s).toContain("sourceIdentity");
+  expect(s).toContain("nativeAnchorSha256:digest(nativeAnchorText)");
  });
  it("does not overwrite live V5 or claim ritual approval",()=>{
   const s=readFileSync("scripts/wave3at-sankranti-native-frame-impact.ts","utf8");
