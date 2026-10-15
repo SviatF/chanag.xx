@@ -44,7 +44,9 @@
     "stage:jpl-v6-release": "npx --yes tsx@4.23.13 scripts/wave3ah-precompute-v6-staging.ts",
     "audit:jpl-v6-lunations": "npx --yes tsx@4.23.13 scripts/wave3am-jpl-lunation-audit.ts",
     "audit:jpl-v6-sidereal-baseline": "npx --yes tsx@4.23.13 scripts/wave3an-swiss-lahiri-baseline.ts",
-    "audit:jpl-v6-sidereal-verify": "npx --yes tsx@4.23.13 scripts/wave3an-verify-sidereal.ts"
+    "audit:jpl-v6-sidereal-verify": "npx --yes tsx@4.23.13 scripts/wave3an-verify-sidereal.ts",
+    "audit:jpl-v6-sidereal-anchors": "npx --yes tsx@4.23.13 scripts/wave3ao-lahiri-anchors.ts",
+    "audit:jpl-v6-sidereal-global": "npx --yes tsx@4.23.13 scripts/wave3ao-verify-global.ts"
   },
   "dependencies": {
     "@types/node": "^22.10.0",
