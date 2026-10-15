@@ -11,13 +11,14 @@ import type {VratOccurrence,VratSlug} from "./vrat";
 import {toMuhuratPanchangSnapshot,type MuhuratPanchangSnapshot} from "./muhurat-build-data-schema";
 import {JPL_V6_ROOTS_ASSET_SHA256,getPinnedV6HalfTithiTable} from "./jpl-v6-pinned-data";
 import {getJplV6SunriseLunarCanary,type JplV6SunriseLunarCanary} from "./jpl-v6-crossfamily-canary";
+import {jplLunarMonthCandidate} from "./jpl-v6-lunation-candidate";
 
 export const PUBLIC_LUNAR_ENGINE_VERSION="v5-swiss-moshier" as const;
 export const STAGED_LUNAR_ENGINE_VERSION="v6-jpl-de440s" as const;
 export const V6_STAGING_SHARD_SCHEMA=6 as const;
 export const UNRECONCILED_V6_DEPENDENCIES=[
   "Nakshatra and Yoga remain Swiss/Moshier",
-  "Sidereal Hindu month and Samvat year start remain V5",
+  "JPL new moons now anchor staged month/year candidates; Lahiri sidereal Sun still uses Swiss/Moshier and public Hindu Month/Samvat remains V5",
   "Moon illumination remains computed from V5 elongation",
   "Festival/Smarta/Vaishnava/ISKCON fasting and Parana rules not certified",
   "Muhurat rankings, Asta and local ritual prohibitions not approved"
@@ -67,6 +68,7 @@ export type StagedV6Daily={
   engine:typeof STAGED_LUNAR_ENGINE_VERSION;
   provenanceSha256:typeof JPL_V6_ROOTS_ASSET_SHA256;
   lunar:JplV6SunriseLunarCanary;
+  lunarMonthResearch:ReturnType<typeof jplLunarMonthCandidate>;
   baselineV5:{engine:Panchang["engine"];paksha:Panchang["paksha"];tithi:string};
   /** For research only. Five V5-derived fields are still mathematically mixed. */
   simulatedPanchang:Panchang;
@@ -75,6 +77,7 @@ export type StagedV6Daily={
 };
 export async function getStagedV6Daily(dateIso:string,city:City):Promise<StagedV6Daily>{
   const lunar=stageLunar(dateIso,city);
+  const lunarMonthResearch=jplLunarMonthCandidate(lunar,getPinnedV6HalfTithiTable());
   const v5=await getPanchang(new Date(dateIso+"T12:00:00Z"),city);
   if(v5.date!==lunar.date||v5.sunrise!==roundedIstSunrise(lunar.sunriseUtc))
     throw Error("V5/V6 sunrise or India civil date mismatch "+city.slug+" "+dateIso);
@@ -89,7 +92,7 @@ export async function getStagedV6Daily(dateIso:string,city:City):Promise<StagedV
   return {
     engine:STAGED_LUNAR_ENGINE_VERSION,
     provenanceSha256:JPL_V6_ROOTS_ASSET_SHA256,
-    lunar,baselineV5:{engine:v5.engine,paksha:v5.paksha,tithi:v5.tithi},
+    lunar,lunarMonthResearch,baselineV5:{engine:v5.engine,paksha:v5.paksha,tithi:v5.tithi},
     simulatedPanchang,unreconciled:UNRECONCILED_V6_DEPENDENCIES,
     publicReleaseAllowed:false
   };
