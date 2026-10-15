@@ -26,6 +26,25 @@ All 2,562 stored source mismatches for the three years are in the original compl
 
 The official Swiss Ephemeris Programming Guide describes **SE_SIDM_LAHIRI** and alternative sidereal coordinate-frame modes: https://www.astro.com/swisseph/swephprg.htm . The 3AR comparison keeps that same convention on both sides to isolate **ephemeris-clock** differences, but is **not an independent ayanamsa certification**. The underlying Lahiri 6-hour anchors still originate from Swiss/Moshier.
 
+## Newly measured source-clock discrepancy (CI evidence)
+
+The first exact-source clock report contains **9,322** independently bracketed Swiss/Moshier-versus-JPL event clocks (2026–2028):
+
+| Physical boundary family | Roots checked | Maximum absolute Swiss-JPL UTC offset |
+|---|---:|---:|
+| Half-Tithi / Karana | 2,226 | 48.86 sec |
+| Moon Pada | 4,332 | 68.749 sec |
+| Nakshatra | 1,083 | 68.749 sec |
+| Yoga | 1,164 | 164.165 sec |
+| Moon Rashi | 481 | 68.310 sec |
+| Solar Rashi | 36 | **1,354.368 sec (22m 34s)** |
+
+**Every one of the 36 Solar Rashi root times** differed by more than ten minutes between the transpiled JavaScript Swiss/Moshier calculation and the pinned JPL root. That is a serious **release blocker** for sunrise-adjacent Sankranti/Solar Rashi and related auspicious-day decisions. It cannot be dismissed as rounding or relabeling, and the cause is not automatically assigned to JPL.
+
+A second source-implementation check has therefore been added using pinned native C Swiss Ephemeris 2.10.03 (`pyswisseph==2.10.3.2`) at the *identical UT, Lahiri mode and Moshier flags*: all 36 Solar Rashi roots, plus the 12 largest-offset roots in every family. Preliminary independent native-C results indicate that the JavaScript Swiss root clocks and native Swiss C also differ materially. The CI artifact must preserve **both** calculations and explicitly mark binding parity as unresolved if differences exceed two seconds. This does **not** prove which underlying coordinate frame is correct.
+
+**Do not activate V6 or migrate Sankranti, Hindu Month/Samvat, Vrat or Muhurat on the strength of a green classification/count gate.** First reconcile the Swiss JS binding with native Swiss C and the true apparent ecliptic JPL reference.
+
 ## Release decision register
 
 - **Astronomical physical root times:** review quantified signed JPL-vs-Swiss differences first, with particular attention to 2027-03-15/07-17 solar transitions; assign source/convention/model explanation and reproducibility evidence, not a generic green badge.
