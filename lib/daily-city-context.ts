@@ -16,7 +16,7 @@ function daylight(data:Panchang){const start=clockMinutes(data.sunrise),end=cloc
 function phase(minutes:number){if(minutes<360)return "pre-six sunrise";if(minutes<390)return "early sunrise";if(minutes<420)return "mid-morning-edge sunrise";return "late sunrise";}
 function transitionBand(time:string,endDate:string|null,baseDate:string,sunrise:string,sunset:string){
   // An HH:MM clock alone cannot classify next-day lunar boundaries.
-  if(!/^([01]\\d|2[0-3]):[0-5]\\d$/.test(time)||!endDate||endDate<baseDate)return "unresolved local-time boundary";
+  if(!/^([01]\d|2[0-3]):[0-5]\d$/.test(time)||!endDate||endDate<baseDate)return "unresolved local-time boundary";
   if(endDate>baseDate)return "following civil date";
   const t=clockMinutes(time),rise=clockMinutes(sunrise),set=clockMinutes(sunset);
   if(t<rise)return "before sunrise (requires source review)";
