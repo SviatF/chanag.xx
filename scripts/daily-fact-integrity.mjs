@@ -31,10 +31,10 @@ export function extractDailyVisibleFacts(html){
         if(name==="Tithi"){
           // This is visible under the Tithi card. Distinguish lunar identity
           // from the separately rendered clock/date; do not infer Paksha.
-          const details=[...block.matchAll(/<small\\b[^>]*>([\\s\\S]*?)<\\/small>/gi)].map(x=>plain(x[1]));
+          const details=[...block.matchAll(/<small\b[^>]*>([\s\S]*?)<\/small>/gi)].map(x=>plain(x[1]));
           const sub=details.slice(1).join(" ");
-          values.Paksha=sub.match(/\\b(Shukla|Krishna) Paksha\\b/)?.[1]??null;
-          values.TithiEndClock=sub.match(/\\buntil (\\d{2}:\\d{2})\\b/)?.[1]??null;
+          values.Paksha=sub.match(/\b(Shukla|Krishna) Paksha\b/)?.[1]??null;
+          values.TithiEndClock=sub.match(/\buntil (\d{2}:\d{2})\b/)?.[1]??null;
         }
       }
     }
