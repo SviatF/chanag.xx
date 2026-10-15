@@ -40,6 +40,8 @@ def main():
     rows=[]
     solar_root_samples=0
     deltat_differences=[]
+    ts_versus_mean_lahiri=[]
+    apparent_versus_mean_lahiri=[]
     for point in points:
         at=point["atUtc"]
         if at in seen or not at.endswith("Z"):raise RuntimeError("Duplicate/missing UTC sample")
@@ -51,6 +53,9 @@ def main():
         if not validate_float(js_dt):raise RuntimeError("Missing JS DeltaT at shared UT")
         deltat_differences.append(js_dt-native_dt_days*86400)
         if not 50<native_dt_days*86400<100:raise RuntimeError("Unexpected astronomical Delta-T")
+        native_mean_lahiri=swe.get_ayanamsa_ut(jd)%360
+        if not 20<native_mean_lahiri<29:
+            raise RuntimeError("Swiss native mean Lahiri source out of bounds")
         native={}
         for name,body in (("sun",swe.SUN),("moon",swe.MOON)):
             tropical=swe.calc_ut(jd,body,flags)[0]
@@ -77,11 +82,23 @@ def main():
                    result["jsMinusNativeSiderealArcsec"])>0.01:
                 raise RuntimeError("Tropical/Lahiri/sidereal source decomposition does not close")
             native[name]=result
+        # The transpiled TS effective Lahiri matches native C MEAN ayanamsa,
+        # while native apparent sidereal positions also include the
+        # nutation/apparent-reference-frame contribution.
+        js_mean=signed(point["sun"]["effectiveLahiriDeg"],native_mean_lahiri)*3600
+        native_apparent=signed(native["sun"]["nativeEffectiveLahiriDeg"],native_mean_lahiri)*3600
+        ts_versus_mean_lahiri.append(js_mean)
+        apparent_versus_mean_lahiri.append(native_apparent)
+        if abs(js_mean)>0.01:
+            raise RuntimeError("TS mean Lahiri convention changed; review source-frame policy")
         if any("Solar Rashi JPL root" in r for r in point["roles"]):solar_root_samples+=1
         rows.append({"atUtc":at,"roles":point["roles"],
           "nativeDeltaTSeconds":native_dt_days*86400,
           "jsDeltaTSeconds":js_dt,
           "jsMinusNativeDeltaTSeconds":js_dt-native_dt_days*86400,
+          "nativeMeanLahiriDeg":native_mean_lahiri,
+          "jsEffectiveMinusNativeMeanLahiriArcsec":js_mean,
+          "nativeApparentMinusMeanLahiriArcsec":native_apparent,
           "sun":native["sun"],"moon":native["moon"]})
     if solar_root_samples!=36 or len(rows)!=len(points):
         raise RuntimeError("Did not compare all 36 actual Solar Rashi JPL events")
@@ -109,12 +126,17 @@ def main():
                                   round(max(r["nativeDeltaTSeconds"] for r in rows),6)],
       "nativeEtVsUtConsistent":True,
       "jsMinusNativeDeltaTSeconds":stats(deltat_differences),
+      "jsEffectiveMinusNativeMeanLahiriArcsec":stats(ts_versus_mean_lahiri),
+      "nativeApparentMinusMeanLahiriArcsec":stats(apparent_versus_mean_lahiri),
       "sourceComponentResidualArcsec":aggregates,
       "diagnostic":{
         "SunTropicalDriftOver1Arcsec":trop>1,
         "LahiriEffectiveFrameDriftOver1Arcsec":frame>1,
         "SunSiderealDriftOver1Arcsec":sid>1,
         "sourceBindingParityProven":False,
+        "tsEffectiveLahiriEqualsNativeMeanLahiri":max(abs(x) for x in ts_versus_mean_lahiri)<0.01,
+        "nativeApparentMinusMeanTermMaterial":max(abs(x) for x in apparent_versus_mean_lahiri)>1,
+        "tropicalPositionModelDifferenceStillUnresolved":True,
         "jplSolarRootCanBePromoted":False,
         "correctCauseNeedsSourceCodeOrIndependentFrameReview":True
       },
@@ -134,6 +156,8 @@ def main():
       "moonLahiriMaxArcsec":aggregates["moon"]["jsMinusNativeEffectiveLahiriArcsec"]["maxAbs"],
       "nativeEtUtValidated":True,
       "DeltaTmaxDifferenceSeconds":round(max(abs(x) for x in deltat_differences),6),
+      "JSmeanLahiriMaxResidualArcsec":round(max(abs(x) for x in ts_versus_mean_lahiri),6),
+      "nativeApparentMinusMeanMaxArcsec":round(max(abs(x) for x in apparent_versus_mean_lahiri),6),
       "productionChange":False
     }),flush=True)
 
