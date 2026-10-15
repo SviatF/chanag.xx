@@ -39,7 +39,8 @@ const add=(target:Target)=>{
 if(all){
   for(const shardId of MUHURAT_PANCHANG_SHARD_IDS){
     const v5=await loadMuhuratPrecomputedShard(shardId);
-    if(!v5||v5.version!==5||v5.shardId!==shardId)fail("Missing or wrong-version V5 input "+shardId);
+    if(!v5)throw Error("Missing V5 precomputed shard "+shardId);
+    if(v5.version!==5||v5.shardId!==shardId)throw Error("Wrong-version V5 shard "+shardId);
     for(const target of v5.targets){
       const parts=target.split("|");
       if(parts.length!==4||parts[3]!==shardId)fail("Corrupt legacy target "+target);
