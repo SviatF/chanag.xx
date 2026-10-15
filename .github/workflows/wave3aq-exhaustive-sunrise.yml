@@ -1,0 +1,92 @@
+name: Panchvani V6 exhaustive sunrise 2026-2028 (research only)
+
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - "scripts/wave3aq-exhaustive-sunrise.ts"
+      - "lib/v6-unified-calendar-staging.ts"
+      - "lib/jpl-v6-*.ts"
+      - "lib/cities.ts"
+      - "lib/city-candidates.ts"
+      - "scripts/wave3ao-*.ts"
+      - "scripts/wave3ao-*.py"
+      - "tsconfig.wave3aq.json"
+      - "package.json"
+      - ".github/workflows/wave3aq-exhaustive-sunrise.yml"
+  push:
+    branches: [main]
+    paths:
+      - "scripts/wave3aq-exhaustive-sunrise.ts"
+      - "lib/v6-unified-calendar-staging.ts"
+      - "tsconfig.wave3aq.json"
+      - ".github/workflows/wave3aq-exhaustive-sunrise.yml"
+  workflow_dispatch:
+
+jobs:
+  full-geographic-year-census:
+    name: V6 exact sunrise / ${{ matrix.year }} / 454 cities
+    runs-on: ubuntu-latest
+    timeout-minutes: 55
+    strategy:
+      fail-fast: false
+      matrix:
+        year: [2026, 2027, 2028]
+    permissions:
+      contents: read
+    steps:
+      - name: Checkout source
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+          cache-dependency-path: package.json
+
+      - name: Install pinned JS dependencies
+        run: npm install --legacy-peer-deps --no-audit --no-fund
+
+      - name: Setup JPL oracle Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install pinned Skyfield
+        run: python -m pip install --disable-pip-version-check "skyfield==1.55"
+
+      - name: Download and verify JPL DE440s binary kernel
+        timeout-minutes: 5
+        shell: bash
+        run: |
+          mkdir -p artifacts/jpl-kernels
+          KERNEL="artifacts/jpl-kernels/de440s.bsp"
+          if ! curl -fLSs --retry 3 --retry-delay 2 --connect-timeout 20 --max-time 180 "https://ssd.jpl.nasa.gov/ftp/eph/planets/bsp/de440s.bsp" -o "$KERNEL"; then
+            curl -fLSs --retry 3 --retry-delay 2 --connect-timeout 20 --max-time 180 "https://naif.jpl.nasa.gov/pub/naif/generic_kernels/spk/planets/de440s.bsp" -o "$KERNEL"
+          fi
+          test "$(head -c 7 "$KERNEL")" = "DAF/SPK"
+          echo "c1c7feeab882263fc493a9d5a5b2ddd71b54826cdf65d8d17a76126b260a49f2  $KERNEL" | sha256sum --check --status
+
+      - name: Generate measured Swiss Lahiri 6h anchors (immutable reference)
+        timeout-minutes: 5
+        run: npm run audit:jpl-v6-sidereal-anchors
+
+      - name: Generate full Wave 3AO JPL sidereal catalog (2026-2028)
+        timeout-minutes: 10
+        run: python scripts/wave3ao-build-sidereal-transitions.py --kernel=artifacts/jpl-kernels/de440s.bsp
+
+      - name: Type-check exhaustive sunrise auditor
+        run: npx tsc --noEmit -p tsconfig.wave3aq.json
+
+      - name: Verify actual sunrise and JPL phase plus 5 sidereal families in every city-day
+        timeout-minutes: 35
+        run: npm run audit:jpl-v6-exhaustive-sunrise -- --year=${{ matrix.year }}
+
+      - name: Upload exact full-year JPL city sunrise and boundary evidence (not deployable)
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: wave3aq-jpl-full-454-city-${{ matrix.year }}-research-only
+          path: artifacts/wave3aq-full-city-day-jpl-sunrise-${{ matrix.year }}.json
+          if-no-files-found: error
