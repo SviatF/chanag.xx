@@ -50,7 +50,8 @@
     "audit:jpl-v6-unified-sunrise": "npx --yes tsx@4.23.13 scripts/wave3ap-verify-unified.ts",
     "audit:jpl-v6-exhaustive-sunrise": "npx --yes tsx@4.23.13 scripts/wave3aq-exhaustive-sunrise.ts",
     "audit:jpl-v6-root-clocks": "npx --yes tsx@4.23.13 scripts/wave3ar-reconcile-jpl-swiss-event-clocks.ts",
-    "audit:jpl-v6-root-triage": "node scripts/wave3ar-disagreement-triage.mjs"
+    "audit:jpl-v6-root-triage": "node scripts/wave3ar-disagreement-triage.mjs",
+    "audit:jpl-v6-coordinate-js": "npx --yes tsx@4.23.13 scripts/wave3as-js-coordinate-baseline.ts"
   },
   "dependencies": {
     "@types/node": "^22.10.0",
