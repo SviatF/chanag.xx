@@ -26,7 +26,7 @@ const dates=[
   ["kolkata","2027-10-25"],
   ["bengaluru","2028-01-31"]
 ] as const;
-const daily=[];
+const daily:Awaited<ReturnType<typeof compareDailyPanchangV6Canary>>[]=[];
 for(const [slug,date] of dates){
   const r=await compareDailyPanchangV6Canary(date,cityBySlug(slug),table);
   daily.push(r);
@@ -53,7 +53,7 @@ const yearlyCases=[
   ["mumbai",2027],
   ["chennai",2028]
 ] as const;
-const vrat=[];
+const vrat:ReturnType<typeof compareYearlyVratV6Canary>[]=[];
 for(const [slug,year] of yearlyCases){
   const r=compareYearlyVratV6Canary(year,cityBySlug(slug),table);
   vrat.push(r);
@@ -69,7 +69,7 @@ const muhuratCases=[
   ["mumbai",2027,3],
   ["chennai",2028,1]
 ] as const;
-const muhurat=[];
+const muhurat:Awaited<ReturnType<typeof compareMuhuratMonthV6Canary>>[]=[];
 for(const [slug,year,month] of muhuratCases){
   const r=await compareMuhuratMonthV6Canary(year,month,cityBySlug(slug),table);
   muhurat.push(r);
