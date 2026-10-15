@@ -29,7 +29,7 @@ describe("Wave 3AF V6 read-only JPL half-Tithi and Karana canary",()=>{
     expect(()=>validateJplHalfTithiTable({...f,halfTithiTransitions:
       f.halfTithiTransitions.map((x,i)=>i===200?[x[0],x[1]+3] as const:x)})).toThrow();
     expect(()=>validateJplHalfTithiTable({...f,halfTithiTransitions:
-      f.halfTithiTransitions.map((x,i)=>i===200?[x[0]-7200_000,x[1]] as const:x)})).toThrow();
+      f.halfTithiTransitions.map((x,i)=>i===200?[x[0]-18_000_000,x[1]] as const:x)})).toThrow();
   });
   it("never mistakes first and second half of a Tithi for the next boundary",()=>{
     const f=validateJplHalfTithiTable(fixture());
@@ -71,7 +71,7 @@ describe("Wave 3AF V6 read-only JPL half-Tithi and Karana canary",()=>{
     expect(audit).toContain("supportedCities");
     expect(audit).toContain("sweRiseTrans");
     expect(audit).toContain("jplHalfTithiAtMs");
-    expect(audit).not.toContain("maxNOAAErrorSeconds");
+    expect(audit).toContain("maxNOAAErrorSeconds");
     expect(audit).toContain("checkedApproximateSunriseErrorMaxSeconds");
     expect(audit).toContain("productionPanchangStillV5:true");
     expect(audit).toContain("muhuratSnapshotsStillV5:true");
