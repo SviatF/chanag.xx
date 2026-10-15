@@ -17,7 +17,7 @@ import {sweRiseTrans} from "@typescriptify/sweph/dist/swecl.js";
 import {SE_SUN,SEFLG_MOSEPH,SE_CALC_RISE} from "@typescriptify/sweph/dist/constants.js";
 import type {City} from "./cities";
 import {requireSolarEvent} from "./ephemeris-integrity";
-import {indiaCivilDayStartJulian,indiaLocalPartsFromJulian} from "./india-time";
+import {indiaCivilDayStartJulian} from "./india-time";
 import {getPanchang} from "./panchang";
 import {calculateVratCalendar,vratSlugs,type VratSlug} from "./vrat";
 import {getMuhuratPanchangMonth} from "./muhurat";
@@ -31,9 +31,10 @@ const tithiNames=["Pratipada","Dvitiya","Tritiya","Chaturthi","Panchami","Shasht
 const karanaCycle=["Bava","Balava","Kaulava","Taitila","Garaja","Vanija","Vishti"] as const;
 const pad=(n:number)=>String(n).padStart(2,"0");
 const fmtCivil=(date:Date)=>date.getUTCFullYear()+"-"+pad(date.getUTCMonth()+1)+"-"+pad(date.getUTCDate());
-const asDate=(ms:number)=>new Date(ms+IST_MS).toISOString().slice(0,10);
 function istClock(utcMs:number){
-  const local=new Date(utcMs+IST_MS);
+  // Match the existing Panchang local-minute rounding convention; otherwise
+  // exact high-precision JPL boundary displays diverge solely by truncation.
+  const local=new Date(Math.round((utcMs+IST_MS)/60000)*60000);
   return {time:local.toISOString().slice(11,16),date:local.toISOString().slice(0,10)};
 }
 function tithiName(i:number){
