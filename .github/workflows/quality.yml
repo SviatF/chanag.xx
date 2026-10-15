@@ -334,6 +334,21 @@ jobs:
             artifacts/wave3ao-global-sidereal-verification.json
           if-no-files-found: error
 
+      - name: Type-check unified Wave 3AP JPL research loader and all-city verification
+        run: npx tsc --noEmit -p tsconfig.wave3ap.json
+
+      - name: Verify unified pinned JPL Tithi Karana Nakshatra Pada Yoga Rashi on India city sunrises
+        timeout-minutes: 8
+        run: npm run audit:jpl-v6-unified-sunrise
+
+      - name: Archive Wave 3AP unified sunrise staging (research only, not for deploy)
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: wave3ap-unified-jpl-sunrise-all-city-research-only
+          path: artifacts/wave3ap-unified-jpl-sunrise-staging.json
+          if-no-files-found: error
+
       - name: Scan all supported cities and all 2026–2028 daily dawn states with V6 canary
         timeout-minutes: 8
         run: npm run audit:jpl-v6-all-dynamic-city-days
