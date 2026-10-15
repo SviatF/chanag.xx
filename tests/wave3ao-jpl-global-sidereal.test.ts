@@ -4,13 +4,15 @@ import {validateSiderealTransitionTable,siderealStateAtUtc,
   type JplSiderealTransitionTable} from "../lib/jpl-v6-sidereal-transitions";
 const kernel="c1c7feeab882263fc493a9d5a5b2ddd71b54826cdf65d8d17a76126b260a49f2";
 const roots="0cab0c6accaf2e2125fe417bf4a4f14a22453a4013a1609dce6dce84ec44142e";
-const first=Date.parse("2027-01-01T00:00:00.000Z");
+const low=Date.parse("2026-01-01T00:00:00.000Z");
+const high=Date.parse("2029-01-01T00:00:00.000Z");
+const distribute=(count:number,modulus:number)=>Array.from({length:count},
+  (_,i)=>[Math.round(low+(i+1)*(high-low)/(count+1)),(i+1)%modulus] as [number,number]);
 function fixture(){
-  const moonPada=Array.from({length:160},(_,i)=>[first+i*3600000,(i+1)%108] as [number,number]);
+  const moonPada=distribute(4332,108);
   const nakshatra=moonPada.filter(([,idx])=>idx%4===0)
     .map(([ms,idx])=>[ms,idx/4] as [number,number]);
-  const family=(modulus:number)=>Array.from({length:40},
-    (_,i)=>[first+i*3600000,(i+1)%modulus] as [number,number]);
+  const family=(modulus:number,count:number)=>distribute(count,modulus);
   return {
     wave:"3AO",schema:1,status:"research-only",
     coverageStartUtc:"2026-01-01T00:00:00.000Z",
@@ -20,20 +22,21 @@ function fixture(){
     lahiriAnchorSha256:"a".repeat(64),maxMeasuredAnchorMidpointErrorArcsec:0.1,
     fullIndependentAyanamsaApproved:false,ritualSelectionCertified:false,
     productionSwitchAllowed:false,
-    events:{moonPada,nakshatra,yoga:family(27),
-      moonRashi:family(12),sunRashi:family(12)}
+    events:{moonPada,nakshatra,yoga:family(27,1164),
+      moonRashi:family(12,481),sunRashi:family(12,36)}
   } as JplSiderealTransitionTable;
 }
 describe("Wave 3AO: fail-closed global sidereal transitions",()=>{
   it("validates all families and does precise UTC root binary lookup",()=>{
     const table=validateSiderealTransitionTable(fixture());
+    const first=table.events.moonPada[0][0];
     const old=siderealStateAtUtc(table,new Date(first-1).toISOString());
     const now=siderealStateAtUtc(table,new Date(first).toISOString());
     expect(old.moonPada.index).toBe(0);
     expect(now.moonPada.index).toBe(1);
     expect(now.nakshatra.index).toBe(0);
     expect(now.nakshatraPada).toBe(2);
-    expect(now.moonPada.nextTransitionUtc).toBe(new Date(first+3600000).toISOString());
+    expect(now.moonPada.nextTransitionUtc).toBe(new Date(table.events.moonPada[1][0]).toISOString());
     expect(now.productionReleaseAllowed).toBe(false);
   });
   it("blocks forged JPL kernel/root source, missing validation and production approval",()=>{
@@ -52,6 +55,9 @@ describe("Wave 3AO: fail-closed global sidereal transitions",()=>{
     const lost=fixture();
     lost.events.nakshatra.pop();
     expect(()=>validateSiderealTransitionTable(lost)).toThrow(/shared JPL/);
+    const truncated=fixture();
+    truncated.events.yoga=truncated.events.yoga.slice(0,20);
+    expect(()=>validateSiderealTransitionTable(truncated)).toThrow(/Incomplete/);
     const unordered=fixture();
     unordered.events.moonRashi[1][0]=unordered.events.moonRashi[0][0];
     expect(()=>validateSiderealTransitionTable(unordered)).toThrow(/Unordered/);
