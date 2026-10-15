@@ -13,6 +13,8 @@ describe("Wave 3AS: do not conflate UT, coordinate frame and physical ephemeris 
    expect(py).toContain("swe.calc_ut(jd,body,flags|swe.FLG_SIDEREAL)");
    expect(py).toContain("swe.deltat_ex(jd,swe.FLG_MOSEPH)");
    expect(py).toContain("nativeEtVsUtConsistent");
+   expect(py).toContain("tsEffectiveLahiriEqualsNativeMeanLahiri");
+   expect(py).toContain("swe.get_ayanamsa_ut(jd)");
    expect(py).toContain("jsMinusNativeDeltaTSeconds");
    expect(py).toContain("jsMinusNativeTropicalArcsec");
    expect(py).toContain("jsMinusNativeEffectiveLahiriArcsec");
