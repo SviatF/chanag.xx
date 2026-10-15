@@ -19,6 +19,7 @@ import {getPinnedV6HalfTithiTable,JPL_V6_ROOTS_ASSET_SHA256} from "../lib/jpl-v6
 import {jplHalfTithiAtMs} from "../lib/jpl-v6-tithi-karana-canary";
 import {openVerifiedV6SiderealSource,getV6UnifiedSunrise} from "../lib/v6-unified-calendar-staging";
 import {siderealStateAtUtc,SIDEREAL_FAMILY_MODULUS,type SiderealFamily} from "../lib/jpl-v6-sidereal-transitions";
+import {nearestExactRoot,sourceLabelsAreAdjacent,daysInGregorianYear} from "../lib/v6-exhaustive-sunrise-evidence";
 import {assertProductionLunarEngine,PUBLIC_LUNAR_ENGINE_VERSION,STAGED_LUNAR_ENGINE_VERSION} from "../lib/v6-calendar-staging";
 
 const requestedYear=Number(process.argv.find(x=>x.startsWith("--year="))?.slice(7));
@@ -38,14 +39,6 @@ const familyNear10:Record<Family,number>=Object.fromEntries(families.map(f=>[f,0
 const familyDisagree:Record<Family,number>=Object.fromEntries(families.map(f=>[f,0])) as Record<Family,number>;
 const sha=(s:string)=>createHash("sha256").update(s).digest("hex");
 const norm=(v:number)=>((v%360)+360)%360;
-function rootNeighbor(rows:ReadonlyArray<readonly [number,number]>,ms:number){
-  let low=0,high=rows.length;
-  while(low<high){const middle=(low+high)>>>1;if(rows[middle][0]<=ms)low=middle+1;else high=middle;}
-  const past=low>0?rows[low-1][0]:null;
-  const next=low<rows.length?rows[low][0]:null;
-  const gap=Math.min(past===null?Infinity:ms-past,next===null?Infinity:next-ms);
-  return {gap,past,next};
-}
 function canonicalCities(){
   const unique=new Map<string,City>();
   const repeated:string[]=[];
@@ -110,14 +103,14 @@ try{
       let smallest=Infinity,near2=false,near10=false;
       for(const f of families){
         const rows=f==="halfTithi"?half.halfTithiTransitions:source.table.events[f];
-        const neighbor=rootNeighbor(rows,ms);
-        if(!Number.isFinite(neighbor.gap)||neighbor.gap<0)throw Error("Bad JPL root coverage "+f+" "+date);
-        smallest=Math.min(smallest,neighbor.gap);
-        if(neighbor.gap<=2*ONE_MIN){
+        const neighbor=nearestExactRoot(rows,ms);
+        if(!Number.isFinite(neighbor.distanceMs)||neighbor.distanceMs<0)throw Error("Bad JPL root coverage "+f+" "+date);
+        smallest=Math.min(smallest,neighbor.distanceMs);
+        if(neighbor.distanceMs<=2*ONE_MIN){
           near2=true;familyNear2[f]++;
-          near[f]=Math.round(neighbor.gap/1000)/60;
+          near[f]=Math.round(neighbor.distanceMs/1000)/60;
         }
-        if(neighbor.gap<=10*ONE_MIN){near10=true;familyNear10[f]++;}
+        if(neighbor.distanceMs<=10*ONE_MIN){near10=true;familyNear10[f]++;}
       }
       if(near2){
         within2++;annual.near2min++;
@@ -157,15 +150,14 @@ try{
           if(old[f]===indices[f])continue;
           // V5 and JPL may disagree near boundaries, but nonadjacent
           // states mean more than ephemeris source rounding and are fatal.
-          const step=(old[f]-indices[f]+modulus)%modulus;
-          if(step!==1&&step!==modulus-1)
+          if(!sourceLabelsAreAdjacent(old[f],indices[f],modulus))
             throw Error("Nonadjacent V5/JPL classification "+f+" "+city.slug+" "+date);
           familyDisagree[f]++;annual.modelChanged[f]++;
-          const boundary=rootNeighbor(f==="halfTithi"?
+          const boundary=nearestExactRoot(f==="halfTithi"?
             half.halfTithiTransitions:source.table.events[f as SiderealFamily],ms);
           const mismatch={city:city.slug,date,sunriseUtc:new Date(ms).toISOString(),
             family:f,v5Index:old[f],v6Index:indices[f],
-            closestJplBoundarySeconds:Math.round(boundary.gap/1000)};
+            closestJplBoundarySeconds:Math.round(boundary.distanceMs/1000)};
           if(mismatches.length<5000)mismatches.push(mismatch);
           riskDigest.update(JSON.stringify(mismatch)+"\n");
         }
@@ -189,7 +181,7 @@ try{
   }
 }finally{sweClose(swed);}
 const daysPerCity=(END-START)/DAY,expected=cities.length*daysPerCity;
-if(daysPerCity!==(requestedYear===2028?366:365)||exactSunrises!==expected||allCount!==expected||
+if(daysPerCity!==daysInGregorianYear(requestedYear)||exactSunrises!==expected||allCount!==expected||
    swissCompared<1000||referenceChecks!==cities.length)
   throw Error("Incomplete direct sunrise census "+JSON.stringify({
     expected,exactSunrises,allCount,swissCompared,referenceChecks}));
