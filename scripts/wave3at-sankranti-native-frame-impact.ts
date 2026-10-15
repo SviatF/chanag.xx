@@ -6,6 +6,7 @@
 import {readFileSync,writeFileSync,mkdirSync} from "node:fs";
 import {createHash} from "node:crypto";
 import {createDefaultSweData} from "@typescriptify/sweph/dist/types.js";
+import {sweClose} from "@typescriptify/sweph/dist/sweph.js";
 import {sweRiseTrans} from "@typescriptify/sweph/dist/swecl.js";
 import {SE_SUN,SEFLG_MOSEPH,SE_CALC_RISE} from "@typescriptify/sweph/dist/constants.js";
 import {supportedCities,type City} from "../lib/cities";
@@ -89,9 +90,7 @@ try{
       }
     }
   }
-}finally{
-  // lifecycle is intentionally local to this research-only process
-}
+}finally{sweClose(swed);}
 const clusters=[...dateFamilies].map(([key,value])=>{
   const [date,index]=key.split("|");
   return {date,solarSignIndex:Number(index),cities:value.cities.size,
