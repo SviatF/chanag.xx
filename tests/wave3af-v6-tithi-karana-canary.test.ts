@@ -69,6 +69,8 @@ describe("Wave 3AF V6 read-only JPL half-Tithi and Karana canary",()=>{
     expect(audit).toContain("for(const city of cityList)");
     expect(audit).toContain("localDayMidnight<END");
     expect(audit).toContain("supportedCities");
+    expect(audit).toContain("findCityBySlug(slug)");
+    expect(audit).toContain("duplicateCandidateSourceSlugsResolvedByCanonicalCityLookup");
     expect(audit).toContain("sweRiseTrans");
     expect(audit).toContain("jplHalfTithiAtMs");
     expect(audit).toContain("maxNOAAErrorSeconds");
