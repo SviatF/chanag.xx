@@ -40,9 +40,18 @@ export function validateSiderealTransitionTable(value:unknown):JplSiderealTransi
      !/^[0-9a-f]{64}$/.test(t.lahiriAnchorSha256))
     throw Error("Invalid Wave3AO source hash, reference frame or release gate");
   const low=Date.parse(t.coverageStartUtc),high=Date.parse(t.coverageEndUtc);
+  const physicalBounds:Record<SiderealFamily,{min:number;max:number;maxGapMs:number}>={
+    moonPada:{min:4000,max:4700,maxGapMs:36*3600000},
+    nakshatra:{min:1000,max:1200,maxGapMs:96*3600000},
+    yoga:{min:1000,max:1300,maxGapMs:72*3600000},
+    moonRashi:{min:440,max:520,maxGapMs:6*86400000},
+    sunRashi:{min:34,max:39,maxGapMs:45*86400000}
+  };
   for(const [family,modulus] of Object.entries(SIDEREAL_FAMILY_MODULUS) as [SiderealFamily,number][]){
     const entries=t.events?.[family];
-    if(!Array.isArray(entries)||entries.length<30)throw Error("Empty or incomplete JPL "+family+" event stream");
+    const bound=physicalBounds[family];
+    if(!Array.isArray(entries)||entries.length<bound.min||entries.length>bound.max)
+      throw Error("Incomplete or physically impossible JPL "+family+" event count");
     let last=-Infinity,prevIndex=-1;
     for(const [time,index] of entries){
       if(!Number.isSafeInteger(time)||time<low||time>=high||
@@ -50,8 +59,12 @@ export function validateSiderealTransitionTable(value:unknown):JplSiderealTransi
         throw Error("Unordered/nonfinite JPL "+family+" transition");
       if(prevIndex>=0&&(prevIndex+1)%modulus!==index)
         throw Error("Skipped JPL "+family+" transition index");
+      if(last!==-Infinity&&time-last>bound.maxGapMs)
+        throw Error("Incomplete JPL "+family+" event timeline: missing interval");
       last=time;prevIndex=index;
     }
+    if(entries[0][0]-low>2*bound.maxGapMs||high-last>2*bound.maxGapMs)
+      throw Error("Incomplete JPL "+family+" start/end coverage");
   }
   const pada=t.events.moonPada;
   const nak=t.events.nakshatra;
