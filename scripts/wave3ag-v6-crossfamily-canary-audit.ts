@@ -14,7 +14,7 @@ import {
 } from "../lib/jpl-v6-crossfamily-canary";
 
 const out=process.argv.find(x=>x.startsWith("--report="))?.slice(9)||
-  "artifacts/wave3ag-v6-daily-vrat-muhurat-canary.json";
+  "artifacts/wave3ag-v6-lunar-crossfamily.json";
 const table=getPinnedV6HalfTithiTable();
 const dates=[
   ["patna","2027-01-31"],
