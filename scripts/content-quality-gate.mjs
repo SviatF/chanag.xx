@@ -26,6 +26,7 @@ const sitemapUrls=totals.sitemapUrls??0;
 const fetched=totals.fetched??0;
 
 const failures=[];
+if(!report.seoIdentity||!Number.isInteger(report.seoIdentity.programmaticPages))failures.push("SEO identity audit missing or incomplete");
 if(sitemapUrls<=0)failures.push("empty sitemap corpus");
 if(fetched!==sitemapUrls)failures.push(`rendered corpus incomplete (${fetched}/${sitemapUrls})`);
 if((totals.fetchErrors??0)>0)failures.push(`${totals.fetchErrors} fetch error(s)`);
