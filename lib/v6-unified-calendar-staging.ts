@@ -13,6 +13,8 @@ import {siderealStateAtUtc,validateSiderealTransitionTable,type JplSiderealTrans
 import {STAGED_LUNAR_ENGINE_VERSION,PUBLIC_LUNAR_ENGINE_VERSION} from "./v6-calendar-staging";
 
 export const UNIFIED_V6_RESEARCH_SCHEMA=7 as const;
+export const V6_UNIFIED_PINNED_SIDEREAL_SHA256="b898fefb8b23fd689c6c841828a6a2ff915df2e8c5cdd13cf3dfd9312b83a554" as const;
+export const V6_UNIFIED_PINNED_LAHIRI_SHA256="f5a346251079734c66187f3b068ca97f12fae0dbb5bf9373e3fcf863ad6c9e54" as const;
 const NAK=[
  "Ashwini","Bharani","Krittika","Rohini","Mrigashirsha","Ardra","Punarvasu",
  "Pushya","Ashlesha","Magha","Purva Phalguni","Uttara Phalguni","Hasta","Chitra",
@@ -49,14 +51,18 @@ function istBoundary(utc:string|null){
 }
 function requireSource(value:RootSource){
   if(!verified.has(value)||!Object.isFrozen(value))
-    throw Error("V6 unified sidereal source was not cryptographically verified");
+    throw Error("V6 unified sidereal source was not SHA-pinned and validated");
   return value;
 }
 /** Verify both separately generated immutable source artifacts by their ACTUAL bytes. */
 export function openVerifiedV6SiderealSource(rawCatalog:string,rawAnchors:string):RootSource{
   const catalog=JSON.parse(rawCatalog) as unknown;
   const table=validateSiderealTransitionTable(catalog);
+  const sourceDigest=sha(rawCatalog);
   const anchorDigest=sha(rawAnchors);
+  if(sourceDigest!==V6_UNIFIED_PINNED_SIDEREAL_SHA256||
+     anchorDigest!==V6_UNIFIED_PINNED_LAHIRI_SHA256)
+    throw Error("V6 sidereal artifact is not byte-for-byte the previously reviewed JPL catalog and Lahiri anchors");
   if(anchorDigest!==table.lahiriAnchorSha256)
     throw Error("JPL sidereal source does not match real measured Lahiri anchor SHA");
   const anchor=JSON.parse(rawAnchors) as Record<string,unknown>;
@@ -74,7 +80,6 @@ export function openVerifiedV6SiderealSource(rawCatalog:string,rawAnchors:string
   Object.freeze(table.events);
   Object.freeze(table.years);
   Object.freeze(table);
-  const sourceDigest=sha(rawCatalog);
   const result=Object.freeze({table,sourceDigest,lahiriAnchorDigest:anchorDigest,
     combinedIdentity:sha([UNIFIED_V6_RESEARCH_SCHEMA,JPL_V6_ROOTS_ASSET_SHA256,
       sourceDigest,anchorDigest].join("|")),researchOnly:true as const});
