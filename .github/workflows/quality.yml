@@ -311,6 +311,29 @@ jobs:
             artifacts/wave3an-jpl-sidereal-verification.json
           if-no-files-found: error
 
+      - name: Measure and export 6-hour effective Lahiri frame anchors for all 2026–2028
+        timeout-minutes: 4
+        run: npm run audit:jpl-v6-sidereal-anchors
+
+      - name: Solve global JPL DE440s Nakshatra Pada Yoga and solar/lunar Rashi transitions
+        timeout-minutes: 9
+        run: python scripts/wave3ao-build-sidereal-transitions.py --kernel=artifacts/jpl-kernels/de440s.bsp
+
+      - name: Verify global 2026–2028 JPL event streams against exact DE440s observations
+        timeout-minutes: 3
+        run: npm run audit:jpl-v6-sidereal-global
+
+      - name: Archive SHA-pinned Wave 3AO geocentric sidereal transition catalog
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: wave3ao-global-jpl-sidereal-roots-2026-2028-research-only
+          path: |
+            artifacts/wave3ao-lahiri-6h-anchors.json
+            artifacts/wave3ao-jpl-global-sidereal-transitions.json
+            artifacts/wave3ao-global-sidereal-verification.json
+          if-no-files-found: error
+
       - name: Scan all supported cities and all 2026–2028 daily dawn states with V6 canary
         timeout-minutes: 8
         run: npm run audit:jpl-v6-all-dynamic-city-days
