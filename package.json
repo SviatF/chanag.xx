@@ -40,7 +40,8 @@
     "audit:jpl-swiss-baseline": "npx --yes tsx@4.23.13 scripts/wave3ad-swiss-baseline.ts",
     "audit:near-sunrise-shards": "npx --yes tsx@4.23.13 scripts/wave3ae-swiss-full-shard-screen.ts",
     "audit:jpl-v6-all-dynamic-city-days": "npx --yes tsx@4.23.13 scripts/wave3af-dynamic-all-city-days-v6-canary.ts",
-    "audit:jpl-v6-crossfamily": "npx --yes tsx@4.23.13 scripts/wave3ag-v6-crossfamily-canary-audit.ts"
+    "audit:jpl-v6-crossfamily": "npx --yes tsx@4.23.13 scripts/wave3ag-v6-crossfamily-canary-audit.ts",
+    "stage:jpl-v6-release": "npx --yes tsx@4.23.13 scripts/wave3ah-precompute-v6-staging.ts"
   },
   "dependencies": {
     "@types/node": "^22.10.0",

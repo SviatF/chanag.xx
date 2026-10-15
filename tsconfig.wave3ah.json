@@ -1,0 +1,15 @@
+{
+  "extends": "./tsconfig.json",
+  "include": [
+    "lib/v6-calendar-staging.ts",
+    "scripts/wave3ah-precompute-v6-staging.ts"
+  ],
+  "exclude": [
+    "node_modules",
+    "tests",
+    "app",
+    "components",
+    ".next",
+    "dist"
+  ]
+}

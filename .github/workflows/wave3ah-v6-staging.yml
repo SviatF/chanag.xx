@@ -1,0 +1,55 @@
+name: Panchvani V6 staging (not production)
+
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - "lib/v6-calendar-staging.ts"
+      - "lib/jpl-v6-*.ts"
+      - "generated/jpl-v6-half-tithi-2025-2030.ts"
+      - "scripts/wave3ah-precompute-v6-staging.ts"
+      - "tests/wave3ah-versioned-v6-staging.test.ts"
+      - "package.json"
+      - ".github/workflows/wave3ah-v6-staging.yml"
+  workflow_dispatch:
+    inputs:
+      mode:
+        description: "sample = three critical sunrise flips; all = every legacy Muhurat city-month, archived only"
+        type: choice
+        required: true
+        default: sample
+        options:
+          - sample
+          - all
+
+jobs:
+  research-only-shards:
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+          cache-dependency-path: package.json
+      - run: npm install --legacy-peer-deps --no-audit --no-fund
+      - name: Type-check V6 staging before expensive full-shard generation
+        run: npx tsc --noEmit -p tsconfig.wave3ah.json
+      - name: Verify V6 release staging contract and JPL cross-family regression
+        run: npx vitest run tests/wave3ah-versioned-v6-staging.test.ts tests/wave3ag-pinned-jpl-crossfamily.test.ts
+      - name: Rebuild three critical V6 staged city-months (never public assets)
+        if: github.event_name != 'workflow_dispatch' || inputs.mode != 'all'
+        run: npm run stage:jpl-v6-release
+      - name: Rebuild all committed V5 targets as isolated V6 staging artifacts
+        if: github.event_name == 'pull_request' || (github.event_name == 'workflow_dispatch' && inputs.mode == 'all')
+        run: npm run stage:jpl-v6-release -- --all
+      - name: Upload source-versioned V6 research shards and release-gate manifest
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: wave3ah-v6-staging-not-for-deploy
+          path: artifacts/wave3ah-v6-staging/
+          if-no-files-found: error
