@@ -1,0 +1,5 @@
+{
+  "extends": "./tsconfig.json",
+  "include": ["scripts/wave3aq-exhaustive-sunrise.ts"],
+  "exclude": ["node_modules","tests","app","components",".next","dist"]
+}
