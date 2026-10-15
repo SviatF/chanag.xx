@@ -1,8 +1,8 @@
 import {describe,it,expect} from "vitest";
 import {inspectCrossPageCalendar,reconcileRenderedCalendar} from "../scripts/crosspage-calendar-integrity.mjs";
 
-const d=(date,tithi,nakshatra)=>
-  `<main><div class="data-card"><small>Tithi</small><strong>${tithi}</strong></div><div class="data-card"><small>Nakshatra</small><strong>${nakshatra}</strong></div></main>`;
+const d=(date,tithi,nakshatra,paksha="Shukla",sunrise="06:20",end="07:30")=>
+  `<main><div class="data-card"><small>Tithi</small><strong>${tithi}</strong><small>${paksha} Paksha · until ${end}</small></div><div class="data-card"><small>Nakshatra</small><strong>${nakshatra}</strong></div><div class="data-card"><small>Sunrise</small><strong>${sunrise}</strong></div></main>`;
 const month=(city,date,tithi,nakshatra)=>
   `<main><div class="month-grid"><a href="/panchang/${city}/${date}"><strong>21</strong><small>${tithi}</small><small>${nakshatra}</small><small class="calendar-lunar-marker">${tithi}</small></a></div></main>`;
 const vrat=(city,date,paksha)=>
@@ -35,6 +35,17 @@ describe("Wave 3AK cross-page lunar source consistency",()=>{
     expect(x.matchedVrat).toBe(1);
     expect(x.contradictions[0].field).toBe("Vrat sunrise Tithi");
     expect(x.contradictions[0].expected).toBe("Ekadashi");
+  });
+  it("rejects Vrat Paksha, sunrise or Tithi end mismatch even if Tithi label matches",()=>{
+    const rows=[
+      inspectCrossPageCalendar("/vrat/ekadashi/2026/kanpur",vrat("kanpur","2026-11-21","Shukla")),
+      inspectCrossPageCalendar("/panchang/kanpur/2026-11-21",d("2026-11-21","Ekadashi","Rohini","Krishna","06:31","09:12"))
+    ];
+    const report=reconcileRenderedCalendar(rows);
+    expect(report.contradictions.map(x=>x.field)).toEqual(expect.arrayContaining([
+      "Vrat Paksha","Vrat sunrise clock","Vrat Tithi end clock"
+    ]));
+    expect(report.contradictions.map(x=>x.field)).not.toContain("Vrat sunrise Tithi");
   });
   it("does not invent a conflict if the counterpart is absent from the sitemap",()=>{
     const x=reconcileRenderedCalendar([
