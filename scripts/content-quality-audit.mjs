@@ -1,5 +1,6 @@
 import {writeFileSync} from "node:fs";
 import {createHash} from "node:crypto";
+import {extractSeoIdentity,auditSeoIdentity} from "./seo-identity-quality.mjs";
 
 const args=process.argv.slice(2);
 function arg(name,fallback){
@@ -201,6 +202,7 @@ function auditPage(pathname,html){
   const alternates=extractAlternates(html).map(item=>({...item,pathname:absolutePath(item.href)}));
   const robots=extractRobots(html);
   const h1=extractH1(html);
+  const seo=extractSeoIdentity(html);
   const issues=[];
   const warnings=[];
   if(!canonical)issues.push("missing canonical");
@@ -223,6 +225,7 @@ function auditPage(pathname,html){
     alternates,
     robots,
     h1,
+    seo,
     factualEvidence,
     wordCount:words.length,
     normalizedHash:sha(words.join(" ")),
@@ -285,6 +288,7 @@ for(const page of pages){
 }
 for(const [canonical,owners] of canonicalOwners)if(owners.length>1)duplicateCanonicals.push({canonical,owners});
 
+const seoIdentity=auditSeoIdentity(pages);
 const similarityPairs=pairwiseSimilarity(pages);
 const exactNormalizedDuplicates=[];
 const hashGroups=new Map();
@@ -319,10 +323,14 @@ const report={
     sitemapUrls:paths.length,fetched:pages.length,fetchErrors:fetchErrors.length,
     structuralIssues:structuralIssues.length,hreflangIssues:hreflangIssues.length,
     duplicateCanonicals:duplicateCanonicals.length,exactNormalizedDuplicateGroups:exactNormalizedDuplicates.length,
+    seoIdentityIssues:seoIdentity.issues.length,
+    duplicateSeoTitles:seoIdentity.duplicateTitles.length,
+    duplicateMetaDescriptions:seoIdentity.duplicateDescriptions.length,
     highSimilarityPairs:similarityPairs.length,severeSimilarityPairs:similarityPairs.filter(pair=>pair.severity==="severe").length,
     disclaimerPages:pages.filter(page=>page.disclaimerHits.length).length,
   },
   familySummary,
+  seoIdentity,
   evidenceNote:"Quantitative evidence counts are observation and prioritization only, not independent fact verification.",
   fetchErrors,
   structuralIssues,
@@ -337,6 +345,7 @@ writeFileSync(reportPath,JSON.stringify(report,null,2));
 console.log(`[content-audit] fetched=${pages.length}/${paths.length}`);
 console.log(`[content-audit] structural=${structuralIssues.length} hreflang=${hreflangIssues.length} duplicateCanonicals=${duplicateCanonicals.length}`);
 console.log(`[content-audit] similarity high=${similarityPairs.length} severe=${report.totals.severeSimilarityPairs} exact=${exactNormalizedDuplicates.length}`);
+console.log(`[content-audit] SEO identity audited=${seoIdentity.programmaticPages} issues=${seoIdentity.issues.length} duplicateTitles=${seoIdentity.duplicateTitles.length} duplicateDescriptions=${seoIdentity.duplicateDescriptions.length}`);
 console.log(`[content-audit] disclaimerPages=${report.totals.disclaimerPages}`);
 console.log(`[content-audit] report=${reportPath}`);
 if(similarityPairs.length)console.log("[content-audit] top similarity risks:\n"+similarityPairs.slice(0,20).map(pair=>`  ${pair.score} ${pair.left} <> ${pair.right}`).join("\n"));
@@ -346,6 +355,9 @@ if(fetchErrors.length)fatal.push(`${fetchErrors.length} fetch error(s)`);
 if(structuralIssues.length)fatal.push(`${structuralIssues.length} structural issue(s)`);
 if(hreflangIssues.length)fatal.push(`${hreflangIssues.length} hreflang reciprocity issue(s)`);
 if(duplicateCanonicals.length)fatal.push(`${duplicateCanonicals.length} duplicate canonical owner(s)`);
+if(seoIdentity.issues.length)fatal.push(`${seoIdentity.issues.length} indexed page identity problem(s)`);
+if(seoIdentity.duplicateTitles.length)fatal.push(`${seoIdentity.duplicateTitles.length} duplicate SEO title group(s)`);
+if(seoIdentity.duplicateDescriptions.length)fatal.push(`${seoIdentity.duplicateDescriptions.length} duplicate meta description group(s)`);
 if(exactNormalizedDuplicates.length)fatal.push(`${exactNormalizedDuplicates.length} exact normalized duplicate group(s)`);
 if(report.totals.disclaimerPages)fatal.push(`${report.totals.disclaimerPages} disclaimer-style page(s)`);
 if(enforceSimilarity&&report.totals.severeSimilarityPairs)fatal.push(`${report.totals.severeSimilarityPairs} severe similarity pair(s)`);
