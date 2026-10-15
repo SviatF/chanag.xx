@@ -26,6 +26,20 @@ describe("Wave 3AS: do not conflate UT, coordinate frame and physical ephemeris 
    expect(py).toContain("solar_root_samples!=36");
    expect(py).toContain("len(points)");
  });
+ it("rebuilds an alternate C-Lahiri JPL catalog without silently changing the reviewed original",()=>{
+   const py=readFileSync("scripts/wave3as-native-lahiri-anchor-candidate.py","utf8");
+   const compare=readFileSync("scripts/wave3as-native-lahiri-jpl-counterfactual.py","utf8");
+   const workflow=readFileSync(".github/workflows/quality.yml","utf8");
+   expect(py).toContain("ORIGINAL_SHA");
+   expect(py).toContain("maxMeasuredMidpointInterpolationErrorArcsec");
+   expect(py).toContain("Native C apparent Lahiri Moon/Sun frame disagreement");
+   expect(compare).toContain("REVIEWED_SHA");
+   expect(compare).toContain("checkedMatchingJplEventRoots");
+   expect(compare).toContain("ritualCalendarReleaseAllowed");
+   expect(workflow).toContain("--anchors=artifacts/wave3as-native-swiss-lahiri-candidate.json");
+   expect(workflow).toContain("--report=artifacts/wave3as-jpl-native-lahiri-root-candidate.json");
+   expect(workflow).not.toContain("--report=artifacts/wave3ao-jpl-global-sidereal-transitions.json --anchors=artifacts/wave3as");
+ });
  it("retains explicit release blockers after a green diagnostic",()=>{
    const py=readFileSync("scripts/wave3as-native-coordinate-decomposition.py","utf8");
    expect(py).toContain("astronomicalReferenceFullyCertified");
