@@ -31,7 +31,7 @@ for(const [jplMs,index] of source.table.events.sunRashi){
   const atUtc=new Date(jplMs).toISOString();
   add(atUtc,"Solar Rashi JPL root "+index);
 }
-for(const [family,v] of Object.entries(prior.family)){
+for(const [family,v] of Object.entries(prior.family as Record<string,{worst:Array<{atUtc:string;targetIndex:number}>}>)){
   for(const item of v.worst){
     add(item.atUtc,family+" high-offset JPL root "+item.targetIndex);
   }
