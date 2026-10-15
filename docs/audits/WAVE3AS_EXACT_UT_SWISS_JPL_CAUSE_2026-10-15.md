@@ -15,6 +15,27 @@ Across 9,322 precisely bracketed JPL/Swiss physical transitions, Solar Rashi had
 - Fail CI if the source or timestamp is missing, identical Sun/Moon Lahiri convention breaks, a coordinate is nonfinite, or the decomposition does not close. Produce per-body maximum/mean/median arcsecond difference and raw values in an archived JSON report.
 - **No numerical “fix” is applied until the source code / reference-frame cause is resolved.** A linear correction to transition clocks is NOT physically justified; fixing a few festival labels would risk new errors at the next boundary.
 
+## Confirmed identical-time root-cause decomposition (99 physical UTC instants)
+
+The first reproducible native C vs pure TypeScript Swiss measurement across 99 source-locked instants, including all 36 JPL Solar Rashi roots, found:
+
+| Comparison | Largest absolute angular residual |
+|---|---:|
+| JS vs native **Delta-T** | **0.000000 seconds** |
+| Sun tropical apparent ecliptic longitude | **54.872393 arcseconds** |
+| Moon tropical apparent ecliptic longitude | **34.569666 arcseconds** |
+| Sun/Moon *effective Lahiri* (tropical minus sidereal) | **17.284824 arcseconds** |
+| Sun sidereal longitude | **37.850182 arcseconds** |
+| Moon sidereal longitude | **17.284842 arcseconds** |
+
+**Delta-T is identical** at the measured instants; an UT↔ET correction cannot explain 929 seconds of root-clock divergence. Real differences exist in both the tropical sky-position output and in the Lahiri transformation. Therefore one cannot simply subtract 929 seconds or shift the event timestamps of all Solar Rashi dates.
+
+### Implemented parallel frame-correction experiment
+
+Wave 3AS now regenerates an **alternate six-hour Lahiri grid using native Swiss Ephemeris C** at all original anchor instants. It verifies the reviewed original input SHA, measures native Sun–Moon frame equivalence and interpolated midpoint error, and **does not overwrite** the original Wave3AO Lahiri/JPL source. Using the *same JPL DE440s binary and same precise root-solving algorithm*, it generates an independent alternate set of 7,096 lunar/solar sidereal transitions, then compares clock differences with the original and all 36 native-C Solar Rashi transitions. This is a test of the consequence of changing the reference-frame source, not a certification of the convention.
+
+**Release remains blocked:** choosing native Swiss C's Lahiri implementation is a new source policy requiring independent calendar/regional validation, not an automatic substitute for all visible PANCHVANI dates.
+
 ## Exact hold points
 
 The JPL DE440s physical Sun and Moon coordinate events are a separate referenced source. The Lahiri frame of the JPL sidereal catalog still uses Swiss-derived six-hour apparent correction anchors. Moon phase/Tithi is independent of ayanamsa, but Nakshatra, Yoga, Rashi, month naming and Samvat depend on accepted sidereal conventions. Calendar-visible V5, all Vrat/Festival/Muhurat decisions and SEO remain unchanged.
