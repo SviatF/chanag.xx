@@ -6,6 +6,7 @@ on:
     paths:
       - "scripts/wave3aq-exhaustive-sunrise.ts"
       - "scripts/wave3aq-aggregate-year-reports.mjs"
+      - "scripts/wave3ar-disagreement-triage.mjs"
       - "lib/v6-exhaustive-sunrise-evidence.ts"
       - "lib/v6-unified-calendar-staging.ts"
       - "lib/jpl-v6-*.ts"
@@ -112,6 +113,16 @@ jobs:
 
       - name: Reject incomplete, duplicate or mixed-source three-year census
         run: node scripts/wave3aq-aggregate-year-reports.mjs
+
+      - name: Triage every original V5-vs-JPL model-disagreement row against actual boundary distance
+        run: node scripts/wave3ar-disagreement-triage.mjs
+
+      - name: Archive Wave 3AR full three-year boundary review queues
+        uses: actions/upload-artifact@v4
+        with:
+          name: wave3ar-all-source-discrepancies-ritual-review-blocked
+          path: artifacts/wave3ar-v5-jpl-2562-disagreement-triage.json
+          if-no-files-found: error
 
       - name: Publish research-only census proof (never deploy)
         uses: actions/upload-artifact@v4
