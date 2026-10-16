@@ -374,6 +374,21 @@ jobs:
           path: artifacts/wave3at-native-lahiri-sankranti-sunrise-impact.json
           if-no-files-found: error
 
+      - name: Type-check regional Sankranti civil-date research and release blockers (Wave 3AU)
+        run: npx tsc --noEmit -p tsconfig.wave3au.json
+
+      - name: Reconcile 454-city exact local month-start convention dates across all 36 ingresses
+        timeout-minutes: 9
+        run: npm run audit:jpl-v6-sankranti-regional-review
+
+      - name: Archive Wave 3AU regional rule candidate and independent-review queue
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: wave3au-454-city-regional-sankranti-research-only
+          path: artifacts/wave3au-sankranti-regional-rule-review.json
+          if-no-files-found: error
+
       - name: Archive Wave 3AS ephemeris-versus-Lahiri cause evidence (not a release)
         if: always()
         uses: actions/upload-artifact@v4
