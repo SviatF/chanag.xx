@@ -28,7 +28,7 @@ export async function generateMetadata({params}:{params:Promise<{event:string;ye
   const monthName=monthLabel(year,month);
   const closure=getVerifiedMuhuratClosure(p.event,year,month,cityBySlug("mumbai"));
   if(closure)return {title:`${rule.title} — ${p.event==="wedding"?"No Traditional Marathi Wedding Dates":"No Customary Marathi House-Entry Dates"}, ${monthName} ${year} · Mumbai`,description:closure.headline+`. ${closure.reason} under the reviewed ${closure.convention} convention.`,alternates:{canonical:`/muhurat/${p.event}/${year}/${p.month}`},robots:robotsFor(isMonthlyMuhuratIndexable(p.event,year,month))};
-  return {title:`${rule.title} — ${monthName} ${year} Candidate Dates`,description:`${rule.title} candidate dates for ${monthName} ${year} with Mumbai-baseline score spread, clean-time supply and event-specific continuity metrics.`,alternates:{canonical:`/muhurat/${p.event}/${year}/${p.month}`},robots:robotsFor(isMonthlyMuhuratIndexable(p.event,year,month))};
+  return {title:`${rule.title} — ${monthName} ${year} Candidate Dates`,description:`${rule.title} astronomical candidates for ${monthName} ${year} from Mumbai sunrise data; not verified ceremony dates.`,alternates:{canonical:`/muhurat/${p.event}/${year}/${p.month}`},robots:robotsFor(isMonthlyMuhuratIndexable(p.event,year,month))};
 }
 
 export default async function MuhuratPage({params}:{params:Promise<{event:string;year:string;month:string}>}){
@@ -44,11 +44,10 @@ export default async function MuhuratPage({params}:{params:Promise<{event:string
   const similarity=buildMuhuratMonthSimilarityContext(p.event,year,month,rows);
   const cityLinks=muhuratCityAuthorityLinks(p.event,year,month);
   const ld={"@context":"https://schema.org","@graph":[
-    {"@type":"CollectionPage","name":`${rule.title} candidate dates — ${monthName} ${year}`,"url":`https://panchvani.com/muhurat/${p.event}/${year}/${p.month}`,"description":quality.directAnswer},
-    {"@type":"ItemList","name":`${rule.title} screened candidate dates`,"itemListElement":rows.map((r,index)=>({"@type":"ListItem","position":index+1,"name":`${r.date} · Planning Score ${r.planning.score}/100`,"url":`https://panchvani.com/panchang/${city.slug}/${r.date}`}))}
+    {"@type":"CollectionPage","name":`${rule.title} astronomical screening reference — ${monthName} ${year}`,"url":`https://panchvani.com/muhurat/${p.event}/${year}/${p.month}`,"description":verification.explanation}
   ]};
 
-  return <main><Header city={city}/><div className="page-shell internal-visual internal-muhurat">
+  return <main data-ritual-status="candidate-only"><Header city={city}/><div className="page-shell internal-visual internal-muhurat">
     <div className="breadcrumbs"><Link href={muhuratYearPath(p.event,year)}>{rule.title} {year}</Link> / {monthName}</div>
     <p className="page-kicker">MUHURAT ANALYSIS · MUMBAI BASELINE</p>
     <h1 className="page-title">{rule.title}<br/>{monthName} {year}</h1>

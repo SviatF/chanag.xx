@@ -29,7 +29,7 @@ export async function generateMetadata({params}:{params:Promise<{event:string;ye
   const heading=buildMuhuratCityMonthHeading(rule.title,city.name,year,month);
   const closure=getVerifiedMuhuratClosure(p.event,year,month,city);
   if(closure)return {title:`${rule.title} — ${p.event==="wedding"?"No Traditional Marathi Wedding Dates":"No Customary Marathi House-Entry Dates"} in ${city.name} · ${heading.period}`,description:closure.headline+`. ${closure.reason} under the reviewed ${closure.convention} convention.`,alternates:{canonical:`/muhurat/${p.event}/${year}/${p.month}/${city.slug}`},robots:robotsFor(isMonthlyMuhuratIndexable(p.event,year,month,city.slug))};
-  return {title:`${heading.full} Candidate Dates`,description:`${heading.full}: local clean-time rankings, score spread, timing-source coverage and event-specific continuity metrics.`,alternates:{canonical:`/muhurat/${p.event}/${year}/${p.month}/${city.slug}`},robots:robotsFor(isMonthlyMuhuratIndexable(p.event,year,month,city.slug))};
+  return {title:`${heading.full} Candidate Dates`,description:`${heading.full}: sunrise-based Tithi/Nakshatra and daytime interval screening; dates are not verified ceremony recommendations.`,alternates:{canonical:`/muhurat/${p.event}/${year}/${p.month}/${city.slug}`},robots:robotsFor(isMonthlyMuhuratIndexable(p.event,year,month,city.slug))};
 }
 
 export default async function Page({params}:{params:Promise<{event:string;year:string;month:string;city:string}>}){
@@ -46,11 +46,10 @@ export default async function Page({params}:{params:Promise<{event:string;year:s
   const localContext=buildMuhuratCityContext(city,rows,rule.title);
   const similarityContext=buildMuhuratCitySimilarityContext(city,rows,rule.title,year,month);
   const ld={"@context":"https://schema.org","@graph":[
-    {"@type":"CollectionPage","name":`${heading.full} candidate dates`,"url":`https://panchvani.com/muhurat/${p.event}/${year}/${p.month}/${city.slug}`,"description":quality.directAnswer},
-    {"@type":"ItemList","name":`${heading.full} screened candidate dates`,"itemListElement":rows.map((r,index)=>({"@type":"ListItem","position":index+1,"name":`${r.date} · Planning Score ${r.planning.score}/100`,"url":`https://panchvani.com/panchang/${city.slug}/${r.date}`}))}
+    {"@type":"CollectionPage","name":`${heading.full} astronomical screening reference — not ceremony approval`,"url":`https://panchvani.com/muhurat/${p.event}/${year}/${p.month}/${city.slug}`,"description":verification.explanation}
   ]};
 
-  return <main><Header city={city}/><div className="page-shell internal-visual internal-muhurat">
+  return <main data-ritual-status="candidate-only"><Header city={city}/><div className="page-shell internal-visual internal-muhurat">
     <div className="breadcrumbs"><Link href={muhuratYearPath(p.event,year)}>{rule.title} {year}</Link> / <Link href={`/muhurat/${p.event}/${year}/${p.month}`}>{heading.period}</Link> / {city.name}</div>
     <p className="page-kicker">LOCAL MUHURAT ANALYSIS · {city.state}</p>
     <h1 className="page-title">{heading.primary}<br/>{heading.period}</h1>
