@@ -75,7 +75,7 @@ export default async function YearlyMuhurat({params}:{params:Promise<{event:stri
     <section className="wide-panel"><div className="seo-copy"><h2>{quality.rankingTitle}</h2><p>{quality.rankingBody}</p></div></section>
     <section className="wide-panel"><div className="seo-copy"><h2>{quality.ruleTitle}</h2><p>{quality.ruleBody}</p></div></section>
 
-    <section className="wide-panel"><h2 className="page-title" style={{fontSize:32}}>Month-by-month {year}</h2><div className="city-directory">{summary.months.map(item=><Link href={`/muhurat/${p.event}/${year}/${item.slug}`} key={item.slug}><small>{item.qualified} screened candidate dates · avg clock availability {item.averageScore}/100</small><strong>{item.name}</strong><span>{item.top?`Most clean time ${item.top.date} · ${item.top.planning.score}/100 clock supply · ${item.top.planning.longestWindowMinutes} min longest block`:"No configured-profile candidate"}</span></Link>)}</div></section>
+    <section className="wide-panel"><h2 className="page-title" style={{fontSize:32}}>Month-by-month {year}</h2><div className="city-directory">{summary.months.map(item=><Link href={`/muhurat/${p.event}/${year}/${item.slug}`} key={item.slug}><small>{item.qualified} screened candidate dates · avg clock availability {item.averageScore}/100</small><strong>{item.name}</strong><span>{item.top?`Top clock-availability score ${item.top.date} · ${item.top.planning.score}/100 · ${item.top.planning.longestWindowMinutes} min longest block`:"No configured-profile candidate"}</span></Link>)}</div></section>
 
     {p.event==="wedding"&&weddingEvidenceRows.length?<section className="wide-panel">
       <div className="seo-copy">
