@@ -1,0 +1,1 @@
+{"extends":"./tsconfig.json","include":["scripts/wave3au-sankranti-regional-review.ts","lib/wave3au-sankranti-policy.ts"],"exclude":["node_modules","tests","app","components",".next","dist"]}
