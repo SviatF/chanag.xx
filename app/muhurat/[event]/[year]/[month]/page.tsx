@@ -52,7 +52,6 @@ export default async function MuhuratPage({params}:{params:Promise<{event:string
     <p className="page-kicker">MUHURAT ANALYSIS · MUMBAI BASELINE</p>
     <h1 className="page-title">{rule.title}<br/>{monthName} {year}</h1>
     <p className="page-subtitle">{quality.directAnswer}</p>
-    <p className="page-subtitle">A 0–100 clock-window availability score describes screened daytime intervals only. Even a 100/100 score is NOT an approved wedding, house-entry or purchase ceremony date.</p>
     <section className="wide-panel"><div className="seo-copy"><small>BASELINE RITUAL VERIFICATION · {p.event.toUpperCase()}</small><h2>{verification.headline}</h2><p>{verification.explanation}</p></div></section>
 
     <div className="data-grid">{quality.facts.map(item=><div className="data-card" key={item.label}><small>{item.label}</small><strong>{item.value}</strong>{item.note?<small>{item.note}</small>:null}</div>)}</div>
