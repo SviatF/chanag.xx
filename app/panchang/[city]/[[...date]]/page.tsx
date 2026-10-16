@@ -91,27 +91,18 @@ export default async function PanchangPage({params}:{params:Promise<{city:string
       <div className="data-card"><small>Day Lord</small><strong>{data.dayLord}</strong></div>
     </div>
     {boundaryNotice?<section className="wide-panel" aria-label="Sunrise Tithi source review"><div className="seo-copy"><small>SUNRISE BOUNDARY · SOURCE REVIEW</small><h2>Minute-sensitive Tithi evidence for {city.name}</h2><p>{boundaryNotice.summary}</p><p>Published calendars disagree or omit the second-level precision needed to determine the exact sunrise order. A sunrise-based Tithi is not automatically a tradition-approved Vrat or Muhurat date. For conventions and corrections, see the <Link href="/accuracy">accuracy policy</Link> and <Link href="/corrections">corrections process</Link>.</p></div></section>:null}
-    <div className="wide-panel"><h2 className="page-title" style={{fontSize:32}}>Auspicious & avoid periods</h2><div className="timing-row">
+    <div className="wide-panel"><h2 className="page-title" style={{fontSize:32}}>Calculated local timing intervals · {data.date}</h2><div className="timing-row">
       <div className="timing-chip good"><small>Abhijit Muhurat</small><strong>{formatWindow(data.abhijit)}</strong></div>
       <div className="timing-chip bad"><small>Rahu Kalam</small><strong>{formatWindow(data.rahu)}</strong></div>
       <div className="timing-chip bad"><small>Yamaganda</small><strong>{formatWindow(data.yamaganda)}</strong></div>
       <div className="timing-chip bad"><small>Gulika Kalam</small><strong>{formatWindow(data.gulika)}</strong></div>
     </div></div>
     <section className="wide-panel">
-      <h2 className="page-title" style={{fontSize:32}}>Calculated local timing intervals · ${data.date}</h2>
-      <div className="timing-row">
-        <div className="timing-chip good"><small>Abhijit Muhurat</small><strong>{formatWindow(data.abhijit)}</strong></div>
-        <div className="timing-chip bad"><small>Rahu Kalam</small><strong>{formatWindow(data.rahu)}</strong></div>
-        <div className="timing-chip bad"><small>Yamaganda</small><strong>{formatWindow(data.yamaganda)}</strong></div>
-        <div className="timing-chip bad"><small>Gulika Kalam</small><strong>{formatWindow(data.gulika)}</strong></div>
-      </div>
-    </section>
-    <section className="wide-panel">
       <h2 className="page-title" style={{fontSize:32}}>How to read these local timings</h2>
-      <p className="page-subtitle">The Tithi and Nakshatra above describe the state at the calculated ${city.name} sunrise on ${data.date}. Their end times may fall on the following civil date. Rahu Kalam, Yamaganda, Gulika and Choghadiya are local time intervals; they do not independently establish whether a wedding, fast or other ritual is permitted.</p>
+      <p className="page-subtitle">The Tithi and Nakshatra above describe the state at the calculated {city.name} sunrise on {data.date}. Their end times may fall on the following civil date. Rahu Kalam, Yamaganda, Gulika and Choghadiya are local time intervals; they do not independently establish whether a wedding, fast or other ritual is permitted.</p>
       <p>See <Link href="/methodology">calculation methodology</Link> and <Link href="/accuracy">data accuracy status</Link> for conventions, uncertainty and limitations.</p>
     </section>
-    <div className="wide-panel"><h2 className="page-title" style={{fontSize:32}}>Choghadiya · ${city.name} · ${data.date}</h2>
+    <div className="wide-panel"><h2 className="page-title" style={{fontSize:32}}>Choghadiya · {city.name} · {data.date}</h2>
       <p className="page-subtitle">Eight daytime and eight nighttime intervals derived from local sunrise, sunset and next sunrise.</p><ChoghadiyaTable day={data.dayChoghadiya} night={data.nightChoghadiya}/></div>
     <section className="wide-panel">
       <div className="seo-copy"><h2>{qualityContent.transitionTitle}</h2><p>{qualityContent.transitionBody}</p></div>
