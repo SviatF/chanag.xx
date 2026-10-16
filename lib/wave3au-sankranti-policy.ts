@@ -46,6 +46,7 @@ export function regionalIngressCandidates(ingressUtcMs:number,day:LocalSolarDay)
   if(istDate(ingressUtcMs)!==day.date||istDate(day.sunriseUtcMs)!==day.date||
      istDate(day.sunsetUtcMs)!==day.date)
     throw Error("Ingress and solar clocks are not from the same IST civil day");
+  const midnightStart=Date.parse(day.date+"T00:00:00Z")-IST_OFFSET_MS;
   const midnightNext=Date.parse(addIsoDays(day.date,1)+"T00:00:00Z")-IST_OFFSET_MS;
   const daylight=day.sunsetUtcMs-day.sunriseUtcMs;
   if(daylight<6*3600_000||daylight>16*3600_000)
@@ -61,7 +62,7 @@ export function regionalIngressCandidates(ingressUtcMs:number,day:LocalSolarDay)
     dateOfIngressIst:day.date,
     sourceEventUtc:new Date(ingressUtcMs).toISOString(),
     proposedMonthStart:{
-      "bengal-midnight-v5":following,
+      "bengal-midnight-v5":ingressUtcMs===midnightStart?day.date:following,
       "tamil-sunset-v5":ingressUtcMs<=day.sunsetUtcMs?day.date:following,
       "kerala-three-fifths-v5":ingressUtcMs<=keralaCutoff?day.date:following
     },
