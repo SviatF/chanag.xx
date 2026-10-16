@@ -28,7 +28,7 @@ describe("CT2: public Muhurat trust boundary",()=>{
       expect(s).toContain("verification.explanation");
       expect(s).not.toContain('"@type":"ItemList"');
       expect(s).not.toContain("Planning Score ${r.planning.score}/100");
-      expect(s).toContain("availability {r.planning.grade}");
+      expect(s).toContain("{verification.headline}");
     }
     const s=readFileSync("lib/muhurat.ts","utf8");
     expect(s).toContain("getVerifiedMuhuratClosure");
