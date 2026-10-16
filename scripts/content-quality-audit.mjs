@@ -4,6 +4,7 @@ import {extractSeoIdentity,auditSeoIdentity} from "./seo-identity-quality.mjs";
 import {inspectDailyVisibleFacts,summarizeDailyFactIntegrity} from "./daily-fact-integrity.mjs";
 import {inspectCrossPageCalendar,reconcileRenderedCalendar} from "./crosspage-calendar-integrity.mjs";
 import {chooseUnlistedDailyReferences} from "./unlisted-calendar-reference-sampler.mjs";
+import {inspectRenderedContentTrust,summarizeContentTrust} from "./content-trust-integrity.mjs";
 
 const args=process.argv.slice(2);
 function arg(name,fallback){
@@ -208,6 +209,7 @@ function auditPage(pathname,html){
   const h1=extractH1(html);
   const seo=extractSeoIdentity(html);
   const dailyFact=inspectDailyVisibleFacts(pathname,html);
+  const contentTrust=inspectRenderedContentTrust(pathname,html);
   const issues=[];
   const warnings=[];
   if(!canonical)issues.push("missing canonical");
@@ -232,6 +234,7 @@ function auditPage(pathname,html){
     h1,
     seo,
     dailyFact,
+    contentTrust,
     crossPage:inspectCrossPageCalendar(pathname,html),
     factualEvidence,
     wordCount:words.length,
@@ -297,6 +300,7 @@ for(const [canonical,owners] of canonicalOwners)if(owners.length>1)duplicateCano
 
 const seoIdentity=auditSeoIdentity(pages);
 const dailyFactIntegrity=summarizeDailyFactIntegrity(pages.map(page=>page.dailyFact));
+const contentTrust=summarizeContentTrust(pages.map(page=>page.contentTrust));
 // Check non-sitemap Daily URLs directly, without adding low-value pages
 // to sitemap/index. All reference owners stay available for reconciliation.
 const preliminaryCrossPage=reconcileRenderedCalendar(pages.map(page=>page.crossPage));
@@ -365,6 +369,8 @@ const report={
     crossPageCalendarMatchedVrat:crossPageCalendar.matchedVrat,
     dailyFactFailures:dailyFactIntegrity.failures.length,
     dailyFactIdenticalGroups:dailyFactIntegrity.identicalLocalFactGroups.length,
+    contentTrustReviewed:contentTrust.inspected,
+    contentTrustFailures:contentTrust.failures.length,
     seoIdentityIssues:seoIdentity.issues.length,
     duplicateSeoTitles:seoIdentity.duplicateTitles.length,
     duplicateMetaDescriptions:seoIdentity.duplicateDescriptions.length,
@@ -374,6 +380,7 @@ const report={
   familySummary,
   seoIdentity,
   dailyFactIntegrity,
+  contentTrust,
   crossPageCalendar,
   unlistedAudit,
   evidenceNote:"Quantitative evidence counts are observation and prioritization only, not independent fact verification.",
@@ -395,6 +402,7 @@ console.log(`[content-audit] rendered daily facts=${dailyFactIntegrity.dailyPage
 console.log(`[content-audit] crossPage month=${crossPageCalendar.matchedMonth}/${crossPageCalendar.monthRows} vrat=${crossPageCalendar.matchedVrat}/${crossPageCalendar.vratRows} contradictions=${crossPageCalendar.contradictions.length} unmatched=${crossPageCalendar.missingCounterparts.length}`);
 console.log(`[content-audit] directUnlisted verified=${unlistedAudit.verified}/${unlistedAudit.requested} errors=${unlistedAudit.fetchErrors.length} uniqueTargetUniverse=${unlistedAudit.uniqueTargets}`);
 console.log(`[content-audit] disclaimerPages=${report.totals.disclaimerPages}`);
+console.log(`[content-audit] trust reviewed=${contentTrust.inspected} regressions=${contentTrust.failures.length}; external astronomical/ritual review remains open`);
 console.log(`[content-audit] report=${reportPath}`);
 if(similarityPairs.length)console.log("[content-audit] top similarity risks:\n"+similarityPairs.slice(0,20).map(pair=>`  ${pair.score} ${pair.left} <> ${pair.right}`).join("\n"));
 
@@ -404,6 +412,7 @@ if(structuralIssues.length)fatal.push(`${structuralIssues.length} structural iss
 if(hreflangIssues.length)fatal.push(`${hreflangIssues.length} hreflang reciprocity issue(s)`);
 if(duplicateCanonicals.length)fatal.push(`${duplicateCanonicals.length} duplicate canonical owner(s)`);
 if(dailyFactIntegrity.failures.length)fatal.push(`${dailyFactIntegrity.failures.length} invalid rendered daily fact(s)`);
+if(contentTrust.failures.length)fatal.push(`${contentTrust.failures.length} unreviewed Daily content claim(s)`);
 if(crossPageCalendar.contradictions.length)fatal.push(`${crossPageCalendar.contradictions.length} cross-page lunar contradiction(s)`);
 if(onDemandErrors.length)fatal.push(`${onDemandErrors.length} failed direct non-sitemap Daily fact(s)`);
 if(seoIdentity.issues.length)fatal.push(`${seoIdentity.issues.length} indexed page identity problem(s)`);
