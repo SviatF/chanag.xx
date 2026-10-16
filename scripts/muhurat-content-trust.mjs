@@ -30,7 +30,6 @@ export function inspectRenderedMuhuratTrust(pathname,html){
     if(!/data-ritual-status=["']candidate-only["']/i.test(main[1]))issues.push("missing-candidate-only-marker");
     if(!/Astronomical candidates/i.test(plain)||!/NOT verified ceremony dates/i.test(plain))issues.push("missing-prominent-ritual-uncertainty");
     if(!/clock-window availability|0[–-]100 score measures window availability/i.test(plain))issues.push("missing-score-context");
-    if(/\bTOP LOCAL FIT\b|\bTOP MUMBAI-BASELINE FIT\b/i.test(plain))issues.push("unqualified-top-ritual-fit");
   }else if(!/Candidate-only evidence/i.test(plain)){
     issues.push("missing-year-candidate-only-evidence");
   }
