@@ -52,7 +52,8 @@
     "audit:jpl-v6-root-clocks": "npx --yes tsx@4.23.13 scripts/wave3ar-reconcile-jpl-swiss-event-clocks.ts",
     "audit:jpl-v6-root-triage": "node scripts/wave3ar-disagreement-triage.mjs",
     "audit:jpl-v6-coordinate-js": "npx --yes tsx@4.23.13 scripts/wave3as-js-coordinate-baseline.ts",
-    "audit:jpl-v6-sankranti-impact": "npx --yes tsx@4.23.13 scripts/wave3at-sankranti-native-frame-impact.ts"
+    "audit:jpl-v6-sankranti-impact": "npx --yes tsx@4.23.13 scripts/wave3at-sankranti-native-frame-impact.ts",
+    "audit:jpl-v6-sankranti-regional-review": "npx --yes tsx@4.23.13 scripts/wave3au-sankranti-regional-review.ts"
   },
   "dependencies": {
     "@types/node": "^22.10.0",
