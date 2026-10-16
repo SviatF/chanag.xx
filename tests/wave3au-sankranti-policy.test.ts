@@ -34,6 +34,13 @@ describe("Wave 3AU: separate model sign-at-sunrise from regional month-start dat
     expect(morning.ritualDateApproved).toBe(false);
     expect(morning.independentlyCertified).toBe(false);
   });
+  it("handles ingress at exactly 00:00 IST like the V5 midnight sign state",()=>{
+    const localMidnight=Date.UTC(2027,2,14,18,30);
+    expect(regionalIngressCandidates(localMidnight,day).proposedMonthStart["bengal-midnight-v5"])
+      .toBe("2027-03-15");
+    expect(regionalIngressCandidates(localMidnight+1,day).proposedMonthStart["bengal-midnight-v5"])
+      .toBe("2027-03-16");
+  });
   it("correctly assigns exact ingress at sunset or Kerala 3/5 threshold",()=>{
     const keralaCutoff=event(7.2);
     expect(regionalIngressCandidates(keralaCutoff,day).proposedMonthStart["kerala-three-fifths-v5"])
