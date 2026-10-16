@@ -179,7 +179,7 @@ try{
           city:city.slug,state:city.state,eventIndex:i,solarSignIndex:oldEvent[1],
           originalEventUtc:new Date(oldEvent[0]).toISOString(),
           nativeCandidateEventUtc:new Date(newEvent[0]).toISOString(),
-          originalDateIst:original.date,nativeDateIst:candidate.date,
+          originalDateIst:originalDay.date,nativeDateIst:candidateDay.date,
           sunriseUtc:new Date(originalDay.sunriseUtcMs).toISOString(),
           sunsetUtc:new Date(originalDay.sunsetUtcMs).toISOString(),
           previousWaveSunriseDisagreement:sunriseChanged,
