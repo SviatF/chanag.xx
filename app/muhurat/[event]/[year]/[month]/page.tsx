@@ -28,7 +28,7 @@ export async function generateMetadata({params}:{params:Promise<{event:string;ye
   const monthName=monthLabel(year,month);
   const closure=getVerifiedMuhuratClosure(p.event,year,month,cityBySlug("mumbai"));
   if(closure)return {title:`${rule.title} — ${p.event==="wedding"?"No Traditional Marathi Wedding Dates":"No Customary Marathi House-Entry Dates"}, ${monthName} ${year} · Mumbai`,description:closure.headline+`. ${closure.reason} under the reviewed ${closure.convention} convention.`,alternates:{canonical:`/muhurat/${p.event}/${year}/${p.month}`},robots:robotsFor(isMonthlyMuhuratIndexable(p.event,year,month))};
-  return {title:`${rule.title} — ${monthName} ${year} Candidate Dates`,description:`${rule.title} candidate dates for ${monthName} ${year} with Mumbai-baseline score spread, clean-time supply and event-specific continuity metrics.`,alternates:{canonical:`/muhurat/${p.event}/${year}/${p.month}`},robots:robotsFor(isMonthlyMuhuratIndexable(p.event,year,month))};
+  return {title:`${rule.title} — ${monthName} ${year} Candidate Dates`,description:`${rule.title} astronomical candidates for ${monthName} ${year} from Mumbai sunrise data; not verified ceremony dates.`,alternates:{canonical:`/muhurat/${p.event}/${year}/${p.month}`},robots:robotsFor(isMonthlyMuhuratIndexable(p.event,year,month))};
 }
 
 export default async function MuhuratPage({params}:{params:Promise<{event:string;year:string;month:string}>}){
@@ -44,11 +44,10 @@ export default async function MuhuratPage({params}:{params:Promise<{event:string
   const similarity=buildMuhuratMonthSimilarityContext(p.event,year,month,rows);
   const cityLinks=muhuratCityAuthorityLinks(p.event,year,month);
   const ld={"@context":"https://schema.org","@graph":[
-    {"@type":"CollectionPage","name":`${rule.title} candidate dates — ${monthName} ${year}`,"url":`https://panchvani.com/muhurat/${p.event}/${year}/${p.month}`,"description":quality.directAnswer},
-    {"@type":"ItemList","name":`${rule.title} screened candidate dates`,"itemListElement":rows.map((r,index)=>({"@type":"ListItem","position":index+1,"name":`${r.date} · Planning Score ${r.planning.score}/100`,"url":`https://panchvani.com/panchang/${city.slug}/${r.date}`}))}
+    {"@type":"CollectionPage","name":`${rule.title} astronomical screening reference — ${monthName} ${year}`,"url":`https://panchvani.com/muhurat/${p.event}/${year}/${p.month}`,"description":verification.explanation}
   ]};
 
-  return <main><Header city={city}/><div className="page-shell internal-visual internal-muhurat">
+  return <main data-ritual-status="candidate-only"><Header city={city}/><div className="page-shell internal-visual internal-muhurat">
     <div className="breadcrumbs"><Link href={muhuratYearPath(p.event,year)}>{rule.title} {year}</Link> / {monthName}</div>
     <p className="page-kicker">MUHURAT ANALYSIS · MUMBAI BASELINE</p>
     <h1 className="page-title">{rule.title}<br/>{monthName} {year}</h1>
@@ -68,8 +67,8 @@ export default async function MuhuratPage({params}:{params:Promise<{event:string
     <section className="wide-panel"><div className="seo-copy"><h2>{quality.ruleTitle}</h2><p>{quality.ruleBody}</p></div></section>
 
     {top&&scoreEvidence?<section className="wide-panel"><div className="seo-copy">
-      <small>RANKING EVIDENCE · {rule.title.toUpperCase()} · {city.name.toUpperCase()}</small>
-      <h2>Why {top.date} gets {scoreEvidence.score}/100</h2>
+      <small>CLOCK-WINDOW SCORING EVIDENCE · {rule.title.toUpperCase()} · {city.name.toUpperCase()}</small>
+      <h2>Why {top.date} has {scoreEvidence.score}/100 clock-window availability</h2>
       <p>{scoreEvidence.summary}</p>
       <div className="data-grid">
         <div className="data-card"><small>Longest retained interval</small><strong>{scoreEvidence.continuity}/40</strong></div>
@@ -81,9 +80,9 @@ export default async function MuhuratPage({params}:{params:Promise<{event:string
       {p.event==="wedding"?<p>Wedding Bhadra check for {city.name}: windows overlapping the sunrise-active Vishti Karana, or the following Vishti after Vanija, are removed at their actual dated Karana transitions. Other religious eligibility checks remain unverified.</p>:null}
     </div></section>:null}
 
-    {top?<section className="wide-panel"><div className="seo-copy"><small>TOP MUMBAI-BASELINE FIT</small><h2>{top.date} · {top.planning.grade} · {top.planning.score}/100</h2><p>{top.reasons.join(" · ")}. Longest uninterrupted clean block: {top.planning.longestWindowMinutes} minutes. Total clean-time supply: {top.planning.totalCleanMinutes} minutes.</p><p>{top.recommendedWindows[0]?`First retained window: ${top.recommendedWindows[0].start}–${top.recommendedWindows[0].end} from ${top.recommendedWindows[0].sources.join(" + ")}.`:"The row passes the lunar screen but has no retained favorable daytime block."}</p></div></section>:null}
+    {top?<section className="wide-panel"><div className="seo-copy"><small>TOP MUMBAI CLOCK-WINDOW CANDIDATE · NOT CEREMONY APPROVAL</small><h2>{top.date} · {top.planning.score}/100 clock availability ({top.planning.grade}) · not ceremony approved</h2><p>{top.reasons.join(" · ")}. Longest uninterrupted clean block: {top.planning.longestWindowMinutes} minutes. Total clean-time supply: {top.planning.totalCleanMinutes} minutes.</p><p>{top.recommendedWindows[0]?`First retained window: ${top.recommendedWindows[0].start}–${top.recommendedWindows[0].end} from ${top.recommendedWindows[0].sources.join(" + ")}.`:"The row passes the lunar screen but has no retained favorable daytime block."}</p></div></section>:null}
 
-    <div className="wide-panel"><table className="table"><thead><tr><th>Rank / Date</th><th>Window score /100</th><th>Tithi + Nakshatra · bounded daytime</th><th>Planning windows</th><th>Local exclusions</th></tr></thead><tbody>{rows.length?rows.map((r,index)=><tr key={r.date}><td><small>#{index+1}</small><br/><Link href={`/panchang/${city.slug}/${r.date}`}>{r.date}</Link></td><td><strong>{r.planning.score}/100 · {r.planning.grade}</strong><small style={{display:"block"}}>{r.planning.longestWindowMinutes} min longest · {r.planning.totalCleanMinutes} min clean</small></td><td>{r.reasons.join(" · ")}</td><td>{r.recommendedWindows.length?<>{r.recommendedWindows.slice(0,4).map(window=><span key={`${window.start}-${window.end}`} style={{display:"block",whiteSpace:"nowrap"}}><strong>{window.start}–{window.end}</strong> <small>{window.sources.join(" + ")}</small></span>)}{r.recommendedWindows.length>4?<small>+{r.recommendedWindows.length-4} more retained windows</small>:null}</>:"No retained favorable daytime window"}</td><td>{r.avoidWindows.map(item=><span key={item.label} style={{display:"block",whiteSpace:"nowrap"}}>{item.label}: {item.window.start}–{item.window.end}</span>)}</td></tr>):<tr><td colSpan={5}>No dates matched the configured Tithi + Nakshatra profile for this month.</td></tr>}</tbody></table></div>
+    <div className="wide-panel"><table className="table"><thead><tr><th>Screened date / order</th><th>Clock availability /100</th><th>Tithi + Nakshatra · bounded daytime</th><th>Screened intervals · not ceremony approval</th><th>Local exclusions</th></tr></thead><tbody>{rows.length?rows.map((r,index)=><tr key={r.date}><td><small>#{index+1}</small><br/><Link href={`/panchang/${city.slug}/${r.date}`}>{r.date}</Link></td><td><strong>{r.planning.score}/100 · availability {r.planning.grade}</strong><small style={{display:"block"}}>{r.planning.longestWindowMinutes} min longest · {r.planning.totalCleanMinutes} min clean</small></td><td>{r.reasons.join(" · ")}</td><td>{r.recommendedWindows.length?<>{r.recommendedWindows.slice(0,4).map(window=><span key={`${window.start}-${window.end}`} style={{display:"block",whiteSpace:"nowrap"}}><strong>{window.start}–{window.end}</strong> <small>{window.sources.join(" + ")}</small></span>)}{r.recommendedWindows.length>4?<small>+{r.recommendedWindows.length-4} more retained windows</small>:null}</>:"No retained favorable daytime window"}</td><td>{r.avoidWindows.map(item=><span key={item.label} style={{display:"block",whiteSpace:"nowrap"}}>{item.label}: {item.window.start}–{item.window.end}</span>)}</td></tr>):<tr><td colSpan={5}>No dates matched the configured Tithi + Nakshatra profile for this month.</td></tr>}</tbody></table></div>
 
     {cityLinks.length?<section className="wide-panel">
       <h2 className="page-title" style={{fontSize:32}}>Local {rule.title} by city</h2>
