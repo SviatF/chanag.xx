@@ -98,6 +98,15 @@ export default async function PanchangPage({params}:{params:Promise<{city:string
       <div className="timing-chip bad"><small>Gulika Kalam</small><strong>{formatWindow(data.gulika)}</strong></div>
     </div></div>
     <section className="wide-panel">
+      <h2 className="page-title" style={{fontSize:32}}>Calculated local timing intervals · ${data.date}</h2>
+      <div className="timing-row">
+        <div className="timing-chip good"><small>Abhijit Muhurat</small><strong>{formatWindow(data.abhijit)}</strong></div>
+        <div className="timing-chip bad"><small>Rahu Kalam</small><strong>{formatWindow(data.rahu)}</strong></div>
+        <div className="timing-chip bad"><small>Yamaganda</small><strong>{formatWindow(data.yamaganda)}</strong></div>
+        <div className="timing-chip bad"><small>Gulika Kalam</small><strong>{formatWindow(data.gulika)}</strong></div>
+      </div>
+    </section>
+    <section className="wide-panel">
       <h2 className="page-title" style={{fontSize:32}}>How to read these local timings</h2>
       <p className="page-subtitle">The Tithi and Nakshatra above describe the state at the calculated ${city.name} sunrise on ${data.date}. Their end times may fall on the following civil date. Rahu Kalam, Yamaganda, Gulika and Choghadiya are local time intervals; they do not independently establish whether a wedding, fast or other ritual is permitted.</p>
       <p>See <Link href="/methodology">calculation methodology</Link> and <Link href="/accuracy">data accuracy status</Link> for conventions, uncertainty and limitations.</p>
