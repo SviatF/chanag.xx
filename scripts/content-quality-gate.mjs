@@ -29,6 +29,8 @@ const failures=[];
 if(!report.seoIdentity||!Number.isInteger(report.seoIdentity.programmaticPages))failures.push("SEO identity audit missing or incomplete");
 if(!report.dailyFactIntegrity||!Number.isInteger(report.dailyFactIntegrity.dailyPages)||report.dailyFactIntegrity.dailyPages===0)failures.push("rendered daily fact integrity audit missing or empty");
 if((totals.dailyFactFailures??0)>0)failures.push(`${totals.dailyFactFailures} invalid rendered daily fact(s)`);
+if(!report.contentTrust||report.contentTrust.scope!=="sitemap-indexable-daily"||!Number.isInteger(report.contentTrust.inspected)||report.contentTrust.inspected<1)failures.push("rendered Daily content-trust review missing");
+if((totals.contentTrustFailures??0)>0)failures.push(`${totals.contentTrustFailures} unreviewed Daily guidance/synthetic narration issue(s)`);
 if(!report.crossPageCalendar||!Number.isInteger(report.crossPageCalendar.monthRows))failures.push("rendered cross-page calendar audit missing");
 if((totals.crossPageCalendarContradictions??0)>0)failures.push(`${totals.crossPageCalendarContradictions} cross-page lunar contradictions`);
 if(!report.unlistedAudit||!Number.isInteger(report.unlistedAudit.requested)||
@@ -55,6 +57,7 @@ console.log(`[content-gate] sitemap=${sitemapUrls} fetched=${fetched}`);
 console.log(`[content-gate] structural=${totals.structuralIssues??0} hreflang=${totals.hreflangIssues??0} canonicals=${totals.duplicateCanonicals??0} disclaimers=${totals.disclaimerPages??0}`);
 console.log(`[content-gate] directUnlisted verified=${totals.unlistedDailyVerified??0} errors=${totals.unlistedDailyFailures??0}`);
 console.log(`[content-gate] crossPage month=${totals.crossPageCalendarMatchedMonth??0} vrat=${totals.crossPageCalendarMatchedVrat??0} contradictions=${totals.crossPageCalendarContradictions??0}`);
+console.log(`[content-gate] contentTrust reviewed=${totals.contentTrustReviewed??0} regressions=${totals.contentTrustFailures??0}; independent astronomy/ritual truth NOT certified`);
 console.log(`[content-gate] dailyFactErrors=${totals.dailyFactFailures??0} physically-identical-vectors=${totals.dailyFactIdenticalGroups??0} (review only)`);
 console.log(`[content-gate] seoIdentity issues=${totals.seoIdentityIssues??0} duplicateTitles=${totals.duplicateSeoTitles??0} duplicateDescriptions=${totals.duplicateMetaDescriptions??0}`);
 console.log(`[content-gate] similarity exact=${totals.exactNormalizedDuplicateGroups??0} high=${totals.highSimilarityPairs??0} severe=${totals.severeSimilarityPairs??0}`);

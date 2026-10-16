@@ -8,11 +8,9 @@ import LanguageLinks from "@/components/LanguageLinks";
 import TopicalGraph from "@/components/TopicalGraph";
 import {findCityBySlug} from "@/lib/cities";
 import {buildDailyPanchangQualityContent} from "@/lib/daily-content-engine";
-import {buildDailyCityContext} from "@/lib/daily-city-context";
 import {formatPanchangTime,formatWindow,getPanchang} from "@/lib/panchang";
 import {getLunarMonthConventions} from "@/lib/calendar-conventions";
 import {isDailyIndexable,robotsFor} from "@/lib/seo-policy";
-import {getDailyGuidance} from "@/lib/day-guidance";
 import {nextValidatedFestival} from "@/lib/festival-expansion";
 import {todayInIndia} from "@/lib/dates";
 import {resolveDailyRouteDate} from "@/lib/route-validation";
@@ -50,8 +48,6 @@ export default async function PanchangPage({params}:{params:Promise<{city:string
   const languageAlternates=regionalAlternates(city,undefined,data.date);
   const lunar=getLunarMonthConventions(date,city,data);
   const qualityContent=buildDailyPanchangQualityContent(city,data,lunar);
-  const localContext=buildDailyCityContext(city,data);
-  const guidance=getDailyGuidance(data,city);
   const boundaryNotice=criticalBoundaryNotice(city.slug,data.date);
   const festival=nextValidatedFestival(date);
   const topicalGroups=buildDailyTopicalGraph(city,date,festival);
@@ -95,39 +91,25 @@ export default async function PanchangPage({params}:{params:Promise<{city:string
       <div className="data-card"><small>Day Lord</small><strong>{data.dayLord}</strong></div>
     </div>
     {boundaryNotice?<section className="wide-panel" aria-label="Sunrise Tithi source review"><div className="seo-copy"><small>SUNRISE BOUNDARY · SOURCE REVIEW</small><h2>Minute-sensitive Tithi evidence for {city.name}</h2><p>{boundaryNotice.summary}</p><p>Published calendars disagree or omit the second-level precision needed to determine the exact sunrise order. A sunrise-based Tithi is not automatically a tradition-approved Vrat or Muhurat date. For conventions and corrections, see the <Link href="/accuracy">accuracy policy</Link> and <Link href="/corrections">corrections process</Link>.</p></div></section>:null}
-    <div className="wide-panel"><h2 className="page-title" style={{fontSize:32}}>Auspicious & avoid periods</h2><div className="timing-row">
+    <div className="wide-panel"><h2 className="page-title" style={{fontSize:32}}>Calculated local timing intervals · {data.date}</h2><div className="timing-row">
       <div className="timing-chip good"><small>Abhijit Muhurat</small><strong>{formatWindow(data.abhijit)}</strong></div>
       <div className="timing-chip bad"><small>Rahu Kalam</small><strong>{formatWindow(data.rahu)}</strong></div>
       <div className="timing-chip bad"><small>Yamaganda</small><strong>{formatWindow(data.yamaganda)}</strong></div>
       <div className="timing-chip bad"><small>Gulika Kalam</small><strong>{formatWindow(data.gulika)}</strong></div>
     </div></div>
-    <div className="wide-panel">
-      <h2 className="page-title" style={{fontSize:32}}>Traditional favorable signals · {data.date}</h2>
-      <p className="page-subtitle">{guidance.summary}</p>
-      <div className="data-grid">
-        {guidance.auspicious.map(item=><div className="data-card" key={item.title}><small>Favorable signal</small><strong>{item.title}</strong><small>{item.detail}</small></div>)}
-      </div>
-      <h2 className="page-title" style={{fontSize:32,marginTop:28}}>Traditional timing cautions · {data.date}</h2>
-      <div className="data-grid">
-        {guidance.avoid.map(item=><div className="data-card" key={item.title}><small>Timing caution</small><strong>{item.title}</strong><small>{item.detail}</small></div>)}
-      </div>
-    </div>
-    <div className="wide-panel"><h2 className="page-title" style={{fontSize:32}}>Choghadiya</h2><p className="page-subtitle">Eight daytime and eight nighttime periods for {city.name}.</p><ChoghadiyaTable day={data.dayChoghadiya} night={data.nightChoghadiya}/></div>
-
-    <section className="wide-panel"><div className="seo-copy">
-      <small>DAY FINGERPRINT · {city.name.toUpperCase()}</small>
-      <h2>{qualityContent.fingerprintTitle}</h2>
-      <p>{qualityContent.fingerprintBody}</p>
-    </div><div className="data-grid">{qualityContent.facts.map(item=><div className="data-card" key={item.label}><small>{item.label}</small><strong>{item.value}</strong>{item.note?<small>{item.note}</small>:null}</div>)}</div></section>
-
     <section className="wide-panel">
-      <div className="seo-copy"><small>LOCAL DAY INTERPRETATION · {city.state.toUpperCase()}</small><h2>{localContext.title}</h2><p>{localContext.body}</p><p>{localContext.secondaryBody}</p></div>
-      <div className="data-grid">{localContext.facts.map(item=><div className="data-card" key={item.label}><small>{item.label}</small><strong>{item.value}</strong>{item.note?<small>{item.note}</small>:null}</div>)}</div>
+      <h2 className="page-title" style={{fontSize:32}}>How to read these local timings</h2>
+      <p className="page-subtitle">The Tithi and Nakshatra above describe the state at the calculated {city.name} sunrise on {data.date}. Their end times may fall on the following civil date. Rahu Kalam, Yamaganda, Gulika and Choghadiya are local time intervals; they do not independently establish whether a wedding, fast or other ritual is permitted.</p>
+      <p>See <Link href="/methodology">calculation methodology</Link> and <Link href="/accuracy">data accuracy status</Link> for conventions, uncertainty and limitations.</p>
     </section>
-
-    <section className="wide-panel"><div className="seo-copy"><h2>{qualityContent.transitionTitle}</h2><p>{qualityContent.transitionBody}</p></div></section>
-    <section className="wide-panel"><div className="seo-copy"><h2>{qualityContent.solarTitle}</h2><p>{qualityContent.solarBody}</p><h2>{qualityContent.lunarTitle}</h2><p>{qualityContent.lunarBody}</p></div></section>
-
+    <div className="wide-panel"><h2 className="page-title" style={{fontSize:32}}>Choghadiya · {city.name} · {data.date}</h2>
+      <p className="page-subtitle">Eight daytime and eight nighttime intervals derived from local sunrise, sunset and next sunrise.</p><ChoghadiyaTable day={data.dayChoghadiya} night={data.nightChoghadiya}/></div>
+    <section className="wide-panel">
+      <div className="seo-copy"><h2>{qualityContent.transitionTitle}</h2><p>{qualityContent.transitionBody}</p></div>
+    </section>
+    <section className="wide-panel">
+      <div className="seo-copy"><h2>{qualityContent.solarTitle}</h2><p>{qualityContent.solarBody}</p><h2>{qualityContent.lunarTitle}</h2><p>{qualityContent.lunarBody}</p></div>
+    </section>
     <TopicalGraph title={`Explore ${city.name} Panchang`} groups={topicalGroups}/>
     <div className="wide-panel"><h2>Frequently asked questions</h2>{faq.map(x=><div key={x.q} className="seo-copy"><strong>{x.q}</strong><p>{x.a}</p></div>)}</div>
     <script type="application/ld+json" dangerouslySetInnerHTML={{__html:JSON.stringify(ld)}}/>

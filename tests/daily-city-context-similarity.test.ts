@@ -27,9 +27,12 @@ describe("Daily local-context similarity layer",()=>{
     expect(max).toBeLessThan(0.6);
   });
 
-  it("renders the local context on the public daily route",()=>{
+  it("retains the geo-context generator only as research, without mass publishing synthetic local narratives",()=>{
     const page=readFileSync("app/panchang/[city]/[[...date]]/page.tsx","utf8");
-    expect(page).toContain("buildDailyCityContext");
-    expect(page).toContain("LOCAL DAY INTERPRETATION");
+    expect(page).not.toContain("buildDailyCityContext");
+    expect(page).not.toContain("LOCAL DAY INTERPRETATION");
+    expect(page).not.toContain("DAY FINGERPRINT");
+    expect(page).toContain("calculation methodology");
+    expect(page).toContain("data accuracy status");
   });
 });
