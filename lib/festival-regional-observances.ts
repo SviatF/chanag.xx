@@ -1,5 +1,6 @@
 import type {Festival} from "./festivals";
 import type {City} from "./cities";
+import {getReviewedLocalFestivalDate} from "./festival-local-date";
 export type RegionalFestivalObservance={
   label:string; date:string; message:string;
 };
@@ -9,6 +10,14 @@ export type RegionalFestivalObservance={
  * Audit source: tests/fixtures/festival-regional-date-evidence.ts.
  */
 export function getRegionalFestivalObservance(festival:Festival,city:City):RegionalFestivalObservance|null{
+  const cityDate=getReviewedLocalFestivalDate(festival,city);
+  if(cityDate){
+    return {
+      label:"Source-reviewed local Govardhan Puja date",
+      date:cityDate.date,
+      message:`The reviewed Govardhan Puja / Annakut observance for ${city.name} in 2026 is on Monday, 9 November, not the maintained Delhi-calendar reference of Tuesday, 10 November. The two observance dates follow different local worship-period preferences while Kartika Shukla Pratipada runs across both civil dates. This city's sunrise Tithi, Nakshatra and solar times are recalculated for 9 November from the actual ${city.name} coordinates, rather than reusing 10 November's lunar snapshot. Source: ${cityDate.sourceLocality}, reviewed ${cityDate.observedOn}.`
+    };
+  }
   if(festival.slug==="dussehra"&&festival.year===2026&&city.slug==="kolkata"){
     return {
       label:"Bengal Vijayadashami",
