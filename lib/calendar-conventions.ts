@@ -2,7 +2,7 @@ import type {City} from "./cities";
 import type {Panchang} from "./panchang";
 import {createDefaultSweData} from "@typescriptify/sweph/dist/types.js";
 import {sweCalcUt,sweClose,sweSetSidMode} from "@typescriptify/sweph/dist/sweph.js";
-import {requireSolarEvent,requireSolarSequence} from "./ephemeris-integrity";
+import {requireSolarEvent} from "./ephemeris-integrity";
 import {sweRiseTrans} from "@typescriptify/sweph/dist/swecl.js";
 import {
   SE_SUN,
