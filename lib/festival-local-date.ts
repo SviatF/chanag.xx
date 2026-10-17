@@ -1,5 +1,5 @@
 import type {City} from "./cities";
-import type {Festival} from "./festivals";
+import {allFestivals,indiaFestivalDateIso,type Festival} from "./festivals";
 
 /**
  * Published local observance dates, not algorithmically inferred from longitude,
@@ -50,6 +50,21 @@ export function getReviewedLocalFestivalDate(festival:Festival,city:City):LocalF
 export function getFestivalForCity(festival:Festival,city:City):Festival{
   const reference=getReviewedLocalFestivalDate(festival,city);
   return reference?{...festival,date:reference.date}:festival;
+}
+
+/**
+ * The next REAL date for a particular city, ordered after reviewed local
+ * overrides have been applied. A generic baseline record must not displace a
+ * source-reviewed local observance or be shown on its previous baseline day.
+ *
+ * Null means no future maintained record, NOT a request to recycle 2026.
+ */
+export function nextFestivalForCity(instant:Date,city:City):Festival|null{
+  const today=indiaFestivalDateIso(instant);
+  return allFestivals
+    .map(festival=>getFestivalForCity(festival,city))
+    .filter(festival=>festival.date>=today)
+    .sort((left,right)=>left.date.localeCompare(right.date)||left.slug.localeCompare(right.slug))[0]??null;
 }
 
 /** Explicit evidence for deterministic tests and cross-source reconciliation. */
