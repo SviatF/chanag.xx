@@ -4,6 +4,7 @@ import {extractSeoIdentity,auditSeoIdentity} from "./seo-identity-quality.mjs";
 import {inspectDailyVisibleFacts,summarizeDailyFactIntegrity} from "./daily-fact-integrity.mjs";
 import {inspectCrossPageCalendar,reconcileRenderedCalendar} from "./crosspage-calendar-integrity.mjs";
 import {chooseUnlistedDailyReferences} from "./unlisted-calendar-reference-sampler.mjs";
+import {inspectRenderedDailyTrust,summarizeDailyTrust} from "./daily-content-trust.mjs";
 import {inspectRenderedMuhuratTrust,summarizeMuhuratTrust} from "./muhurat-content-trust.mjs";
 
 const args=process.argv.slice(2);
@@ -209,6 +210,7 @@ function auditPage(pathname,html){
   const h1=extractH1(html);
   const seo=extractSeoIdentity(html);
   const dailyFact=inspectDailyVisibleFacts(pathname,html);
+  const dailyTrust=inspectRenderedDailyTrust(pathname,html);
   const muhuratTrust=inspectRenderedMuhuratTrust(pathname,html);
   const issues=[];
   const warnings=[];
@@ -234,6 +236,7 @@ function auditPage(pathname,html){
     h1,
     seo,
     dailyFact,
+    dailyTrust,
     muhuratTrust,
     crossPage:inspectCrossPageCalendar(pathname,html),
     factualEvidence,
@@ -300,6 +303,7 @@ for(const [canonical,owners] of canonicalOwners)if(owners.length>1)duplicateCano
 
 const seoIdentity=auditSeoIdentity(pages);
 const dailyFactIntegrity=summarizeDailyFactIntegrity(pages.map(page=>page.dailyFact));
+const dailyTrust=summarizeDailyTrust(pages.map(page=>page.dailyTrust));
 const muhuratTrust=summarizeMuhuratTrust(pages.map(page=>page.muhuratTrust));
 // Check non-sitemap Daily URLs directly, without adding low-value pages
 // to sitemap/index. All reference owners stay available for reconciliation.
@@ -369,6 +373,8 @@ const report={
     crossPageCalendarMatchedVrat:crossPageCalendar.matchedVrat,
     dailyFactFailures:dailyFactIntegrity.failures.length,
     dailyFactIdenticalGroups:dailyFactIntegrity.identicalLocalFactGroups.length,
+    dailyTrustInspected:dailyTrust.inspected,
+    dailyTrustFailures:dailyTrust.failures.length,
     muhuratTrustInspected:muhuratTrust.inspected,
     muhuratTrustFailures:muhuratTrust.failures.length,
     seoIdentityIssues:seoIdentity.issues.length,
@@ -380,6 +386,7 @@ const report={
   familySummary,
   seoIdentity,
   dailyFactIntegrity,
+  dailyTrust,
   muhuratTrust,
   crossPageCalendar,
   unlistedAudit,
@@ -402,6 +409,7 @@ console.log(`[content-audit] rendered daily facts=${dailyFactIntegrity.dailyPage
 console.log(`[content-audit] crossPage month=${crossPageCalendar.matchedMonth}/${crossPageCalendar.monthRows} vrat=${crossPageCalendar.matchedVrat}/${crossPageCalendar.vratRows} contradictions=${crossPageCalendar.contradictions.length} unmatched=${crossPageCalendar.missingCounterparts.length}`);
 console.log(`[content-audit] directUnlisted verified=${unlistedAudit.verified}/${unlistedAudit.requested} errors=${unlistedAudit.fetchErrors.length} uniqueTargetUniverse=${unlistedAudit.uniqueTargets}`);
 console.log(`[content-audit] disclaimerPages=${report.totals.disclaimerPages}`);
+console.log(`[content-audit] CT3 Daily trust reviewed=${dailyTrust.inspected} regressions=${dailyTrust.failures.length}; independent truth remains unverified`);
 console.log(`[content-audit] Muhurat trust=${muhuratTrust.inspected} unresolved claims=${muhuratTrust.failures.length}; independent ritual verification still open`);
 console.log(`[content-audit] report=${reportPath}`);
 if(similarityPairs.length)console.log("[content-audit] top similarity risks:\n"+similarityPairs.slice(0,20).map(pair=>`  ${pair.score} ${pair.left} <> ${pair.right}`).join("\n"));
@@ -412,6 +420,7 @@ if(structuralIssues.length)fatal.push(`${structuralIssues.length} structural iss
 if(hreflangIssues.length)fatal.push(`${hreflangIssues.length} hreflang reciprocity issue(s)`);
 if(duplicateCanonicals.length)fatal.push(`${duplicateCanonicals.length} duplicate canonical owner(s)`);
 if(dailyFactIntegrity.failures.length)fatal.push(`${dailyFactIntegrity.failures.length} invalid rendered daily fact(s)`);
+if(dailyTrust.failures.length)fatal.push(`${dailyTrust.failures.length} Daily trust claim(s)`);
 if(muhuratTrust.failures.length)fatal.push(`${muhuratTrust.failures.length} Muhurat presentation trust issue(s)`);
 if(crossPageCalendar.contradictions.length)fatal.push(`${crossPageCalendar.contradictions.length} cross-page lunar contradiction(s)`);
 if(onDemandErrors.length)fatal.push(`${onDemandErrors.length} failed direct non-sitemap Daily fact(s)`);

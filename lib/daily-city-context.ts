@@ -13,7 +13,6 @@ export type DailyCityContext={
 
 function clockMinutes(value:string){const [h,m]=value.split(":").map(Number);return Number.isFinite(h)&&Number.isFinite(m)?h*60+m:0;}
 function daylight(data:Panchang){const start=clockMinutes(data.sunrise),end=clockMinutes(data.sunset);return end>=start?end-start:end+1440-start;}
-function phase(minutes:number){if(minutes<360)return "pre-six sunrise";if(minutes<390)return "early sunrise";if(minutes<420)return "mid-morning-edge sunrise";return "late sunrise";}
 function transitionBand(time:string,endDate:string|null,baseDate:string,sunrise:string,sunset:string){
   // An HH:MM clock alone cannot classify next-day lunar boundaries.
   if(!/^([01]\d|2[0-3]):[0-5]\d$/.test(time)||!endDate||endDate<baseDate)return "unresolved local-time boundary";
@@ -87,7 +86,7 @@ export function buildDailyCityContext(city:City,data:Panchang):DailyCityContext{
   const firstGood=good[0];
   const lastGood=good[good.length-1];
   const moonState=data.moonIllumination<25?"low-illumination":data.moonIllumination<55?"mid-illumination":data.moonIllumination<80?"brightening":"high-illumination";
-  const sunrisePhase=phase(clockMinutes(data.sunrise));
+  const sunrisePhase=`sunrise at ${data.sunrise} IST`;
   const dayShape=wordsMinutes(dayMinutes);
   const rahuOffset=Math.max(0,clockMinutes(data.rahu.start)-clockMinutes(data.sunrise));
   const bodyVariant=key%8;

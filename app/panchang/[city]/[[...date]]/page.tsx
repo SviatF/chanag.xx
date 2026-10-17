@@ -12,7 +12,7 @@ import {buildDailyCityContext} from "@/lib/daily-city-context";
 import {formatPanchangTime,formatWindow,getPanchang} from "@/lib/panchang";
 import {getLunarMonthConventions} from "@/lib/calendar-conventions";
 import {isDailyIndexable,robotsFor} from "@/lib/seo-policy";
-import {getDailyGuidance} from "@/lib/day-guidance";
+import {computeObservedDailyTimingOverlaps} from "@/lib/daily-window-overlap";
 import {nextValidatedFestival} from "@/lib/festival-expansion";
 import {todayInIndia} from "@/lib/dates";
 import {resolveDailyRouteDate} from "@/lib/route-validation";
@@ -51,7 +51,7 @@ export default async function PanchangPage({params}:{params:Promise<{city:string
   const lunar=getLunarMonthConventions(date,city,data);
   const qualityContent=buildDailyPanchangQualityContent(city,data,lunar);
   const localContext=buildDailyCityContext(city,data);
-  const guidance=getDailyGuidance(data,city);
+  const timingOverlaps=computeObservedDailyTimingOverlaps(data);
   const boundaryNotice=criticalBoundaryNotice(city.slug,data.date);
   const festival=nextValidatedFestival(date);
   const topicalGroups=buildDailyTopicalGraph(city,date,festival);
@@ -73,7 +73,7 @@ export default async function PanchangPage({params}:{params:Promise<{city:string
     {"@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"Home","item":"https://panchvani.com/"},{"@type":"ListItem","position":2,"name":city.name,"item":`https://panchvani.com/panchang/${city.slug}/${data.date}`},{"@type":"ListItem","position":3,"name":data.date}]},
     {"@type":"FAQPage","mainEntity":faq.map(x=>({"@type":"Question","name":x.q,"acceptedAnswer":{"@type":"Answer","text":x.a}}))}
   ]};
-  return <main><Header city={city}/><div className="page-shell internal-visual internal-panchang">
+  return <main data-content-trust="timing-observation-only"><Header city={city}/><div className="page-shell internal-visual internal-panchang">
     <div className="breadcrumbs"><Link href="/">Home</Link> / {city.name} / {data.date}</div>
     <p className="page-kicker">DAILY PANCHANG · {city.state}</p><h1 className="page-title">{city.name} Panchang<br/>{data.date}</h1>
     <p className="page-subtitle">{qualityContent.directAnswer}</p>
@@ -101,17 +101,16 @@ export default async function PanchangPage({params}:{params:Promise<{city:string
       <div className="timing-chip bad"><small>Yamaganda</small><strong>{formatWindow(data.yamaganda)}</strong></div>
       <div className="timing-chip bad"><small>Gulika Kalam</small><strong>{formatWindow(data.gulika)}</strong></div>
     </div></div>
-    <div className="wide-panel">
-      <h2 className="page-title" style={{fontSize:32}}>Traditional favorable signals · {data.date}</h2>
-      <p className="page-subtitle">{guidance.summary}</p>
-      <div className="data-grid">
-        {guidance.auspicious.map(item=><div className="data-card" key={item.title}><small>Favorable signal</small><strong>{item.title}</strong><small>{item.detail}</small></div>)}
-      </div>
-      <h2 className="page-title" style={{fontSize:32,marginTop:28}}>Traditional timing cautions · {data.date}</h2>
-      <div className="data-grid">
-        {guidance.avoid.map(item=><div className="data-card" key={item.title}><small>Timing caution</small><strong>{item.title}</strong><small>{item.detail}</small></div>)}
-      </div>
-    </div>
+    <section className="wide-panel" aria-label="Observed overlaps between calculated daytime periods">
+      <h2 className="page-title" style={{fontSize:32}}>Calculated interval overlaps · {data.date} · {city.name}</h2>
+      <p className="page-subtitle">These are date-specific intersections of Abhijit or traditionally favorable-labelled daytime Choghadiya with Rahu Kalam, Yamaganda and Gulika. Overlaps are clock arithmetic, NOT independent ritual approval or a recommendation to start an activity. A displayed favorable period may overlap an exclusion.</p>
+      {timingOverlaps.length?<div className="data-grid">{timingOverlaps.map(item=><div className="data-card" key={`${item.source}-${item.excludedBy}-${item.overlapStart}`}>
+        <small>{item.source} {item.sourceWindow} ∩ {item.excludedBy} {item.excludedWindow}</small>
+        <strong>{item.overlapStart}–{item.overlapEnd}</strong>
+        <small>Overlap: {item.overlapMinutes} minutes · not a ceremony verdict</small>
+      </div>)}</div>:<p>No intersections among these displayed daytime windows and three listed exclusion intervals were calculated for {city.name} on {data.date}. Other eligibility rules have not been assessed.</p>}
+      <p>See the <Link href="/methodology">calculation methodology</Link> and <Link href="/accuracy">accuracy and source limitations</Link>. These computed intervals do not establish a wedding, Vrat, festival or purchase Muhurat.</p>
+    </section>
     <div className="wide-panel"><h2 className="page-title" style={{fontSize:32}}>Choghadiya</h2><p className="page-subtitle">Eight daytime and eight nighttime periods for {city.name}.</p><ChoghadiyaTable day={data.dayChoghadiya} night={data.nightChoghadiya}/></div>
 
     <section className="wide-panel"><div className="seo-copy">
