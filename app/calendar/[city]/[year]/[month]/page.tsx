@@ -123,7 +123,7 @@ export default async function CalendarPage({params}:{params:Promise<{city:string
       <h2 className="page-title" style={{fontSize:32}}>Festivals in {monthName}</h2>
       <p className="page-subtitle">{qualityContent.festivalBody}</p>
       {monthFestivals.length
-        ? <div className="city-directory">{monthFestivals.map(festival=><Link href={`/festivals/${festival.slug}/${y}/${city.slug}`} key={festival.slug}><small>{festival.date}</small><strong>{festival.name}</strong><span>{festival.short}</span></Link>)}</div>
+        ? <div className="city-directory">{monthFestivals.map(festival=><Link href={`/festivals/${festival.slug}/${y}/${city.slug}`} key={`${festival.slug}-${festival.date}`}><small>{festival.date}</small><strong>{festival.name}</strong><span>{festival.short}</span></Link>)}</div>
         : <p className="page-subtitle">No major festival from the maintained dataset falls in this month.</p>}
     </section>
 
