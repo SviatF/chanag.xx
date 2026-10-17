@@ -133,7 +133,7 @@ describe("Indian calendar convention integrity",()=>{
   it("never reintroduces a silent fake sunrise or ET-only positions",()=>{
     const source=readFileSync("lib/calendar-conventions.ts","utf8");
     expect(source).toContain("sweCalcUt(swed,jdUt");
-    expect(source).not.toMatch(/\\bsweCalc\\s*\\(/);
+    expect(source).not.toMatch(/\bsweCalc\s*\(/);
     expect(source).not.toContain("baseJd+0.25");
     expect(source).not.toContain("baseJd+0.75");
     expect(source).toContain('requireSolarEvent(rise,city.slug,data.date,"sunrise")');
