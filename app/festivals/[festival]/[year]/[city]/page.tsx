@@ -9,6 +9,7 @@ import {buildFestivalCityQualityContent,chhathFollowingSunrise} from "@/lib/fest
 import {buildFestivalCityContext} from "@/lib/festival-city-context";
 import {buildFestivalCityHighSimilarityContext} from "@/lib/festival-city-high-similarity-context";
 import {festivalBySlugYear} from "@/lib/festivals";
+import {getFestivalForCity} from "@/lib/festival-local-date";
 import {getFestivalSemantics} from "@/lib/festival-conventions";
 import {festivalCityPageIsIndexable,festivalYearSiblings} from "@/lib/festival-expansion";
 import {formatPanchangTime,getPanchang} from "@/lib/panchang";
@@ -40,8 +41,9 @@ export async function generateMetadata({params}:{params:Promise<{festival:string
   const p=await params;
   const city=findCityBySlug(p.city);
   const year=parseRouteYear(p.year);
-  const festival=year?festivalBySlugYear(p.festival,year):undefined;
-  if(!city||!year||!festival)notFound();
+  const maintainedFestival=year?festivalBySlugYear(p.festival,year):undefined;
+  if(!city||!year||!maintainedFestival)notFound();
+  const festival=getFestivalForCity(maintainedFestival,city);
   const data=await getPanchang(new Date(`${festival.date}T06:00:00Z`),city);
   return {
     title:`${festival.name} ${year} in ${city.name} — ${festival.date} Panchang`,
@@ -55,8 +57,9 @@ export default async function Page({params}:{params:Promise<{festival:string;yea
   const p=await params;
   const city=findCityBySlug(p.city);
   const year=parseRouteYear(p.year);
-  const festival=year?festivalBySlugYear(p.festival,year):undefined;
-  if(!city||!year||!festival)notFound();
+  const maintainedFestival=year?festivalBySlugYear(p.festival,year):undefined;
+  if(!city||!year||!maintainedFestival)notFound();
+  const festival=getFestivalForCity(maintainedFestival,city);
 
   const date=new Date(`${festival.date}T06:00:00Z`);
   const data=await getPanchang(date,city);
