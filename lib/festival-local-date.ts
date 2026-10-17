@@ -11,33 +11,33 @@ import type {Festival} from "./festivals";
  */
 export type LocalFestivalDateEvidence={
   slug:string;year:number;city:string;date:string;
-  source:string;sourceLocality:string;observedOn:string;
+  evidenceId:string;sourceLocality:string;observedOn:string;
   method:"published-city-observance";
 };
 const reviewed:readonly LocalFestivalDateEvidence[]=[
   {
     slug:"govardhan-puja",year:2026,city:"mumbai",date:"2026-11-09",
-    source:"https://www.drikpanchang.com/festivals/govardhan-puja/govardhan-puja-date-time.html?geoname-id=1275339",
+    evidenceId:"govardhan2026-mumbai",
     sourceLocality:"Mumbai, Maharashtra",observedOn:"2026-10-17",method:"published-city-observance"
   },
   {
     slug:"govardhan-puja",year:2026,city:"pune",date:"2026-11-09",
-    source:"https://www.drikpanchang.com/festivals/govardhan-puja/govardhan-puja-date-time.html?geoname-id=1259229",
+    evidenceId:"govardhan2026-pune",
     sourceLocality:"Pune, Maharashtra",observedOn:"2026-10-17",method:"published-city-observance"
   },
   {
     slug:"govardhan-puja",year:2026,city:"jaipur",date:"2026-11-09",
-    source:"https://www.drikpanchang.com/festivals/govardhan-puja/govardhan-puja-date-time.html?geoname-id=1269515",
+    evidenceId:"govardhan2026-jaipur",
     sourceLocality:"Jaipur, Rajasthan",observedOn:"2026-10-17",method:"published-city-observance"
   },
   {
     slug:"govardhan-puja",year:2026,city:"indore",date:"2026-11-09",
-    source:"https://www.drikpanchang.com/festivals/govardhan-puja/govardhan-puja-date-time.html?geoname-id=1269743",
+    evidenceId:"govardhan2026-indore",
     sourceLocality:"Indore, Madhya Pradesh",observedOn:"2026-10-17",method:"published-city-observance"
   },
   {
     slug:"govardhan-puja",year:2026,city:"ahmedabad",date:"2026-11-09",
-    source:"https://www.drikpanchang.com/gujarati/calendar/gujarati-calendar.html?geoname-id=1279233&year=2026",
+    evidenceId:"govardhan2026-ahmedabad",
     sourceLocality:"Ahmedabad, Gujarat (Govardhan Puja / Annakut)",observedOn:"2026-10-17",method:"published-city-observance"
   },
 ];
