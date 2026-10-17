@@ -177,7 +177,7 @@ export function festivalBySlugYear(slug:string,year:number){
  * future observance. Return null until a source-reviewed future year exists.
  * Date comparisons use India local time, not UTC (00:00–05:29 IST differs).
  */
-export function nextFestival(date:Date):Festival|null{
+export function indiaFestivalDateIso(date:Date):string{
   if(!Number.isFinite(date.getTime()))throw new Error("Invalid current date for festival lookup");
   const indiaDate=new Intl.DateTimeFormat("en-CA",{
     timeZone:"Asia/Kolkata",year:"numeric",month:"2-digit",day:"2-digit"
@@ -185,6 +185,11 @@ export function nextFestival(date:Date):Festival|null{
   const parts=indiaDate.formatToParts(date);
   const field=(type:string)=>parts.find(part=>part.type===type)?.value;
   const iso=`${field("year")}-${field("month")}-${field("day")}`;
+  return iso;
+}
+
+export function nextFestival(date:Date):Festival|null{
+  const iso=indiaFestivalDateIso(date);
   return allFestivals.find(f=>f.date>=iso)??null;
 }
 
