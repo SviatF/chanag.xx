@@ -10,8 +10,7 @@ import {buildCalendarMonthSimilarityContext} from "@/lib/calendar-month-similari
 import {buildCalendarMonthHighSimilarityContext} from "@/lib/calendar-month-high-similarity-context";
 import {getPrecomputedMuhuratPanchangMonth} from "@/lib/muhurat-precomputed";
 import {getPanchang} from "@/lib/panchang";
-import {festivalsForYear} from "@/lib/festivals";
-import {getFestivalForCity} from "@/lib/festival-local-date";
+import {getCalendarFestivalsForCity} from "@/lib/festival-local-date";
 import {isMonthlyIndexable,robotsFor} from "@/lib/seo-policy";
 import {parseRouteMonth,parseRouteYear} from "@/lib/route-validation";
 import {calendarMonthSsgPriority} from "@/lib/static-seo-routes";
@@ -52,7 +51,7 @@ export default async function CalendarPage({params}:{params:Promise<{city:string
   const precomputed=await getPrecomputedMuhuratPanchangMonth(y,m,city);
   const entries=precomputed??await Promise.all(Array.from({length:count},(_,i)=>getPanchang(new Date(Date.UTC(y,m-1,i+1,6)),city)));
 
-  const monthFestivals=festivalsForYear(y).map(f=>getFestivalForCity(f,city)).filter(f=>Number(f.date.slice(5,7))===m);
+  const monthFestivals=getCalendarFestivalsForCity(y,city).filter(f=>Number(f.date.slice(5,7))===m);
   const festivalByDate=new Map(monthFestivals.map(f=>[f.date,f]));
   const qualityContent=buildMonthlyCalendarQualityContent(city,y,m,entries,monthFestivals);
   const cityContext=buildCalendarMonthCityContext(city,y,m,entries,monthFestivals);
