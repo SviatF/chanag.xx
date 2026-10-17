@@ -117,7 +117,7 @@ export default async function Home({searchParams}:{searchParams:Promise<{city?:s
         <div className="day-grid">
           <article className="info-card good"><Sun/><div><span>Highlighted time today</span><h3>{bestTime.name}</h3><strong>{bestTime.time}</strong><p>Calculated from today's local Panchang and daylight window.</p></div></article>
           <article className="info-card danger"><Clock3/><div><span>Avoid this time</span><h3>Rahu Kalam</h3><strong>{formatWindow(data.rahu)}</strong><p>Location-sensitive period calculated from local sunrise and sunset.</p></div></article>
-          <article className="info-card festival"><Sparkles/><div><span>Upcoming festival</span><h3>{festival.name}</h3><strong>{festival.date}</strong><p>{festival.short}</p></div></article>
+          <article className="info-card festival"><Sparkles/><div><span>Upcoming festival</span>{festival?<><h3>{festival.name}</h3><strong>{festival.date}</strong><p>{festival.short}</p></>:<><h3>Next date not yet verified</h3><p>The maintained festival calendar does not contain a future source-reviewed date. Browse verified year-specific records rather than treating an old observance as upcoming.</p></>}</div></article>
         </div>
         <div className="your-day-art" aria-hidden="true">
           <img className="your-day-photo-layer" src={geneshaYourDay.src} alt=""/>
