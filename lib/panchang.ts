@@ -1,4 +1,5 @@
 import { City } from "./cities";
+import {lunarIlluminationPercent} from "./lunar-illumination";
 import { createDefaultSweData } from "@typescriptify/sweph/dist/types.js";
 import { sweCalcUt, sweClose, sweSetSidMode } from "@typescriptify/sweph/dist/sweph.js";
 import { sweRiseTrans } from "@typescriptify/sweph/dist/swecl.js";
@@ -267,6 +268,15 @@ export async function getPanchang(date: Date, city: City): Promise<Panchang> {
     };
 
     const atSunrise = stateAt(sunriseJd);
+    // Get full physical geometry at the same local sunrise instant. A mere
+    // longitude separation is NOT the fraction of the illuminated lunar disc.
+    // sweCalcUt returns tropical geocentric lon/lat/distance in degrees/deg/AU.
+    const sunGeometry = sweCalcUt(swed,sunriseJd,SE_SUN,SEFLG_MOSEPH).xx;
+    const moonGeometry = sweCalcUt(swed,sunriseJd,SE_MOON,SEFLG_MOSEPH).xx;
+    const moonIllumination = lunarIlluminationPercent(
+      [sunGeometry[0],sunGeometry[1],sunGeometry[2]],
+      [moonGeometry[0],moonGeometry[1],moonGeometry[2]]
+    );
     const tithiNumber = atSunrise.tithiIndex + 1;
     const paksha: Panchang["paksha"] = tithiNumber <= 15 ? "Shukla" : "Krishna";
     const tithiBase = atSunrise.tithiIndex % 15;
@@ -444,7 +454,7 @@ export async function getPanchang(date: Date, city: City): Promise<Panchang> {
       moonriseDate: moonrise.date,
       moonset: moonset.time,
       moonsetDate: moonset.date,
-      moonIllumination: Math.round(((1 - Math.cos(atSunrise.elongation * Math.PI / 180)) / 2) * 100),
+      moonIllumination,
       rahu: segmentWindow(sunriseMinutes, sunsetMinutes, rahuIndex),
       yamaganda: segmentWindow(sunriseMinutes, sunsetMinutes, yamagandaIndex),
       gulika: segmentWindow(sunriseMinutes, sunsetMinutes, gulikaIndex),
