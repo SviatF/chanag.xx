@@ -1,7 +1,8 @@
 import type {City} from "./cities";
 import type {Panchang} from "./panchang";
 import {createDefaultSweData} from "@typescriptify/sweph/dist/types.js";
-import {sweCalc,sweClose,sweSetSidMode} from "@typescriptify/sweph/dist/sweph.js";
+import {sweCalcUt,sweClose,sweSetSidMode} from "@typescriptify/sweph/dist/sweph.js";
+import {requireSolarEvent} from "./ephemeris-integrity";
 import {sweRiseTrans} from "@typescriptify/sweph/dist/swecl.js";
 import {
   SE_SUN,
@@ -53,11 +54,12 @@ export type RegionalCalendarConventions={
   gujaratiSamvatYearStart:string;
 };
 
+/** All callers supply Julian days in UT, never ET/TT. sweCalcUt applies Delta-T. */
 function stateFactory(swed:ReturnType<typeof createDefaultSweData>){
-  return (jd:number)=>{
-    const sun=sweCalc(swed,jd,SE_SUN,SEFLG_MOSEPH|SEFLG_SIDEREAL).xx[0];
-    const tropicalSun=sweCalc(swed,jd,SE_SUN,SEFLG_MOSEPH).xx[0];
-    const tropicalMoon=sweCalc(swed,jd,SE_MOON,SEFLG_MOSEPH).xx[0];
+  return (jdUt:number)=>{
+    const sun=sweCalcUt(swed,jdUt,SE_SUN,SEFLG_MOSEPH|SEFLG_SIDEREAL).xx[0];
+    const tropicalSun=sweCalcUt(swed,jdUt,SE_SUN,SEFLG_MOSEPH).xx[0];
+    const tropicalMoon=sweCalcUt(swed,jdUt,SE_MOON,SEFLG_MOSEPH).xx[0];
     return {
       sunSidereal:norm(sun),
       solarSignIndex:signIndex(sun),
@@ -70,7 +72,7 @@ function sunriseForIso(swed:ReturnType<typeof createDefaultSweData>,city:City,is
   const parts=isoDateParts(iso);
   const start=indiaCivilDayStartJulian(parts.year,parts.month,parts.day);
   const rise=sweRiseTrans(swed,start,SE_SUN,null,SEFLG_MOSEPH,SE_CALC_RISE,[city.lng,city.lat,0],1013.25,25,null);
-  return rise.retval>=0?rise.tret:null;
+  return requireSolarEvent(rise,city.slug,iso,"sunrise");
 }
 
 function findPreviousNewMoon(startJd:number,stateAt:ReturnType<typeof stateFactory>){
@@ -120,7 +122,7 @@ export function getLunarMonthConventions(date:Date,city:City,data:Panchang):Luna
     const parts=isoDateParts(data.date);
     const baseJd=indiaCivilDayStartJulian(parts.year,parts.month,parts.day);
     const rise=sweRiseTrans(swed,baseJd,SE_SUN,null,SEFLG_MOSEPH,SE_CALC_RISE,[city.lng,city.lat,0],1013.25,25,null);
-    const sunriseJd=rise.retval>=0?rise.tret:baseJd+0.25;
+    const sunriseJd=requireSolarEvent(rise,city.slug,data.date,"sunrise");
     const stateAt=stateFactory(swed);
     const previousNewMoon=findPreviousNewMoon(sunriseJd,stateAt);
     const nextNewMoon=findNextNewMoon(previousNewMoon,stateAt);
@@ -203,7 +205,7 @@ function resolveGujaratiYearStart(swed:ReturnType<typeof createDefaultSweData>,c
   const nextDate=addIsoDays(startDate,1);
   const firstSunrise=sunriseForIso(swed,city,startDate);
   const nextSunrise=sunriseForIso(swed,city,nextDate);
-  const activeAt=(jd:number|null)=>jd!==null&&jd>=pratipadaStart&&jd<pratipadaEnd;
+  const activeAt=(jd:number)=>jd>=pratipadaStart&&jd<pratipadaEnd;
   const boundary=activeAt(firstSunrise)?startDate:activeAt(nextSunrise)?nextDate:startDate;
   gujaratiYearStartCache.set(cacheKey,boundary);
   return boundary;
@@ -218,8 +220,10 @@ export function getRegionalCalendarConventions(date:Date,city:City,data:Panchang
     const geopos=[city.lng,city.lat,0];
     const rise=sweRiseTrans(swed,baseJd,SE_SUN,null,SEFLG_MOSEPH,SE_CALC_RISE,geopos,1013.25,25,null);
     const set=sweRiseTrans(swed,baseJd,SE_SUN,null,SEFLG_MOSEPH,SE_CALC_SET,geopos,1013.25,25,null);
-    const sunriseJd=rise.retval>=0?rise.tret:baseJd+0.25;
-    const sunsetJd=set.retval>=0?set.tret:baseJd+0.75;
+    const sunriseJd=requireSolarEvent(rise,city.slug,data.date,"sunrise");
+    const sunsetJd=requireSolarEvent(set,city.slug,data.date,"sunset");
+    if(!(sunriseJd<sunsetJd&&sunsetJd<sunriseJd+1))
+      throw new Error(`Invalid regional solar sequence for ${city.slug} on ${data.date}`);
     const stateAt=stateFactory(swed);
     const ingress=findSolarIngressOnCivilDate(baseJd,stateAt);
     const bengaliIndex=stateAt(baseJd).solarSignIndex;
