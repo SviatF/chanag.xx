@@ -8,8 +8,7 @@ import {buildCalendarYearCityContext} from "@/lib/calendar-year-city-context";
 import {buildCalendarYearSimilarityContext} from "@/lib/calendar-year-similarity-context";
 import {buildCalendarYearHighSimilarityContext} from "@/lib/calendar-year-high-similarity-context";
 import {festivalDateIsValidated} from "@/lib/festival-expansion";
-import {festivalsForYear} from "@/lib/festivals";
-import {getFestivalForCity} from "@/lib/festival-local-date";
+import {getCalendarFestivalsForCity} from "@/lib/festival-local-date";
 import {getPanchang} from "@/lib/panchang";
 import {isVratIndexable,isYearlyCalendarIndexable,isYearlyMuhuratIndexable,primaryMuhuratEvents,primaryVratTypes,robotsFor,yearlyIndexYears} from "@/lib/seo-policy";
 import {parseRouteYear} from "@/lib/route-validation";
@@ -32,7 +31,7 @@ export default async function CityYearCalendar({params}:{params:Promise<{city:st
   const activeYears=yearlyIndexYears();
   const indexable=isYearlyCalendarIndexable(year,city.slug);
   const snapshots=await Promise.all(yearlyMonths.map(item=>getPanchang(new Date(Date.UTC(year,item.month-1,1,6)),city)));
-  const festivals=festivalsForYear(year).filter(item=>festivalDateIsValidated(item.slug,year)).map(item=>getFestivalForCity(item,city));
+  const festivals=getCalendarFestivalsForCity(year,city).filter(item=>festivalDateIsValidated(item.slug,year));
   const qualityContent=buildYearlyCalendarQualityContent(city,year,snapshots,festivals);
   const cityContext=buildCalendarYearCityContext(city,year,snapshots,festivals);
   const similarityContext=buildCalendarYearSimilarityContext(city,year,snapshots,festivals);
