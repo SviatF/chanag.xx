@@ -8,11 +8,11 @@ const sample={
   yamaganda:{start:"15:20",end:"16:47"},
   gulika:{start:"08:01",end:"09:29"},
   dayChoghadiya:[
-    {name:"Char",effect:"neutral" as const,start:"06:33",end:"08:01"},
-    {name:"Labh",effect:"good" as const,start:"08:01",end:"09:29"},
-    {name:"Amrit",effect:"good" as const,start:"09:29",end:"10:56"},
-    {name:"Kaal",effect:"bad" as const,start:"10:56",end:"12:24"},
-    {name:"Shubh",effect:"good" as const,start:"12:24",end:"13:52"},
+    {name:"Char",effect:"neutral" as const,start:"06:33",end:"08:01",startDayOffset:0 as const,endDayOffset:0 as const},
+    {name:"Labh",effect:"good" as const,start:"08:01",end:"09:29",startDayOffset:0 as const,endDayOffset:0 as const},
+    {name:"Amrit",effect:"good" as const,start:"09:29",end:"10:56",startDayOffset:0 as const,endDayOffset:0 as const},
+    {name:"Kaal",effect:"bad" as const,start:"10:56",end:"12:24",startDayOffset:0 as const,endDayOffset:0 as const},
+    {name:"Shubh",effect:"good" as const,start:"12:24",end:"13:52",startDayOffset:0 as const,endDayOffset:0 as const},
   ]
 };
 describe("CT3: meaningful daily clock conflict evidence",()=>{
