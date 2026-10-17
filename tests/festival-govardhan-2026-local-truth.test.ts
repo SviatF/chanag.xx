@@ -5,6 +5,7 @@ import {festivalBySlugYear} from "../lib/festivals";
 import {getFestivalForCity,getReviewedLocalFestivalDate,reviewedLocalFestivalDates} from "../lib/festival-local-date";
 import {getRegionalFestivalObservance} from "../lib/festival-regional-observances";
 import {getPanchang} from "../lib/panchang";
+import {govardhan2026LocalDateSources} from "./fixtures/govardhan-2026-local-date-sources";
 import {buildFestivalYearQualityContext} from "../lib/festival-parent-quality";
 
 describe("2026 Govardhan Puja city-specific date truth",()=>{
@@ -16,7 +17,10 @@ describe("2026 Govardhan Puja city-specific date truth",()=>{
       const city=cityBySlug(citySlug);
       const reference=getReviewedLocalFestivalDate(national,city);
       expect(reference?.date).toBe("2026-11-09");
-      expect(reference?.source).toMatch(/^https:\/\//);
+      const ref=govardhan2026LocalDateSources.find(row=>row.evidenceId===reference?.evidenceId);
+      expect(ref?.date).toBe(reference?.date);
+      expect(ref?.city).toBe(citySlug);
+      expect(ref?.source).toMatch(/^https:\/\//);
       expect(new Date(reference!.date+"T12:00:00Z").getUTCDay()).toBe(1); // Monday
       const local=getFestivalForCity(national,city);
       expect(local.date).toBe("2026-11-09");
