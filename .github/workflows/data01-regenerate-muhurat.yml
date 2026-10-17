@@ -1,0 +1,46 @@
+name: DATA-01 single-use regenerate committed Muhurat snapshots
+
+on:
+  push:
+    branches:
+      - fix-data-moon-illumination-physical-geometry
+    paths:
+      - .github/workflows/data01-regenerate-muhurat.yml
+
+permissions:
+  contents: write
+
+jobs:
+  regenerate-committed-shards:
+    if: github.repository == 'SviatF/chanag.xx' && github.ref == 'refs/heads/fix-data-moon-illumination-physical-geometry'
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    steps:
+      - name: Checkout exact proposed source
+        uses: actions/checkout@v4
+        with:
+          persist-credentials: true
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 24
+      - name: Install dependencies
+        run: npm install --legacy-peer-deps --no-audit --no-fund
+      - name: Regenerate ALL monthly source-bound snapshots with production code
+        run: npm run precompute:muhurat
+      - name: Verify that regenerated committed artifacts are internally complete
+        run: npm run verify:muhurat-precompute
+      - name: Independently audit generated lunar candidate data
+        run: npm run audit:muhurat
+      - name: Commit only source-bound generated snapshots on this feature branch
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add generated/muhurat-panchang-shards.ts generated/muhurat-panchang-shard-*.ts
+          git diff --cached --stat
+          if git diff --cached --quiet; then
+            echo "Generator produced no changed shards, unexpected because source signature changed."
+            exit 1
+          fi
+          git commit -m "chore(data): regenerate 48 Muhurat shards with corrected Panchang source signature"
+          git push origin HEAD:refs/heads/fix-data-moon-illumination-physical-geometry
