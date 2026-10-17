@@ -6,8 +6,7 @@ import Header from "@/components/Header";
 import DayWheel from "@/components/DayWheel";
 import { cities, cityBySlug } from "@/lib/cities";
 import { formatPanchangTime, formatWindow, getPanchang } from "@/lib/panchang";
-import { festivalsForYear } from "@/lib/festivals";
-import {getFestivalForCity,nextFestivalForCity} from "@/lib/festival-local-date";
+import {getCalendarFestivalsForCity,nextFestivalForCity} from "@/lib/festival-local-date";
 import { todayInIndia } from "@/lib/dates";
 import {regionalCitiesForLanguage} from "@/lib/regional-seo";
 import {homepageHotset} from "@/lib/hotset-links";
@@ -58,7 +57,7 @@ export default async function Home({searchParams}:{searchParams:Promise<{city?:s
   const monthData=await getMonthData(city.slug,year,month);
   const firstWeekday=new Date(Date.UTC(year,month-1,1)).getUTCDay();
   const featured=featuredSlugs.map(cityBySlug);
-  const monthFestivals=festivalsForYear(year).map(f=>getFestivalForCity(f,city)).filter(f=>{
+  const monthFestivals=getCalendarFestivalsForCity(year,city).filter(f=>{
     const d=new Date(f.date+"T00:00:00Z");
     return d.getUTCFullYear()===year&&d.getUTCMonth()+1===month;
   });
