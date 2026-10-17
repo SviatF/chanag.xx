@@ -29,6 +29,8 @@ const failures=[];
 if(!report.seoIdentity||!Number.isInteger(report.seoIdentity.programmaticPages))failures.push("SEO identity audit missing or incomplete");
 if(!report.dailyFactIntegrity||!Number.isInteger(report.dailyFactIntegrity.dailyPages)||report.dailyFactIntegrity.dailyPages===0)failures.push("rendered daily fact integrity audit missing or empty");
 if((totals.dailyFactFailures??0)>0)failures.push(`${totals.dailyFactFailures} invalid rendered daily fact(s)`);
+if(!report.dailyTrust||report.dailyTrust.scope!=="indexed-daily-ssr"||!Number.isInteger(report.dailyTrust.inspected)||report.dailyTrust.inspected<1)failures.push("CT3 rendered Daily content-trust check missing");
+if((totals.dailyTrustFailures??0)>0)failures.push(`${totals.dailyTrustFailures} unsupported Daily content claims`);
 if(!report.muhuratTrust||!Number.isInteger(report.muhuratTrust.inspected)||report.muhuratTrust.inspected<1)failures.push("rendered Muhurat content-trust audit missing");
 if((totals.muhuratTrustFailures??0)>0)failures.push(`${totals.muhuratTrustFailures} Muhurat presentation trust issue(s)`);
 if(!report.crossPageCalendar||!Number.isInteger(report.crossPageCalendar.monthRows))failures.push("rendered cross-page calendar audit missing");
@@ -58,6 +60,7 @@ console.log(`[content-gate] structural=${totals.structuralIssues??0} hreflang=${
 console.log(`[content-gate] directUnlisted verified=${totals.unlistedDailyVerified??0} errors=${totals.unlistedDailyFailures??0}`);
 console.log(`[content-gate] crossPage month=${totals.crossPageCalendarMatchedMonth??0} vrat=${totals.crossPageCalendarMatchedVrat??0} contradictions=${totals.crossPageCalendarContradictions??0}`);
 console.log(`[content-gate] muhuratTrust inspected=${totals.muhuratTrustInspected??0} regressions=${totals.muhuratTrustFailures??0}; ritual dates NOT certified`);
+console.log(`[content-gate] dailyTrust reviewed=${totals.dailyTrustInspected??0} regressions=${totals.dailyTrustFailures??0}; astronomy and religious eligibility NOT certified`);
 console.log(`[content-gate] dailyFactErrors=${totals.dailyFactFailures??0} physically-identical-vectors=${totals.dailyFactIdenticalGroups??0} (review only)`);
 console.log(`[content-gate] seoIdentity issues=${totals.seoIdentityIssues??0} duplicateTitles=${totals.duplicateSeoTitles??0} duplicateDescriptions=${totals.duplicateMetaDescriptions??0}`);
 console.log(`[content-gate] similarity exact=${totals.exactNormalizedDuplicateGroups??0} high=${totals.highSimilarityPairs??0} severe=${totals.severeSimilarityPairs??0}`);
