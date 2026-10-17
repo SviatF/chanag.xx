@@ -46,7 +46,7 @@ export default async function CityYearCalendar({params}:{params:Promise<{city:st
     <p className="page-subtitle">{qualityContent.directAnswer}</p>
     <p className="page-subtitle">The snapshot on each month card is the Tithi and Nakshatra active at local sunrise on the first day of that Gregorian month.</p>
 
-    <section className="wide-panel"><div className="city-directory">{yearlyMonths.map((item,index)=>{const data=snapshots[index];return <Link href={`/calendar/${city.slug}/${year}/${item.slug}`} key={item.slug}><small>{item.name} 1 · sunrise {data.sunrise}</small><strong>{item.name}</strong><span>{data.tithi} · {data.nakshatra}</span></Link>;})}</div></section>
+    <section className="wide-panel"><div className="city-directory">{yearlyMonths.map((item,index)=>{const data=snapshots[index];return <Link href={`/calendar/${city.slug}/${year}/${item.slug}`} key={`${item.slug}-${item.date}`}><small>{item.name} 1 · sunrise {data.sunrise}</small><strong>{item.name}</strong><span>{data.tithi} · {data.nakshatra}</span></Link>;})}</div></section>
 
     <section className="wide-panel"><div className="seo-copy">
       <small>YEAR FINGERPRINT · {city.name.toUpperCase()}</small>
