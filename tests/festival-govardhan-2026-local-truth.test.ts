@@ -5,6 +5,7 @@ import {festivalBySlugYear} from "../lib/festivals";
 import {getFestivalForCity,getReviewedLocalFestivalDate,reviewedLocalFestivalDates} from "../lib/festival-local-date";
 import {getRegionalFestivalObservance} from "../lib/festival-regional-observances";
 import {getPanchang} from "../lib/panchang";
+import {buildFestivalYearQualityContext} from "../lib/festival-parent-quality";
 
 describe("2026 Govardhan Puja city-specific date truth",()=>{
   const national=festivalBySlugYear("govardhan-puja",2026)!;
@@ -43,6 +44,16 @@ describe("2026 Govardhan Puja city-specific date truth",()=>{
     expect(baseline.tithi).toBe("Pratipada");
     expect(baseline.paksha).toBe("Shukla");
   });
+  it("corrects the festival-year parent Mumbai lunar reference instead of contradicting city pages",async()=>{
+    const summary=await buildFestivalYearQualityContext(national);
+    expect(summary.facts.find(item=>item.label==="Maintained date")?.value).toBe("2026-11-10");
+    expect(summary.facts.find(item=>item.label==="Mumbai sunrise state")?.value).toBe("Krishna Amavasya");
+    expect(summary.facts.find(item=>item.label==="Mumbai sunrise state")?.note).toContain("2026-11-09");
+    expect(summary.directAnswer).toContain("Mumbai source-reviewed local observance on 2026-11-09");
+    expect(summary.cityVariationBody).toContain("Mumbai 2026-11-09");
+    expect(summary.directAnswer).toContain("maintained on Tuesday");
+  });
+
   it("wires metadata, headings, facts and all other city context to the same corrected date",()=>{
     const jsx=readFileSync("app/festivals/[festival]/[year]/[city]/page.tsx","utf8");
     expect(jsx).toContain('import {getFestivalForCity} from "@/lib/festival-local-date"');
