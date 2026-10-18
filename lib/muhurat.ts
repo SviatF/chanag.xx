@@ -196,17 +196,28 @@ export async function getMonthlyMuhurat(event:string,year:number,month:number,ci
   if(!rule)throw new Error(`Unsupported Muhurat event: ${event}`);
   // A reviewed ceremony prohibition overrides favorable sunrise/clock screening.
   // This is locality + tradition + month scoped, not a blanket India calendar.
-  if(getVerifiedMuhuratClosure(event,year,month,city))return {rule,rows:[] as MuhuratRow[]};
+  if(getVerifiedMuhuratClosure(event,year,month,city))return {rule,rows:[] as MuhuratRow[],lunarMatchedDays:0,screenedWithoutWindowDates:[] as string[]};
   const precomputed=await getPrecomputedMuhuratPanchangMonth(year,month,city);
   const monthPanchang=precomputed??await getMuhuratPanchangMonth(year,month,city);
   const rows:MuhuratRow[]=[];
+  const screenedWithoutWindowDates:string[]=[];
+  let lunarMatchedDays=0;
   for(const data of monthPanchang){
     if(!rule.goodTithi.includes(data.tithi)||!rule.goodNakshatra.includes(data.nakshatra))continue;
+    lunarMatchedDays++;
     // V2 build data lacks end instants: keep clearly non-certified reference clocks.
     // Full live Panchang rows contain dated transitions and are clipped fail-closed.
     const lunar=boundMuhuratWindowsByLunarTransitions(data,buildRecommendedMuhuratWindows(data));
     const karana=event==="wedding"?screenWeddingVishtiKarana(data,lunar.windows):null;
     const recommendedWindows=karana?karana.windows:lunar.windows;
+    // A sunrise-only lunar match is not a bookable/reference date when the
+    // daytime screen retains ZERO >=15-minute windows. In particular a Tithi
+    // or Nakshatra can end before the first favorable daytime segment.
+    // Do not assign a misleading "Limited 0/100" rank to such a day.
+    if(recommendedWindows.length===0){
+      screenedWithoutWindowDates.push(data.date);
+      continue;
+    }
     rows.push({
       date:data.date,
       data,
@@ -230,5 +241,5 @@ export async function getMonthlyMuhurat(event:string,year:number,month:number,ci
     b.planning.sourceCount-a.planning.sourceCount||
     Number(b.planning.hasAbhijit)-Number(a.planning.hasAbhijit)||
     a.date.localeCompare(b.date));
-  return {rule,rows};
+  return {rule,rows,lunarMatchedDays,screenedWithoutWindowDates};
 }
