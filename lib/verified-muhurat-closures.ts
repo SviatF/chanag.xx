@@ -18,10 +18,10 @@ export type VerifiedMuhuratClosure={
   year:ReviewedYear;
   month:ReviewedMonth;
   cityName:string;
-  convention:"Customary Marathi marriage calendar"|"Reviewed Marathi house-entry calendar";
+  convention:"Customary Marathi marriage calendar"|"Reviewed Marathi house-entry calendar"|"Published New Delhi Vivaha Panchang Shuddhi";
   /** Only populate when actual bounds have independent review. */
   observedPeriod?:{from:string;through:string};
-  reason:"Chaturmas"|"Restricted lunar months and planetary Asta";
+  reason:"Chaturmas"|"Restricted lunar months and planetary Asta"|"Published monthly Vivaha prohibitions";
   headline:string;
   explanation:string;
   alternativesNote:string;
@@ -39,6 +39,24 @@ function isReviewedMonth(value:number):value is ReviewedMonth{
 export function getVerifiedMuhuratClosure(
   event:string,year:number,month:number,city:Pick<City,"name"|"state"|"slug">
 ):VerifiedMuhuratClosure|null{
+  // Three independently published Delhi-specific calendars all show no
+  // traditional Vivaha dates in October 2026; this is a published eligibility
+  // finding, NOT the sunrise lunar-only algorithm's result and not a blanket
+  // veto for neighbouring cities or individual community ceremonies.
+  // Full audit-only URLs: tests/fixtures/delhi-wedding-oct2026-source-ledger.ts.
+  if(event==="wedding"&&year===2026&&month===10&&city.slug==="delhi"){
+    return {
+      code:"delhi-vivaha-2026-october-published-closure",
+      event:"wedding",year:2026,month:10,cityName:city.name,
+      convention:"Published New Delhi Vivaha Panchang Shuddhi",
+      reason:"Published monthly Vivaha prohibitions",
+      headline:"No source-reviewed traditional Vivaha Muhurat dates in Delhi in October 2026",
+      explanation:"New Delhi-specific published marriage-calendar lists independently show zero Shubh Vivaha dates for October 2026. The sources apply ceremony-season, solar-month and planetary-combustion exclusions in addition to Tithi/Nakshatra. These are PUBLISHED monthly eligibility outcomes; Panchvani has not independently recalculated every local Shukra/Guru Asta, Lagna or community-specific selection rule. An otherwise high 0–100 daytime availability score does not override these published marriage-calendar results.",
+      alternativesNote:"The zero-date verdict is scoped to the independently reviewed Delhi marriage-calendar selection profiles, not a universal religious prohibition for every family, sampradaya, municipality or ceremony. Other communities and personal charts can use different rules; consult the relevant local tradition before scheduling a wedding.",
+      periodNote:"Both Drik Panchang's New Delhi 2026 marriage ledger and independently maintained New Delhi Vivaha references list zero auspicious wedding dates during this entire Gregorian month, although they attribute individual-date exclusions to different rule families. Panchvani does not attribute a single invented Venus/Jupiter Asta clock or blanket Chaturmas boundary to every date.",
+      reviewedOn:"2026-10-18",
+    };
+  }
   if(city.state!=="Maharashtra"||!isReviewedMonth(month))return null;
   const monthName=MONTH_NAMES[month];
   // Only 2026 has independently matched Pune + statewide Marathi Griha
