@@ -53,9 +53,11 @@ export async function buildYearlyMuhuratSummary(event:string,year:number,city:Ci
   const rule=muhuratRules[event];
   if(!rule)throw new Error(`Unsupported Muhurat event: ${event}`);
   const results=await Promise.all(yearlyMonths.map(async item=>{
-    const {rows}=await getMonthlyMuhurat(event,year,item.month,city);
+    const {rows,screenedWithoutWindowRows}=await getMonthlyMuhurat(event,year,item.month,city);
     const total=rows.reduce((sum,row)=>sum+row.planning.score,0);
-    const vishtiChanges=event==="wedding"?rows.map(row=>{
+    // Count Vishti exclusion from the full sunrise-matched evidence set,
+    // including dates that ended with zero reference windows and are not ranked.
+    const vishtiChanges=event==="wedding"?[...rows,...screenedWithoutWindowRows].map(row=>{
       const before=boundMuhuratWindowsByLunarTransitions(row.data,buildRecommendedMuhuratWindows(row.data)).windows;
       return Math.max(0,sourceWindowMinutes(before)-sourceWindowMinutes(row.recommendedWindows));
     }):[];
