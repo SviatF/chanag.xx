@@ -111,7 +111,7 @@ function monthlyDirect(ruleTitle:string,location:string,label:string,rows:readon
   }
 }
 
-export function buildMuhuratMonthlyQualityContent(event:string,year:number,month:number,city:City,rows:readonly MuhuratRow[],scope:"city"|"baseline"="city"):MuhuratMonthlyQualityContent{
+export function buildMuhuratMonthlyQualityContent(event:string,year:number,month:number,city:City,rows:readonly MuhuratRow[],scope:"city"|"baseline"="city",screenedWithoutWindowCount=0):MuhuratMonthlyQualityContent{
   const rule=muhuratRules[event];if(!rule)throw new Error(`Unsupported Muhurat event: ${event}`);
   const profile=profileFor(event);
   const label=humanMonth(year,month);
@@ -122,7 +122,9 @@ export function buildMuhuratMonthlyQualityContent(event:string,year:number,month
   const medianClean=median(rows.map(row=>row.planning.totalCleanMinutes));
   const avgLongest=avg(rows.map(row=>row.planning.longestWindowMinutes));
   const abhijitRows=rows.filter(row=>row.planning.hasAbhijit).length;
-  const noWindowRows=rows.filter(row=>row.recommendedWindows.length===0).length;
+  const noWindowRows=screenedWithoutWindowCount;
+  if(!Number.isSafeInteger(noWindowRows)||noWindowRows<0)throw Error("Invalid rejected-window evidence count");
+  if(rows.some(row=>row.recommendedWindows.length===0))throw Error("A no-window date cannot enter the ranked Muhurat candidate set");
   const reason=topReason(rows);const week=weekdayLeader(rows);
   const weekdayVariety=new Set(rows.map(row=>weekday(row.date))).size;
   const sources=uniqueSources(rows);
@@ -136,14 +138,18 @@ export function buildMuhuratMonthlyQualityContent(event:string,year:number,month
 
   if(!top){
     return {
-      directAnswer:`${rule.title} in ${location} has no candidate date for ${label} under the current Tithi + Nakshatra profile.`,
-      facts:[{label:"Screened candidates",value:"0",note:label},{label:"Ideal continuous target",value:`${rule.idealContinuousMinutes} min`,note:profile.focus},{label:"Accepted Tithis",value:String(rule.goodTithi.length)},{label:"Accepted Nakshatras",value:String(rule.goodNakshatra.length)}],
-      fingerprintTitle:`${label} ${rule.title} fingerprint · empty lunar gate`,
-      fingerprintBody:`The zero-candidate month is its own data state: none of the local Panchang rows match both configured lunar filters, so ${location} has no score distribution, fallback depth or clean-window comparison to summarize.`,
+      directAnswer:noWindowRows
+        ?`${rule.title} in ${location} has no retained daytime reference window for ${label}. ${noWindowRows} date${noWindowRows===1?"":"s"} matched the sunrise lunar screen but lost all timed intervals; this does not establish that every ceremony time in the month is religiously prohibited.`
+        :`${rule.title} in ${location} has no candidate date for ${label} under the current Tithi + Nakshatra profile.`,
+      facts:[{label:"Rankable screened dates",value:"0",note:label},{label:"Sunrise matches without retained windows",value:String(noWindowRows),note:"Excluded from timing ranking"},{label:"Ideal continuous target",value:`${rule.idealContinuousMinutes} min`,note:profile.focus},{label:"Accepted Tithis",value:String(rule.goodTithi.length)},{label:"Accepted Nakshatras",value:String(rule.goodNakshatra.length)}],
+      fingerprintTitle:`${label} ${rule.title} fingerprint · no retained timing candidate`,
+      fingerprintBody:noWindowRows
+        ?`${noWindowRows} local sunrise Tithi and Nakshatra combinations matched the configured screening profile, but no >=15-minute favorable daytime interval survived lunar transitions, locally excluded periods and, for wedding, Karana screening. These are discarded from rankings rather than reported as zero-point candidate dates.`
+        :`None of the local Panchang rows match both configured sunrise lunar filters, so ${location} has no score distribution, fallback depth or clean-window comparison to summarize.`,
       rankingTitle:"No ranking layer this month",
-      rankingBody:`With no lunar-profile survivor there is no artificial #1 date. The meaningful comparison shifts to another month where the event's ${rule.goodTithi.length} accepted Tithis and ${rule.goodNakshatra.length} accepted Nakshatras produce at least one row.`,
-      timingTitle:`Timing stage never activates in ${label}`,
-      timingBody:`${profile.continuity}. Rahu Kalam, Yamaganda, Gulika, Abhijit and favorable Choghadiya are only ranked after a date survives the lunar gate; no row reaches that stage here.`,
+      rankingBody:`No date retains an eligible daytime reference block, so there is no artificial #1 date. This is an incomplete astronomical screen, not a conclusion that every traditional ceremony Muhurat is unavailable.`,
+      timingTitle:`No retained daytime timing block in ${label}`,
+      timingBody:`${profile.continuity}. Only dates retaining a >=15-minute daytime block after lunar and local timing exclusions may enter the ranking. ${noWindowRows} sunrise-matched date${noWindowRows===1?" was":"s were"} excluded at this stage.`,
       ruleTitle:`What makes ${rule.title} different`,
       ruleBody:`This event is evaluated around ${profile.focus}; the decisive signal is ${profile.signal}. The configured ideal continuous target is ${rule.idealContinuousMinutes} minutes.`
     };
@@ -182,8 +188,8 @@ export function buildMuhuratMonthlyQualityContent(event:string,year:number,month
     rankingBody=`The top pair is only the front of a ${rows.length}-date field. ${pairComparison}, while ${rows.length-2} additional screened dates create deeper fallback capacity. ${spreadState.text}; ${profile.decision}.`;
   }
 
-  const timingBody=clean.key==="fragmented"
-    ? `${clean.body} ${abhijit.text} ${noWindowRows} candidate row${noWindowRows===1?"":"s"} ${noWindowRows===1?"has":"have"} no surviving recommended window, so lunar qualification is materially stronger than practical daytime continuity in this local month.`
+  const timingBodyBase=clean.key==="fragmented"
+    ? `${clean.body} ${abhijit.text} ${noWindowRows} additional sunrise-matched date${noWindowRows===1?" was":"s were"} excluded from the ranking because no daytime reference block survived.`
     : clean.key==="narrow"
       ? `${clean.body} ${abhijit.text} The surviving windows draw on ${sourceProfile(sources)}, so small changes in local exclusions matter more than raw candidate count.`
       : clean.key==="compact"
@@ -194,6 +200,10 @@ export function buildMuhuratMonthlyQualityContent(event:string,year:number,month
             ? `${clean.body} ${abhijit.text} With ${sourceProfile(sources)}, continuity rather than simple window count is the defining timing feature.`
             : `${clean.body} ${sourceProfile(sources)[0].toUpperCase()+sourceProfile(sources).slice(1)} appears across the field, and ${abhijit.text.toLowerCase()}`;
 
+  const timingBody=noWindowRows&&clean.key!=="fragmented"
+    ?`${timingBodyBase} ${noWindowRows} other lunar-matched date${noWindowRows===1?" was":"s were"} omitted from this ranking because no >=15-minute daytime reference interval survived.`
+    :timingBodyBase;
+
   return {
     directAnswer:monthlyDirect(rule.title,location,label,rows,top,shortlist),
     facts:[
@@ -202,7 +212,7 @@ export function buildMuhuratMonthlyQualityContent(event:string,year:number,month
       {label:"Clean-time profile",value:clean.key,note:`Median ${medianClean} min · longest avg ${avgLongest} min`},
       {label:"Abhijit pattern",value:abhijit.key,note:`${abhijitRows}/${rows.length} rows`},
       {label:"Lunar-match leader",value:reason?.[0]??"—",note:reason?`${reason[1]} row(s)`:undefined},
-      {label:"Timing-source depth",value:String(sources),note:noWindowRows?`${noWindowRows} row${noWindowRows===1?"":"s"} without surviving window`:"All rows retain timing"},
+      {label:"Timing-source depth",value:String(sources),note:noWindowRows?`${noWindowRows} lunar-matched date${noWindowRows===1?"":"s"} excluded before ranking`:"All ranked rows retain timing"},
     ],
     fingerprintTitle:`${label} ${rule.title} · ${shortlist.label} · ${clean.text}`,
     fingerprintBody,
