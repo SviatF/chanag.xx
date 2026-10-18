@@ -58,6 +58,24 @@ describe("Demand-backed Vrat calendar engine",()=>{
     expect(delhiRows[0].sunrise).not.toBe(chennaiRows[0].sunrise);
   });
 
+  it("never reuses yearly Vrat timings after coordinates change but slug stays the same",()=>{
+    // Reproducible former collision: cache used only slug+year.
+    const left={...mumbai,slug:"vrat-cache-coordinate-proof",lat:19.076,lng:72.8777};
+    const right={...left,lat:28.6139,lng:77.209};
+    const first=calculateVratCalendar("ekadashi",2026,left);
+    const second=calculateVratCalendar("ekadashi",2026,right);
+    expect(first.length).toBeGreaterThan(20);
+    expect(second.length).toBeGreaterThan(20);
+    // Test compares actual longitude-dependent sunrise clocks, not only cache keys.
+    expect(first.map(x=>x.date+":"+x.sunrise)).not.toEqual(second.map(x=>x.date+":"+x.sunrise));
+    expect(second.map(x=>x.date+":"+x.sunrise)).toEqual(
+      calculateVratCalendar("ekadashi",2026,{...right,slug:"fresh-city-cache-proof"})
+        .map(x=>x.date+":"+x.sunrise)
+    );
+    expect(calculateVratCalendar("ekadashi",2026,left).map(x=>x.date+":"+x.sunrise))
+      .toEqual(first.map(x=>x.date+":"+x.sunrise));
+  });
+
   it("summarizes the yearly list and keeps indexation inside the rolling priority-city policy",()=>{
     const rows=calculateVratCalendar("ekadashi",2026,mumbai);
     const summary=vratCalendarSummary(rows);

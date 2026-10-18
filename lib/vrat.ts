@@ -58,6 +58,8 @@ export function findVratBySlug(value:string):VratDefinition|undefined{
 const tithiNames=["Pratipada","Dvitiya","Tritiya","Chaturthi","Panchami","Shashthi","Saptami","Ashtami","Navami","Dashami","Ekadashi","Dwadashi","Trayodashi","Chaturdashi","Purnima"] as const;
 type VratCalendarMap=Record<VratSlug,VratOccurrence[]>;
 const cache=new Map<string,VratCalendarMap>();
+
+/** Cache identity must include geographical coordinates: same slug/year at a\n * different physical location produces different sunrise and lunar observations. */
 const norm=(value:number)=>((value%360)+360)%360;
 
 function nextDayIso(dateIso:string){return addIsoDays(dateIso,1);}
@@ -86,7 +88,7 @@ function finalize(rows:Omit<VratOccurrence,"repeatedAtSunrise"|"sequence">[]):Vr
 }
 
 function calculateAllVratCalendars(year:number,city:City):VratCalendarMap{
-  const cacheKey=`${city.slug}:${year}`;
+  const cacheKey=`${city.slug}|${city.lat.toFixed(6)}|${city.lng.toFixed(6)}|${year}`;
   const cached=cache.get(cacheKey);if(cached)return cached;
 
   const swed=createDefaultSweData();
