@@ -46,7 +46,7 @@ export default async function CityYearCalendar({params}:{params:Promise<{city:st
     <p className="page-subtitle">{qualityContent.directAnswer}</p>
     <p className="page-subtitle">The snapshot on each month card is the Tithi and Nakshatra active at local sunrise on the first day of that Gregorian month.</p>
 
-    <section className="wide-panel"><div className="city-directory">{yearlyMonths.map((item,index)=>{const data=snapshots[index];return <Link href={`/calendar/${city.slug}/${year}/${item.slug}`} key={`${item.slug}-${item.date}`}><small>{item.name} 1 · sunrise {data.sunrise}</small><strong>{item.name}</strong><span>{data.tithi} · {data.nakshatra}</span></Link>;})}</div></section>
+    <section className="wide-panel"><div className="city-directory">{yearlyMonths.map((item,index)=>{const data=snapshots[index];return <Link href={`/calendar/${city.slug}/${year}/${item.slug}`} key={item.slug}><small>{item.name} 1 · sunrise {data.sunrise}</small><strong>{item.name}</strong><span>{data.tithi} · {data.nakshatra}</span></Link>;})}</div></section>
 
     <section className="wide-panel"><div className="seo-copy">
       <small>YEAR FINGERPRINT · {city.name.toUpperCase()}</small>
@@ -77,7 +77,7 @@ export default async function CityYearCalendar({params}:{params:Promise<{city:st
 
     <section className="wide-panel"><h2 className="page-title" style={{fontSize:32}}>Muhurat planning in {year}</h2><p className="page-subtitle">Annual India-baseline hubs summarize the year; drill into a month to open city-specific clean timing windows.</p><div className="pill-links">{primaryMuhuratEvents.filter(event=>isYearlyMuhuratIndexable(event,year)).map(event=><Link href={muhuratYearPath(event,year)} key={event}>{event.replaceAll("-"," ")} Muhurat {year}</Link>)}</div></section>
 
-    <section className="wide-panel"><h2 className="page-title" style={{fontSize:32}}>{cityContext.festivalTitle}</h2><p className="page-subtitle">{cityContext.festivalBody}</p>{festivals.length?<div className="city-directory">{festivals.map(item=><Link href={`/festivals/${item.slug}/${year}/${city.slug}`} key={item.slug}><small>{item.date}</small><strong>{item.name}</strong><span>Open local Panchang context</span></Link>)}</div>:<p className="page-subtitle">No maintained festival record is stored for {year}.</p>}</section>
+    <section className="wide-panel"><h2 className="page-title" style={{fontSize:32}}>{cityContext.festivalTitle}</h2><p className="page-subtitle">{cityContext.festivalBody}</p>{festivals.length?<div className="city-directory">{festivals.map(item=><Link href={`/festivals/${item.slug}/${year}/${city.slug}`} key={`${item.slug}-${item.date}`}><small>{item.date}</small><strong>{item.name}</strong><span>Open local Panchang context</span></Link>)}</div>:<p className="page-subtitle">No maintained festival record is stored for {year}.</p>}</section>
 
     {indexable?<section className="wide-panel"><h2 className="page-title" style={{fontSize:32}}>Compare yearly calendars</h2><div className="pill-links">{peers.map(item=><Link href={cityCalendarYearPath(item,year)} key={item.slug}>{item.name}</Link>)}</div></section>:null}
     <div className="pill-links">{activeYears.includes(year-1)?<Link href={cityCalendarYearPath(city,year-1)}>← {year-1}</Link>:null}<Link href={hinduCalendarYearPath(year)}>India {year}</Link>{activeYears.includes(year+1)?<Link href={cityCalendarYearPath(city,year+1)}>{year+1} →</Link>:null}</div>
