@@ -18,6 +18,8 @@ describe("DATA-04: never rank a real city/date with zero surviving local Muhurat
       const sunriseMatched=source!.filter(day=>rule.goodTithi.includes(day.tithi)&&rule.goodNakshatra.includes(day.nakshatra));
       expect(result.lunarMatchedDays).toBe(sunriseMatched.length);
       expect(result.rows.length+result.screenedWithoutWindowDates.length).toBe(sunriseMatched.length);
+      expect(result.screenedWithoutWindowRows.map(r=>r.date)).toEqual(result.screenedWithoutWindowDates);
+      expect(result.screenedWithoutWindowRows.every(r=>r.recommendedWindows.length===0&&r.planning.score===0)).toBe(true);
       const expectedRejected:string[]=[];
       for(const data of sunriseMatched){
         const lunar=boundMuhuratWindowsByLunarTransitions(data,buildRecommendedMuhuratWindows(data));
