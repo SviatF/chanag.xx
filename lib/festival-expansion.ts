@@ -1,4 +1,4 @@
-import {allFestivals,festivalBySlugYear,festivalsByYear,festivalsForYear,type Festival} from "./festivals";
+import {allFestivals,festivalBySlugYear,festivalsByYear,festivalsForYear,indiaFestivalDateIso,type Festival} from "./festivals";
 import {todayInIndia} from "./dates";
 import {isPriorityCity,isWave2ControlledCity} from "./seo-policy";
 
@@ -97,6 +97,6 @@ export function festivalYearSiblings(slug:string,year:number){
 }
 
 export function nextValidatedFestival(date:Date):Festival|null{
-  const iso=date.toISOString().slice(0,10);
+  const iso=indiaFestivalDateIso(date);
   return allFestivals.find(item=>item.date>=iso&&festivalPageIsIndexable(item.slug,item.year))??null;
 }

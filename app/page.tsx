@@ -6,7 +6,7 @@ import Header from "@/components/Header";
 import DayWheel from "@/components/DayWheel";
 import { cities, cityBySlug } from "@/lib/cities";
 import { formatPanchangTime, formatWindow, getPanchang } from "@/lib/panchang";
-import { festivalsForYear, nextFestival } from "@/lib/festivals";
+import {getCalendarFestivalsForCity,nextFestivalForCity} from "@/lib/festival-local-date";
 import { todayInIndia } from "@/lib/dates";
 import {regionalCitiesForLanguage} from "@/lib/regional-seo";
 import {homepageHotset} from "@/lib/hotset-links";
@@ -50,14 +50,14 @@ export default async function Home({searchParams}:{searchParams:Promise<{city?:s
   const now=todayInIndia();
   const data=await getPanchang(now,city);
   const nakshatraEnd=formatPanchangTime(data.nakshatraEnd,data.nakshatraEndDate,data.date);
-  const festival=nextFestival(now);
+  const festival=nextFestivalForCity(now,city);
   const year=now.getUTCFullYear();
   const month=now.getUTCMonth()+1;
   const monthName=new Intl.DateTimeFormat("en-IN",{month:"long",timeZone:"Asia/Kolkata"}).format(now);
   const monthData=await getMonthData(city.slug,year,month);
   const firstWeekday=new Date(Date.UTC(year,month-1,1)).getUTCDay();
   const featured=featuredSlugs.map(cityBySlug);
-  const monthFestivals=festivalsForYear(year).filter(f=>{
+  const monthFestivals=getCalendarFestivalsForCity(year,city).filter(f=>{
     const d=new Date(f.date+"T00:00:00Z");
     return d.getUTCFullYear()===year&&d.getUTCMonth()+1===month;
   });

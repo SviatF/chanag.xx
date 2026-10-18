@@ -8,7 +8,7 @@ import {buildCalendarYearCityContext} from "@/lib/calendar-year-city-context";
 import {buildCalendarYearSimilarityContext} from "@/lib/calendar-year-similarity-context";
 import {buildCalendarYearHighSimilarityContext} from "@/lib/calendar-year-high-similarity-context";
 import {festivalDateIsValidated} from "@/lib/festival-expansion";
-import {festivalsForYear} from "@/lib/festivals";
+import {getCalendarFestivalsForCity} from "@/lib/festival-local-date";
 import {getPanchang} from "@/lib/panchang";
 import {isVratIndexable,isYearlyCalendarIndexable,isYearlyMuhuratIndexable,primaryMuhuratEvents,primaryVratTypes,robotsFor,yearlyIndexYears} from "@/lib/seo-policy";
 import {parseRouteYear} from "@/lib/route-validation";
@@ -31,7 +31,7 @@ export default async function CityYearCalendar({params}:{params:Promise<{city:st
   const activeYears=yearlyIndexYears();
   const indexable=isYearlyCalendarIndexable(year,city.slug);
   const snapshots=await Promise.all(yearlyMonths.map(item=>getPanchang(new Date(Date.UTC(year,item.month-1,1,6)),city)));
-  const festivals=festivalsForYear(year).filter(item=>festivalDateIsValidated(item.slug,year));
+  const festivals=getCalendarFestivalsForCity(year,city).filter(item=>festivalDateIsValidated(item.slug,year));
   const qualityContent=buildYearlyCalendarQualityContent(city,year,snapshots,festivals);
   const cityContext=buildCalendarYearCityContext(city,year,snapshots,festivals);
   const similarityContext=buildCalendarYearSimilarityContext(city,year,snapshots,festivals);
@@ -77,7 +77,7 @@ export default async function CityYearCalendar({params}:{params:Promise<{city:st
 
     <section className="wide-panel"><h2 className="page-title" style={{fontSize:32}}>Muhurat planning in {year}</h2><p className="page-subtitle">Annual India-baseline hubs summarize the year; drill into a month to open city-specific clean timing windows.</p><div className="pill-links">{primaryMuhuratEvents.filter(event=>isYearlyMuhuratIndexable(event,year)).map(event=><Link href={muhuratYearPath(event,year)} key={event}>{event.replaceAll("-"," ")} Muhurat {year}</Link>)}</div></section>
 
-    <section className="wide-panel"><h2 className="page-title" style={{fontSize:32}}>{cityContext.festivalTitle}</h2><p className="page-subtitle">{cityContext.festivalBody}</p>{festivals.length?<div className="city-directory">{festivals.map(item=><Link href={`/festivals/${item.slug}/${year}/${city.slug}`} key={item.slug}><small>{item.date}</small><strong>{item.name}</strong><span>Open local Panchang context</span></Link>)}</div>:<p className="page-subtitle">No maintained festival record is stored for {year}.</p>}</section>
+    <section className="wide-panel"><h2 className="page-title" style={{fontSize:32}}>{cityContext.festivalTitle}</h2><p className="page-subtitle">{cityContext.festivalBody}</p>{festivals.length?<div className="city-directory">{festivals.map(item=><Link href={`/festivals/${item.slug}/${year}/${city.slug}`} key={`${item.slug}-${item.date}`}><small>{item.date}</small><strong>{item.name}</strong><span>Open local Panchang context</span></Link>)}</div>:<p className="page-subtitle">No maintained festival record is stored for {year}.</p>}</section>
 
     {indexable?<section className="wide-panel"><h2 className="page-title" style={{fontSize:32}}>Compare yearly calendars</h2><div className="pill-links">{peers.map(item=><Link href={cityCalendarYearPath(item,year)} key={item.slug}>{item.name}</Link>)}</div></section>:null}
     <div className="pill-links">{activeYears.includes(year-1)?<Link href={cityCalendarYearPath(city,year-1)}>← {year-1}</Link>:null}<Link href={hinduCalendarYearPath(year)}>India {year}</Link>{activeYears.includes(year+1)?<Link href={cityCalendarYearPath(city,year+1)}>{year+1} →</Link>:null}</div>

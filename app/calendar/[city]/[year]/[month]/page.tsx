@@ -10,7 +10,7 @@ import {buildCalendarMonthSimilarityContext} from "@/lib/calendar-month-similari
 import {buildCalendarMonthHighSimilarityContext} from "@/lib/calendar-month-high-similarity-context";
 import {getPrecomputedMuhuratPanchangMonth} from "@/lib/muhurat-precomputed";
 import {getPanchang} from "@/lib/panchang";
-import {festivalsForYear} from "@/lib/festivals";
+import {getCalendarFestivalsForCity} from "@/lib/festival-local-date";
 import {isMonthlyIndexable,robotsFor} from "@/lib/seo-policy";
 import {parseRouteMonth,parseRouteYear} from "@/lib/route-validation";
 import {calendarMonthSsgPriority} from "@/lib/static-seo-routes";
@@ -51,7 +51,7 @@ export default async function CalendarPage({params}:{params:Promise<{city:string
   const precomputed=await getPrecomputedMuhuratPanchangMonth(y,m,city);
   const entries=precomputed??await Promise.all(Array.from({length:count},(_,i)=>getPanchang(new Date(Date.UTC(y,m-1,i+1,6)),city)));
 
-  const monthFestivals=festivalsForYear(y).filter(f=>Number(f.date.slice(5,7))===m);
+  const monthFestivals=getCalendarFestivalsForCity(y,city).filter(f=>Number(f.date.slice(5,7))===m);
   const festivalByDate=new Map(monthFestivals.map(f=>[f.date,f]));
   const qualityContent=buildMonthlyCalendarQualityContent(city,y,m,entries,monthFestivals);
   const cityContext=buildCalendarMonthCityContext(city,y,m,entries,monthFestivals);
@@ -123,7 +123,7 @@ export default async function CalendarPage({params}:{params:Promise<{city:string
       <h2 className="page-title" style={{fontSize:32}}>Festivals in {monthName}</h2>
       <p className="page-subtitle">{qualityContent.festivalBody}</p>
       {monthFestivals.length
-        ? <div className="city-directory">{monthFestivals.map(festival=><Link href={`/festivals/${festival.slug}/${y}/${city.slug}`} key={festival.slug}><small>{festival.date}</small><strong>{festival.name}</strong><span>{festival.short}</span></Link>)}</div>
+        ? <div className="city-directory">{monthFestivals.map(festival=><Link href={`/festivals/${festival.slug}/${y}/${city.slug}`} key={`${festival.slug}-${festival.date}`}><small>{festival.date}</small><strong>{festival.name}</strong><span>{festival.short}</span></Link>)}</div>
         : <p className="page-subtitle">No major festival from the maintained dataset falls in this month.</p>}
     </section>
 

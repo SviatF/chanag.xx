@@ -1,5 +1,5 @@
 import type {City} from "./cities";
-import type {Festival} from "./festivals";
+import {allFestivals,festivalsForYear,indiaFestivalDateIso,type Festival} from "./festivals";
 
 /**
  * Published local observance dates, not algorithmically inferred from longitude,
@@ -50,6 +50,49 @@ export function getReviewedLocalFestivalDate(festival:Festival,city:City):LocalF
 export function getFestivalForCity(festival:Festival,city:City):Festival{
   const reference=getReviewedLocalFestivalDate(festival,city);
   return reference?{...festival,date:reference.date}:festival;
+}
+
+/**
+ * A regional observance is not interchangeable with the India-wide festival
+ * sharing its name. Kolkata's Dussehra (20 Oct 2026) and Bengal-specific
+ * Vijayadashami (21 Oct 2026) are two DIFFERENT published rule outcomes.
+ * Display the second event as an additional marker, never overwrite the first.
+ *
+ * Audit-only source: tests/fixtures/festival-regional-date-evidence.ts;
+ * Drik Panchang Kolkata Bengal-rule calendar, reviewed 2026-10-13.
+ */
+const cityExtraObservances=[
+  {city:"kolkata",year:2026,slug:"dussehra",date:"2026-10-21",
+   name:"Bengal Vijayadashami",
+   short:"Bengal-rule Vijayadashami observance, distinct from India-wide Dussehra on 20 October.",
+   evidenceId:"bengal-vijayadashami-2026-kolkata"}
+] as const;
+
+export function getCalendarFestivalsForCity(year:number,city:City):Festival[]{
+  const national=festivalsForYear(year);
+  const published=national.map(festival=>getFestivalForCity(festival,city));
+  for(const row of cityExtraObservances){
+    if(row.year!==year||row.city!==city.slug)continue;
+    const parent=national.find(festival=>festival.slug===row.slug);
+    if(!parent)throw Error("Missing maintained parent festival for published regional variant");
+    published.push({...parent,date:row.date,name:row.name,short:row.short});
+  }
+  return published.sort((left,right)=>left.date.localeCompare(right.date)||left.name.localeCompare(right.name));
+}
+
+/**
+ * The next REAL date for a particular city, ordered after reviewed local
+ * overrides have been applied. A generic baseline record must not displace a
+ * source-reviewed local observance or be shown on its previous baseline day.
+ *
+ * Null means no future maintained record, NOT a request to recycle 2026.
+ */
+export function nextFestivalForCity(instant:Date,city:City):Festival|null{
+  const today=indiaFestivalDateIso(instant);
+  const years=[...new Set(allFestivals.map(festival=>festival.year))];
+  return years.flatMap(year=>getCalendarFestivalsForCity(year,city))
+    .filter(festival=>festival.date>=today)
+    .sort((left,right)=>left.date.localeCompare(right.date)||left.name.localeCompare(right.name))[0]??null;
 }
 
 /** Explicit evidence for deterministic tests and cross-source reconciliation. */
