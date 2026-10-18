@@ -84,7 +84,7 @@ function vratRows(index:number):VratOccurrence[]{
 
 function muhuratRows(index:number):MuhuratRow[]{
   const count=1+index;
-  return Array.from({length:count},(_,rowIndex)=>({date:`2026-09-${String(4+index*3+rowIndex).padStart(2,"0")}`,recommendedWindows:rowIndex===0&&index===4?[]:[{start:`0${7+index}:10`,end:`${9+index}:00`,sources:[index%2?"Amrit Choghadiya":"Abhijit Muhurat"]}],avoidWindows:[],reasons:[`${tithis[index]} Tithi`,`${nakshatras[index]} Nakshatra`],planning:{score:92-index*7-rowIndex*3,grade:index===0?"Excellent":index<3?"Strong":"Good",totalCleanMinutes:210-index*27,longestWindowMinutes:index===4?0:130-index*22,sourceCount:2,hasAbhijit:index%2===0,idealContinuousMinutes:90,factors:[]}})) as unknown as MuhuratRow[];
+  return Array.from({length:count},(_,rowIndex)=>({date:`2026-09-${String(4+index*3+rowIndex).padStart(2,"0")}`,recommendedWindows:[{start:`0${7+index}:10`,end:`${9+index}:00`,sources:[index%2?"Amrit Choghadiya":"Abhijit Muhurat"]}],avoidWindows:[],reasons:[`${tithis[index]} Tithi`,`${nakshatras[index]} Nakshatra`],planning:{score:92-index*7-rowIndex*3,grade:index===0?"Excellent":index<3?"Strong":"Good",totalCleanMinutes:210-index*27,longestWindowMinutes:130-index*22,sourceCount:2,hasAbhijit:index%2===0,idealContinuousMinutes:90,factors:[]}})) as unknown as MuhuratRow[];
 }
 
 describe("global content uniqueness and citation integrity",()=>{
