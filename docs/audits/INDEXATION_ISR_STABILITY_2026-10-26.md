@@ -12,3 +12,6 @@ Remediation: stable, fixed reviewed metadata release cohort for baseline cities 
 - Review 885 potential indexable URLs and 507 unclassified, don't publish blindly.
 - Re-evaluate extension of fixed release cohort before mid-February 2027, when rolling +45-day discovery approaches the 2027-03-31 ceiling.
 - URL Inspection / GSC comparison must be evaluated separately; these repairs do not prove Google ranking recovery or festival/ceremony accuracy.
+
+### Verified 12,821 linked-outside-sitemap inventory
+The old classifier omitted the five Wave 2 controlled city slugs from its route families, so it wrongly returned **406 Daily + 100 Calendar unclassified** records. The remaining unresolved URL was a retired `/disclaimer` 404 linked from six trust pages; the shared broken link is removed here. Classifier now distinguishes the stable released-but-archived Daily URLs from a genuinely indexable URL missing from its **current** sitemap window. These changes reduce misleading review counts but do not index any new family or establish GSC performance.

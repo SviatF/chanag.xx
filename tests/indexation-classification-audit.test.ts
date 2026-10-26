@@ -1,8 +1,10 @@
 import {describe,expect,it} from "vitest";
-import {phase1PriorityCities,primaryMuhuratEvents} from "../lib/seo-policy";
+import {DAILY_METADATA_RELEASE_END,phase1PriorityCities,primaryMuhuratEvents,wave2ControlledCities} from "../lib/seo-policy";
 // @ts-ignore Audit runtime is intentionally a plain Node ESM module.
 import {
   AUDIT_PRIORITY_CITIES,
+  AUDIT_CONTROLLED_CITIES,
+  AUDIT_DAILY_RELEASE_END,
   AUDIT_PRIMARY_MUHURAT_EVENTS,
   classifyOutsideUrl,
   classifyReport,
@@ -13,14 +15,25 @@ const REFERENCE="2026-09-16";
 describe("outside-sitemap indexation classification",()=>{
   it("keeps the audit policy mirror aligned with SEO policy",()=>{
     expect(AUDIT_PRIORITY_CITIES).toEqual([...phase1PriorityCities]);
+    expect(AUDIT_CONTROLLED_CITIES).toEqual([...wave2ControlledCities]);
+    expect(AUDIT_DAILY_RELEASE_END).toBe(DAILY_METADATA_RELEASE_END);
     expect(AUDIT_PRIMARY_MUHURAT_EVENTS).toEqual([...primaryMuhuratEvents]);
   });
 
   it("separates daily and monthly metadata-indexable gaps from intentional windows",()=>{
-    expect(classifyOutsideUrl("https://panchvani.com/panchang/mumbai/2026-08-02",REFERENCE).classification).toBe("indexable_candidate");
-    expect(classifyOutsideUrl("https://panchvani.com/panchang/mumbai/2026-08-01",REFERENCE).classification).toBe("intentional_exclusion");
+    expect(classifyOutsideUrl("https://panchvani.com/panchang/mumbai/2026-09-01",REFERENCE)).toMatchObject({classification:"intentional_exclusion",reason:"RETAINED_DAILY_ARCHIVE_OUTSIDE_SITEMAP"});
+    expect(classifyOutsideUrl("https://panchvani.com/panchang/mumbai/2026-08-31",REFERENCE)).toMatchObject({classification:"intentional_exclusion",reason:"DAILY_OUTSIDE_PINNED_METADATA_RELEASE"});
+    expect(classifyOutsideUrl("https://panchvani.com/panchang/mumbai/2026-09-15",REFERENCE).classification).toBe("indexable_candidate");
     expect(classifyOutsideUrl("https://panchvani.com/calendar/delhi/2026/06",REFERENCE).classification).toBe("indexable_candidate");
     expect(classifyOutsideUrl("https://panchvani.com/calendar/delhi/2026/05",REFERENCE).classification).toBe("intentional_exclusion");
+  });
+
+  it("classifies the controlled Wave 2 city pages without unclassified warnings",()=>{
+    expect(classifyOutsideUrl("https://panchvani.com/panchang/ludhiana/2026-10-09","2026-10-26")).toMatchObject({classification:"intentional_exclusion",reason:"RETAINED_DAILY_ARCHIVE_OUTSIDE_SITEMAP"});
+    expect(classifyOutsideUrl("https://panchvani.com/panchang/ludhiana/2026-10-22","2026-10-26")).toMatchObject({classification:"intentional_exclusion",reason:"RETAINED_DAILY_ARCHIVE_OUTSIDE_SITEMAP"});
+    expect(classifyOutsideUrl("https://panchvani.com/panchang/ludhiana/2026-11-09","2026-10-26")).toMatchObject({classification:"indexable_candidate",family:"panchang-daily"});
+    expect(classifyOutsideUrl("https://panchvani.com/calendar/agra/2026/11","2026-10-26")).toMatchObject({classification:"intentional_exclusion",reason:"MONTHLY_OUTSIDE_INDEX_WINDOW"});
+    expect(classifyOutsideUrl("https://panchvani.com/panchang/coimbatore/2026-10-26","2026-10-26")).toMatchObject({classification:"intentional_exclusion",reason:"CITY_NOT_IN_AUDIT_DAILY_COHORT"});
   });
 
   it("treats undated Panchang aliases and unvalidated festival pages as intentional exclusions",()=>{

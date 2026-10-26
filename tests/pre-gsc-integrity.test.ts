@@ -31,6 +31,8 @@ describe("Pre-GSC technical indexation integrity",()=>{
     const retiredDisclaimer=source("app/disclaimer/page.tsx");
     expect(retiredDisclaimer).toContain("notFound()");
     expect(retiredDisclaimer).not.toContain('canonical:"/disclaimer"');
+    // The retired 404 route must not be recommended on all six trust pages.
+    expect(source("components/TrustPage.tsx")).not.toContain('href="/disclaimer"');
   });
 
   it("keeps the regional root in only the core sitemap",async()=>{
