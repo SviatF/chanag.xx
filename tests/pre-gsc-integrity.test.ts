@@ -31,6 +31,8 @@ describe("Pre-GSC technical indexation integrity",()=>{
     const retiredDisclaimer=source("app/disclaimer/page.tsx");
     expect(retiredDisclaimer).toContain("notFound()");
     expect(retiredDisclaimer).not.toContain('canonical:"/disclaimer"');
+    // The retired 404 route must not be recommended on all six trust pages.
+    expect(source("components/TrustPage.tsx")).not.toContain('href="/disclaimer"');
   });
 
   it("keeps the regional root in only the core sitemap",async()=>{
@@ -62,12 +64,12 @@ describe("Pre-GSC technical indexation integrity",()=>{
     expect(header).not.toContain("const muhuratItems=Object.entries(muhuratRules)");
   });
 
-  it("emits reciprocal hreflang from today's daily Panchang and Choghadiya",()=>{
+  it("omits volatile nonreciprocal daily hreflang while keeping stable Choghadiya equivalents",()=>{
     const daily=source("app/panchang/[city]/[[...date]]/page.tsx");
     const regional=source("app/regional/[language]/[city]/page.tsx");
     const choghadiya=source("app/tools/choghadiya/[city]/page.tsx");
-    expect(daily).toContain("if(ds===today)alternates.languages=regionalAlternates(city,undefined,ds)");
-    expect(regional).toContain("regionalAlternates(city,undefined,date)");
+    expect(daily).not.toContain("alternates.languages=regionalAlternates");
+    expect(regional).not.toContain("languages:regionalAlternates(city,undefined,date)");
     expect(choghadiya).toContain('regionalAlternates(city,"choghadiya")');
   });
 

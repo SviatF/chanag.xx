@@ -87,9 +87,28 @@ export function isPriorityCity(citySlug:string){
   return isBaselinePriorityCity(citySlug)||isWave2ControlledCity(citySlug)||isConfiguredExtraCity(citySlug);
 }
 
+// Pinned release cohort: never auto-noindex a published dated Daily page just
+// because an SSG/ISR copy outlives the sitemap's advancing discovery window.
+// Changes to the ceiling require editorial/data review, not a daily cron.
+export const DAILY_METADATA_RELEASE_END="2027-03-31";
+const DAILY_BASELINE_RELEASE_START="2026-09-01";
+const DAILY_CONTROLLED_RELEASE_START="2026-10-09";
+
+function validDailyIsoDate(value:string){
+  if(!/^\d{4}-\d{2}-\d{2}$/.test(value))return false;
+  const date=new Date(value+"T00:00:00Z");
+  return !Number.isNaN(date.getTime())&&date.toISOString().slice(0,10)===value;
+}
+
+export function isDailyPageIndexable(citySlug:string,dateIso:string){
+  if(!isPriorityCity(citySlug)||!validDailyIsoDate(dateIso))return false;
+  const first=isBaselinePriorityCity(citySlug)?DAILY_BASELINE_RELEASE_START:DAILY_CONTROLLED_RELEASE_START;
+  return dateIso>=first&&dateIso<=DAILY_METADATA_RELEASE_END;
+}
+
+// A narrow rolling sitemap is a discovery policy, not a robots noindex clock.
 export function isDailyIndexable(citySlug:string,dateIso:string){
-  if(!isPriorityCity(citySlug)) return false;
-  if(!/^\d{4}-\d{2}-\d{2}$/.test(dateIso)) return false;
+  if(!isDailyPageIndexable(citySlug,dateIso))return false;
 
   const now=todayInIndia();
   const target=new Date(dateIso+"T00:00:00Z");

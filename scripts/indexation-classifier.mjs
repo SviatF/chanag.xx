@@ -8,9 +8,15 @@ export const AUDIT_PRIORITY_CITIES=[
   "bhopal","visakhapatnam","patna","vadodara","varanasi"
 ];
 
+export const AUDIT_CONTROLLED_CITIES=["pimpri-chinchwad","ghaziabad","ludhiana","agra","nashik"];
+export const AUDIT_DAILY_RELEASE_END="2027-03-31";
+export const AUDIT_DAILY_BASELINE_START="2026-09-01";
+export const AUDIT_DAILY_CONTROLLED_START="2026-10-09";
+
 export const AUDIT_PRIMARY_MUHURAT_EVENTS=["wedding","griha-pravesh","vehicle-purchase"];
 
 const priorityCities=new Set(AUDIT_PRIORITY_CITIES);
+const controlledCities=new Set(AUDIT_CONTROLLED_CITIES);
 const primaryMuhuratEvents=new Set(AUDIT_PRIMARY_MUHURAT_EVENTS);
 
 function indiaDayFromIso(iso){
@@ -50,19 +56,34 @@ export function classifyOutsideUrl(rawUrl,referenceIso){
     return result("intentional_exclusion","TODAY_ALIAS_CANONICALIZES_TO_DATED_PAGE","panchang-today-alias");
   }
 
-  if(parts[0]==="panchang"&&parts.length===3&&priorityCities.has(parts[1])&&validIsoDate(parts[2])){
-    const delta=dayDistance(parts[2],referenceIso);
-    if(Math.abs(delta)<=45){
-      return result("indexable_candidate","DAILY_METADATA_INDEXABLE_OUTSIDE_SITEMAP","panchang-daily",`dayOffset=${delta}`);
-    }
-    return result("intentional_exclusion","DAILY_OUTSIDE_45_DAY_INDEX_WINDOW","panchang-daily",`dayOffset=${delta}`);
+  if(parts[0]==="panchang"&&parts.length===3&&validIsoDate(parts[2])){
+    const city=parts[1],date=parts[2];
+    const baseline=priorityCities.has(city),controlled=controlledCities.has(city);
+    if(!baseline&&!controlled)
+      return result("intentional_exclusion","CITY_NOT_IN_AUDIT_DAILY_COHORT","panchang-daily");
+    const start=baseline?AUDIT_DAILY_BASELINE_START:AUDIT_DAILY_CONTROLLED_START;
+    if(date<start||date>AUDIT_DAILY_RELEASE_END)
+      return result("intentional_exclusion","DAILY_OUTSIDE_PINNED_METADATA_RELEASE","panchang-daily");
+    const delta=dayDistance(date,referenceIso);
+    const past=baseline?14:3,forward=baseline?45:14;
+    // These are known to be metadata-indexable; if missing from the live
+    // sitemap within its current discovery window, investigate drift.
+    if(delta>=-past&&delta<=forward)
+      return result("indexable_candidate","APPROVED_DAILY_MISSING_FROM_SITEMAP","panchang-daily",`dayOffset=${delta}`);
+    // An archive can stay indexed after leaving the narrow discovery feed.
+    // Do not mistake intentional omission from sitemap for a robots block.
+    return result("intentional_exclusion",delta<0?"RETAINED_DAILY_ARCHIVE_OUTSIDE_SITEMAP":"FUTURE_DAILY_OUTSIDE_DISCOVERY_WINDOW","panchang-daily",`dayOffset=${delta}`);
   }
 
-  if(parts[0]==="calendar"&&parts.length===4&&priorityCities.has(parts[1])&&validYear(parts[2])&&validMonth(parts[3])){
+  if(parts[0]==="calendar"&&parts.length===4&&validYear(parts[2])&&validMonth(parts[3])){
+    const city=parts[1];
+    const baseline=priorityCities.has(city),controlled=controlledCities.has(city);
+    if(!baseline&&!controlled)
+      return result("intentional_exclusion","CITY_NOT_IN_AUDIT_CALENDAR_COHORT","calendar-month");
     const distance=monthDistance(Number(parts[2]),Number(parts[3]),referenceIso);
-    if(distance>=-3&&distance<=12){
-      return result("indexable_candidate","MONTHLY_METADATA_INDEXABLE_OUTSIDE_SITEMAP","calendar-month",`monthOffset=${distance}`);
-    }
+    const inWindow=controlled?distance===0:distance>=-3&&distance<=12;
+    if(inWindow)
+      return result("indexable_candidate","APPROVED_MONTH_MISSING_FROM_SITEMAP","calendar-month",`monthOffset=${distance}`);
     return result("intentional_exclusion","MONTHLY_OUTSIDE_INDEX_WINDOW","calendar-month",`monthOffset=${distance}`);
   }
 

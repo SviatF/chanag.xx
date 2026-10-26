@@ -30,7 +30,6 @@ export default function TrustPage({kicker,title,subtitle,sections}:{kicker:strin
       <Link href="/data-sources">Data sources</Link>
       <Link href="/editorial-policy">Editorial policy</Link>
       <Link href="/corrections">Corrections</Link>
-      <Link href="/disclaimer">Disclaimer</Link>
       <Link href="/photo-credits">Photo credits</Link>
     </div>
   </div></main>;
