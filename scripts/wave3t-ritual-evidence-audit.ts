@@ -75,6 +75,9 @@ for(const event of events){
         if(!resolved){failures.push("missing city: "+city);continue}
         const closure=getVerifiedMuhuratClosure(event,year,month,resolved);
         const notice=getMuhuratVerificationNotice(event,year,month,resolved);
+        // A Delhi-only, independently source-reviewed Vivaha convention is
+        // permitted; blanket non-Maharashtra replication is still a failure.
+        const reviewedDelhiVivaha=resolved.slug==="delhi"&&event==="wedding"&&year===2026&&month===10&&closure?.convention==="Published New Delhi Vivaha Panchang Shuddhi";
         const calendarSources=event==="wedding"?
           marathiMarriage2025to2027.sourcesByYear[year as 2025|2026|2027]:[];
         const sourceLocations=calendarSources.map(s=>s.location);
@@ -89,7 +92,7 @@ for(const event of events){
           publisherLocationScope:sourceLocations,
           closureObserved:Boolean(closure),
           convention:closure?.convention??null,
-          status:closure?"reviewed-customary-monthly-exclusion":"astronomical-candidate-only",
+          status:reviewedDelhiVivaha?"reviewed-delhi-vivaha-convention":closure?"reviewed-customary-monthly-exclusion":"astronomical-candidate-only",
           userNoticeStatus:notice.status,
           independentlyCertifiedExactDay:false,
           stateWideAndAllTraditionsBan:false,
@@ -97,7 +100,7 @@ for(const event of events){
         };
         if(Boolean(closure)!==(notice.status==="reviewed-closed-calendar"))
           failures.push("Notice/closure conflict: "+event+"/"+city+"/"+year+"/"+month);
-        if(resolved.state!=="Maharashtra"&&closure)
+        if(resolved.state!=="Maharashtra"&&closure&&!reviewedDelhiVivaha)
           failures.push("Region leakage: "+event+"/"+city+"/"+year+"/"+month);
         if(event==="griha-pravesh"&&year!==2026&&closure)
           failures.push("Unsupported 2025/27 Griha closure");
@@ -147,7 +150,7 @@ const report={
     "Ekadashi Vrat is a sunrise-based Tithi list; Dashami Vedha, special sampradaya exceptions, and next-day Parana have NOT been independently approved.",
     "If a Tithi boundary and local sunrise are within five displayed minutes, the observation is marked needs-independent-minute-review; never treat a rounded same-minute endpoint as certain.",
     "Purnima/Amavasya are sunrise Panchang observations; Sraddha/night ritual date may require another temporal rule.",
-    "Maharashtra wedding and Griha Pravesh reviewed monthly closures are convention-scoped and must not become India-wide restrictions, exact daily Asta dates or full personal Shuddhi.",
+    "Maharashtra wedding and Griha Pravesh reviewed monthly closures and separately reviewed Delhi October Vivaha are convention-scoped; no India-wide restrictions or inferred daily Asta dates.",
     "A Muhurat planning score of 100/100 is availability of daytime windows, not 100% auspicious or ceremonial validity.",
     "This audit is not a replacement for primary source verification and does not automatically change any published event date or indexability."
   ],
