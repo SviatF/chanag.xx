@@ -36,6 +36,6 @@ export function getMuhuratVerificationNotice(
   return{
     status:"astronomical-candidate-only",
     headline:"Astronomical candidates · NOT verified ceremony dates",
-    explanation:`These ${city.name} ${period} results screen sunrise Tithi/Nakshatra and daytime timing windows. The 0–100 score measures window availability, not a probability of an auspicious ceremony. Full ${eventCautions[event]??"ceremony-specific planetary, regional and family rules"} have NOT been independently verified for every listed date. Review the exact Panchang and your community's practice before treating any candidate as an approved Muhurat.`
+    explanation:`${city.name}, ${period}: sunrise lunar screening only. The 0–100 score measures window availability, never ceremony approval. ${eventCautions[event]??"Ceremony-specific planetary, regional and family rules"} have NOT been independently verified for these dates. Seek local ritual guidance.`
   };
 }

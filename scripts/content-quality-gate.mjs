@@ -63,7 +63,7 @@ console.log(`[content-gate] muhuratTrust inspected=${totals.muhuratTrustInspecte
 console.log(`[content-gate] dailyTrust reviewed=${totals.dailyTrustInspected??0} regressions=${totals.dailyTrustFailures??0}; astronomy and religious eligibility NOT certified`);
 console.log(`[content-gate] dailyFactErrors=${totals.dailyFactFailures??0} physically-identical-vectors=${totals.dailyFactIdenticalGroups??0} (review only)`);
 console.log(`[content-gate] seoIdentity issues=${totals.seoIdentityIssues??0} duplicateTitles=${totals.duplicateSeoTitles??0} duplicateDescriptions=${totals.duplicateMetaDescriptions??0}`);
-console.log(`[content-gate] similarity exact=${totals.exactNormalizedDuplicateGroups??0} high=${totals.highSimilarityPairs??0} severe=${totals.severeSimilarityPairs??0}`);
+console.log(`[content-gate] similarity exact=${totals.exactNormalizedDuplicateGroups??0} high=${totals.highSimilarityPairs??0} factualReview=${totals.factuallyDistinctReviewPairs??0} severe=${totals.severeSimilarityPairs??0}`);
 console.log(`[content-gate] programmatic issues=${programmaticIssues} warnings=${programmaticWarnings}`);
 
 console.log("[content-gate] family-by-family summary:");
