@@ -31,7 +31,7 @@ export default function VerifiedMuhuratClosurePage({event,year,month,city,baseli
     "name":heading,
     "description":closure.headline,
     "url":`https://panchvani.com${canonical}`};
-  return <main><Header city={city}/><div className="page-shell internal-visual internal-muhurat">
+  return <main data-ritual-status="source-reviewed-closure"><Header city={city}/><div className="page-shell internal-visual internal-muhurat">
     <div className="breadcrumbs"><Link href={muhuratYearPath(event,year)}>{rite} {year}</Link> / {monthName} / {place}</div>
     <p className="page-kicker">REVIEWED {isWedding?"MARRIAGE":"HOUSE-ENTRY"} CALENDAR · {city.state.toUpperCase()}</p>
     <h1 className="page-title">{rite} in {place}<br/>{monthName} {year}</h1>

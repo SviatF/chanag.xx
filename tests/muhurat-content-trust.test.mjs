@@ -16,8 +16,12 @@ describe("CT2: public Muhurat trust boundary",()=>{
     expect(summarizeMuhuratTrust([report]).independentCeremonyCertification).toBe(false);
   });
   it("checks regional closure and yearly pages separately",()=>{
-    const closure=doc({html:"REVIEWED REGIONAL WEDDING CALENDAR · Reviewed convention · not a blanket prohibition"});
+    const closure=doc({attrs:`data-ritual-status="source-reviewed-closure"`,html:"REVIEWED REGIONAL WEDDING CALENDAR · Reviewed convention · not a blanket prohibition"});
     expect(inspectRenderedMuhuratTrust(url,closure).category).toBe("reviewed-regional-closure");
+    const fake=doc({html:"REVIEWED REGIONAL WEDDING CALENDAR · Reviewed convention · not a blanket prohibition"});
+    expect(inspectRenderedMuhuratTrust(url,fake).issues).toContain("missing-candidate-only-marker");
+    const missingScope=doc({attrs:`data-ritual-status="source-reviewed-closure"`,html:"Reviewed convention without city-specific scope"});
+    expect(inspectRenderedMuhuratTrust(url,missingScope).issues).toContain("missing-region-scope");
     const yearly=doc({html:"Candidate-only evidence: NOT verified ceremony dates"});
     expect(inspectRenderedMuhuratTrust("/muhurat/wedding/2027",yearly).issues).toEqual([]);
   });

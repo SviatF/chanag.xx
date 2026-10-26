@@ -11,7 +11,7 @@ export function inspectRenderedMuhuratTrust(pathname,html){
   if(!main)return {pathname,category:"unreadable",issues:["missing-main"],riskFlags:["ritual-unverified"]};
   const markup=main[2];
   const plain=markup.replace(/<script\b[^>]*>[\s\S]*?<\/script>/gi," ").replace(/<[^>]+>/g," ").replace(/\s+/g," ");
-  const reviewedClosure=/\bREVIEWED REGIONAL\b/i.test(plain)&&/\bReviewed convention\b/i.test(plain);
+  const reviewedClosure=/data-ritual-status=["\x27]source-reviewed-closure["\x27]/i.test(main[1])&&/\bReviewed convention\b/i.test(plain);
   const issues=[];
   const jsonScripts=[...markup.matchAll(/<script\b[^>]*type=["']application\/ld\+json["'][^>]*>([\s\S]*?)<\/script>/gi)];
   if(!jsonScripts.length)issues.push("no-jsonld");
@@ -23,7 +23,7 @@ export function inspectRenderedMuhuratTrust(pathname,html){
     }catch{issues.push("invalid-jsonld");}
   }
   if(reviewedClosure){
-    if(!/\bnot a blanket prohibition\b/i.test(plain))issues.push("missing-region-scope");
+    if(!/\bnot a (?:blanket|universal)\b/i.test(plain))issues.push("missing-region-scope");
     return {pathname,category:"reviewed-regional-closure",issues,riskFlags:["other-traditions-unreviewed"]};
   }
   if(MONTH.test(pathname)){

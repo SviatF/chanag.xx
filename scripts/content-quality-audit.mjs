@@ -6,6 +6,7 @@ import {inspectCrossPageCalendar,reconcileRenderedCalendar} from "./crosspage-ca
 import {chooseUnlistedDailyReferences} from "./unlisted-calendar-reference-sampler.mjs";
 import {inspectRenderedDailyTrust,summarizeDailyTrust} from "./daily-content-trust.mjs";
 import {inspectRenderedMuhuratTrust,summarizeMuhuratTrust} from "./muhurat-content-trust.mjs";
+import {evidenceDistinctSimilarityPair} from "./factual-similarity-evidence.mjs";
 
 const args=process.argv.slice(2);
 function arg(name,fallback){
@@ -195,7 +196,7 @@ function factualEvidenceSignals(html,text){
   const factualCards=[...html.matchAll(/<div\b[^>]*class=["'][^"']*\bdata-card\b[^"']*["'][^>]*>/gi)].length;
   const dataRows=[...html.matchAll(/<tr\b/gi)].length;
   const sections=[...html.matchAll(/<h[2-4]\b/gi)].length;
-  return {distinctClockValues:clocks.length,distinctIsoDates:isoDates.length,factualCards,dataRows,sections};
+  return {distinctClockValues:clocks.length,distinctIsoDates:isoDates.length,factualCards,dataRows,sections,clockValues:clocks};
 }
 
 function auditPage(pathname,html){
@@ -261,7 +262,10 @@ function pairwiseSimilarity(pages){
     if(list.length<2)continue;
     for(let i=0;i<list.length;i++)for(let j=i+1;j<list.length;j++){
       const score=jaccard(list[i].normalizedWords,list[j].normalizedWords);
-      if(score>=HIGH_RISK_SIMILARITY)pairs.push({group,left:list[i].pathname,right:list[j].pathname,score:Number(score.toFixed(4)),severity:score>=SEVERE_SIMILARITY?"severe":"high"});
+      if(score>=HIGH_RISK_SIMILARITY){
+        const different=evidenceDistinctSimilarityPair(list[i],list[j],score);
+        pairs.push({group,left:list[i].pathname,right:list[j].pathname,score:Number(score.toFixed(4)),severity:score>=SEVERE_SIMILARITY?"severe":different?"factually-distinct-review":"high",clockEvidenceDistinct:different});
+      }
     }
   }
   return pairs.sort((a,b)=>b.score-a.score);
@@ -354,7 +358,8 @@ for(const page of pages){
 for(const pair of similarityPairs){
   const family=pair.group.split("::")[0];
   const entry=familySummary[family]??={pages:0,issues:0,warnings:0,disclaimerPages:0};
-  entry.highSimilarityPairs=(entry.highSimilarityPairs??0)+1;
+  if(pair.severity==="factually-distinct-review")entry.factuallyDistinctReviewPairs=(entry.factuallyDistinctReviewPairs??0)+1;
+  else entry.highSimilarityPairs=(entry.highSimilarityPairs??0)+1;
   if(pair.severity==="severe")entry.severeSimilarityPairs=(entry.severeSimilarityPairs??0)+1;
 }
 
@@ -380,7 +385,9 @@ const report={
     seoIdentityIssues:seoIdentity.issues.length,
     duplicateSeoTitles:seoIdentity.duplicateTitles.length,
     duplicateMetaDescriptions:seoIdentity.duplicateDescriptions.length,
-    highSimilarityPairs:similarityPairs.length,severeSimilarityPairs:similarityPairs.filter(pair=>pair.severity==="severe").length,
+    highSimilarityPairs:similarityPairs.filter(pair=>pair.severity!=="factually-distinct-review").length,
+    factuallyDistinctReviewPairs:similarityPairs.filter(pair=>pair.severity==="factually-distinct-review").length,
+    severeSimilarityPairs:similarityPairs.filter(pair=>pair.severity==="severe").length,
     disclaimerPages:pages.filter(page=>page.disclaimerHits.length).length,
   },
   familySummary,
@@ -403,7 +410,7 @@ writeFileSync(reportPath,JSON.stringify(report,null,2));
 
 console.log(`[content-audit] fetched=${pages.length}/${paths.length}`);
 console.log(`[content-audit] structural=${structuralIssues.length} hreflang=${hreflangIssues.length} duplicateCanonicals=${duplicateCanonicals.length}`);
-console.log(`[content-audit] similarity high=${similarityPairs.length} severe=${report.totals.severeSimilarityPairs} exact=${exactNormalizedDuplicates.length}`);
+console.log(`[content-audit] similarity high=${report.totals.highSimilarityPairs} factual-review=${report.totals.factuallyDistinctReviewPairs} severe=${report.totals.severeSimilarityPairs} exact=${exactNormalizedDuplicates.length}`);
 console.log(`[content-audit] SEO identity audited=${seoIdentity.programmaticPages} issues=${seoIdentity.issues.length} duplicateTitles=${seoIdentity.duplicateTitles.length} duplicateDescriptions=${seoIdentity.duplicateDescriptions.length}`);
 console.log(`[content-audit] rendered daily facts=${dailyFactIntegrity.dailyPages} errors=${dailyFactIntegrity.failures.length} identicalLocalVectors=${dailyFactIntegrity.identicalLocalFactGroups.length} (human review, not presumed error)`);
 console.log(`[content-audit] crossPage month=${crossPageCalendar.matchedMonth}/${crossPageCalendar.monthRows} vrat=${crossPageCalendar.matchedVrat}/${crossPageCalendar.vratRows} contradictions=${crossPageCalendar.contradictions.length} unmatched=${crossPageCalendar.missingCounterparts.length}`);
