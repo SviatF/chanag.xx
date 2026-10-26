@@ -46,7 +46,12 @@ describe("international SEO alternate integrity",()=>{
     expect(hub).toContain('canonical:`/regional/${language}`');
     expect(hub).toContain("languages:regionalLanguageHubAlternates()");
     expect(city).toContain('canonical:`/regional/${p.language}/${city.slug}`');
-    expect(city).toContain("languages:regionalAlternates(city,undefined,date)");
+    expect(city).not.toContain("languages:regionalAlternates(city,undefined,date)");
+    const daily=source("app/panchang/[city]/[[...date]]/page.tsx");
+    expect(daily).not.toContain("alternates.languages=regionalAlternates");
+    expect(daily).toContain("robots:robotsFor(isDailyPageIndexable(city.slug,ds))");
+    expect(city).toContain("<LanguageLinks languages={languageAlternates}/>");
+    expect(daily).toContain("<LanguageLinks languages={languageAlternates}/>");
     expect(intent).toContain("canonical:regionalIntentPath(language,city,intent)");
     expect(intent).toContain("languages:regionalAlternates(city,intent)");
   });

@@ -62,12 +62,12 @@ describe("Pre-GSC technical indexation integrity",()=>{
     expect(header).not.toContain("const muhuratItems=Object.entries(muhuratRules)");
   });
 
-  it("emits reciprocal hreflang from today's daily Panchang and Choghadiya",()=>{
+  it("omits volatile nonreciprocal daily hreflang while keeping stable Choghadiya equivalents",()=>{
     const daily=source("app/panchang/[city]/[[...date]]/page.tsx");
     const regional=source("app/regional/[language]/[city]/page.tsx");
     const choghadiya=source("app/tools/choghadiya/[city]/page.tsx");
-    expect(daily).toContain("if(ds===today)alternates.languages=regionalAlternates(city,undefined,ds)");
-    expect(regional).toContain("regionalAlternates(city,undefined,date)");
+    expect(daily).not.toContain("alternates.languages=regionalAlternates");
+    expect(regional).not.toContain("languages:regionalAlternates(city,undefined,date)");
     expect(choghadiya).toContain('regionalAlternates(city,"choghadiya")');
   });
 

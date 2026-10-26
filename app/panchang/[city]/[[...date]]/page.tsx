@@ -11,10 +11,9 @@ import {buildDailyPanchangQualityContent} from "@/lib/daily-content-engine";
 import {buildDailyCityContext} from "@/lib/daily-city-context";
 import {formatPanchangTime,formatWindow,getPanchang} from "@/lib/panchang";
 import {getLunarMonthConventions} from "@/lib/calendar-conventions";
-import {isDailyIndexable,robotsFor} from "@/lib/seo-policy";
+import {isDailyPageIndexable,robotsFor} from "@/lib/seo-policy";
 import {computeObservedDailyTimingOverlaps} from "@/lib/daily-window-overlap";
 import {nextValidatedFestival} from "@/lib/festival-expansion";
-import {todayInIndia} from "@/lib/dates";
 import {resolveDailyRouteDate} from "@/lib/route-validation";
 import {regionalAlternates} from "@/lib/regional-seo";
 import {datedPanchangSsgPriority} from "@/lib/static-seo-routes";
@@ -35,10 +34,10 @@ export async function generateMetadata({params}:{params:Promise<{city:string,dat
   const date=resolveDailyRouteDate(p.date);
   if(!city||!date)notFound();
   const ds=date.toISOString().slice(0,10);
-  const today=todayInIndia().toISOString().slice(0,10);
+  // Cached dated pages must keep date-stable metadata. Moving "today" hreflang
+  // pairs cannot remain reciprocal across independently revalidated locales.
   const alternates:Metadata["alternates"]={canonical:`/panchang/${city.slug}/${ds}`};
-  if(ds===today)alternates.languages=regionalAlternates(city,undefined,ds);
-  return {title:`${city.name} Panchang for ${ds} — Tithi, Nakshatra & Sunrise`,description:`Panchang for ${city.name}: Tithi, Nakshatra, sunrise, sunset, Rahu Kalam, Yamaganda, Gulika and Abhijit Muhurat for ${ds}.`,alternates,robots:robotsFor(isDailyIndexable(city.slug,ds))};
+  return {title:`${city.name} Panchang for ${ds} — Tithi, Nakshatra & Sunrise`,description:`Panchang for ${city.name}: Tithi, Nakshatra, sunrise, sunset, Rahu Kalam, Yamaganda, Gulika and Abhijit Muhurat for ${ds}.`,alternates,robots:robotsFor(isDailyPageIndexable(city.slug,ds))};
 }
 
 export default async function PanchangPage({params}:{params:Promise<{city:string,date?:string[]}>}){
