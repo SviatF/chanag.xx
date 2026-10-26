@@ -62,6 +62,8 @@ export const festivalDateEvidence:readonly FestivalDateReference[]=[
  * Every row is checked separately by the Festival Truth Audit.
  */
 export const independentFestivalDateChecks:readonly FestivalDateReference[]=[
+  {slug:"akshaya-tritiya",year:2027,date:"2027-05-09",source:"https://www.prokerala.com/festivals/akshaya-tritiya.html",sourceLocality:"Prokerala, Ujjain published observance day (not Delhi Puja window)",observedOn:"2026-10-26"},
+  {slug:"chhath-puja",year:2027,date:"2027-11-04",source:"https://www.timeanddate.com/holidays/india/2027",sourceLocality:"Timeanddate India holiday/observance date; NOT city sunrise/sunset certification",observedOn:"2026-10-26"},
   {slug:"ganesh-chaturthi",year:2026,date:"2026-09-14",source:"https://www.prokerala.com/festivals/ganesh-chaturthi.html",sourceLocality:"Prokerala India-wide festival date reference",observedOn:"2026-10-13"},
   {slug:"ganesh-chaturthi",year:2027,date:"2027-09-04",source:"https://www.prokerala.com/calendar/hinducalendar-2027.html",sourceLocality:"Prokerala general Hindu calendar 2027",observedOn:"2026-10-13"},
   {slug:"dussehra",year:2027,date:"2027-10-09",source:"https://www.prokerala.com/calendar/hinducalendar-2027.html",sourceLocality:"Prokerala general Hindu calendar 2027",observedOn:"2026-10-13"},
