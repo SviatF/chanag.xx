@@ -50,7 +50,9 @@ describe("Reviewed Marathi marriage calendar by state, year and month",()=>{
     for(const slug of ["delhi","ahmedabad","chennai","kolkata","bengaluru","jaipur","surat"]){
       const city=findCityBySlug(slug)!;
       for(const year of reviewedYears)for(const month of reviewedMonths){
-        expect(getVerifiedMuhuratClosure("wedding",year,month,city)).toBeNull();
+        if(slug==="delhi"&&year===2026&&month===10){
+          expect(getVerifiedMuhuratClosure("wedding",year,month,city)?.convention).toBe("Published New Delhi Vivaha Panchang Shuddhi");
+        }else expect(getVerifiedMuhuratClosure("wedding",year,month,city)).toBeNull();
       }
     }
   });

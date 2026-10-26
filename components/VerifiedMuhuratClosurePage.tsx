@@ -19,7 +19,10 @@ export default function VerifiedMuhuratClosurePage({event,year,month,city,baseli
   const place=baseline?"Mumbai baseline":city.name;
   const isWedding=event==="wedding";
   const rite=isWedding?"Wedding Muhurat":"Griha Pravesh Muhurat";
-  const dateKind=isWedding?"Traditional Marathi marriage dates":"Traditional Marathi house-entry dates";
+  const marathi=closure.convention==="Customary Marathi marriage calendar"||closure.convention==="Reviewed Marathi house-entry calendar";
+  const dateKind=marathi
+    ?isWedding?"Traditional Marathi marriage dates":"Traditional Marathi house-entry dates"
+    :"Source-reviewed Delhi Vivaha dates";
   const heading=`${rite} in ${place} — ${monthName} ${year}`;
   const canonical=baseline
     ?`/muhurat/${event}/${year}/${month}`
@@ -30,7 +33,7 @@ export default function VerifiedMuhuratClosurePage({event,year,month,city,baseli
     "url":`https://panchvani.com${canonical}`};
   return <main><Header city={city}/><div className="page-shell internal-visual internal-muhurat">
     <div className="breadcrumbs"><Link href={muhuratYearPath(event,year)}>{rite} {year}</Link> / {monthName} / {place}</div>
-    <p className="page-kicker">REVIEWED REGIONAL {isWedding?"MARRIAGE":"HOUSE-ENTRY"} CALENDAR · MAHARASHTRA</p>
+    <p className="page-kicker">REVIEWED {isWedding?"MARRIAGE":"HOUSE-ENTRY"} CALENDAR · {city.state.toUpperCase()}</p>
     <h1 className="page-title">{rite} in {place}<br/>{monthName} {year}</h1>
     <p className="page-subtitle">{closure.headline}. This documented result describes one community calendar, not an inability to calculate the local lunar day.</p>
     <div className="data-grid">
@@ -40,7 +43,7 @@ export default function VerifiedMuhuratClosurePage({event,year,month,city,baseli
     </div>
     <section className="wide-panel"><div className="seo-copy">
       <small>WHY THERE IS NO {monthName.toUpperCase()} SHORTLIST</small>
-      <h2>Why are no customary Marathi {isWedding?"wedding":"house-entry"} Muhurat dates recommended?</h2>
+      <h2>Why are no {marathi?"customary Marathi":city.name+"-reviewed"} {isWedding?"wedding":"house-entry"} Muhurat dates recommended?</h2>
       <p>{closure.explanation}</p>
       <p>{closure.periodNote} All {new Date(Date.UTC(year,month,0)).getUTCDate()} civil dates of {monthName} are excluded under the named convention. This page does not promote an otherwise favorable hourly window to a confirmed {isWedding?"wedding":"Griha Pravesh"} recommendation.</p>
     </div></section>
@@ -50,7 +53,9 @@ export default function VerifiedMuhuratClosurePage({event,year,month,city,baseli
       <p>{closure.alternativesNote}</p>
       {!isWedding?<p>Why might another published calendar list dates for the same month? Different traditions and calculation methods can apply distinct month restrictions and ceremony selection rules. The zero-date count here is explicitly the reviewed Marathi house-entry calendar, not a universal prohibition or an independently verified reconciliation of those other methods.</p>:null}
       <p>{isWedding
-        ?"Separate calculations such as Venus/Jupiter combustion, Yoga, Karana, Lagna and personalized compatibility are not independently certified here. The marriage closure follows the reviewed Marathi Chaturmas convention."
+        ?marathi
+          ?"Separate calculations such as Venus/Jupiter combustion, Yoga, Karana, Lagna and personalized compatibility are not independently certified here. The marriage closure follows the reviewed Marathi Chaturmas convention."
+          :"This exact Delhi/October 2026 outcome follows three published local Vivaha calendars. Panchvani has not independently solved the full planetary-combustion clocks, regional rules or personal Lagna Shuddhi for each civil day."
         :"The house-entry closure follows reviewed published calendars. Exact Guru/Shukra combustion instants, prohibited Yoga/Karana and Lagna have not been independently certified for every local day. This page must not claim an invented minute-level religious computation."}</p>
     </div></section>
     <section className="wide-panel"><div className="seo-copy">
