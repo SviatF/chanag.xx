@@ -2,6 +2,7 @@ import type {Metadata} from "next";
 import Link from "next/link";
 import {notFound} from "next/navigation";
 import Header from "@/components/Header";
+import IndependentCalendarEvidence from "@/components/IndependentCalendarEvidence";
 import CalendarEvidenceNotice from "@/components/CalendarEvidenceNotice";
 import TopicalGraph from "@/components/TopicalGraph";
 import {findCityBySlug} from "@/lib/cities";
@@ -49,6 +50,7 @@ export default async function VratCityPage({params}:{params:Promise<{vrat:string
     <h1 className="page-title">{vrat.name} {year}<br/>{city.name}</h1>
     <p className="page-subtitle">{quality.directAnswer}</p>
     <CalendarEvidenceNotice scope="sunrise-tithi-reference" cityName={city.name} subject={vrat.name} year={year}/>
+    <IndependentCalendarEvidence kind="ekadashi" slug={vrat.slug} citySlug={city.slug} year={year}/>
 
     <div className="data-grid">
       <div className="data-card"><small>Sunrise observations</small><strong>{summary.count}</strong><small>{summary.first??"—"} → {summary.last??"—"}</small></div>

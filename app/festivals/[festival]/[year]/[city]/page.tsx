@@ -2,6 +2,7 @@ import type {Metadata} from "next";
 import Link from "next/link";
 import {notFound} from "next/navigation";
 import Header from "@/components/Header";
+import IndependentCalendarEvidence from "@/components/IndependentCalendarEvidence";
 import TopicalGraph from "@/components/TopicalGraph";
 import {findCityBySlug} from "@/lib/cities";
 import {getLunarMonthConventions} from "@/lib/calendar-conventions";
@@ -93,6 +94,7 @@ export default async function Page({params}:{params:Promise<{festival:string;yea
     <p className="page-kicker">LOCAL FESTIVAL PANCHANG · {city.state}</p>
     <h1 className="page-title">{festival.name} {year}<br/>in {city.name}</h1>
     <p className="page-subtitle">{content.directAnswer}</p>
+    <IndependentCalendarEvidence kind="festival" slug={festival.slug} citySlug={city.slug} year={year}/>
 
     <div className="data-grid">
       {content.directFacts.map(item=><div className="data-card" key={item.label}><small>{item.label}</small><strong>{item.value}</strong>{item.note?<small>{item.note}</small>:null}</div>)}
