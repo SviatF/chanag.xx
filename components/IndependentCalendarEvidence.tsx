@@ -12,7 +12,7 @@ export default function IndependentCalendarEvidence({kind,slug,citySlug,year}:Pr
         <h2>{example.name}: sunrise Tithi and tradition-specific fasting days differ</h2>
         <p>Published Smarta fasting date: <strong>{example.smarta}</strong>. Published Vaishnava fasting date: <strong>{example.vaishnava}</strong>.</p>
         <p>{example.explanation}</p>
-        <p>This is a cited example of a different rule system, not a PANCHVANI-calculated fasting or Parana recommendation. Source: <a href={example.source} target="_blank" rel="noopener noreferrer">Drik Panchang · Delhi Ekadashi calendar</a>.</p>
+        <p>This is a sourced example of a different rule system, not a PANCHVANI-calculated fasting or Parana recommendation. Review the <a href="https://github.com/SviatF/chanag.xx/blob/main/docs/audits/INDEPENDENT_PUBLISHED_CALENDAR_2026-10-26.md" target="_blank" rel="noopener noreferrer">independent publication evidence ledger</a> for the exact source, city and rules.</p>
       </div>
     </section>;
   }
@@ -23,7 +23,7 @@ export default function IndependentCalendarEvidence({kind,slug,citySlug,year}:Pr
       <small>PUBLISHED LOCALITY EVIDENCE · DELHI · 2027</small>
       <h2>{example.title}</h2>
       <p>Maintained Delhi observance: <strong>{example.observance}</strong>. {example.explanation}</p>
-      <p>Publisher comparison: <a href={example.source} target="_blank" rel="noopener noreferrer">Drik Panchang · Delhi</a> and <a href={example.secondSource} target="_blank" rel="noopener noreferrer">second published calendar</a>. This comparison does not independently certify ritual eligibility or a city-specific puja minute.</p>
+      <p>See the <a href="https://github.com/SviatF/chanag.xx/blob/main/docs/audits/INDEPENDENT_PUBLISHED_CALENDAR_2026-10-26.md" target="_blank" rel="noopener noreferrer">independently published calendar evidence ledger</a> for dated source records. This comparison does not independently certify ritual eligibility or a city-specific puja minute.</p>
     </div>
   </section>;
 }

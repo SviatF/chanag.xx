@@ -18,17 +18,17 @@ describe("Wave 2C: independently documented festival dates and regional variance
       expect(festivalPageIsIndexable(row.slug,2027)).toBe(false);
     }
   });
-  it("separately verifies 7 festival-year dates against a second publisher without inflating original coverage",()=>{
+  it("separately verifies nine festival-year dates against other published calendars without inflating original coverage",()=>{
     expect(festivalDateEvidence).toHaveLength(38);
-    expect(independentFestivalDateChecks).toHaveLength(7);
-    expect(new Set(independentFestivalDateChecks.map(r=>r.year+"|"+r.slug)).size).toBe(7);
+    expect(independentFestivalDateChecks).toHaveLength(9);
+    expect(new Set(independentFestivalDateChecks.map(r=>r.year+"|"+r.slug)).size).toBe(9);
     for(const source of independentFestivalDateChecks){
       const primary=festivalDateEvidence.find(r=>r.slug===source.slug&&r.year===source.year);
       expect(primary?.date).toBe(source.date);
       expect(festivalBySlugYear(source.slug,source.year)?.date).toBe(source.date);
       expect(new URL(primary!.source).hostname).not.toBe(new URL(source.source).hostname);
     }
-    expect(independentFestivalDateChecks.filter(r=>r.year===2027)).toHaveLength(6);
+    expect(independentFestivalDateChecks.filter(r=>r.year===2027)).toHaveLength(8);
   });
   it("distinguishes Kolkata Bengal Vijayadashami from general Dussehra in 2026",()=>{
     const ref=festivalRegionalDateEvidence[0];
