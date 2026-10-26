@@ -28,7 +28,7 @@ export async function generateMetadata({params}:{params:Promise<{event:string;ye
   if(!city||!rule||!year||!month)notFound();
   const heading=buildMuhuratCityMonthHeading(rule.title,city.name,year,month);
   const closure=getVerifiedMuhuratClosure(p.event,year,month,city);
-  if(closure)return {title:`${rule.title} — No Dates Under Reviewed ${closure.convention} in ${city.name} · ${heading.period}`,description:closure.headline+`. ${closure.reason} under the reviewed ${closure.convention} convention.`,alternates:{canonical:`/muhurat/${p.event}/${year}/${p.month}/${city.slug}`},robots:robotsFor(isMonthlyMuhuratIndexable(p.event,year,month,city.slug))};
+  if(closure)return {title:`${rule.title} — ${closure.convention==="Reviewed Marathi house-entry calendar"?"No Customary Marathi House-Entry Dates":closure.convention==="Customary Marathi marriage calendar"?"No Traditional Marathi Wedding Dates":"No Dates Under Reviewed Delhi Vivaha Calendar"} in ${city.name} · ${heading.period}`,description:closure.headline+`. ${closure.reason} under the reviewed ${closure.convention} convention.`,alternates:{canonical:`/muhurat/${p.event}/${year}/${p.month}/${city.slug}`},robots:robotsFor(isMonthlyMuhuratIndexable(p.event,year,month,city.slug))};
   return {title:`${heading.full} Candidate Dates`,description:`${heading.full}: sunrise-based Tithi/Nakshatra and daytime interval screening; dates are not verified ceremony recommendations.`,alternates:{canonical:`/muhurat/${p.event}/${year}/${p.month}/${city.slug}`},robots:robotsFor(isMonthlyMuhuratIndexable(p.event,year,month,city.slug))};
 }
 
