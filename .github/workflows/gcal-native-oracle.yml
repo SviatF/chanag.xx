@@ -41,7 +41,8 @@ jobs:
             $cmdArgs = @("-R",$scenario.request,"-L","28N37;77E12","-N","Delhi","-TZ","5:30","-SG",$scenario.start)
             if ($scenario.method -ne "") { $cmdArgs += @($scenario.method,$scenario.final) }
             $cmdArgs += @("-O",$dest)
-            & $exe @cmdArgs
+            $native = Start-Process -FilePath $exe -ArgumentList $cmdArgs -PassThru -Wait
+            for ($poll=0; $poll -lt 20 -and !(Test-Path $dest); $poll++) { Start-Sleep -Milliseconds 200 }
             $exists = Test-Path $dest
             $data = if ($exists) { [IO.File]::ReadAllText($dest) } else { "" }
             $count = if ($data -match '<arg name="daycount" val="(\d+)"') { [int]$Matches[1] } else { -1 }
