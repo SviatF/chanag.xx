@@ -6,9 +6,9 @@
  */
 import type {City} from "./cities";
 import {createDefaultSweData} from "@typescriptify/sweph/dist/types.js";
-import {sweCalcUt,sweClose} from "@typescriptify/sweph/dist/sweph.js";
+import {sweCalcUt,sweClose,sweSetSidMode} from "@typescriptify/sweph/dist/sweph.js";
 import {sweRiseTrans} from "@typescriptify/sweph/dist/swecl.js";
-import {SE_SUN,SE_MOON,SEFLG_MOSEPH,SE_CALC_RISE} from "@typescriptify/sweph/dist/constants.js";
+import {SE_SUN,SE_MOON,SEFLG_MOSEPH,SEFLG_SIDEREAL,SE_SIDM_LAHIRI,SE_CALC_RISE} from "@typescriptify/sweph/dist/constants.js";
 import {addIsoDays,indiaCivilDayStartJulian,indiaLocalPartsFromJulian} from "./india-time";
 
 export const ARUNODAYA_MINUTES_BEFORE_SUNRISE = 96 as const;
@@ -61,6 +61,7 @@ function boundary(swed:SwissState,at:number,direction:-1|1){
 export type EkadashiMethodDiagnostic={
   city:string;date:string;sunrise:Time;arunodaya:Time;followingSunrise:Time;
   sunriseTithiIndex:number;sunriseTithi:string;
+  sunriseNakshatraIndex:number;followingSunriseNakshatraIndex:number;
   arunodayaTithiIndex:number;arunodayaTithi:string;
   followingSunriseTithiIndex:number;followingSunriseTithi:string;
   dashamiArunodayaScreen:"dashami-at-arunodaya"|"ekadashi-at-arunodaya"|"not-ekadashi-at-sunrise"|"other-arunodaya-state";
@@ -84,6 +85,12 @@ export function compareEkadashiArunodaya(city:City,date:string):EkadashiMethodDi
   const [year,month,day]=date.split("-").map(Number);
   const swed=createDefaultSweData();
   try{
+    sweSetSidMode(swed,SE_SIDM_LAHIRI,0,0);
+    const nakshatraAt=(jd:number)=>{
+      const longitude=sweCalcUt(swed,jd,SE_MOON,SEFLG_MOSEPH|SEFLG_SIDEREAL).xx[0];
+      if(!Number.isFinite(longitude))throw Error("Nonfinite independent Lahiri Moon longitude");
+      return Math.floor(normalized(longitude)/(360/27));
+    };
     const sunriseFor=(start:number,expectedDate:string)=>{
       const rise=sweRiseTrans(swed,start,SE_SUN,null,SEFLG_MOSEPH,SE_CALC_RISE,[city.lng,city.lat,0],1013.25,25,null);
       if(rise.retval<0||!Number.isFinite(rise.tret))throw Error("No astronomical sunrise: "+expectedDate);
@@ -123,6 +130,7 @@ export function compareEkadashiArunodaya(city:City,date:string):EkadashiMethodDi
     return {
       city:city.slug,date,sunrise:local(sunrise),arunodaya:local(arunodaya),followingSunrise:local(following),
       sunriseTithiIndex:atRise,sunriseTithi:tithiName(atRise),
+      sunriseNakshatraIndex:nakshatraAt(sunrise),followingSunriseNakshatraIndex:nakshatraAt(following),
       arunodayaTithiIndex:atArunodaya,arunodayaTithi:tithiName(atArunodaya),
       followingSunriseTithiIndex:atNext,followingSunriseTithi:tithiName(atNext),
       dashamiArunodayaScreen,sunriseAndArunodayaDisagree:atRise!==atArunodaya,
