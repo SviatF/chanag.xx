@@ -15,6 +15,7 @@ const event={date:"2026-01-14",gcalEkadashiFast:true,mismatch:false,sourceSubtyp
 function scenario(){
  const baseline=makeSummary(),current=structuredClone(baseline);
  current.totals.candidateMismatches=159;
+ current.totals.independentOnlySubtypeCandidates=0;
  const oldRows=new Map(),newRows=new Map();
  for(let i=0;i<18993;i++){
   const key="city/"+(2026+i%2)+"/event-"+i;
@@ -49,6 +50,20 @@ describe("PANCHVANI strict 908-year parity and no-regression gate",()=>{
   const a=scenario();const key=a.newRows.keys().next().value;
   a.newRows.set(key,{...a.newRows.get(key),mismatch:true});
   assert.match(compareResearchRuns(...Object.values(a)).errors.join(" "),/Previously matched fast dates regressed/);
+ });
+ it("blocks newly invented Mahadvadashi subtype when GCal has no subtype",()=>{
+  const a=scenario(),key=a.newRows.keys().next().value;
+  a.newRows.set(key,{...a.newRows.get(key),subtype:"UNMILANI"});
+  a.current.totals.independentOnlySubtypeCandidates=1;
+  const result=compareResearchRuns(...Object.values(a));
+  assert.equal(result.status,"REGRESSION_GATE_FAILED");
+  assert.match(result.errors.join(" "),/independent-only Mahadvadashi/i);
+ });
+ it("blocks unreported independently invented subtype count",()=>{
+  const a=scenario(),key=a.newRows.keys().next().value;
+  a.newRows.set(key,{...a.newRows.get(key),subtype:"UNMILANI"});
+  const result=compareResearchRuns(...Object.values(a));
+  assert.match(result.errors.join(" "),/source disagreement totals invalid/);
  });
  it("rejects false ritual certification",()=>{
   const a=scenario();a.current.publicRitualApproval=true;
