@@ -1,0 +1,37 @@
+name: PANCHVANI Independent Vedha/Hari Vasara Research (NON-PUBLISHING)
+on:
+  workflow_dispatch:
+  pull_request:
+    paths:
+      - "lib/independent-vaishnava-rule-screen.ts"
+      - "tests/independent-vaishnava-rule-screen.test.ts"
+      - "scripts/independent-vaishnava-annual-compare.ts"
+      - ".github/workflows/independent-vaishnava-rules.yml"
+jobs:
+  independent-rule-audit:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "24"
+      - run: npm install --legacy-peer-deps --no-audit --no-fund
+      - name: Validate independent rule unit tests
+        run: npx vitest run tests/independent-vaishnava-rule-screen.test.ts
+      - name: Fetch genuine completed native GCal evidence artifact
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh run download 40515382389 -R ${{ github.repository }} -n gcal-native-all-city-years -D artifacts/native
+      - name: Compare independent Swiss astronomical rules against actual GCal dates
+        run: npx tsx scripts/independent-vaishnava-annual-compare.ts --input=artifacts/native/native-city-year-summary.json
+      - if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: independent-vaishnava-rule-gaps
+          path: artifacts/gcal-rule-screen.json
+          if-no-files-found: warn
+          retention-days: 14
