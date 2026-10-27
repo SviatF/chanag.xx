@@ -5,7 +5,7 @@ on:
     paths:
       - "lib/gcal-annual-parser.mjs"
       - "scripts/gcal-independent-annual-audit.mjs"
-      - "tests/gcal-annual-parser.test.mjs"
+      - "tests/gcal-annual-parser.test.ts"
       - ".github/workflows/gcal-independent-annual.yml"
 jobs:
   gcal-annual:
@@ -22,7 +22,7 @@ jobs:
           cache-dependency-path: package.json
       - run: npm install --legacy-peer-deps --no-audit --no-fund
       - name: Offline parser and attribution regression
-        run: npx vitest run tests/gcal-annual-parser.test.mjs
+        run: npx vitest run tests/gcal-annual-parser.test.ts
       - name: Independent full-year GCal 11 TXT city/date reconciliation
         run: npx tsx scripts/gcal-independent-annual-audit.mjs
       - name: Upload derived annual comparison, never raw third-party calendars
