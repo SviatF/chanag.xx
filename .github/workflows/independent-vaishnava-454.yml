@@ -12,6 +12,9 @@ on:
       - "scripts/independent-vaishnava-annual-compare.ts"
       - "scripts/aggregate-independent-454.mjs"
       - ".github/workflows/independent-vaishnava-454.yml"
+concurrency:
+  group: research-454-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
 jobs:
   independent-454:
     strategy:
