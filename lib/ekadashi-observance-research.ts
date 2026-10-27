@@ -108,6 +108,7 @@ export function compareEkadashiArunodaya(city:City,date:string):EkadashiMethodDi
     if(following<=sunrise||following-sunrise>1.2)throw Error("Invalid following sunrise sequence");
     const arunodaya=sunrise-ARUNODAYA_MINUTES_BEFORE_SUNRISE/1440;
     const atRise=tithiAt(swed,sunrise),atArunodaya=tithiAt(swed,arunodaya),atNext=tithiAt(swed,following);
+    const sunriseNakshatra=nakshatraAt(sunrise),followingNakshatra=nakshatraAt(following);
     const ekadashi=atRise===10||atRise===25;
     const dashami=atArunodaya===9||atArunodaya===24;
     const dashamiArunodayaScreen:EkadashiMethodDiagnostic["dashamiArunodayaScreen"]=!ekadashi?
@@ -134,9 +135,9 @@ export function compareEkadashiArunodaya(city:City,date:string):EkadashiMethodDi
     return {
       city:city.slug,date,sunrise:local(sunrise),arunodaya:local(arunodaya),followingSunrise:local(following),
       sunriseTithiIndex:atRise,sunriseTithi:tithiName(atRise),
-      sunriseNakshatraIndex:nakshatraAt(sunrise).index,followingSunriseNakshatraIndex:nakshatraAt(following).index,
-      sunriseNakshatraBoundaryMinutes:nakshatraAt(sunrise).boundaryMinutes,
-      followingNakshatraBoundaryMinutes:nakshatraAt(following).boundaryMinutes,
+      sunriseNakshatraIndex:sunriseNakshatra.index,followingSunriseNakshatraIndex:followingNakshatra.index,
+      sunriseNakshatraBoundaryMinutes:sunriseNakshatra.boundaryMinutes,
+      followingNakshatraBoundaryMinutes:followingNakshatra.boundaryMinutes,
       arunodayaTithiIndex:atArunodaya,arunodayaTithi:tithiName(atArunodaya),
       followingSunriseTithiIndex:atNext,followingSunriseTithi:tithiName(atNext),
       dashamiArunodayaScreen,sunriseAndArunodayaDisagree:atRise!==atArunodaya,
