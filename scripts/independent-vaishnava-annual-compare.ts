@@ -78,7 +78,7 @@ for(const record of source.records){
      referenceParana=p;
      const inputs=independentParanaAstronomy(city,date,paraDate);
      // Oracle subtypes are comparison labels ONLY, never inputs to independently select a method.
-     const method=researchParanaMethodFromIndependentKind(classifier.kind);
+     const method=researchParanaMethodFromIndependentKind(classifier.kind,obs.sunriseTithiIndex,obs.followingSunriseTithiIndex);
      computedParana=inputs?calculateIndependentParana({...inputs,method}):null;
     }
    }
