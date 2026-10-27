@@ -1,4 +1,4 @@
-name: PANCHVANI Independent Vedha/Hari Vasara Research (NON-PUBLISHING)
+name: PANCHVANI Independent Vedha/Hari Vasara Canary (NON-PUBLISHING)
 on:
   workflow_dispatch:
   pull_request:
@@ -27,7 +27,7 @@ jobs:
         run: |
           gh run download 40515382389 -R ${{ github.repository }} -n gcal-native-all-city-years -D artifacts/native
       - name: Compare independent Swiss astronomical rules against actual GCal dates
-        run: npx tsx scripts/independent-vaishnava-annual-compare.ts --input=artifacts/native/native-city-year-summary.json
+        run: npx tsx scripts/independent-vaishnava-annual-compare.ts --input=artifacts/native/native-city-year-summary.json --shard=0/16
       - if: always()
         uses: actions/upload-artifact@v4
         with:

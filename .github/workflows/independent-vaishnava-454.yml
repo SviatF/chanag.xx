@@ -1,0 +1,44 @@
+name: PANCHVANI Independent Mahadvadashi and Parana — 454 cities (RESEARCH)
+on:
+  workflow_dispatch:
+  pull_request:
+    paths:
+      - "lib/independent-mahadvadashi.ts"
+      - "lib/independent-parana.ts"
+      - "lib/independent-parana-astronomy.ts"
+      - "lib/native-gcal-comparison.ts"
+      - "tests/independent-mahadvadashi-parana.test.ts"
+      - "tests/native-gcal-comparison.test.ts"
+      - "scripts/independent-vaishnava-annual-compare.ts"
+      - ".github/workflows/independent-vaishnava-454.yml"
+jobs:
+  independent-454:
+    strategy:
+      fail-fast: false
+      matrix:
+        shard: [0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15]
+    runs-on: ubuntu-latest
+    timeout-minutes: 55
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "24"
+      - run: npm install --legacy-peer-deps --no-audit --no-fund
+      - name: Independent pure-rule and native-source filter regression
+        run: npx vitest run tests/independent-mahadvadashi-parana.test.ts tests/native-gcal-comparison.test.ts
+      - name: Fetch pinned original GCal executable 908-year artifact
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh run download 40515382389 -R ${{ github.repository }} -n gcal-native-all-city-years -D artifacts/native
+      - name: Independent astronomical Parana and Mahadvadashi — partition
+        run: npx tsx scripts/independent-vaishnava-annual-compare.ts --input=artifacts/native/native-city-year-summary.json --shard=${{ matrix.shard }}/16
+      - if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: independent-454-shard-${{ matrix.shard }}
+          path: artifacts/independent-454/*.json
+          if-no-files-found: warn
+          retention-days: 14
