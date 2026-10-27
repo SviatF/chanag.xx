@@ -12,7 +12,7 @@ import {addIsoDays} from "../lib/india-time";
 import {independentlyScreenVaishnavaDay} from "../lib/independent-vaishnava-rule-screen";
 import {classifyMahadvadashiSequence,identifySourceMahadvadashi} from "../lib/independent-mahadvadashi";
 import {independentParanaAstronomy} from "../lib/independent-parana-astronomy";
-import {calculateIndependentParana,minutesBetween} from "../lib/independent-parana";
+import {calculateIndependentParana,minutesBetween,researchParanaMethodFromIndependentKind} from "../lib/independent-parana";
 import {isGcalEkadashiFast,isoGcalNativeDate,shardFor} from "../lib/native-gcal-comparison";
 const argv=(key:string)=>process.argv.find(x=>x.startsWith("--"+key+"="))?.slice(key.length+3);
 const input=argv("input"),shardSpec=argv("shard")??"0/1";
@@ -75,16 +75,21 @@ for(const record of source.records){
     if(p){
      referenceParana=p;
      const inputs=independentParanaAstronomy(city,date,paraDate);
-     const method=sourceKind==="NAKSHATRA_REVIEW"?"GCal-nakshatra-review":sourceKind?"GCal-trisprsha-review":"GCal-normal";
+     // Oracle subtypes are comparison labels ONLY, never inputs to independently select a method.
+     const method=researchParanaMethodFromIndependentKind(classifier.kind);
      computedParana=inputs?calculateIndependentParana({...inputs,method}):null;
     }
    }
-   const residualStart=computedParana?.from&&referenceParana?.from?minutesBetween(computedParana.from,referenceParana.from):null;
-   const residualEnd=computedParana?.to&&referenceParana?.to?minutesBetween(computedParana.to,referenceParana.to):null;
+   // Compare ordinary numerical windows only when BOTH independent prediction and
+   // source identify an ordinary case. Keep special mismatches in the gap ledger.
+   const normalMethodPair=sourceKind===null&&classifier.kind===null;
+   const residualStart=normalMethodPair&&computedParana?.from&&referenceParana?.from?minutesBetween(computedParana.from,referenceParana.from):null;
+   const residualEnd=normalMethodPair&&computedParana?.to&&referenceParana?.to?minutesBetween(computedParana.to,referenceParana.to):null;
    rows.push({date,gcalEkadashiFast:expected,independentFastCandidate:classifier.fastCandidates.iskcon,
     independentlyScreenedFast:screen.tentativeFastEligibility,
     mismatch:expected!==Boolean(classifier.fastCandidates.iskcon===date),
     subtype:classifier.kind,sourceSubtype:sourceType,subtypeMatch:sameSourceKind,
+    normalParanaMethodComparable:normalMethodPair,paranaMethodProvenance:"independent-classifier",
     gcalParana:referenceParana,calculatedParana:computedParana,
     startResidualMinutes:residualStart,endResidualMinutes:residualEnd,
     certified:false});
