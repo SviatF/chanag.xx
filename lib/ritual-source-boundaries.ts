@@ -1,4 +1,18 @@
 /** Source-publication comparisons only. Never a ritual eligibility API. */
+/** 24+ time on a sunrise-day convention: 29:22+ on Sep 12 is Sep 13 05:22. */
+export function normalizePublishedPlusClock(printedDay:string,printedTime:string):string{
+ const date=new Date(printedDay+"T00:00:00Z");
+ if(!/^\d{4}-\d{2}-\d{2}$/.test(printedDay)||Number.isNaN(date.getTime())||date.toISOString().slice(0,10)!==printedDay)
+   throw Error("Invalid published day");
+ if(!/^(?:[01]\d|2\d|3\d|4[0-7]):[0-5]\d\+?$/.test(printedTime))
+   throw Error("Invalid published plus-clock");
+ const plus=printedTime.endsWith("+");
+ const h=+printedTime.slice(0,2),m=+printedTime.slice(3,5);
+ if((h>=24&&!plus)||(h<24&&plus))throw Error("Invalid plus-clock suffix");
+ const dayShift=Math.floor(h/24);
+ const target=new Date(date.getTime()+dayShift*86400000).toISOString().slice(0,10);
+ return target+"T"+String(h%24).padStart(2,"0")+":"+String(m).padStart(2,"0");
+}
 export type PublishedParana={city:"delhi";event:"Devutthana Ekadashi";year:2026;
   tradition:"Smarta"|"Gauna/Vaishnava"|"ISKCON Delhi";
   fastDate:string;paranaDate:string;start:string;end:string;publisherKey:string;
