@@ -55,6 +55,7 @@ function paranaFlags(pair){
  const reasons=[pair.parana?.startReason??"",pair.parana?.endReason??""].join("|").toLowerCase();
  return {
   firstQuarterTithi:reasons.includes("1/4 of tithi"),
+  sourceOpenEnded:!!pair.parana?.openEnded,
   endOfTithi:reasons.includes("end of tithi"),
   oneThirdDaylight:reasons.includes("1/3 of daylight"),
   sunriseRestricted:reasons.includes("sunrise"),
@@ -77,6 +78,7 @@ for(const year of years){
    const expected=year%4===0&&year%100!==0||year%400===0?366:365;
    if(parsed.summary.days!==expected)issues.push(item.slug+"/"+year+": expected "+expected+" civil days, got "+parsed.summary.days);
    if(parsed.warnings.length)issues.push(item.slug+"/"+year+": "+parsed.warnings.join(", "));
+   if(parsed.summary.unparsedParana)issues.push(item.slug+"/"+year+": "+parsed.summary.unparsedParana+" unparsed Parana shape(s)");
    if(parsed.pairs.some(x=>x.paranaUnpaired)&&!parsed.pairs.every(x=>!x.paranaUnpaired||x.fastDate.endsWith("-12-31")))
       issues.push(item.slug+"/"+year+": unpaired source fast(s)");
    const sunrise=calculateVratCalendar("ekadashi",year,city).map(x=>x.date);
@@ -88,7 +90,7 @@ for(const year of years){
    // from actual GCal daily+Parana rows, not inferred from a single Tithi name.
    const special=parsed.pairs.filter(p=>{
     const v=paranaFlags(p);
-    return v.firstQuarterTithi||v.endOfTithi||v.dayAfterDwadashi||v.vedhaOrUnmilani||v.mahadvadasi;
+    return v.firstQuarterTithi||v.endOfTithi||v.dayAfterDwadashi||v.vedhaOrUnmilani||v.mahadvadasi||v.sourceOpenEnded;
    });
    // Independent mathematical diagnosis for only decisive special cases; NOT
    // a replacement for GCal's multi-phase tradition selection.

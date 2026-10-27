@@ -36,4 +36,14 @@ describe("GCAL independent export annual parser fail-closed",()=>{
   expect(isoDayGap("2027-03-03","2027-03-05")).toBe(2);
   expect(result.warnings).toContain("insufficient-days:7");
  });
+ it("preserves source-only Parana lower bound without inventing a closing time",()=>{
+  const mumbai=fixture.replaceAll("Delhi [India]","Bombay [India]").replace(
+    "Break fast 06:42 (sunrise) - 09:55 (end of tithi) LT",
+    "Break fast after 10:50 (1/4 of tithi) LT");
+  const compared=parseGcalAnnualText(mumbai,{city:"Bombay",year:2027});
+  const parana=compared.pairs[1].parana;
+  expect(parana).toMatchObject({validClock:true,openEnded:true,start:"10:50",end:null,startReason:"1/4 of tithi"});
+  expect(compared.summary.openEndedParana).toBe(1);
+  expect(compared.summary.unparsedParana).toBe(0);
+ });
 });
