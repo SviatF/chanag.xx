@@ -10,7 +10,7 @@ import {compareEkadashiArunodaya} from "../lib/ekadashi-observance-research";
 import {calculateVratCalendar} from "../lib/vrat";
 import {addIsoDays} from "../lib/india-time";
 import {independentlyScreenVaishnavaDay} from "../lib/independent-vaishnava-rule-screen";
-import {classifyMahadvadashiSequence,identifySourceMahadvadashi} from "../lib/independent-mahadvadashi";
+import {classifyMahadvadashiSequence,identifySourceMahadvadashi,identifySourceNakshatra} from "../lib/independent-mahadvadashi";
 import {independentParanaAstronomy} from "../lib/independent-parana-astronomy";
 import {calculateIndependentParana,minutesBetween,researchParanaMethodFromIndependentKind} from "../lib/independent-parana";
 import {isGcalEkadashiFast,isoGcalNativeDate,shardFor} from "../lib/native-gcal-comparison";
@@ -58,16 +58,18 @@ for(const record of source.records){
   try{
    const obs=observe(date),screen=independentlyScreenVaishnavaDay(obs);
    const days=[];
-   for(let n=-1;n<=6;n++){
+   for(let n=-1;n<=8;n++){
     const d=addIsoDays(date,n),o=observe(d);
     days.push({date:d,sunriseIndex:o.sunriseTithiIndex,arunodayaIndex:o.arunodayaTithiIndex,
-      nearBoundary:o.nearFiveMinuteAstronomicalBoundary});
+      nearBoundary:o.nearFiveMinuteAstronomicalBoundary,nakshatraIndex:o.sunriseNakshatraIndex});
    }
    const classifier=classifyMahadvadashiSequence(days,date);
    const expected=fastDays.has(date);
    const sourceType=sourceTypes.get(date)??null;
    const sourceKind=sourceType?identifySourceMahadvadashi(sourceType):null;
-   const sameSourceKind=sourceKind===null?classifier.kind===null:sourceKind===classifier.kind;
+   const sameSourceKind=sourceKind===null?classifier.kind===null:
+    sourceKind==="NAKSHATRA_REVIEW"?classifier.kind===sourceKind&&classifier.nakshatraSubtype===identifySourceNakshatra(sourceType??""):
+    sourceKind===classifier.kind;
    let referenceParana=null,computedParana=null;
    if(expected){
     const paraDate=addIsoDays(date,1);
@@ -88,7 +90,7 @@ for(const record of source.records){
    rows.push({date,gcalEkadashiFast:expected,independentFastCandidate:classifier.fastCandidates.iskcon,
     independentlyScreenedFast:screen.tentativeFastEligibility,
     mismatch:expected!==Boolean(classifier.fastCandidates.iskcon===date),
-    subtype:classifier.kind,sourceSubtype:sourceType,subtypeMatch:sameSourceKind,
+    subtype:classifier.kind,nakshatraSubtype:classifier.nakshatraSubtype,sourceSubtype:sourceType,subtypeMatch:sameSourceKind,
     normalParanaMethodComparable:normalMethodPair,paranaMethodProvenance:"independent-classifier",
     gcalParana:referenceParana,calculatedParana:computedParana,
     startResidualMinutes:residualStart,endResidualMinutes:residualEnd,
