@@ -65,7 +65,7 @@ for(const record of source.records){
       nearNakshatraBoundary:o.sunriseNakshatraBoundaryMinutes<=5});
    }
    const classifier=classifyMahadvadashiSequence(days,date);
-   const boundarySensitive=days.some(d=>d.nearBoundary||d.nearNakshatraBoundary);
+   const boundarySensitive=classifier.researchAmbiguities.length>0;
    const expected=fastDays.has(date);
    const sourceType=sourceTypes.get(date)??null;
    const sourceKind=sourceType?identifySourceMahadvadashi(sourceType):null;
@@ -96,6 +96,7 @@ for(const record of source.records){
     independentSunriseNakshatraIndex:obs.sunriseNakshatraIndex,
     sunriseNakshatraBoundaryMinutes:obs.sunriseNakshatraBoundaryMinutes,
     boundarySensitiveResearchCase:boundarySensitive,
+    independentResearchAmbiguities:classifier.researchAmbiguities,
     independentlyScreenedFast:screen.tentativeFastEligibility,
     mismatch:expected!==Boolean(classifier.fastCandidates.iskcon===date),
     subtype:classifier.kind,nakshatraSubtype:classifier.nakshatraSubtype,sourceSubtype:sourceType,subtypeMatch:sameSourceKind,
