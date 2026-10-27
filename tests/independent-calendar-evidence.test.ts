@@ -6,6 +6,7 @@ import {festivalBySlugYear} from "../lib/festivals";
 import {festivalDateEvidenceStatus} from "../lib/ritual-evidence-matrix";
 import {festivalDateEvidence,independentFestivalDateChecks} from "./fixtures/festival-date-evidence";
 import {delhiEkadashiExamples,delhiFestivalExamples,delhiEkadashiEvidence,delhiFestivalEvidence} from "../lib/independent-calendar-evidence";
+import {delhiDevutthana2026,delhiParanaPublicationExample,validatePublishedParana} from "../lib/ritual-source-boundaries";
 
 function minute(s:string){const [h,m]=s.split(":").map(Number);return 60*h+m;}
 function near(actual:string,expected:string,tol=2){expect(Math.abs(minute(actual)-minute(expected)),`${actual} vs source ${expected}`).toBeLessThanOrEqual(tol);}
@@ -39,6 +40,17 @@ describe("Source-dated independent publisher controls — locality and method sc
     expect(rows2027).not.toContain("2027-01-18");
     expect(rows2027).toContain("2027-01-19");
     expect(delhiEkadashiEvidence("ekadashi",2026,"mumbai")).toBeNull();
+  });
+  it("does not merge published Parana end-times of distinct Delhi fasting traditions",()=>{
+    expect(validatePublishedParana(delhiDevutthana2026)).toEqual([]);
+    expect(delhiDevutthana2026).toHaveLength(3);
+    expect(new Set(delhiDevutthana2026.map(x=>x.publisherKey)).size).toBe(2);
+    expect(delhiDevutthana2026.filter(x=>x.fastDate==="2026-11-21").map(x=>x.end)).toEqual(["08:56","10:21"]);
+    expect(delhiDevutthana2026.every(x=>x.ritualMethodCertified===false&&!x.computedByPanchvani)).toBe(true);
+    expect(delhiParanaPublicationExample("ekadashi","delhi",2026)).not.toBeNull();
+    expect(delhiParanaPublicationExample("ekadashi","kanpur",2026)).toBeNull();
+    expect(delhiParanaPublicationExample("ekadashi","delhi",2027)).toBeNull();
+    expect(validatePublishedParana([{...delhiDevutthana2026[0],end:"13:00"}])).toContain("Smarta/2026-11-20:invalid-parana-clock");
   });
   it("requires two dated publication sources and does not promote 2027 festival city URLs",()=>{
     for(const [slug,day] of [["makar-sankranti","2027-01-15"],["akshaya-tritiya","2027-05-09"]] as const){
