@@ -5,11 +5,12 @@
  * observed Swiss Tithis. Status is research only, NEVER publish these as
  * approved religious observance dates. Source GCal Vaisnava Calculation PDF.
  */
-export type DawnTithi={date:string;sunriseIndex:number;arunodayaIndex:number;nearBoundary?:boolean;nakshatra?:string;nakshatraIndex?:number};
+export type DawnTithi={date:string;sunriseIndex:number;arunodayaIndex:number;nearBoundary?:boolean;nearNakshatraBoundary?:boolean;nakshatra?:string;nakshatraIndex?:number};
 export type MahadvadashiKind="UNMILANI"|"TRISPRSHA"|"VYANJULI"|"PAKSHA_VARDHINI"|"NAKSHATRA_REVIEW"|null;
 export type Tradition="smarta"|"vaishnava"|"iskcon";
 export type MahadvadashiCandidate={
  date:string;kind:MahadvadashiKind;reason:string;nakshatraSubtype:NakshatraMahadvadashi|null;
+ researchAmbiguities:string[];
  sourceOfDecision:"independent-astronomical-rules";
  fastCandidates:Record<Tradition,string|null>;
  needsManualReview:boolean;certified:false;
@@ -84,7 +85,24 @@ export function classifyMahadvadashiSequence(days:readonly DawnTithi[],targetDat
   reason=skippedEkadashiAtSunrise?"Ekadashi absent at both consecutive sunrises; Dvadasi research transfer (Kshaya)":
    "Prior Ekadashi had Dashami at Arunodaya; Viddha research transfer to Dvadasi";
  }
- const boundaryRisk=ordered.slice(Math.max(0,k-1),Math.min(ordered.length,k+2)).some(x=>x.nearBoundary===true);
+ // Only the immediate observance window and the relevant later Paksha
+ // boundary can invalidate this classification; a random boundary a week
+ // later must NOT turn an unrelated fast into a boundary-sensitive case.
+ const researchAmbiguities:string[]=[];
+ const vicinity=ordered.slice(Math.max(0,k-1),Math.min(ordered.length,k+2));
+ const boundaryRisk=vicinity.some(x=>x.nearBoundary===true||x.nearNakshatraBoundary===true);
+ if(boundaryRisk)researchAmbiguities.push("observance-window-tithi-or-nakshatra-boundary");
+ if(D(day.sunriseIndex)&&E(prev.sunriseIndex)&&T(next.sunriseIndex)&&next.nearBoundary)
+  researchAmbiguities.push("possible-vyanjuli-at-next-sunrise");
+ if(D(day.sunriseIndex)&&E(day.arunodayaIndex)&&T(next.sunriseIndex)&&day.nearBoundary)
+  researchAmbiguities.push("possible-trisprsha-kshaya-at-current-sunrise");
+ if(D(day.sunriseIndex)&&E(prev.sunriseIndex)&&!hasRepeatAtFollowingPurnima(k)){
+  const full=day.sunriseIndex<15?14:29;
+  const newMoonSuccessor=day.sunriseIndex<15?15:0;
+  const future=ordered.slice(k+1,k+9);
+  if(future.some((x,j)=>x.sunriseIndex===full&&future[j+1]?.sunriseIndex===newMoonSuccessor&&future[j+1].nearBoundary))
+   researchAmbiguities.push("possible-paksha-vardhini-at-purnima-amavasya-boundary");
+ }
  const arunodayaVedha=E(day.sunriseIndex)&&mod15(day.arunodayaIndex)===9&&sameFortnight(day.sunriseIndex,day.arunodayaIndex);
  // Never count the first of two Ekadashi sunrises, nor a day superseded
  // by next-day Dvadasi special observance.
@@ -99,9 +117,9 @@ export function classifyMahadvadashiSequence(days:readonly DawnTithi[],targetDat
  const fastHere=validEkadashiToday||(D(day.sunriseIndex)&&(specialDvadashi||kshayaOrVedhaTransfer));
  const smarta=(kind==="UNMILANI"||kind==="VYANJULI"||kind==="PAKSHA_VARDHINI")&&E(prev.sunriseIndex)?prev.date:
   E(day.sunriseIndex)?day.date:E(prev.sunriseIndex)?prev.date:null;
- return {date:day.date,kind,nakshatraSubtype,reason,sourceOfDecision:"independent-astronomical-rules",
+ return {date:day.date,kind,nakshatraSubtype,reason,researchAmbiguities,sourceOfDecision:"independent-astronomical-rules",
   fastCandidates:{smarta,vaishnava:fastHere?day.date:null,iskcon:fastHere?day.date:null},
-  needsManualReview:boundaryRisk||kind!==null||kshayaOrVedhaTransfer||!fastHere,
+  needsManualReview:researchAmbiguities.length>0||kind!==null||kshayaOrVedhaTransfer||!fastHere,
   certified:false};
 }
 export function identifySourceMahadvadashi(raw:string):Exclude<MahadvadashiKind,null>|"UNRECOGNIZED"{
