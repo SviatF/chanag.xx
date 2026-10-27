@@ -12,6 +12,7 @@ on:
       - "scripts/independent-vaishnava-annual-compare.ts"
       - "scripts/aggregate-independent-454.mjs"
       - "scripts/verify-independent-454-research-gate.mjs"
+      - "tests/verify-independent-454-research-gate.test.mjs"
       - ".github/workflows/independent-vaishnava-454.yml"
 concurrency:
   group: research-454-${{ github.event.pull_request.number || github.ref }}
@@ -57,6 +58,8 @@ jobs:
       contents: read
     steps:
       - uses: actions/checkout@v4
+      - name: Test the fail-closed research comparison gate
+        run: node --test tests/verify-independent-454-research-gate.test.mjs
       - name: Download all current-run research shards
         uses: actions/download-artifact@v4
         with:
