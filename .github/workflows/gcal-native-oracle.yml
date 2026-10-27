@@ -1,0 +1,75 @@
+name: PANCHVANI Native GCal Binary Oracle (research only)
+on:
+  workflow_dispatch:
+  pull_request:
+    paths:
+      - ".github/workflows/gcal-native-oracle.yml"
+      - "scripts/gcal-native-oracle-smoke.mjs"
+      - "docs/audits/GCAL_NATIVE_BINARY_ORACLE_2026-10-27.md"
+jobs:
+  native-gcal-windows:
+    runs-on: windows-2022
+    timeout-minutes: 15
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+      - name: Fetch original upstream binary and verify Git blob
+        shell: pwsh
+        run: |
+          New-Item -ItemType Directory -Force -Path original-gcal, artifacts/gcal-native | Out-Null
+          Invoke-WebRequest -Uri "https://raw.githubusercontent.com/gopaladasa/GCAL-for-Windows/9267f9fde9aefe2e60fb30c80a7ac9fc366fa585/gcal_11c/gcal.exe" -OutFile original-gcal/gcal.exe
+          if ((git hash-object original-gcal/gcal.exe).Trim() -ne "1d20f6e0caf29b6293157d258d02287e4edf0481") { throw "Binary hash mismatch" }
+      - name: "Execute original Windows binary, full 365-day Delhi year"
+        shell: pwsh
+        timeout-minutes: 6
+        run: |
+          $exe = (Resolve-Path original-gcal/gcal.exe).Path
+          $output = Join-Path (Get-Location) 'artifacts/gcal-native/delhi-2027.xml'
+          Start-Process -FilePath $exe -ArgumentList @("-R","calendar","-L","28N37;77E12","-N","Delhi","-TZ","5:30","-SG","1-1-2027","-EC","365","-O",$output) -Wait
+          if (!(Test-Path $output)) { throw "Original GCal binary returned no calendar" }
+          node scripts/gcal-native-oracle-smoke.mjs $output
+          node scripts/gcal-native-xml-validation.mjs $output delhi 2027
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: original-gcal-2027-delhi-xml-proof
+          path: artifacts/gcal-native/
+          retention-days: 7
+          if-no-files-found: warn
+  full-city-original-gcal:
+    needs: native-gcal-windows
+    runs-on: windows-2022
+    timeout-minutes: 35
+    permissions:
+      contents: read
+    strategy:
+      fail-fast: false
+      max-parallel: 8
+      matrix:
+        shard: [0,1,2,3,4,5,6,7]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "24"
+          cache: npm
+          cache-dependency-path: package.json
+      - run: npm install --legacy-peer-deps --no-audit --no-fund
+      - name: Retrieve and verify original archived Windows GCal binary
+        shell: pwsh
+        run: |
+          New-Item -ItemType Directory -Force -Path original-gcal, artifacts/gcal-native | Out-Null
+          Invoke-WebRequest -Uri "https://raw.githubusercontent.com/gopaladasa/GCAL-for-Windows/9267f9fde9aefe2e60fb30c80a7ac9fc366fa585/gcal_11c/gcal.exe" -OutFile original-gcal/gcal.exe
+          if ((git hash-object original-gcal/gcal.exe).Trim() -ne "1d20f6e0caf29b6293157d258d02287e4edf0481") { throw "Original GCal source mismatch" }
+      - name: "Execute original binary over every supported city in assigned shard for both years"
+        shell: pwsh
+        timeout-minutes: 25
+        run: npx --yes tsx@4.23.13 scripts/gcal-native-all-cities.ts ${{ matrix.shard }} 8
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: original-gcal-complete-shard-${{ matrix.shard }}
+          path: artifacts/gcal-native/
+          retention-days: 14
+          if-no-files-found: warn
