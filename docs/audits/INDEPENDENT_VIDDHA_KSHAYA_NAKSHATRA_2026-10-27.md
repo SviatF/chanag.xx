@@ -34,3 +34,20 @@ Independent observations use Swiss/Moshier solar rise and Sun/Moon Tithi, with L
 5. Keep independentlyCertified=false and publicRitualApproval=false, do not change V6, Muhurat, feeds or SEO publication.
 
 This work is still an **independent screening implementation**, not a fully verified second ritual oracle.
+
+
+## Verified full 908-city-year research run — 40585739657
+
+Run `https://github.com/SviatF/chanag.xx/actions/runs/40585739657` completed successfully, including strict per-event no-regression gate. Full original GCal: **22,246** eligible Ekadashi fasts; **2,724** excluded unrelated festival fasting records; **454 cities × 2026/2027**.
+
+- Fasting-day disagreements: **128** = 64 GCal true dates missed + 64 independent extra dates. Down from 160. **67** have direct event-specific near-boundary ambiguity flags; remaining cases include nearby later Paksha Tithi boundaries, not necessarily algorithm errors.
+- Missing independently matched *source-defined Mahadvadashi labels*: **87** (37 Paksha-vardhini, 31 Trisprsa, 19 Vyanjuli). This is NOT the full subtype disagreement count.
+- Reverse-direction independent-only subtype labels that the GCal source **does not list**: **473** (**469 Unmilani**, 3 Nakshatra, 1 Paksha-vardhini). The original aggregator silently excluded this reverse direction. Bidirectional subtype disagreements are therefore **560 = 87 + 473**. These are genuine *classification disagreements*; absence of a GCal event in the parsed source does **not** by itself prove the independent label wrong, and the independent label is not certified either.
+- Numerically compared both Parana boundaries: **21,671** pairs, up 2,678. All compared residuals are within **3 minutes**. However **575** source Parana events remain unpaired. They are predominantly the 469 independent Unmilani-type disagreement cases, 87 source-only subtype mismatches, and **19 GCal Parana events with blank numeric clock fields** (14 on 2026-08-23, 5 on 2027-04-02). Blank source times cannot be made into a numerical comparison by interpolation or guessed values.
+- The strict gate reported **0** old fasting-date regressions, **0** old subtype regressions, **0** regressions for the 18,993 previously verified numerical Parana pairs, and `RESEARCH_PARITY_PROGRESS_VERIFIED`.
+
+## New evidence-integrity criterion
+
+Record independent-only Mahadvadashi subtype claims **as a separate first-class metric**, including exact dates and subtype categories. Reject a research PR if new independent-only candidates appear relative to the last complete original GCal baseline, even if source-defined subtype matches improve. A green quality test or reduction in source-only mismatches cannot be mistaken for zero bidirectional disagreements. Preserve full 16-shard artifacts, scientific uncertainty, and both independent/original timestamps.
+
+**Production release verdict: BLOCKED.** Independent ritual certification stays false; no new calendar fast recommendations, Muhurat pages, festival auto-publication, or SEO indexation expansion may be based on these research results.
