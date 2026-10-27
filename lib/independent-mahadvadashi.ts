@@ -62,8 +62,12 @@ export function classifyMahadvadashiSequence(days:readonly DawnTithi[],targetDat
  const nakshatraSubtype=nakshatraSubtypeAt(k);
  const prevEkadashiViddha=E(prev.sunriseIndex)&&mod15(prev.arunodayaIndex)===9&&
    sameFortnight(prev.sunriseIndex,prev.arunodayaIndex);
- const skippedEkadashiAtSunrise=D(day.sunriseIndex)&&E(day.arunodayaIndex)&&
-   mod15(prev.sunriseIndex)===9&&sameFortnight(day.sunriseIndex,day.arunodayaIndex);
+ // Ekadashi can be kshaya even at Arunodaya: yesterday sunrise was Dasami,
+ // today sunrise is Dvadasi. A sunrise-only screen must not discard this fast.
+ // Requiring today's Arunodaya to still be Ekadashi misses the full-kshaya case.
+ const skippedEkadashiAtSunrise=D(day.sunriseIndex)&&mod15(prev.sunriseIndex)===9&&
+   sameFortnight(day.sunriseIndex,prev.sunriseIndex)&&
+   (E(day.arunodayaIndex)||D(day.arunodayaIndex));
  const kshayaOrVedhaTransfer=D(day.sunriseIndex)&&(prevEkadashiViddha||skippedEkadashiAtSunrise);
  let kind:MahadvadashiKind=null,reason="No structural Mahadvadashi identified";
  if(E(prev.sunriseIndex)&&E(day.sunriseIndex)){
@@ -77,7 +81,7 @@ export function classifyMahadvadashiSequence(days:readonly DawnTithi[],targetDat
  }else if(nakshatraSubtype){
   kind="NAKSHATRA_REVIEW";reason="Independently observed bright Dvadasi plus repeated "+nakshatraSubtype+" Nakshatra";
  }else if(kshayaOrVedhaTransfer){
-  reason=skippedEkadashiAtSunrise?"Ekadashi exists at Arunodaya but is absent at sunrise; Dvadasi research transfer":
+  reason=skippedEkadashiAtSunrise?"Ekadashi absent at both consecutive sunrises; Dvadasi research transfer (Kshaya)":
    "Prior Ekadashi had Dashami at Arunodaya; Viddha research transfer to Dvadasi";
  }
  const boundaryRisk=ordered.slice(Math.max(0,k-1),Math.min(ordered.length,k+2)).some(x=>x.nearBoundary===true);
