@@ -57,7 +57,20 @@ describe("full independent sunrise sequence date transfers (RESEARCH ONLY)",()=>
   const seq=[make("2027-07-29",24),make("2027-07-30",26,25),make("2027-07-31",27)];
   const result=classifyMahadvadashiSequence(seq,"2027-07-30");
   expect(result.fastCandidates.iskcon).toBe("2027-07-30");
-  expect(result.reason).toContain("absent at sunrise");
+  expect(result.reason).toContain("absent at both consecutive sunrises");
+ });
+ it("assigns complete Kshaya even when Ekadashi ended before Arunodaya",()=>{
+  // Day before: Dasami sunrise; fast day: Dvadasi already at Arunodaya.
+  // This was the remaining 2027-10-26 regional GCal gap.
+  const seq=[make("2027-10-25",24,24),make("2027-10-26",26,26),make("2027-10-27",27,27)];
+  const day=classifyMahadvadashiSequence(seq,"2027-10-26");
+  expect(day.fastCandidates.iskcon).toBe("2027-10-26");
+  expect(day.reason).toContain("Kshaya");
+  expect(day.certified).toBe(false);
+ });
+ it("does not apply Kshaya transfer when an ordinary intervening Ekadashi sunrise exists",()=>{
+  const seq=[make("2027-10-24",24,24),make("2027-10-25",25,25),make("2027-10-26",26,26),make("2027-10-27",27,27)];
+  expect(classifyMahadvadashiSequence(seq,"2027-10-26").fastCandidates.iskcon).toBeNull();
  });
  it("defers Ekadashi to Vyanjuli Dvadashi even with near-boundary risk",()=>{
   const seq=[make("2026-08-22",9),make("2026-08-23",10),{...make("2026-08-24",11),nearBoundary:true},make("2026-08-25",11)];
