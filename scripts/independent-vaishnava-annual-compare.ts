@@ -84,7 +84,8 @@ for(const record of source.records){
    }
    // Compare ordinary numerical windows only when BOTH independent prediction and
    // source identify an ordinary case. Keep special mismatches in the gap ledger.
-   const normalMethodPair=sourceKind===null&&classifier.kind===null;
+   const normalMethodPair=sameSourceKind&&sourceKind!=="NAKSHATRA_REVIEW"&&
+    computedParana?.status==="calculated-research-only";
    const residualStart=normalMethodPair&&computedParana?.from&&referenceParana?.from?minutesBetween(computedParana.from,referenceParana.from):null;
    const residualEnd=normalMethodPair&&computedParana?.to&&referenceParana?.to?minutesBetween(computedParana.to,referenceParana.to):null;
    rows.push({date,gcalEkadashiFast:expected,independentFastCandidate:classifier.fastCandidates.iskcon,
