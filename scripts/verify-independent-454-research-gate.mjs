@@ -76,8 +76,17 @@ export function compareResearchRuns(baseline,current,oldRows,newRows){
   metrics[field]=n;
  }
  let retainedOldPairs=0,oldMatchedFasts=0,fastRegressions=0,subtypeRegressions=0,missingRows=0,
+  independentOnlySubtypeRegressions=0,
   oldParanaRegressions=0,newlyResolvedFasts=0,newlyResolvedSubtypes=0;
- const examples={fast:[],subtype:[],parana:[],missing:[]};
+ const examples={fast:[],subtype:[],parana:[],missing:[],independentOnlySubtype:[]};
+ const sourceIndependentOnly=rows=>[...rows.values()].filter(r=>r.subtype&&!r.sourceSubtype).length;
+ const previousIndependentOnly=sourceIndependentOnly(oldRows),currentIndependentOnly=sourceIndependentOnly(newRows);
+ requireCheck(Number.isInteger(current.totals?.independentOnlySubtypeCandidates)&&
+  current.totals.independentOnlySubtypeCandidates===currentIndependentOnly,
+  "Independent-only Mahadvadashi source disagreement totals invalid");
+ requireCheck(currentIndependentOnly<=previousIndependentOnly,
+  "Independent-only Mahadvadashi labels increased: "+previousIndependentOnly+" -> "+currentIndependentOnly);
+ metrics.independentOnlySubtypeCandidates={before:previousIndependentOnly,after:currentIndependentOnly};
  for(const [key,prior] of oldRows){
   const next=newRows.get(key);
   // An old, false extra candidate can legitimately disappear from the output
@@ -93,6 +102,10 @@ export function compareResearchRuns(baseline,current,oldRows,newRows){
   if(!prior.mismatch&&next.mismatch){
    fastRegressions++;
    if(examples.fast.length<12)examples.fast.push(key);
+  }
+  if(!prior.sourceSubtype&&!prior.subtype&&next.subtype){
+   independentOnlySubtypeRegressions++;
+   if(examples.independentOnlySubtype.length<12)examples.independentOnlySubtype.push(key);
   }
   if(prior.sourceSubtype){
    if(!prior.subtypeMatch&&next.subtypeMatch)newlyResolvedSubtypes++;
@@ -118,11 +131,13 @@ export function compareResearchRuns(baseline,current,oldRows,newRows){
  requireCheck(missingRows===0,"Missing previously verified source rows: "+missingRows);
  requireCheck(fastRegressions===0,"Previously matched fast dates regressed: "+fastRegressions);
  requireCheck(subtypeRegressions===0,"Previously matched Mahadvadashi subtypes regressed: "+subtypeRegressions);
+ requireCheck(independentOnlySubtypeRegressions===0,
+  "New independent-only Mahadvadashi candidate at previously classified date: "+independentOnlySubtypeRegressions);
  requireCheck(oldParanaRegressions===0,"Previously matched Parana numerical endpoints regressed: "+oldParanaRegressions);
  requireCheck(retainedOldPairs===baseline.totals.paranaStartComparisons,
   "Retained baseline Parana comparison count mismatch: "+retainedOldPairs);
  metrics.caseLevel={oldMatchedFasts,retainedOldPairs,fastRegressions,subtypeRegressions,
-  missingRows,oldParanaRegressions,newlyResolvedFasts,newlyResolvedSubtypes};
+  missingRows,oldParanaRegressions,independentOnlySubtypeRegressions,newlyResolvedFasts,newlyResolvedSubtypes};
  const isProgress=current.totals.candidateMismatches<baseline.totals.candidateMismatches||
   current.totals.subtypeMismatches<baseline.totals.subtypeMismatches||
   current.parana.missingNumericBounds<baseline.parana.missingNumericBounds;
