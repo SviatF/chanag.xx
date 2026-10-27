@@ -64,10 +64,17 @@ export const coreCities: City[] = [
 
 const coreSlugSet=new Set(coreCities.map(city=>city.slug));
 
+// The upstream city-candidate feed contains repeated identical records.
+// Deduplicate by stable slug so a city is computed, routed and audited once.
+const seenCitySlugs=new Set(coreSlugSet);
 export const supportedCities:City[]=[
   ...coreCities,
   ...cityCandidates
-    .filter(city=>!coreSlugSet.has(city.slug))
+    .filter(city=>{
+      if(seenCitySlugs.has(city.slug))return false;
+      seenCitySlugs.add(city.slug);
+      return true;
+    })
     .map(({slug,name,state,lat,lng,language})=>({slug,name,state,lat,lng,language}))
 ];
 
