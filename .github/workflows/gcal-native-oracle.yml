@@ -20,16 +20,41 @@ jobs:
           New-Item -ItemType Directory -Force -Path original-gcal, artifacts/gcal-native | Out-Null
           Invoke-WebRequest -Uri "https://raw.githubusercontent.com/gopaladasa/GCAL-for-Windows/9267f9fde9aefe2e60fb30c80a7ac9fc366fa585/gcal_11c/gcal.exe" -OutFile original-gcal/gcal.exe
           if ((git hash-object original-gcal/gcal.exe).Trim() -ne "1d20f6e0caf29b6293157d258d02287e4edf0481") { throw "Binary hash mismatch" }
-      - name: "Direct native Windows execution for complete 2027 Delhi year"
+      - name: "Probe original GCal calendar request date-range semantics"
         shell: pwsh
-        timeout-minutes: 6
+        timeout-minutes: 7
         run: |
           $exe = (Resolve-Path original-gcal/gcal.exe).Path
-          $output = Join-Path (Get-Location) 'artifacts/gcal-native/delhi-2027.xml'
-          & $exe -R calendar -L '28N37;77E12' -N Delhi -TZ '5:30' -SG '1-1-2027' -EC 365 -O $output
-          if (!(Test-Path $output)) { throw "Original executable returned no calendar" }
-          node scripts/gcal-native-oracle-smoke.mjs $output
-          node scripts/gcal-native-xml-validation.mjs $output delhi 2027
+          $scenarios = @(
+            @{ key="same-year"; start="1-1-2027"; method="-EG"; final="31-12-2027"; request="calendar" },
+            @{ key="next-year"; start="1-1-2027"; method="-EG"; final="1-1-2028"; request="calendar" },
+            @{ key="count-30"; start="1-1-2027"; method="-EC"; final="30"; request="calendar" },
+            @{ key="count-364"; start="1-1-2027"; method="-EC"; final="364"; request="calendar" },
+            @{ key="count-365"; start="1-1-2027"; method="-EC"; final="365"; request="calendar" },
+            @{ key="last-day-count"; start="31-12-2027"; method="-EC"; final="1"; request="calendar" },
+            @{ key="next-month"; start="30-12-2027"; method="-EG"; final="2-1-2028"; request="calendar" },
+            @{ key="gcalendar"; start="2027"; method=""; final=""; request="gcalendar" }
+          )
+          $logs = @()
+          foreach ($scenario in $scenarios) {
+            $dest = Join-Path (Get-Location) ("artifacts/gcal-native/" + $scenario.key + ".xml")
+            $cmdArgs = @("-R",$scenario.request,"-L","28N37;77E12","-N","Delhi","-TZ","5:30","-SG",$scenario.start)
+            if ($scenario.method -ne "") { $cmdArgs += @($scenario.method,$scenario.final) }
+            $cmdArgs += @("-O",$dest)
+            & $exe @cmdArgs
+            $exists = Test-Path $dest
+            $data = if ($exists) { [IO.File]::ReadAllText($dest) } else { "" }
+            $count = if ($data -match '<arg name="daycount" val="(\d+)"') { [int]$Matches[1] } else { -1 }
+            $bytes = if ($exists) { (Get-Item $dest).Length } else { 0 }
+            $logs += [PSCustomObject]@{variant=$scenario.key;exists=$exists;bytes=$bytes;daycount=$count}
+            Write-Host ("[gcal-native-probe] " + $scenario.key + " days=" + $count + " bytes=" + $bytes)
+          }
+          $logs | ConvertTo-Json -Depth 4 | Set-Content -Encoding utf8 artifacts/gcal-native/cli-date-semantics.json
+          $complete = $logs | Where-Object { $_.daycount -eq 365 } | Select-Object -First 1
+          if ($null -eq $complete) { throw "No original GCal console command produced a verified complete civil year" }
+          $chosen = Join-Path (Get-Location) ("artifacts/gcal-native/" + $complete.variant + ".xml")
+          node scripts/gcal-native-oracle-smoke.mjs $chosen
+          node scripts/gcal-native-xml-validation.mjs $chosen delhi 2027
       - uses: actions/upload-artifact@v4
         if: always()
         with:
