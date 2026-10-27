@@ -11,7 +11,7 @@ $prefix = [Text.Encoding]::ASCII.GetBytes("blob " + $bytes.Length + [char]0)
 $sha1 = [Security.Cryptography.SHA1]::HashData([byte[]]($prefix + $bytes))
 $gitBlob = [Convert]::ToHexString($sha1).ToLowerInvariant()
 if ($gitBlob -ne "1d20f6e0caf29b6293157d258d02287e4edf0481") { throw "Original GCAL executable Git blob checksum mismatch: $gitBlob" }
-$parameters = @("-R","calendar","-L","28N40;77E13","-N","Delhi","-TZ","5:30","-SG","1-1-2027","-EC","365","-O",(Join-Path $root "delhi-2027.xml"))
+$parameters = @("-R","calendar","-L","28N37;77E13","-N","Delhi","-TZ","5:30","-SG","1-1-2027","-EC","365","-O",(Join-Path $root "delhi-2027.xml"))
 $metadata = @{
  source="gopaladasa/GCAL-for-Windows/gcal_11c/gcal.exe"
  expectedBlob="1d20f6e0caf29b6293157d258d02287e4edf0481"
@@ -31,8 +31,8 @@ $tz = [string]($calendar.xml.request.arg | Where-Object { $_.name -eq "timezone"
 $latitude = [string]($calendar.xml.request.arg | Where-Object { $_.name -eq "latitude" }).val
 $longitude = [string]($calendar.xml.request.arg | Where-Object { $_.name -eq "longitude" }).val
 if ([math]::Abs([double]::Parse($tz,[Globalization.CultureInfo]::InvariantCulture)-5.5) -gt 0.001) { throw "GCal used incorrect timezone $tz instead of +5.5 IST" }
-if ([math]::Abs([double]::Parse($latitude,[Globalization.CultureInfo]::InvariantCulture)-28.66667) -gt 0.02) { throw "GCal latitude mismatch: $latitude" }
-if ([math]::Abs([double]::Parse($longitude,[Globalization.CultureInfo]::InvariantCulture)-77.21667) -gt 0.02) { throw "GCal longitude mismatch: $longitude" }
+if ([math]::Abs([double]::Parse($latitude,[Globalization.CultureInfo]::InvariantCulture)-28.6139) -gt 0.01) { throw "GCal latitude mismatch: $latitude" }
+if ([math]::Abs([double]::Parse($longitude,[Globalization.CultureInfo]::InvariantCulture)-77.209) -gt 0.01) { throw "GCal longitude mismatch: $longitude" }
 $days = @($calendar.xml.result.masa | ForEach-Object { $_.day }).Count
 if ($days -lt 360) { throw "GCal produced $days annual day records, expected near 365" }
 Write-Host "Verified GCal XML timezone +5:30, geo coordinates and $days days."
