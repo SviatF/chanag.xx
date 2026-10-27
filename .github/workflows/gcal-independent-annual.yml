@@ -17,9 +17,10 @@ jobs:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
-          node-version: "22"
+          node-version: "24"
           cache: npm
-      - run: npm ci --no-audit --no-fund
+          cache-dependency-path: package.json
+      - run: npm install --legacy-peer-deps --no-audit --no-fund
       - name: Offline parser and attribution regression
         run: npx vitest run tests/gcal-annual-parser.test.mjs
       - name: Independent full-year GCal 11 TXT city/date reconciliation
