@@ -3,7 +3,17 @@
  * Inputs MUST be independently computed Sun/Moon tithi boundaries and local
  * sunrise/sunset. Does not silently substitute GCal oracle minutes.
  */
+import type {MahadvadashiKind} from "./independent-mahadvadashi";
 export type ParanaMethod="GCal-normal"|"GCal-trisprsha-review"|"GCal-nakshatra-review";
+/**
+ * Research method selection MUST derive from independent astronomical evidence.
+ * Never pass GCal's observed Mahadvadashi subtype into this function.
+ */
+export function researchParanaMethodFromIndependentKind(kind:MahadvadashiKind):ParanaMethod{
+ if(kind==="NAKSHATRA_REVIEW")return "GCal-nakshatra-review";
+ if(kind!==null)return "GCal-trisprsha-review";
+ return "GCal-normal";
+}
 export type ParanaInput={
  fastDate:string;paranaDate:string;sunrise:number;sunset:number;
  dwadashiStart:number|null;dwadashiEnd:number|null;
