@@ -10,6 +10,7 @@ on:
       - "tests/independent-mahadvadashi-parana.test.ts"
       - "tests/native-gcal-comparison.test.ts"
       - "scripts/independent-vaishnava-annual-compare.ts"
+      - "scripts/aggregate-independent-454.mjs"
       - ".github/workflows/independent-vaishnava-454.yml"
 jobs:
   independent-454:
@@ -41,4 +42,28 @@ jobs:
           name: independent-454-shard-${{ matrix.shard }}
           path: artifacts/independent-454/*.json
           if-no-files-found: warn
+          retention-days: 14
+
+  aggregate-independent-454:
+    name: Aggregate 16 shards / assert 908 city-years (RESEARCH ONLY)
+    needs: independent-454
+    if: ${{ always() && needs.independent-454.result == 'success' }}
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+      - name: Download all current-run research shards
+        uses: actions/download-artifact@v4
+        with:
+          pattern: independent-454-shard-*
+          path: artifacts/independent-454
+          merge-multiple: true
+      - name: Validate entire research coverage and write counts
+        run: node scripts/aggregate-independent-454.mjs artifacts/independent-454 artifacts/independent-454-summary.json
+      - uses: actions/upload-artifact@v4
+        with:
+          name: independent-454-aggregate-report
+          path: artifacts/independent-454-summary.json
+          if-no-files-found: error
           retention-days: 14
