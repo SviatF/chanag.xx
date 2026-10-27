@@ -4,7 +4,7 @@
  * sunrise/sunset. Does not silently substitute GCal oracle minutes.
  */
 import type {MahadvadashiKind} from "./independent-mahadvadashi";
-export type ParanaMethod="GCal-normal"|"GCal-viddha-research"|"GCal-trisprsha-review"|"GCal-nakshatra-review";
+export type ParanaMethod="GCal-normal"|"GCal-viddha-research"|"GCal-unmilani-research"|"GCal-vyanjuli-research"|"GCal-trisprsha-research"|"GCal-nakshatra-review";
 /**
  * Research method selection MUST derive from independent astronomical evidence.
  * Never pass GCal's observed Mahadvadashi subtype into this function.
@@ -16,8 +16,10 @@ export function researchParanaMethodFromIndependentKind(kind:MahadvadashiKind,fa
    Math.floor(fastSunriseTithiIndex/15)===Math.floor(paranaSunriseTithiIndex/15)?
    "GCal-viddha-research":"GCal-normal";
   case "NAKSHATRA_REVIEW": return "GCal-nakshatra-review";
-  case "UNMILANI": case "TRISPRSHA": case "VYANJULI": case "PAKSHA_VARDHINI":
-   return "GCal-trisprsha-review";
+  case "UNMILANI": return "GCal-unmilani-research";
+  case "VYANJULI": return "GCal-vyanjuli-research";
+  case "TRISPRSHA": return "GCal-trisprsha-research";
+  case "PAKSHA_VARDHINI": return "GCal-viddha-research";
   default: throw Error("Unknown independent Mahadvadashi kind; GCal source strings are forbidden");
  }
 }
@@ -58,6 +60,18 @@ export function calculateIndependentParana(v:ParanaInput):CandidateParana{
    reasons:["sunrise",until===v.trayodashiEnd?"end of Trayodashi":"1/3 daylight"],
    status:"calculated-research-only",certified:false};
  }
+ // Distinct source-documented ritual-clock conventions, with astronomical
+ // inputs computed solely by Swiss; these remain uncertified research outputs.
+ const sunriseBeginEnd=(end:number,reason:string):CandidateParana=>{
+  if(!finite(end)||end<=v.sunrise)return {...reject("special-rule-review","No positive special Parana clock interval: "+reason),daylightThird,hariVasaraEnd:quarter};
+  return {from:v.sunrise,to:end,openEnded:false,daylightThird,hariVasaraEnd:quarter,
+   reasons:["sunrise",reason],status:"calculated-research-only",certified:false};
+ };
+ if(v.method==="GCal-trisprsha-research")
+   return sunriseBeginEnd(daylightThird,"1/3 daylight after skipped Dvadasi");
+ if(v.method==="GCal-unmilani-research"||v.method==="GCal-vyanjuli-research")
+   return sunriseBeginEnd(Math.min(v.dwadashiEnd,daylightThird),
+    v.dwadashiEnd<=daylightThird?"end of Dvadasi":"1/3 daylight");
  if(v.method!=="GCal-normal")return {
   ...reject("special-rule-review","Mahadvadashi/Nakshatra Parana demands subtype-specific method"),
   daylightThird,hariVasaraEnd:quarter
