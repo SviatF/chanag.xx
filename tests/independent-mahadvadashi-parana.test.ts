@@ -41,6 +41,55 @@ describe("independent Parana method provenance",()=>{
   expect(()=>researchParanaMethodFromIndependentKind("Vijaya Mahadvadasi" as never)).toThrow(/GCal source strings are forbidden/);
  });
 });
+describe("full independent sunrise sequence date transfers (RESEARCH ONLY)",()=>{
+ it("moves Viddha Ekadashi to following Dvadashi after Dashami at Arunodaya",()=>{
+  const seq=[make("2027-10-24",24),make("2027-10-25",25,24),make("2027-10-26",26),make("2027-10-27",27)];
+  const prior=classifyMahadvadashiSequence(seq,"2027-10-25");
+  const moved=classifyMahadvadashiSequence(seq,"2027-10-26");
+  expect(prior.fastCandidates.iskcon).toBeNull();
+  expect(moved.fastCandidates.iskcon).toBe("2027-10-26");
+  expect(moved.certified).toBe(false);
+ });
+ it("detects Ekadashi Kshaya: Arunodaya Ekadashi but Dvadashi at sunrise",()=>{
+  const seq=[make("2027-07-29",24),make("2027-07-30",26,25),make("2027-07-31",27)];
+  const result=classifyMahadvadashiSequence(seq,"2027-07-30");
+  expect(result.fastCandidates.iskcon).toBe("2027-07-30");
+  expect(result.reason).toContain("absent at sunrise");
+ });
+ it("defers Ekadashi to Vyanjuli Dvadashi even with near-boundary risk",()=>{
+  const seq=[make("2026-08-22",9),make("2026-08-23",10),{...make("2026-08-24",11),nearBoundary:true},make("2026-08-25",11)];
+  expect(classifyMahadvadashiSequence(seq,"2026-08-23").fastCandidates.iskcon).toBeNull();
+  const special=classifyMahadvadashiSequence(seq,"2026-08-24");
+  expect(special.kind).toBe("VYANJULI");
+  expect(special.fastCandidates.iskcon).toBe("2026-08-24");
+  expect(special.needsManualReview).toBe(true);
+ });
+ it("moves Paksha-vardhini rather than counting both consecutive fasts",()=>{
+  const idx=[9,10,11,12,13,14,14,0,1,2].map((n,i)=>make("2027-06-"+String(i+13).padStart(2,"0"),n));
+  expect(classifyMahadvadashiSequence(idx,"2027-06-14").fastCandidates.iskcon).toBeNull();
+  const next=classifyMahadvadashiSequence(idx,"2027-06-15");
+  expect(next.kind).toBe("PAKSHA_VARDHINI");
+  expect(next.fastCandidates.iskcon).toBe("2027-06-15");
+ });
+ it("classifies Lahiri Sravana V i j a y a candidate on bright Dvadashi at consecutive sunrises",()=>{
+  const seq=[
+    {...make("2027-09-10",9),nakshatraIndex:19},
+    {...make("2027-09-11",10),nakshatraIndex:20},
+    {...make("2027-09-12",11),nakshatraIndex:21},
+    {...make("2027-09-13",12),nakshatraIndex:21}
+  ];
+  expect(classifyMahadvadashiSequence(seq,"2027-09-11").fastCandidates.iskcon).toBeNull();
+  const next=classifyMahadvadashiSequence(seq,"2027-09-12");
+  expect(next.kind).toBe("NAKSHATRA_REVIEW");
+  expect(next.nakshatraSubtype).toBe("VIJAYA");
+  expect(next.fastCandidates.iskcon).toBe("2027-09-12");
+  expect(next.certified).toBe(false);
+ });
+ it("rejects unsupported Nakshatra indexes instead of inventing special fasts",()=>{
+  const seq=[{...make("2027-09-11",10),nakshatraIndex:20},{...make("2027-09-12",11),nakshatraIndex:30},make("2027-09-13",12)];
+  expect(()=>classifyMahadvadashiSequence(seq,"2027-09-12")).toThrow(/Invalid independent dawn/);
+ });
+});
 describe("independently calculated Parana timing bounds",()=>{
  const t=(s:string)=>Date.parse(s);
  it("starts after sunrise/Hari Vasara and ends at first-third daylight or Dvadashi",()=>{
