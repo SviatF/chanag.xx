@@ -1,0 +1,35 @@
+name: PANCHVANI GCal 11 Independent Annual Research (NO PUBLIC RELEASE)
+on:
+  workflow_dispatch:
+  pull_request:
+    paths:
+      - "lib/gcal-annual-parser.mjs"
+      - "scripts/gcal-independent-annual-audit.mjs"
+      - "tests/gcal-annual-parser.test.ts"
+      - ".github/workflows/gcal-independent-annual.yml"
+jobs:
+  gcal-annual:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "24"
+          cache: npm
+          cache-dependency-path: package.json
+      - run: npm install --legacy-peer-deps --no-audit --no-fund
+      - name: Offline parser and attribution regression
+        run: npx vitest run tests/gcal-annual-parser.test.ts
+      - name: Independent full-year GCal 11 TXT city/date reconciliation
+        run: npx tsx scripts/gcal-independent-annual-audit.mjs
+      - name: Upload derived annual comparison, never raw third-party calendars
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: gcal-independent-annual-reconciliation
+          path: artifacts/gcal-11-independent-yearly.json
+          retention-days: 14
+          if-no-files-found: warn
