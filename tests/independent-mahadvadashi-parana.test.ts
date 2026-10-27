@@ -176,6 +176,46 @@ describe("independently calculated Parana timing bounds",()=>{
   expect(result.to).toBe(t("2027-01-20T05:30Z"));
   expect(result.certified).toBe(false);
  });
+ it("handles independent Jayanti/Vijaya Parana when Dvadasi ended before sunrise",()=>{
+  const t=(v:string)=>Date.parse(v);
+  const v={fastDate:"2027-09-12",paranaDate:"2027-09-13",
+   sunrise:t("2027-09-13T01:00Z"),sunset:t("2027-09-13T13:00Z"),
+   dwadashiStart:t("2027-09-11T16:00Z"),dwadashiEnd:t("2027-09-12T18:00Z"),
+   nakshatraEnd:t("2027-09-13T08:00Z"),method:"GCal-nakshatra-review" as const,
+   nakshatraSubtype:"VIJAYA" as const};
+  const result=calculateIndependentParana(v);
+  expect(result.status).toBe("calculated-research-only");
+  expect(result.from).toBe(v.sunrise);
+  expect(result.to).toBe(t("2027-09-13T05:00Z"));
+  expect(result.certified).toBe(false);
+ });
+ it("applies conditional Nakshatra-vs-Dvadasi limits without oracle clock inputs",()=>{
+  const t=(v:string)=>Date.parse(v);
+  const v={fastDate:"2027-01-18",paranaDate:"2027-01-19",
+   sunrise:t("2027-01-19T01:00Z"),sunset:t("2027-01-19T13:00Z"),
+   dwadashiStart:t("2027-01-18T23:00Z"),dwadashiEnd:t("2027-01-19T09:00Z"),
+   nakshatraEnd:t("2027-01-19T03:00Z"),method:"GCal-nakshatra-review" as const,
+   nakshatraSubtype:"JAYANTI" as const};
+  const earlier=calculateIndependentParana(v);
+  expect(earlier.from).toBe(v.nakshatraEnd);
+  expect(earlier.to).toBe(t("2027-01-19T05:00Z"));
+  const afterThird=calculateIndependentParana({...v,nakshatraEnd:t("2027-01-19T06:00Z")});
+  expect(afterThird.from).toBe(t("2027-01-19T06:00Z"));
+  expect(afterThird.to).toBe(v.dwadashiEnd);
+  const afterDvadashi=calculateIndependentParana({...v,nakshatraEnd:t("2027-01-19T10:00Z")});
+  expect(afterDvadashi.from).toBe(v.sunrise);
+  expect(afterDvadashi.to).toBe(t("2027-01-19T05:00Z"));
+ });
+ it("keeps Jaya/Papanasini and unresolved Nakshatra boundaries uncertified",()=>{
+  const t=(v:string)=>Date.parse(v);
+  const v={fastDate:"2027-09-12",paranaDate:"2027-09-13",sunrise:t("2027-09-13T01:00Z"),
+   sunset:t("2027-09-13T13:00Z"),dwadashiStart:t("2027-09-11T16:00Z"),
+   dwadashiEnd:t("2027-09-12T18:00Z"),nakshatraEnd:null,method:"GCal-nakshatra-review" as const,
+   nakshatraSubtype:"VIJAYA" as const};
+  expect(calculateIndependentParana(v).status).toBe("special-rule-review");
+  expect(calculateIndependentParana({...v,nakshatraSubtype:"JAYA"}).status).toBe("special-rule-review");
+  expect(calculateIndependentParana({...v,nakshatraSubtype:"PAPANASINI"}).status).toBe("special-rule-review");
+ });
  it("starts after sunrise/Hari Vasara and ends at first-third daylight or Dvadashi",()=>{
   const x=calculateIndependentParana({fastDate:"2027-01-19",paranaDate:"2027-01-20",
    sunrise:t("2027-01-20T01:30:00Z"),sunset:t("2027-01-20T12:30:00Z"),
