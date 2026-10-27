@@ -40,3 +40,9 @@ No public automatic Vaishnava/Smarta Parana selection, no expansion of indexed
 Promotion needs independently executed GCal for exact city coordinates,
 complete Smarta/ISKCON rule implementation, Hari Vasara & Dvadashi boundary
 tests and disagreement review, plus a reproducible annual report.
+
+## Additional audited boundary cases
+- 2027 Delhi published 15 June: **Paksa vardhini Mahadvadasi** (spaced subtype name), Parana the next day. The parser now captures any explicit `Mahadvadasi` label and preserves its original subtype string, rather than assuming a narrow fixed spelling list.
+- 2027 Delhi 13 September: Nakshatra-restricted Parana **06:04–06:05 LT**; a one-minute interval is flagged for manual review, not rounded away or broadened.
+- 2026 Bombay 24 August: published **Break fast after 10:50** with no end; the parser preserves `end=null` and does not invent a cutoff.
+- A raw `Ekadasi (not suitable for fasting)` source line is an observed GCal exclusion; its exact rule (Vedha/Mahadvadasi/other) is not inferred without further method evidence.

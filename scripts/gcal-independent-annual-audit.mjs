@@ -57,6 +57,7 @@ function paranaFlags(pair){
   firstQuarterTithi:reasons.includes("1/4 of tithi"),
   sourceOpenEnded:!!pair.parana?.openEnded,
   endOfTithi:reasons.includes("end of tithi"),
+  endOfNakshatra:reasons.includes("end of naksatra"),
   oneThirdDaylight:reasons.includes("1/3 of daylight"),
   sunriseRestricted:reasons.includes("sunrise"),
   dayAfterDwadashi:pair.dwadashiExpiredBeforeParanaSunrise,
@@ -90,7 +91,7 @@ for(const year of years){
    // from actual GCal daily+Parana rows, not inferred from a single Tithi name.
    const special=parsed.pairs.filter(p=>{
     const v=paranaFlags(p);
-    return v.firstQuarterTithi||v.endOfTithi||v.dayAfterDwadashi||v.vedhaOrUnmilani||v.mahadvadasi||v.sourceOpenEnded;
+    return v.firstQuarterTithi||v.endOfTithi||v.endOfNakshatra||v.dayAfterDwadashi||v.vedhaOrUnmilani||v.mahadvadasi||v.sourceOpenEnded;
    });
    // Independent mathematical diagnosis for only decisive special cases; NOT
    // a replacement for GCal's multi-phase tradition selection.
@@ -139,6 +140,8 @@ const report={
  paranaEngineCertified:false,mahadvadasiMethodCertified:false,
  notes:[
  "GCAL TXT exports include Ekadasi or Dvadasi fasting, Mahadvadasi and observed Parana start/end reason labels.",
+ "A published Ekadasi labelled not suitable for fasting is not automatically a proved Dashami-Vedha; inspect GCal event classification.",
+ "Some Parana windows terminate at Nakshatra, have a one-minute published duration, or provide only an open-ended lower bound.",
  "PANCHVANI sunrise Tithi is an astronomical observation, not the ISKCON fast selector.",
  "Dates differing across systems must be reviewed, not blindly corrected to match another program.",
  "The source is a third party publishing exported GCal 11 Build 5 files; it is not an independent execution of local GCal binary.",
