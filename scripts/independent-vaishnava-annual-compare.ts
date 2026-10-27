@@ -78,15 +78,15 @@ for(const record of source.records){
     const p=oracleParana.get(paraDate);
     if(p){
      referenceParana=p;
-     const inputs=independentParanaAstronomy(city,date,paraDate);
+     const inputs=independentParanaAstronomy(city,date,paraDate,classifier.nakshatraSubtype);
      // Oracle subtypes are comparison labels ONLY, never inputs to independently select a method.
      const method=researchParanaMethodFromIndependentKind(classifier.kind,obs.sunriseTithiIndex,obs.followingSunriseTithiIndex);
-     computedParana=inputs?calculateIndependentParana({...inputs,method}):null;
+     computedParana=inputs?calculateIndependentParana({...inputs,method,nakshatraSubtype:classifier.nakshatraSubtype}):null;
     }
    }
    // Compare ordinary numerical windows only when BOTH independent prediction and
    // source identify an ordinary case. Keep special mismatches in the gap ledger.
-   const normalMethodPair=sameSourceKind&&sourceKind!=="NAKSHATRA_REVIEW"&&
+   const normalMethodPair=sameSourceKind&&
     computedParana?.status==="calculated-research-only";
    const residualStart=normalMethodPair&&computedParana?.from&&referenceParana?.from?minutesBetween(computedParana.from,referenceParana.from):null;
    const residualEnd=normalMethodPair&&computedParana?.to&&referenceParana?.to?minutesBetween(computedParana.to,referenceParana.to):null;
