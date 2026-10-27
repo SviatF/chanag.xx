@@ -36,10 +36,10 @@ describe("independent Parana method provenance",()=>{
   expect(researchParanaMethodFromIndependentKind(null,26,27)).toBe("GCal-viddha-research");
   expect(researchParanaMethodFromIndependentKind(null,11,12)).toBe("GCal-viddha-research");
   expect(researchParanaMethodFromIndependentKind(null,10,11)).toBe("GCal-normal");
-  expect(researchParanaMethodFromIndependentKind("TRISPRSHA")).toBe("GCal-trisprsha-review");
-  expect(researchParanaMethodFromIndependentKind("UNMILANI")).toBe("GCal-trisprsha-review");
-  expect(researchParanaMethodFromIndependentKind("VYANJULI")).toBe("GCal-trisprsha-review");
-  expect(researchParanaMethodFromIndependentKind("PAKSHA_VARDHINI")).toBe("GCal-trisprsha-review");
+  expect(researchParanaMethodFromIndependentKind("TRISPRSHA")).toBe("GCal-trisprsha-research");
+  expect(researchParanaMethodFromIndependentKind("UNMILANI")).toBe("GCal-unmilani-research");
+  expect(researchParanaMethodFromIndependentKind("VYANJULI")).toBe("GCal-vyanjuli-research");
+  expect(researchParanaMethodFromIndependentKind("PAKSHA_VARDHINI")).toBe("GCal-viddha-research");
   expect(researchParanaMethodFromIndependentKind("NAKSHATRA_REVIEW")).toBe("GCal-nakshatra-review");
   expect(()=>researchParanaMethodFromIndependentKind("Vijaya Mahadvadasi" as never)).toThrow(/GCal source strings are forbidden/);
  });
@@ -119,6 +119,33 @@ describe("independently calculated Parana timing bounds",()=>{
   expect(result.to).toBe(d("2027-10-27T04:40:00Z"));
   expect(result.certified).toBe(false);
   expect(calculateIndependentParana({...opts,trayodashiEnd:null}).status).toBe("special-rule-review");
+ });
+ it("separately computes Unmilani and Vyanjuli from sunrise through Dvadasi/third daylight",()=>{
+  const parse=(v:string)=>Date.parse(v);
+  const day={fastDate:"2027-03-04",paranaDate:"2027-03-05",
+   sunrise:parse("2027-03-05T01:00:00Z"),sunset:parse("2027-03-05T13:00:00Z"),
+   dwadashiStart:parse("2027-03-04T14:00:00Z"),dwadashiEnd:parse("2027-03-05T04:00:00Z")};
+  for(const method of ["GCal-unmilani-research","GCal-vyanjuli-research"] as const){
+   const result=calculateIndependentParana({...day,method});
+   expect(result.from).toBe(day.sunrise);
+   expect(result.to).toBe(day.dwadashiEnd);
+   expect(result.status).toBe("calculated-research-only");
+   expect(result.certified).toBe(false);
+  }
+  const expired=calculateIndependentParana({...day,method:"GCal-vyanjuli-research",
+    dwadashiEnd:parse("2027-03-05T00:30:00Z")});
+  expect(expired.status).toBe("special-rule-review");
+ });
+ it("calculates Trisprsa Parana after Dvadashi expires before following sunrise",()=>{
+  const t=(v:string)=>Date.parse(v);
+  const start=t("2027-01-20T01:30Z"),sunset=t("2027-01-20T13:30Z");
+  const result=calculateIndependentParana({
+   fastDate:"2027-01-19",paranaDate:"2027-01-20",sunrise:start,sunset,
+   dwadashiStart:t("2027-01-19T03:00Z"),dwadashiEnd:t("2027-01-19T23:00Z"),
+   method:"GCal-trisprsha-research"});
+  expect(result.from).toBe(start);
+  expect(result.to).toBe(t("2027-01-20T05:30Z"));
+  expect(result.certified).toBe(false);
  });
  it("starts after sunrise/Hari Vasara and ends at first-third daylight or Dvadashi",()=>{
   const x=calculateIndependentParana({fastDate:"2027-01-19",paranaDate:"2027-01-20",
