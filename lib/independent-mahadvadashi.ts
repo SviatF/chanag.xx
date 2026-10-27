@@ -19,7 +19,6 @@ const mod15=(i:number)=>i%15;
 const E=(i:number)=>mod15(i)===10;
 const D=(i:number)=>mod15(i)===11;
 const T=(i:number)=>mod15(i)===12;
-const isFull=(i:number)=>i===14||i===29;
 const sameFortnight=(a:number,b:number)=>Math.floor(a/15)===Math.floor(b/15);
 const nakshatraKinds:Record<number,NakshatraMahadvadashi>={3:"JAYANTI",6:"JAYA",7:"PAPANASINI",21:"VIJAYA"};
 export function identifySourceNakshatra(raw:string):NakshatraMahadvadashi|null{
