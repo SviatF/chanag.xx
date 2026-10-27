@@ -72,6 +72,35 @@ describe("full independent sunrise sequence date transfers (RESEARCH ONLY)",()=>
   const seq=[make("2027-10-24",24,24),make("2027-10-25",25,25),make("2027-10-26",26,26),make("2027-10-27",27,27)];
   expect(classifyMahadvadashiSequence(seq,"2027-10-26").fastCandidates.iskcon).toBeNull();
  });
+ it("flags possible Vyanjuli when next Trayodashi sunrise is at an astronomical boundary",()=>{
+  const seq=[make("2026-08-23",10),make("2026-08-24",11),
+   {...make("2026-08-25",12,11),nearBoundary:true},make("2026-08-26",12)];
+  const result=classifyMahadvadashiSequence(seq,"2026-08-24");
+  expect(result.kind).toBeNull(); // Do not invent GCal Vyanjuli as a fact.
+  expect(result.researchAmbiguities).toContain("possible-vyanjuli-at-next-sunrise");
+  expect(result.certified).toBe(false);
+ });
+ it("flags following Purnima transition close to sunrise as indeterminate Paksha-vardhini",()=>{
+  const seq=[
+   make("2026-06-25",10),make("2026-06-26",11),make("2026-06-27",12),
+   make("2026-06-28",13),make("2026-06-29",14),
+   {...make("2026-06-30",15,14),nearBoundary:true},make("2026-07-01",15),
+   make("2026-07-02",16)];
+  const result=classifyMahadvadashiSequence(seq,"2026-06-26");
+  expect(result.kind).toBeNull();
+  expect(result.researchAmbiguities).toContain("possible-paksha-vardhini-at-purnima-amavasya-boundary");
+  expect(result.needsManualReview).toBe(true);
+ });
+ it("does not mislabel unrelated Nakshatra boundary eight days later",()=>{
+  const seq=[
+   make("2027-01-01",9),make("2027-01-02",10),make("2027-01-03",11),
+   make("2027-01-04",12),make("2027-01-05",13),
+   make("2027-01-06",14),make("2027-01-07",15),
+   make("2027-01-08",16),{...make("2027-01-09",17),nearBoundary:true}];
+  const result=classifyMahadvadashiSequence(seq,"2027-01-02");
+  expect(result.kind).toBeNull();
+  expect(result.researchAmbiguities).toEqual([]);
+ });
  it("defers Ekadashi to Vyanjuli Dvadashi even with near-boundary risk",()=>{
   const seq=[make("2026-08-22",9),make("2026-08-23",10),{...make("2026-08-24",11),nearBoundary:true},make("2026-08-25",11)];
   expect(classifyMahadvadashiSequence(seq,"2026-08-23").fastCandidates.iskcon).toBeNull();
