@@ -44,8 +44,9 @@ describe("independently calculated Parana timing bounds",()=>{
   const x=calculateIndependentParana({fastDate:"2027-01-19",paranaDate:"2027-01-20",
    sunrise:t("2027-01-20T01:30:00Z"),sunset:t("2027-01-20T12:30:00Z"),
    dwadashiStart:t("2027-01-20T03:00:00Z"),dwadashiEnd:t("2027-01-20T12:00:00Z"),method:"GCal-normal"});
-  expect(x.openEnded).toBe(false);
+  expect(x.openEnded).toBe(true);
   expect(x.from).toBe(t("2027-01-20T05:15:00Z"));
+  expect(x.to).toBeNull();
  });
  it("does not approve past-sunrise Dvadashi or Nakshatra special constraints",()=>{
   const base={fastDate:"2027-01-19",paranaDate:"2027-01-20",sunrise:t("2027-01-20T01:30Z"),sunset:t("2027-01-20T12:30Z"),
