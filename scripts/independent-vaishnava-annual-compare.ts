@@ -61,9 +61,11 @@ for(const record of source.records){
    for(let n=-1;n<=8;n++){
     const d=addIsoDays(date,n),o=observe(d);
     days.push({date:d,sunriseIndex:o.sunriseTithiIndex,arunodayaIndex:o.arunodayaTithiIndex,
-      nearBoundary:o.nearFiveMinuteAstronomicalBoundary,nakshatraIndex:o.sunriseNakshatraIndex});
+      nearBoundary:o.nearFiveMinuteAstronomicalBoundary,nakshatraIndex:o.sunriseNakshatraIndex,
+      nearNakshatraBoundary:o.sunriseNakshatraBoundaryMinutes<=5});
    }
    const classifier=classifyMahadvadashiSequence(days,date);
+   const boundarySensitive=days.some(d=>d.nearBoundary||d.nearNakshatraBoundary);
    const expected=fastDays.has(date);
    const sourceType=sourceTypes.get(date)??null;
    const sourceKind=sourceType?identifySourceMahadvadashi(sourceType):null;
@@ -92,6 +94,8 @@ for(const record of source.records){
     independentResearchReason:classifier.reason,independentSunriseTithiIndex:obs.sunriseTithiIndex,
     independentArunodayaTithiIndex:obs.arunodayaTithiIndex,
     independentSunriseNakshatraIndex:obs.sunriseNakshatraIndex,
+    sunriseNakshatraBoundaryMinutes:obs.sunriseNakshatraBoundaryMinutes,
+    boundarySensitiveResearchCase:boundarySensitive,
     independentlyScreenedFast:screen.tentativeFastEligibility,
     mismatch:expected!==Boolean(classifier.fastCandidates.iskcon===date),
     subtype:classifier.kind,nakshatraSubtype:classifier.nakshatraSubtype,sourceSubtype:sourceType,subtypeMatch:sameSourceKind,
@@ -106,6 +110,7 @@ for(const record of source.records){
    unrelatedSourceFastsExcluded:unrelated,sourceParanaEvents:record.parana.length,
    sourceMahadvadashiEvents:record.mahadvadasi.length,observations:rows.length,
    mismatchedCandidates:rows.filter(x=>x.mismatch).length,
+   boundarySensitiveMismatches:rows.filter(x=>x.mismatch&&x.boundarySensitiveResearchCase).length,
    unconfirmedSubtypes:rows.filter(x=>x.sourceSubtype&&x.subtypeMatch!==true).length,
    pairedParana:rows.filter(x=>x.gcalParana).length,
    comparedParanaStart:rows.filter(x=>x.startResidualMinutes!==null).length,
@@ -124,6 +129,7 @@ const report={status:failures.length?"INCOMPLETE":"FULL_SHARD_RESEARCH_COMPARISO
  totals:{sourceEkadashiFasts:results.reduce((n,x)=>n+x.sourceEkadashiFasts,0),
  unrelatedSourceFastsExcluded:results.reduce((n,x)=>n+x.unrelatedSourceFastsExcluded,0),
  candidateMismatches:results.reduce((n,x)=>n+x.mismatchedCandidates,0),
+ boundarySensitiveCandidateMismatches:results.reduce((n,x)=>n+x.boundarySensitiveMismatches,0),
  subtypeMismatches:results.reduce((n,x)=>n+x.unconfirmedSubtypes,0),
  paranaStartComparisons:results.reduce((n,x)=>n+x.comparedParanaStart,0),
  paranaEndComparisons:results.reduce((n,x)=>n+x.comparedParanaEnd,0),
