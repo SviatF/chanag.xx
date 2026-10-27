@@ -1,0 +1,52 @@
+name: PANCHVANI Native GCal Binary Oracle (research only)
+on:
+  workflow_dispatch:
+  pull_request:
+    paths:
+      - ".github/workflows/gcal-native-oracle.yml"
+      - "scripts/gcal-native-oracle-smoke.mjs"
+      - "docs/audits/GCAL_NATIVE_BINARY_ORACLE_2026-10-27.md"
+jobs:
+  native-gcal-smoke:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 35
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install Windows interoperability for genuine historical GCal executable
+        run: |
+          sudo dpkg --add-architecture i386
+          sudo apt-get update -qq
+          sudo DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends wine32:i386 wine64 xvfb
+      - name: Fetch, pin and verify upstream GCal executable
+        run: |
+          set -euo pipefail
+          mkdir -p original-gcal artifacts/gcal-native
+          curl --fail --location --retry 3 --silent --show-error \
+            https://raw.githubusercontent.com/gopaladasa/GCAL-for-Windows/9267f9fde9aefe2e60fb30c80a7ac9fc366fa585/gcal_11c/gcal.exe \
+            --output original-gcal/gcal.exe
+          test "$(git hash-object original-gcal/gcal.exe)" = "1d20f6e0caf29b6293157d258d02287e4edf0481"
+          file original-gcal/gcal.exe
+          sha256sum original-gcal/gcal.exe | tee artifacts/gcal-native/verified-binary.sha256
+      - name: Execute original binary with Windows console calendar arguments
+        timeout-minutes: 5
+        run: |
+          set -euo pipefail
+          export WINEPREFIX="$RUNNER_TEMP/panchvani-gcal-wine"
+          export WINEDEBUG=-all
+          mkdir -p "$WINEPREFIX"
+          xvfb-run -a timeout 180s wine original-gcal/gcal.exe \
+            -R calendar -L '28N37;77E12' -N 'Delhi' -TZ '5:30' \
+            -SG '1-1-2027' -EG '31-12-2027' \
+            -O 'artifacts/gcal-native/delhi-2027.xml'
+          test -s artifacts/gcal-native/delhi-2027.xml
+          node scripts/gcal-native-oracle-smoke.mjs artifacts/gcal-native/delhi-2027.xml
+      - name: Upload smoke proof, no published religious recommendations
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: native-gcal-11-execution-proof
+          path: artifacts/gcal-native/
+          retention-days: 7
+          if-no-files-found: warn
