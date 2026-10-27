@@ -149,3 +149,26 @@ export function calculateIndependentParanaGeometry(city:City,fastDate:string,par
   return result;
  }finally{sweClose(s);}
 }
+
+/** Independently implemented ordinary Gaudiya Parana bounded-window model.
+ * Requires a caller-supplied fast date; does not decide *whether* fasting on
+ * that date is allowed, nor the Mahadvadasi-specific tradition to apply.
+ */
+export function predictStandardParana(g:IndependentParanaGeometry){
+ const day=g.paranaDate;
+ const rise=g.sunrise.totalMinutes,third=g.daylightThird.totalMinutes;
+ const quarter=g.dwadashiWindow?.firstQuarterEnds;
+ const ending=g.dwadashiWindow?.end;
+ const quarterValid=quarter?.date===day&&quarter.totalMinutes>rise;
+ const dvEndingValid=ending?.date===day&&ending.totalMinutes>rise;
+ const start=quarterValid?quarter!.totalMinutes:rise;
+ const end=dvEndingValid?Math.min(third,ending!.totalMinutes):third;
+ const hhmm=(n:number)=>String(Math.floor(n/60)).padStart(2,"0")+":"+String(n%60).padStart(2,"0");
+ return {
+  start:hhmm(start),end:hhmm(end),
+  startReason:quarterValid?"after-dvadashi-first-quarter":"after-sunrise",
+  endReason:dvEndingValid&&ending!.totalMinutes<third?"before-dvadashi-end":"within-first-third-daylight",
+  valid:start<end,certifiedRitualRecommendation:false as const,
+  validMahadvadasiRule:false as const
+ };
+}

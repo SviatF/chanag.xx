@@ -5,7 +5,7 @@
 import {readFileSync,writeFileSync,mkdirSync} from "node:fs";
 import {findCityBySlug} from "../lib/cities";
 import {addIsoDays} from "../lib/india-time";
-import {calculateIndependentParanaGeometry,isEkadashiDvadashiNativeFast,parseGcalNativeDate,boundaryAlignment} from "../lib/ritual-parana-independent";
+import {calculateIndependentParanaGeometry,isEkadashiDvadashiNativeFast,parseGcalNativeDate,boundaryAlignment,predictStandardParana} from "../lib/ritual-parana-independent";
 const arg=(key:string,def:string)=>process.argv.find(x=>x.startsWith("--"+key+"="))?.slice(key.length+3)??def;
 const shard=Number(arg("shard","0")),shards=Number(arg("shards","1"));
 if(!Number.isInteger(shard)||!Number.isInteger(shards)||shards<1||shard<0||shard>=shards)throw Error("Invalid sharding parameters");
@@ -21,6 +21,9 @@ if(source.cityCount!==454||source.completedCityYears!==908||source.expectedCityY
 const reports:any[]=[],errors:string[]=[];
 const totals={annual:0,fastTags:0,unrelatedFastTags:0,ekadashiDvadashiFasts:0,
   paired:0,missingParana:0,computed:0,geometryErrors:0,
+  bothBoundsMissing:0,onlyEndMissing:0,standardFiniteCases:0,
+  standardBothMatched:0,mahadvadasiFiniteCases:0,
+  mahadvadasiStandardMatched:0,mahadvadasiNeedsSpecialRule:0,
   dashamiArunodayaCandidates:0,trisprshaGeometryCandidates:0,
   dwadashiBeforeSunrise:0,sourceStartNearGeometry:0,sourceStartUnexplained:0,
   sourceEndNearGeometry:0,sourceEndUnexplained:0,openEndedParana:0,sourceMahaNames:0};
@@ -52,18 +55,35 @@ for(let ri=0;ri<source.records.length;ri++){
    if(g.possibleDashamiVedha)totals.dashamiArunodayaCandidates++;
    if(g.trispashaAstronomicalCandidate)totals.trisprshaGeometryCandidates++;
    if(g.dwadashiEndedBeforeParanaSunrise)totals.dwadashiBeforeSunrise++;
+   const standard=predictStandardParana(g);
+   const isMahadvadasi=(maha.get(fastDate)||[]).length>0;
    const start=boundaryAlignment(p.from||null,{
     sunrise:g.sunrise.time,
     dvadashiQuarter:g.dwadashiWindow?.firstQuarterEnds.date===paranaDate?g.dwadashiWindow.firstQuarterEnds.time:null
-   },7);
+   },3);
    const end=boundaryAlignment(p.to||null,{
     daylightThird:g.daylightThird.time,
     dvadashiEnd:g.dwadashiWindow?.end.date===paranaDate?g.dwadashiWindow.end.time:null,
     nakshatraEnd:g.nakshatraNextEnd?.date===paranaDate?g.nakshatraNextEnd.time:null
-   },7);
+   },3);
+   if(!p.from&&!p.to)totals.bothBoundsMissing++;
+   else if(p.from&&!p.to)totals.onlyEndMissing++;
+   if(p.from&&p.to){
+     const stdStart=boundaryAlignment(p.from,{standard:standard.start},3);
+     const stdEnd=boundaryAlignment(p.to,{standard:standard.end},3);
+     const stdMatch=stdStart.withinTolerance&&stdEnd.withinTolerance;
+     if(isMahadvadasi){
+       totals.mahadvadasiFiniteCases++;
+       if(stdMatch)totals.mahadvadasiStandardMatched++;
+       else totals.mahadvadasiNeedsSpecialRule++;
+     }else{
+       totals.standardFiniteCases++;
+       if(stdMatch)totals.standardBothMatched++;
+     }
+   }
    if(start.withinTolerance)totals.sourceStartNearGeometry++;
    else totals.sourceStartUnexplained++;
-   if(!p.to)totals.openEndedParana++;
+   if(!p.to&&p.from)totals.openEndedParana++;
    else if(end.withinTolerance)totals.sourceEndNearGeometry++;
    else totals.sourceEndUnexplained++;
    reports.push({
@@ -77,6 +97,7 @@ for(let ri=0;ri<source.records.length;ri++){
       dwadashiEndedBeforeSunrise:g.dwadashiEndedBeforeParanaSunrise
     },
     sourceStartVsGeometry:start,sourceEndVsGeometry:end,
+    independentlyPredictedStandardWindow:standard,
     unresolved:!start.withinTolerance||!!p.to&&!end.withinTolerance,
     gcalSubtypesAreNotIndependentlyCertified:true,safeForPublication:false
    });
@@ -87,7 +108,7 @@ const result={
  generatedAt:new Date().toISOString(),shard,shards,
  inputCityYears:908,sourceGcalNativeGitBlob:"1d20f6e0caf29b6293157d258d02287e4edf0481",
  method:"Independently authored Swiss/Moshier geometry; not independent ephemeris and not complete GCal ritual logic",
- toleranceMinutes:7,totals,errors,
+ toleranceMinutes:3,totals,errors,
  researchStatus:errors.length||totals.geometryErrors?"RESEARCH_REQUIRES_TECHNICAL_FIX":"RESEARCH_DATE_BY_DATE_ANALYSIS_UNCERTIFIED",
  releaseApproved:false,independentFastSelectorComplete:false,independentParanaMethodComplete:false,
  reports
@@ -97,5 +118,5 @@ writeFileSync(output,JSON.stringify(result,null,2)+"\n");
 console.log("[parana-independent] shard="+shard+"/"+shards+" years="+totals.annual+
  " candidates="+totals.ekadashiDvadashiFasts+" compared="+totals.computed+
  " unrelatedFastTags="+totals.unrelatedFastTags+" startUnexplained="+totals.sourceStartUnexplained+
- " endUnexplained="+totals.sourceEndUnexplained+" errors="+totals.geometryErrors+" state="+result.researchStatus);
+ " endUnexplained="+totals.sourceEndUnexplained+" standardMatches="+totals.standardBothMatched+"/"+totals.standardFiniteCases+" exceptionalMahadvadasi="+totals.mahadvadasiNeedsSpecialRule+" missingSourceBounds="+totals.bothBoundsMissing+" errors="+totals.geometryErrors+" state="+result.researchStatus);
 if(errors.length||totals.geometryErrors)process.exitCode=1;

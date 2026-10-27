@@ -1,6 +1,6 @@
 import {describe,expect,it} from "vitest";
 import {cityBySlug} from "../lib/cities";
-import {calculateIndependentParanaGeometry,isEkadashiDvadashiNativeFast,parseGcalNativeDate,boundaryAlignment} from "../lib/ritual-parana-independent";
+import {calculateIndependentParanaGeometry,isEkadashiDvadashiNativeFast,parseGcalNativeDate,boundaryAlignment,predictStandardParana} from "../lib/ritual-parana-independent";
 
 describe("Independent (from GCal implementation) research-only Parana geometry",()=>{
  it("rejects non-Ekadashi fasting flags rather than inflating ISKCON totals",()=>{
@@ -26,6 +26,10 @@ describe("Independent (from GCal implementation) research-only Parana geometry",
   expect(x.paranaWindowCertified).toBe(false);
   expect(x.safeForPublication).toBe(false);
   expect(x.mahadwadasiSubtypeCertified).toBe(false);
+  const ordinary=predictStandardParana(x);
+  expect(ordinary.valid).toBe(true);
+  expect(ordinary.certifiedRitualRecommendation).toBe(false);
+  expect(ordinary.start).toMatch(/^[0-2]\d:[0-5]\d$/);
  });
  it("keeps Trisprsa-like skipped-Dvadashi sunrise as a distinct, not-certified class",()=>{
   const x=calculateIndependentParanaGeometry(cityBySlug("delhi"),"2027-01-19","2027-01-20");
@@ -33,6 +37,7 @@ describe("Independent (from GCal implementation) research-only Parana geometry",
   expect(x.dwadashiEndedBeforeParanaSunrise).toBe(true);
   expect(x.dwadashiWindow?.firstQuarterEnds).toBeTruthy();
   expect(x.safeForPublication).toBe(false);
+  expect(predictStandardParana(x).validMahadvadasiRule).toBe(false);
  });
  it("preserves minute-level boundary discrepancies for human review",()=>{
   const m=boundaryAlignment("07:14",{sunrise:"07:13",quarter:"10:21"});
