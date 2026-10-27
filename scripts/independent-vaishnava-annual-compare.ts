@@ -88,6 +88,9 @@ for(const record of source.records){
    const residualStart=normalMethodPair&&computedParana?.from&&referenceParana?.from?minutesBetween(computedParana.from,referenceParana.from):null;
    const residualEnd=normalMethodPair&&computedParana?.to&&referenceParana?.to?minutesBetween(computedParana.to,referenceParana.to):null;
    rows.push({date,gcalEkadashiFast:expected,independentFastCandidate:classifier.fastCandidates.iskcon,
+    independentResearchReason:classifier.reason,independentSunriseTithiIndex:obs.sunriseTithiIndex,
+    independentArunodayaTithiIndex:obs.arunodayaTithiIndex,
+    independentSunriseNakshatraIndex:obs.sunriseNakshatraIndex,
     independentlyScreenedFast:screen.tentativeFastEligibility,
     mismatch:expected!==Boolean(classifier.fastCandidates.iskcon===date),
     subtype:classifier.kind,nakshatraSubtype:classifier.nakshatraSubtype,sourceSubtype:sourceType,subtypeMatch:sameSourceKind,
