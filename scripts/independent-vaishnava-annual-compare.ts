@@ -95,6 +95,7 @@ for(const record of source.records){
     mismatch:expected!==Boolean(classifier.fastCandidates.iskcon===date),
     subtype:classifier.kind,nakshatraSubtype:classifier.nakshatraSubtype,sourceSubtype:sourceType,subtypeMatch:sameSourceKind,
     normalParanaMethodComparable:normalMethodPair,paranaMethodProvenance:"independent-classifier",
+    researchDawnSequence:(expected!==Boolean(classifier.fastCandidates.iskcon===date)||!!sourceType&&!sameSourceKind)?days:null,
     gcalParana:referenceParana,calculatedParana:computedParana,
     startResidualMinutes:residualStart,endResidualMinutes:residualEnd,
     certified:false});
