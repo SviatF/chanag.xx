@@ -49,9 +49,15 @@ export function independentParanaAstronomy(city:City,fastDate:string,paranaDate:
    const next=transitions.find(y=>y.jd>x.jd+1e-8);
    return {start:x.jd,end:next?.jd??null};
   });
+  const trayodashiSegments=transitions.filter(x=>x.index===12||x.index===27).map(x=>{
+   const next=transitions.find(y=>y.jd>x.jd+1e-8);
+   return {start:x.jd,end:next?.jd??null};
+  });
+  const trayodashi=trayodashiSegments.find(x=>x.end!==null&&x.end>=paraStart&&x.start<=paraStart+1);
   const bounds=segments.find(x=>x.end!==null&&x.end>=fastStart&&x.start<=paraStart+1);
   if(!bounds?.end)return null;
   return {fastDate,paranaDate,sunrise:jdToMs(jdRise.tret),sunset:jdToMs(jdSet.tret),
-   dwadashiStart:jdToMs(bounds.start),dwadashiEnd:jdToMs(bounds.end),method:"GCal-normal"};
+   dwadashiStart:jdToMs(bounds.start),dwadashiEnd:jdToMs(bounds.end),
+   trayodashiEnd:trayodashi?.end?jdToMs(trayodashi.end):null,method:"GCal-normal"};
  }finally{sweClose(swed);}
 }
