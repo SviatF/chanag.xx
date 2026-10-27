@@ -50,3 +50,37 @@ jobs:
           path: artifacts/gcal-native/
           retention-days: 7
           if-no-files-found: warn
+  native-gcal-windows:
+    runs-on: windows-2022
+    timeout-minutes: 15
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+      - name: Fetch and prove authentic GCal binary on native Windows
+        shell: pwsh
+        run: |
+          New-Item -ItemType Directory -Force -Path original-gcal, artifacts/gcal-native | Out-Null
+          $source = "https://raw.githubusercontent.com/gopaladasa/GCAL-for-Windows/9267f9fde9aefe2e60fb30c80a7ac9fc366fa585/gcal_11c/gcal.exe"
+          Invoke-WebRequest -Uri $source -OutFile original-gcal/gcal.exe
+          $blob = git hash-object original-gcal/gcal.exe
+          if ($blob.Trim() -ne "1d20f6e0caf29b6293157d258d02287e4edf0481") { throw "Original upstream GCal executable SHA mismatch" }
+          (Get-FileHash original-gcal/gcal.exe -Algorithm SHA256).Hash | Out-File -Encoding ascii artifacts/gcal-native/verified-binary.sha256
+      - name: Direct native Windows execution: Delhi full 2027
+        shell: pwsh
+        timeout-minutes: 6
+        run: |
+          $exe = (Resolve-Path original-gcal/gcal.exe).Path
+          $target = Join-Path (Get-Location) 'artifacts/gcal-native/delhi-2027.xml'
+          & $exe -R calendar -L '28N37;77E12' -N Delhi -TZ '5:30' -SG '1-1-2027' -EG '31-12-2027' -O $target
+          if ($LASTEXITCODE -ne 0) { throw "GCal console exited $LASTEXITCODE" }
+          if (!(Test-Path $target)) { throw "GCal returned success without producing calendar XML" }
+          node scripts/gcal-native-oracle-smoke.mjs $target
+      - name: Upload Windows GCal evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: original-gcal-native-windows-proof
+          path: artifacts/gcal-native/
+          retention-days: 7
+          if-no-files-found: warn
