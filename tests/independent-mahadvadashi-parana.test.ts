@@ -38,7 +38,7 @@ describe("independent Parana method provenance",()=>{
   expect(researchParanaMethodFromIndependentKind("VYANJULI")).toBe("GCal-trisprsha-review");
   expect(researchParanaMethodFromIndependentKind("PAKSHA_VARDHINI")).toBe("GCal-trisprsha-review");
   expect(researchParanaMethodFromIndependentKind("NAKSHATRA_REVIEW")).toBe("GCal-nakshatra-review");
-  expect(researchParanaMethodFromIndependentKind("Vijaya Mahadvadasi" as never)).not.toBe("GCal-normal");
+  expect(()=>researchParanaMethodFromIndependentKind("Vijaya Mahadvadasi" as never)).toThrow(/GCal source strings are forbidden/);
  });
 });
 describe("independently calculated Parana timing bounds",()=>{
