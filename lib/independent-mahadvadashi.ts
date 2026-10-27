@@ -93,8 +93,8 @@ export function classifyMahadvadashiSequence(days:readonly DawnTithi[],targetDat
  const validEkadashiToday=E(day.sunriseIndex)&&!arunodayaVedha&&!firstOfRepeatedEkadashi&&!followingDvadashiSpecial;
  const specialDvadashi=kind==="VYANJULI"||kind==="PAKSHA_VARDHINI"||kind==="NAKSHATRA_REVIEW";
  const fastHere=validEkadashiToday||(D(day.sunriseIndex)&&(specialDvadashi||kshayaOrVedhaTransfer));
- const smarta=E(day.sunriseIndex)?day.date:
-  E(prev.sunriseIndex)?prev.date:null;
+ const smarta=(kind==="UNMILANI"||kind==="VYANJULI"||kind==="PAKSHA_VARDHINI")&&E(prev.sunriseIndex)?prev.date:
+  E(day.sunriseIndex)?day.date:E(prev.sunriseIndex)?prev.date:null;
  return {date:day.date,kind,nakshatraSubtype,reason,sourceOfDecision:"independent-astronomical-rules",
   fastCandidates:{smarta,vaishnava:fastHere?day.date:null,iskcon:fastHere?day.date:null},
   needsManualReview:boundaryRisk||kind!==null||kshayaOrVedhaTransfer||!fastHere,
