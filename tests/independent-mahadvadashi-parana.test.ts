@@ -33,6 +33,9 @@ describe("independent Mahadvadashi structural rules",()=>{
 describe("independent Parana method provenance",()=>{
  it("does not accept an original GCal subtype and isolates structural cases",()=>{
   expect(researchParanaMethodFromIndependentKind(null)).toBe("GCal-normal");
+  expect(researchParanaMethodFromIndependentKind(null,26,27)).toBe("GCal-viddha-research");
+  expect(researchParanaMethodFromIndependentKind(null,11,12)).toBe("GCal-viddha-research");
+  expect(researchParanaMethodFromIndependentKind(null,10,11)).toBe("GCal-normal");
   expect(researchParanaMethodFromIndependentKind("TRISPRSHA")).toBe("GCal-trisprsha-review");
   expect(researchParanaMethodFromIndependentKind("UNMILANI")).toBe("GCal-trisprsha-review");
   expect(researchParanaMethodFromIndependentKind("VYANJULI")).toBe("GCal-trisprsha-review");
@@ -92,6 +95,18 @@ describe("full independent sunrise sequence date transfers (RESEARCH ONLY)",()=>
 });
 describe("independently calculated Parana timing bounds",()=>{
  const t=(s:string)=>Date.parse(s);
+ it("calculates independently timed Viddha Parana on Trayodashi sunrise",()=>{
+  const d=(v:string)=>Date.parse(v);
+  const opts={fastDate:"2027-10-26",paranaDate:"2027-10-27",
+   sunrise:d("2027-10-27T01:00:00Z"),sunset:d("2027-10-27T12:00:00Z"),
+   dwadashiStart:d("2027-10-25T16:00:00Z"),dwadashiEnd:d("2027-10-26T15:00:00Z"),
+   trayodashiEnd:d("2027-10-27T08:00:00Z"),method:"GCal-viddha-research" as const};
+  const result=calculateIndependentParana(opts);
+  expect(result.from).toBe(opts.sunrise);
+  expect(result.to).toBe(d("2027-10-27T04:40:00Z"));
+  expect(result.certified).toBe(false);
+  expect(calculateIndependentParana({...opts,trayodashiEnd:null}).status).toBe("special-rule-review");
+ });
  it("starts after sunrise/Hari Vasara and ends at first-third daylight or Dvadashi",()=>{
   const x=calculateIndependentParana({fastDate:"2027-01-19",paranaDate:"2027-01-20",
    sunrise:t("2027-01-20T01:30:00Z"),sunset:t("2027-01-20T12:30:00Z"),
