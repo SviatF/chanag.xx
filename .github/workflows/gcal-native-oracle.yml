@@ -66,7 +66,7 @@ jobs:
           $blob = git hash-object original-gcal/gcal.exe
           if ($blob.Trim() -ne "1d20f6e0caf29b6293157d258d02287e4edf0481") { throw "Original upstream GCal executable SHA mismatch" }
           (Get-FileHash original-gcal/gcal.exe -Algorithm SHA256).Hash | Out-File -Encoding ascii artifacts/gcal-native/verified-binary.sha256
-      - name: Direct native Windows execution: Delhi full 2027
+      - name: "Direct native Windows execution — Delhi full 2027"
         shell: pwsh
         timeout-minutes: 6
         run: |
