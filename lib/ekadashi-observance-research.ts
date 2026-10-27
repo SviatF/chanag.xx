@@ -8,7 +8,7 @@ import type {City} from "./cities";
 import {createDefaultSweData} from "@typescriptify/sweph/dist/types.js";
 import {sweCalcUt,sweClose,sweSetSidMode} from "@typescriptify/sweph/dist/sweph.js";
 import {sweRiseTrans} from "@typescriptify/sweph/dist/swecl.js";
-import {SE_SUN,SE_MOON,SEFLG_MOSEPH,SEFLG_SIDEREAL,SE_SIDM_LAHIRI,SE_CALC_RISE} from "@typescriptify/sweph/dist/constants.js";
+import {SE_SUN,SE_MOON,SEFLG_MOSEPH,SEFLG_SIDEREAL,SEFLG_SPEED,SE_SIDM_LAHIRI,SE_CALC_RISE} from "@typescriptify/sweph/dist/constants.js";
 import {addIsoDays,indiaCivilDayStartJulian,indiaLocalPartsFromJulian} from "./india-time";
 
 export const ARUNODAYA_MINUTES_BEFORE_SUNRISE = 96 as const;
@@ -62,6 +62,7 @@ export type EkadashiMethodDiagnostic={
   city:string;date:string;sunrise:Time;arunodaya:Time;followingSunrise:Time;
   sunriseTithiIndex:number;sunriseTithi:string;
   sunriseNakshatraIndex:number;followingSunriseNakshatraIndex:number;
+  sunriseNakshatraBoundaryMinutes:number;followingNakshatraBoundaryMinutes:number;
   arunodayaTithiIndex:number;arunodayaTithi:string;
   followingSunriseTithiIndex:number;followingSunriseTithi:string;
   dashamiArunodayaScreen:"dashami-at-arunodaya"|"ekadashi-at-arunodaya"|"not-ekadashi-at-sunrise"|"other-arunodaya-state";
@@ -87,9 +88,12 @@ export function compareEkadashiArunodaya(city:City,date:string):EkadashiMethodDi
   try{
     sweSetSidMode(swed,SE_SIDM_LAHIRI,0,0);
     const nakshatraAt=(jd:number)=>{
-      const longitude=sweCalcUt(swed,jd,SE_MOON,SEFLG_MOSEPH|SEFLG_SIDEREAL).xx[0];
-      if(!Number.isFinite(longitude))throw Error("Nonfinite independent Lahiri Moon longitude");
-      return Math.floor(normalized(longitude)/(360/27));
+      const [longitude,, ,speed]=sweCalcUt(swed,jd,SE_MOON,SEFLG_MOSEPH|SEFLG_SIDEREAL|SEFLG_SPEED).xx;
+      if(!Number.isFinite(longitude)||!Number.isFinite(speed)||Math.abs(speed)<1)
+       throw Error("Invalid independent Lahiri Moon longitude/speed");
+      const span=360/27,position=normalized(longitude),within=position%span;
+      return {index:Math.floor(position/span),
+       boundaryMinutes:Math.min(within,span-within)/Math.abs(speed)*1440};
     };
     const sunriseFor=(start:number,expectedDate:string)=>{
       const rise=sweRiseTrans(swed,start,SE_SUN,null,SEFLG_MOSEPH,SE_CALC_RISE,[city.lng,city.lat,0],1013.25,25,null);
@@ -130,7 +134,9 @@ export function compareEkadashiArunodaya(city:City,date:string):EkadashiMethodDi
     return {
       city:city.slug,date,sunrise:local(sunrise),arunodaya:local(arunodaya),followingSunrise:local(following),
       sunriseTithiIndex:atRise,sunriseTithi:tithiName(atRise),
-      sunriseNakshatraIndex:nakshatraAt(sunrise),followingSunriseNakshatraIndex:nakshatraAt(following),
+      sunriseNakshatraIndex:nakshatraAt(sunrise).index,followingSunriseNakshatraIndex:nakshatraAt(following).index,
+      sunriseNakshatraBoundaryMinutes:nakshatraAt(sunrise).boundaryMinutes,
+      followingNakshatraBoundaryMinutes:nakshatraAt(following).boundaryMinutes,
       arunodayaTithiIndex:atArunodaya,arunodayaTithi:tithiName(atArunodaya),
       followingSunriseTithiIndex:atNext,followingSunriseTithi:tithiName(atNext),
       dashamiArunodayaScreen,sunriseAndArunodayaDisagree:atRise!==atArunodaya,
