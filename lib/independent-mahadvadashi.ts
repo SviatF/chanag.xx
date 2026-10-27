@@ -100,7 +100,7 @@ export function classifyMahadvadashiSequence(days:readonly DawnTithi[],targetDat
   const full=day.sunriseIndex<15?14:29;
   const newMoonSuccessor=day.sunriseIndex<15?15:0;
   const future=ordered.slice(k+1,k+9);
-  if(future.some((x,j)=>x.sunriseIndex===full&&future[j+1]?.sunriseIndex===newMoonSuccessor&&future[j+1].nearBoundary))
+  if(future.some((x,j)=>x.sunriseIndex===full&&future[j+1]?.sunriseIndex===newMoonSuccessor&&future[j+1]?.nearBoundary===true))
    researchAmbiguities.push("possible-paksha-vardhini-at-purnima-amavasya-boundary");
  }
  const arunodayaVedha=E(day.sunriseIndex)&&mod15(day.arunodayaIndex)===9&&sameFortnight(day.sunriseIndex,day.arunodayaIndex);
