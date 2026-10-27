@@ -3,7 +3,7 @@
  * Inputs MUST be independently computed Sun/Moon tithi boundaries and local
  * sunrise/sunset. Does not silently substitute GCal oracle minutes.
  */
-import type {MahadvadashiKind} from "./independent-mahadvadashi";
+import type {MahadvadashiKind,NakshatraMahadvadashi} from "./independent-mahadvadashi";
 export type ParanaMethod="GCal-normal"|"GCal-viddha-research"|"GCal-unmilani-research"|"GCal-vyanjuli-research"|"GCal-trisprsha-research"|"GCal-nakshatra-review";
 /**
  * Research method selection MUST derive from independent astronomical evidence.
@@ -26,7 +26,7 @@ export function researchParanaMethodFromIndependentKind(kind:MahadvadashiKind,fa
 export type ParanaInput={
  fastDate:string;paranaDate:string;sunrise:number;sunset:number;
  dwadashiStart:number|null;dwadashiEnd:number|null;trayodashiEnd?:number|null;
- method:ParanaMethod;nakshatraEnd?:number|null
+ method:ParanaMethod;nakshatraEnd?:number|null;nakshatraSubtype?:NakshatraMahadvadashi|null
 };
 export type CandidateParana={
  from:number|null;to:number|null;openEnded:boolean;daylightThird:number|null;
@@ -72,6 +72,33 @@ export function calculateIndependentParana(v:ParanaInput):CandidateParana{
  if(v.method==="GCal-unmilani-research"||v.method==="GCal-vyanjuli-research")
    return sunriseBeginEnd(Math.min(v.dwadashiEnd,daylightThird),
     v.dwadashiEnd<=daylightThird?"end of Dvadasi":"1/3 daylight");
+ if(v.method==="GCal-nakshatra-review"){
+  // GCal Jayanti/Vijaya source-described Parana timing uses the independently
+  // solved Nakshatra end. Jaya/Papanasini require different restrictions.
+  if(v.nakshatraSubtype!=="JAYANTI"&&v.nakshatraSubtype!=="VIJAYA")
+   return {...reject("special-rule-review","Nakshatra subtype has no implemented independent Parana rule"),
+    daylightThird,hariVasaraEnd:quarter};
+  const nakEnd=v.nakshatraEnd;
+  if(nakEnd===undefined||nakEnd===null||!finite(nakEnd)||nakEnd<=v.sunrise)
+   return {...reject("special-rule-review","Nakshatra end not independently established after sunrise"),
+    daylightThird,hariVasaraEnd:quarter};
+  const dvadashiPresent=v.dwadashiStart<=v.sunrise&&v.dwadashiEnd>v.sunrise;
+  let from=v.sunrise,to:number;
+  if(!dvadashiPresent){
+   to=Math.min(nakEnd,daylightThird);
+  }else if(nakEnd<v.dwadashiEnd){
+   from=nakEnd;
+   to=nakEnd<=daylightThird?Math.min(v.dwadashiEnd,daylightThird):v.dwadashiEnd;
+  }else {
+   to=Math.min(v.dwadashiEnd,daylightThird);
+  }
+  if(to<=from)
+   return {...reject("special-rule-review","Nakshatra-specific Parana interval is empty"),
+    daylightThird,hariVasaraEnd:quarter};
+  return {from,to,openEnded:false,daylightThird,hariVasaraEnd:quarter,
+   reasons:["Jayanti/Vijaya Nakshatra independent timing","source-rule conditional"],
+   status:"calculated-research-only",certified:false};
+ }
  if(v.method!=="GCal-normal")return {
   ...reject("special-rule-review","Mahadvadashi/Nakshatra Parana demands subtype-specific method"),
   daylightThird,hariVasaraEnd:quarter
