@@ -1,6 +1,6 @@
 import {describe,it,expect} from "vitest";
 import {classifyMahadvadashiSequence,identifySourceMahadvadashi} from "../lib/independent-mahadvadashi";
-import {calculateIndependentParana,minutesBetween} from "../lib/independent-parana";
+import {calculateIndependentParana,minutesBetween,researchParanaMethodFromIndependentKind} from "../lib/independent-parana";
 const make=(date:string,sunriseIndex:number,arunodayaIndex=sunriseIndex)=>({date,sunriseIndex,arunodayaIndex});
 describe("independent Mahadvadashi structural rules",()=>{
  it("identifies two Ekadashi sunrises as Unmilani on second day",()=>{
@@ -28,6 +28,17 @@ describe("independent Mahadvadashi structural rules",()=>{
   expect(identifySourceMahadvadashi("Vijaya Mahadvadasi")).toBe("NAKSHATRA_REVIEW");
   expect(identifySourceMahadvadashi("Paksa vardhini Mahadvadasi")).toBe("PAKSHA_VARDHINI");
   expect(()=>classifyMahadvadashiSequence([make("2027-02-01",10),make("2027-02-03",11),make("2027-02-04",12)],"2027-02-03")).toThrow();
+ });
+});
+describe("independent Parana method provenance",()=>{
+ it("does not accept an original GCal subtype and isolates structural cases",()=>{
+  expect(researchParanaMethodFromIndependentKind(null)).toBe("GCal-normal");
+  expect(researchParanaMethodFromIndependentKind("TRISPRSHA")).toBe("GCal-trisprsha-review");
+  expect(researchParanaMethodFromIndependentKind("UNMILANI")).toBe("GCal-trisprsha-review");
+  expect(researchParanaMethodFromIndependentKind("VYANJULI")).toBe("GCal-trisprsha-review");
+  expect(researchParanaMethodFromIndependentKind("PAKSHA_VARDHINI")).toBe("GCal-trisprsha-review");
+  expect(researchParanaMethodFromIndependentKind("NAKSHATRA_REVIEW")).toBe("GCal-nakshatra-review");
+  expect(researchParanaMethodFromIndependentKind("Vijaya Mahadvadasi" as never)).not.toBe("GCal-normal");
  });
 });
 describe("independently calculated Parana timing bounds",()=>{
