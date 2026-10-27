@@ -1,0 +1,36 @@
+name: PANCHVANI Native GCal All Supported Cities 2026–27 (RESEARCH ONLY)
+on:
+  workflow_dispatch:
+  pull_request:
+    paths:
+      - "scripts/gcal-native-all-cities.ps1"
+      - "scripts/gcal-native-city-manifest.ts"
+      - ".github/workflows/gcal-native-all-cities.yml"
+jobs:
+  all-cities:
+    runs-on: windows-latest
+    timeout-minutes: 55
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "24"
+      - name: Install dependencies
+        run: npm install --legacy-peer-deps --no-audit --no-fund
+      - name: Generate live registry coordinate manifest
+        run: npx tsx scripts/gcal-native-city-manifest.ts
+      - name: Execute native GCal for every city in 2026 and 2027
+        shell: pwsh
+        run: ./scripts/gcal-native-all-cities.ps1
+      - name: Save derived per-city annual fast and Parana evidence (not source binary)
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: gcal-native-all-city-years
+          path: |
+            artifacts/gcal-city-run/manifest.json
+            artifacts/gcal-city-run/native-city-year-summary.json
+          retention-days: 14
+          if-no-files-found: warn
