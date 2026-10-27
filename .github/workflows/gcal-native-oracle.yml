@@ -26,7 +26,7 @@ jobs:
         run: |
           $exe = (Resolve-Path original-gcal/gcal.exe).Path
           $output = Join-Path (Get-Location) 'artifacts/gcal-native/delhi-2027.xml'
-          & $exe -R calendar -L '28N37;77E12' -N Delhi -TZ '5:30' -SG '1-1-2027' -EG '1-1-2028' -O $output
+          & $exe -R calendar -L '28N37;77E12' -N Delhi -TZ '5:30' -SG '1-1-2027' -EC 365 -O $output
           if (!(Test-Path $output)) { throw "Original executable returned no calendar" }
           node scripts/gcal-native-oracle-smoke.mjs $output
           node scripts/gcal-native-xml-validation.mjs $output delhi 2027
