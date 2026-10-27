@@ -4,14 +4,17 @@
  * sunrise/sunset. Does not silently substitute GCal oracle minutes.
  */
 import type {MahadvadashiKind} from "./independent-mahadvadashi";
-export type ParanaMethod="GCal-normal"|"GCal-trisprsha-review"|"GCal-nakshatra-review";
+export type ParanaMethod="GCal-normal"|"GCal-viddha-research"|"GCal-trisprsha-review"|"GCal-nakshatra-review";
 /**
  * Research method selection MUST derive from independent astronomical evidence.
  * Never pass GCal's observed Mahadvadashi subtype into this function.
  */
-export function researchParanaMethodFromIndependentKind(kind:MahadvadashiKind):ParanaMethod{
+export function researchParanaMethodFromIndependentKind(kind:MahadvadashiKind,fastSunriseTithiIndex?:number,paranaSunriseTithiIndex?:number):ParanaMethod{
  switch(kind){
-  case null: return "GCal-normal";
+  case null: return fastSunriseTithiIndex!==undefined&&paranaSunriseTithiIndex!==undefined&&
+   fastSunriseTithiIndex%15===11&&paranaSunriseTithiIndex%15===12&&
+   Math.floor(fastSunriseTithiIndex/15)===Math.floor(paranaSunriseTithiIndex/15)?
+   "GCal-viddha-research":"GCal-normal";
   case "NAKSHATRA_REVIEW": return "GCal-nakshatra-review";
   case "UNMILANI": case "TRISPRSHA": case "VYANJULI": case "PAKSHA_VARDHINI":
    return "GCal-trisprsha-review";
@@ -20,7 +23,7 @@ export function researchParanaMethodFromIndependentKind(kind:MahadvadashiKind):P
 }
 export type ParanaInput={
  fastDate:string;paranaDate:string;sunrise:number;sunset:number;
- dwadashiStart:number|null;dwadashiEnd:number|null;
+ dwadashiStart:number|null;dwadashiEnd:number|null;trayodashiEnd?:number|null;
  method:ParanaMethod;nakshatraEnd?:number|null
 };
 export type CandidateParana={
@@ -43,6 +46,18 @@ export function calculateIndependentParana(v:ParanaInput):CandidateParana{
  // UTC timestamps, local civil dates verified separately in the caller.
  const daylightThird=v.sunrise+(v.sunset-v.sunrise)/3;
  const quarter=v.dwadashiStart+(v.dwadashiEnd-v.dwadashiStart)/4;
+ if(v.method==="GCal-viddha-research"){
+  // Source-specific Viddha rule, computed without importing GCal clock data:
+  // Parana after sunrise on Trayodashi, by earliest of Trayodashi end
+  // or first third of daylight.
+  if(!v.trayodashiEnd||!finite(v.trayodashiEnd)||v.trayodashiEnd<=v.sunrise)
+   return {...reject("special-rule-review","Missing independent Trayodashi end after sunrise"),
+    daylightThird,hariVasaraEnd:quarter};
+  const until=Math.min(v.trayodashiEnd,daylightThird);
+  return {from:v.sunrise,to:until,openEnded:false,daylightThird,hariVasaraEnd:quarter,
+   reasons:["sunrise",until===v.trayodashiEnd?"end of Trayodashi":"1/3 daylight"],
+   status:"calculated-research-only",certified:false};
+ }
  if(v.method!=="GCal-normal")return {
   ...reject("special-rule-review","Mahadvadashi/Nakshatra Parana demands subtype-specific method"),
   daylightThird,hariVasaraEnd:quarter
