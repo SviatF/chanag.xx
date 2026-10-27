@@ -1,0 +1,26 @@
+name: PANCHVANI native GCal 11 Windows oracle (RESEARCH ONLY)
+on:
+  workflow_dispatch:
+  pull_request:
+    paths:
+      - ".github/workflows/gcal-native-windows.yml"
+      - "scripts/gcal-native-windows.ps1"
+jobs:
+  native-gcal:
+    runs-on: windows-latest
+    timeout-minutes: 15
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+      - name: Download and execute pinned original GCal 11 binary
+        shell: pwsh
+        run: ./scripts/gcal-native-windows.ps1
+      - name: Save diagnostic artifacts (research only)
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: gcal-native-windows-diagnostics
+          path: artifacts/gcal-native/
+          retention-days: 14
+          if-no-files-found: warn
