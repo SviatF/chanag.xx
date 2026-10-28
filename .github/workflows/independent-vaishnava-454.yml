@@ -5,12 +5,14 @@ on:
     paths:
       - "lib/independent-mahadvadashi.ts"
       - "lib/ekadashi-observance-research.ts"
+      - "lib/ekadashi-observance-research.ts"
       - "lib/independent-parana.ts"
       - "lib/independent-parana-astronomy.ts"
       - "lib/native-gcal-comparison.ts"
       - "tests/independent-mahadvadashi-parana.test.ts"
       - "tests/native-gcal-comparison.test.ts"
       - "scripts/independent-vaishnava-annual-compare.ts"
+      - "scripts/compare-gcal-original-dawn.mjs"
       - "scripts/aggregate-independent-454.mjs"
       - "scripts/verify-independent-454-research-gate.mjs"
       - "scripts/adjudicate-independent-454.mjs"
@@ -89,6 +91,12 @@ jobs:
         run: node scripts/verify-independent-454-research-gate.mjs artifacts/previous-summary/independent-454-summary.json artifacts/independent-454-summary.json artifacts/previous-454 artifacts/independent-454 artifacts/independent-454-regression-gate.json
       - name: Adjudicate every remaining mismatch without masking scientific uncertainty
         run: node scripts/adjudicate-independent-454.mjs artifacts/independent-454 artifacts/independent-454-summary.json artifacts/independent-454-adjudication.json
+      - name: Download original GCal 11 source dawn XML for all remaining disputed events
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh run download 40684054890 -R ${{ github.repository }} -n gcal-original-dawn-mismatch-raw-xml -D artifacts/gcal-dawn
+      - name: Compare original GCal and independent Swiss sunrise and Arunodaya to the second
+        run: node scripts/compare-gcal-original-dawn.mjs artifacts/gcal-dawn/original-gcal-dawn-trace.json artifacts/independent-454 artifacts/independent-454-dawn-comparison.json
       - if: always()
         uses: actions/upload-artifact@v4
         with:
@@ -97,5 +105,6 @@ jobs:
             artifacts/independent-454-summary.json
             artifacts/independent-454-regression-gate.json
             artifacts/independent-454-adjudication.json
+            artifacts/independent-454-dawn-comparison.json
           if-no-files-found: error
           retention-days: 14
