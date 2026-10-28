@@ -1,0 +1,34 @@
+name: PANCHVANI GCal original missing Parana clocks — 19 XML replay (RESEARCH)
+on:
+  workflow_dispatch:
+  pull_request:
+    paths:
+      - "scripts/gcal-original-parana-clock-proof.ps1"
+      - ".github/workflows/gcal-original-parana-clock-proof.yml"
+permissions:
+  contents: read
+  actions: read
+concurrency:
+  group: gcal-original-clock-proof-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+jobs:
+  original-source-proof:
+    runs-on: windows-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+      - name: Download pinned 454-city GCal 11 native run
+        shell: pwsh
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh run download 40515382389 -R ${{ github.repository }} -n gcal-native-all-city-years -D artifacts/native
+      - name: Replay original executable for 19 blank Parana entries and inspect raw XML nodes
+        shell: pwsh
+        run: ./scripts/gcal-original-parana-clock-proof.ps1
+      - if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: original-gcal-19-parana-clock-proof
+          path: artifacts/gcal-original-clock-proof/original-gcal-clock-proof.json
+          if-no-files-found: error
+          retention-days: 30
