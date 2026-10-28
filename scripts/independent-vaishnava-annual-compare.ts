@@ -26,14 +26,16 @@ if(source.researchOnly!==true||source.publicRitualApproved!==false||source.hasIn
  throw Error("Native GCal evidence is incomplete, stale or falsely certified");
 if(source.gcalOriginalExeGitBlob!=="1d20f6e0caf29b6293157d258d02287e4edf0481")throw Error("Wrong native GCal binary");
 const rawProof=JSON.parse(readFileSync(proofPath,"utf8"));
-if(rawProof.originalExeGitBlob!==source.gcalOriginalExeGitBlob||rawProof.expected!==19||
+if(rawProof.status!=="GCAL_ORIGINAL_19_AFTER_ONLY_CLOCKS_CONFIRMED"||
+   rawProof.verifiedAfterOnly!==19||rawProof.originalExeGitBlob!==source.gcalOriginalExeGitBlob||rawProof.expected!==19||
    rawProof.replayed!==19||rawProof.independentlyCertified!==false||rawProof.publicRitualApproval!==false||
    !Array.isArray(rawProof.records)||rawProof.records.length!==19)
  throw Error("Missing or unpinned original GCal 11 XML clock proof");
 const afterProof=new Map<string,string>();
 for(const entry of rawProof.records){
  const match=String(entry.originalParanaXml??"").match(/\bafter="(\d{2}:\d{2})"/);
- if(!match||entry.originalXmlFrom||entry.originalXmlTo)throw Error("Raw GCal XML does not prove after-only Parana");
+ if(!match||entry.verifiedOneSidedAfter!==true||entry.originalXmlAfter!==match[1]||
+    entry.originalXmlFrom||entry.originalXmlTo)throw Error("Raw GCal XML does not prove after-only Parana");
  const key=entry.city+"/"+entry.year+"/"+isoGcalNativeDate(entry.date);
  if(afterProof.has(key))throw Error("Duplicate original GCal XML one-sided Parana "+key);
  afterProof.set(key,match[1]);
