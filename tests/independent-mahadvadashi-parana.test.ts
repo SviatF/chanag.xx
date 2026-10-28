@@ -11,6 +11,22 @@ describe("independent Mahadvadashi structural rules",()=>{
   expect(x.fastCandidates.vaishnava).toBe("2027-03-04");
   expect(x.certified).toBe(false);
  });
+ it("does not invent Unmilani after an earlier Dashami-viddha Ekadashi sunrise",()=>{
+  const days=[make("2026-05-26",10,9),make("2026-05-27",10,10),make("2026-05-28",11,11)];
+  const result=classifyMahadvadashiSequence(days,"2026-05-27");
+  expect(result.kind).toBeNull();
+  expect(result.fastCandidates.iskcon).toBe("2026-05-27");
+  expect(result.reason).toContain("Dashami-viddha");
+  expect(result.needsManualReview).toBe(true);
+  expect(result.certified).toBe(false);
+ });
+ it("keeps bona fide Unmilani when preceding Ekadashi was clean at Arunodaya",()=>{
+  const days=[make("2027-03-03",25,25),make("2027-03-04",25,25),make("2027-03-05",26,26)];
+  const result=classifyMahadvadashiSequence(days,"2027-03-04");
+  expect(result.kind).toBe("UNMILANI");
+  expect(result.fastCandidates.iskcon).toBe("2027-03-04");
+  expect(result.certified).toBe(false);
+ });
  it("classifies Trisprsha when Ekadashi jumps to Trayodashi",()=>{
   const x=classifyMahadvadashiSequence([make("2027-01-18",9),make("2027-01-19",10),make("2027-01-20",12)],"2027-01-19");
   expect(x.kind).toBe("TRISPRSHA");

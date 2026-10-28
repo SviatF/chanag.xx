@@ -71,8 +71,13 @@ export function classifyMahadvadashiSequence(days:readonly DawnTithi[],targetDat
    (E(day.arunodayaIndex)||D(day.arunodayaIndex));
  const kshayaOrVedhaTransfer=D(day.sunriseIndex)&&(prevEkadashiViddha||skippedEkadashiAtSunrise);
  let kind:MahadvadashiKind=null,reason="No structural Mahadvadashi identified";
- if(E(prev.sunriseIndex)&&E(day.sunriseIndex)){
-  kind="UNMILANI";reason="Second sunrise under Ekadashi; fast shifts to second occurrence";
+ // An Ekadashi sunrise polluted by Dasami at the *previous* Arunodaya
+ // is not a clean first Ekadashi. Do not elevate the subsequent sunrise
+ // to Unmilani merely because Ekadashi spans both astronomical sunrises.
+ const priorViddhaRepeated=E(prev.sunriseIndex)&&mod15(prev.arunodayaIndex)===9&&
+   sameFortnight(prev.sunriseIndex,prev.arunodayaIndex)&&E(day.sunriseIndex);
+ if(E(prev.sunriseIndex)&&E(prev.arunodayaIndex)&&E(day.sunriseIndex)){
+  kind="UNMILANI";reason="Two clean Ekadashi sunrises with Ekadashi already at first Arunodaya";
  }else if(E(day.sunriseIndex)&&T(next.sunriseIndex)){
   kind="TRISPRSHA";reason="Dvadasi skipped at sunrise after Ekadashi";
  }else if(E(prev.sunriseIndex)&&D(day.sunriseIndex)&&D(next.sunriseIndex)){
@@ -81,6 +86,8 @@ export function classifyMahadvadashiSequence(days:readonly DawnTithi[],targetDat
   kind="PAKSHA_VARDHINI";reason="Later full/new Moon Tithi spans two sunrises";
  }else if(nakshatraSubtype){
   kind="NAKSHATRA_REVIEW";reason="Independently observed bright Dvadasi plus repeated "+nakshatraSubtype+" Nakshatra";
+ }else if(priorViddhaRepeated){
+  reason="Previous Ekadashi sunrise was Dashami-viddha at Arunodaya; second sunrise is ordinary fasting candidate, not Unmilani";
  }else if(kshayaOrVedhaTransfer){
   reason=skippedEkadashiAtSunrise?"Ekadashi absent at both consecutive sunrises; Dvadasi research transfer (Kshaya)":
    "Prior Ekadashi had Dashami at Arunodaya; Viddha research transfer to Dvadasi";
@@ -119,7 +126,7 @@ export function classifyMahadvadashiSequence(days:readonly DawnTithi[],targetDat
   E(day.sunriseIndex)?day.date:E(prev.sunriseIndex)?prev.date:null;
  return {date:day.date,kind,nakshatraSubtype,reason,researchAmbiguities,sourceOfDecision:"independent-astronomical-rules",
   fastCandidates:{smarta,vaishnava:fastHere?day.date:null,iskcon:fastHere?day.date:null},
-  needsManualReview:researchAmbiguities.length>0||kind!==null||kshayaOrVedhaTransfer||!fastHere,
+  needsManualReview:researchAmbiguities.length>0||kind!==null||kshayaOrVedhaTransfer||priorViddhaRepeated||!fastHere,
   certified:false};
 }
 export function identifySourceMahadvadashi(raw:string):Exclude<MahadvadashiKind,null>|"UNRECOGNIZED"{
