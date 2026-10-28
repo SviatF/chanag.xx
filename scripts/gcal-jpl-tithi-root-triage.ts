@@ -87,7 +87,7 @@ const angleAt=(ms:number)=>{
  const sun=sweCalcUt(st,jd,SE_SUN,SEFLG_MOSEPH).xx[0];
  return norm(moon-sun);
 };
-const caseRows=[],rawRows=[],dateGroups=new Map<string,any>(),countByState:Record<string,number>={},eventsWithoutObservation=[];
+const caseRows=[],rawRows=[],dateGroups=new Map<string,any>(),countByState:Record<string,number>={},eventsWithoutObservation:string[]=[];
 let clocks=0,gcalJpl=0,swissJpl=0,gcalSwiss=0,rootSolvedCount=0;
 let closeJplRootCount=0,recalculatedSwissDawnDays=0;
 try{
