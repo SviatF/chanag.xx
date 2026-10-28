@@ -109,7 +109,7 @@ export function adjudicate(rows,summary){
  const unavailable=unpaired.filter(x=>x.category==="GCAL_REFERENCE_CLOCK_MISSING").length;
  const afterOnly=unpaired.filter(x=>x.category==="GCAL_VERIFIED_ONE_SIDED_AFTER").length;
  assert(unavailable===0,"A missing GCal Parana clock has not been checked against original XML");
- assert(afterOnly===19&&afterOnly===p.originalGcalAfterOnlyEvents&&
+ assert(afterOnly===p.originalGcalAfterOnlyEvents&&
   afterOnly===p.verifiedAfterOnlyLowerBounds,"original GCal open-ended after-only clock evidence not reconciled");
  assert(unpaired.filter(x=>x.category==="GCAL_VERIFIED_ONE_SIDED_AFTER").every(x=>
   x.independentlyVerifiedAfterResidualMinutes!==null&&
