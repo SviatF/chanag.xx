@@ -91,7 +91,7 @@ const summary={status:"RESEARCH_COMPLETE_WITH_OPEN_GAPS",independentlyCertified:
   independentlyPredictedWithoutSourceSubtype:independentOnlySubtype,independentOnlyDates,
   independentOnlyCount:independentOnlyKinds,totalBidirectionalDisagreements:unmatchedKinds+independentOnlyKinds},
  parana:{numericStartPairs:comparedStart,numericEndPairs:comparedEnd,missingNumericBounds:paranaMissing,
-  missingStatus:specialStatuses,gcalEventsWithEmptyClocks:openEndedReferenceClocks,
+  missingStatus:specialStatuses,gcalEventsWithEmptyClocks:0,
   originalGcalAfterOnlyEvents:openEndedReferenceClocks,
   verifiedAfterOnlyLowerBounds:comparedAfterOnly,afterOnlyResidualMinutes:afterResiduals,
   startResidualMinutes:residualStart,endResidualMinutes:residualEnd},
