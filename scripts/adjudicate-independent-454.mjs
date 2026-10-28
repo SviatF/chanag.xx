@@ -80,12 +80,15 @@ export function adjudicate(rows,summary){
   const p=row.gcalParana;
   if(p&&(row.startResidualMinutes===null||row.endResidualMinutes===null)){
    let category;
-   if(!/^\d{2}:\d{2}$/.test(p.from??"")||!/^\d{2}:\d{2}$/.test(p.to??""))
+   if(!p.from&&!p.to&&/^\d{2}:\d{2}$/.test(p.after??""))
+    category="GCAL_VERIFIED_ONE_SIDED_AFTER";
+   else if(!/^\d{2}:\d{2}$/.test(p.from??"")||!/^\d{2}:\d{2}$/.test(p.to??""))
     category="GCAL_REFERENCE_CLOCK_MISSING";
    else if((row.sourceSubtype&&row.subtypeMatch!==true)||(row.subtype&&!row.sourceSubtype))
     category="SUBTYPE_DISAGREEMENT_BLOCKS_PARANA_COMPARISON";
    else category="UNEXPLAINED_NUMERIC_PARANA_GAP";
-   add(unpaired,row,category,{gcalClock:{from:p.from??null,to:p.to??null},
+   add(unpaired,row,category,{gcalClock:{from:p.from??null,to:p.to??null,after:p.after??null},
+    independentlyVerifiedAfterResidualMinutes:row.oneSidedAfterResidualMinutes??null,
     independentlyComputedStatus:row.calculatedParana?.status??null});
    if(category==="UNEXPLAINED_NUMERIC_PARANA_GAP")unexplained.push(tallyKey(row));
   }
@@ -104,7 +107,14 @@ export function adjudicate(rows,summary){
  assert(independentOnly.length+sourceOnly.length===b.totalBidirectionalDisagreements,
   "bidirectional subtype mismatch not reconciled");
  const unavailable=unpaired.filter(x=>x.category==="GCAL_REFERENCE_CLOCK_MISSING").length;
- assert(unavailable===p.gcalEventsWithEmptyClocks,"empty source Parana clocks not reconciled");
+ const afterOnly=unpaired.filter(x=>x.category==="GCAL_VERIFIED_ONE_SIDED_AFTER").length;
+ assert(unavailable===0,"A missing GCal Parana clock has not been checked against original XML");
+ assert(afterOnly===19&&afterOnly===p.originalGcalAfterOnlyEvents&&
+  afterOnly===p.verifiedAfterOnlyLowerBounds,"original GCal open-ended after-only clock evidence not reconciled");
+ assert(unpaired.filter(x=>x.category==="GCAL_VERIFIED_ONE_SIDED_AFTER").every(x=>
+  x.independentlyVerifiedAfterResidualMinutes!==null&&
+  x.independentlyVerifiedAfterResidualMinutes<=5),
+  "GCal after-only lower bound does not independently match within five minutes");
  assert(unexplained.length===0,
   "unexplained Parana gaps "+unexplained.slice(0,8).join(", "));
  const sort=(a,b)=>a.date.localeCompare(b.date)||a.city.localeCompare(b.city);
@@ -116,8 +126,10 @@ export function adjudicate(rows,summary){
    independentOnlySubtypeDisagreements:independentOnly.length,
    bidirectionalSubtypeDisagreements:sourceOnly.length+independentOnly.length,
    paranaNotNumericallyComparable:unpaired.length,
-   missingGcalClockValues:unavailable,
-   subtypeDisagreementBlocksParana:unpaired.length-unavailable},
+   sourceClockTrulyMissing:unavailable,
+   originalGcalAfterOnlyParana:afterOnly,
+   afterOnlyLowerBoundsVerified:afterOnly,
+   subtypeDisagreementBlocksParana:unpaired.length-afterOnly-unavailable},
   reasons,dateClusters,boundaryEvidence,
   fastDateCases:mismatches.sort(sort),sourceOnlySubtypeCases:sourceOnly.sort(sort),
   independentOnlySubtypeCases:independentOnly.sort(sort),paranaCases:unpaired.sort(sort),
