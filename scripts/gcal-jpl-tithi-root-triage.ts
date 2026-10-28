@@ -7,7 +7,10 @@ import {readFileSync,writeFileSync,readdirSync,mkdirSync} from "node:fs";
 import {dirname,join} from "node:path";
 import {createDefaultSweData} from "@typescriptify/sweph/dist/types.js";
 import {sweCalcUt,sweClose} from "@typescriptify/sweph/dist/sweph.js";
-import {SE_SUN,SE_MOON,SEFLG_MOSEPH} from "@typescriptify/sweph/dist/constants.js";
+import {sweRiseTrans} from "@typescriptify/sweph/dist/swecl.js";
+import {findCityBySlug} from "../lib/cities";
+import {indiaCivilDayStartJulian} from "../lib/india-time";
+import {SE_SUN,SE_MOON,SEFLG_MOSEPH,SE_CALC_RISE} from "@typescriptify/sweph/dist/constants.js";
 import {getPinnedV6HalfTithiTable,JPL_V6_ROOTS_ASSET_SHA256} from "../lib/jpl-v6-pinned-data";
 import {bisectSwissRoot} from "../lib/v6-root-clock-reconciliation";
 import {ORIGINAL_GCAL_SHA,ORIGINAL_JPL_KERNEL_SHA,
@@ -86,11 +89,34 @@ const angleAt=(ms:number)=>{
 };
 const caseRows=[],rawRows=[],dateGroups=new Map<string,any>(),countByState:Record<string,number>={},eventsWithoutObservation=[];
 let clocks=0,gcalJpl=0,swissJpl=0,gcalSwiss=0,rootSolvedCount=0;
-let closeJplRootCount=0;
+let closeJplRootCount=0,recalculatedSwissDawnDays=0;
 try{
  for(const orig of source.dailySourceEvidence){
-  const k=key(orig.city,orig.year,orig.date),sw=days.get(k);
-  if(!sw){eventsWithoutObservation.push(k);continue;}
+  const k=key(orig.city,orig.year,orig.date);
+  let sw=days.get(k);
+  if(!sw){
+   // The original GCal source includes a -2/+9 day research window, whereas
+   // the prior 908-city-year Swiss shards preserved only -1/+8.
+   // Compute the missing independent Swiss/Moshier dawn directly from date,
+   // coordinates and physical observer convention, NOT from GCal sunrise.
+   const city=findCityBySlug(orig.city);
+   want(!!city&&Math.abs(city.lat-orig.latitude)<0.01&&
+    Math.abs(city.lng-orig.longitude)<0.01,"unverifiable fresh Swiss city "+k);
+   const [yy,mm,dd]=orig.date.split("-").map(Number);
+   const rise=sweRiseTrans(st,indiaCivilDayStartJulian(yy,mm,dd),
+    SE_SUN,null,SEFLG_MOSEPH,SE_CALC_RISE,
+    [city!.lng,city!.lat,0],1013.25,25,null);
+   want(rise.retval>=0&&Number.isFinite(rise.tret),"Swiss dawn impossible "+k);
+   const independentSunriseUtcMs=(rise.tret-JD0)*DAY_MS;
+   want(new Date(independentSunriseUtcMs+330*60000).toISOString().slice(0,10)===orig.date,
+    "Swiss independent dawn date differs "+k);
+   sw={independentSunriseUtcMs,
+    independentArunodayaUtcMs:independentSunriseUtcMs-96*60000,
+    sunriseIndex:swissIndex(independentSunriseUtcMs),
+    arunodayaIndex:swissIndex(independentSunriseUtcMs-96*60000),
+    independentTargetedDawnRecalculation:true};
+   recalculatedSwissDawnDays++;
+  }
   const gcalUtcMs=originalGcalISTSunriseUtcMs(orig.date,orig.sunriseXml);
   const swUtcMs=sw.independentSunriseUtcMs;
   const gcalState=originalGcalTithiAtSunrise(orig.sunriseXml);
@@ -141,6 +167,9 @@ try{
     swissMinusJplSeconds:+exactRoot.offsetSeconds.toFixed(3),
     targetTithiIndex:exactRoot.index}:null,
    previousSwissNearSunriseBoundarySeconds:sw.closestSunriseBoundarySeconds??null,
+   independentDawnProvenance:sw.independentTargetedDawnRecalculation===true?
+    "fresh-Swiss-Moshier-from-original-city-coordinates-and-ISO-day":
+    "verified-908-city-year-research-shard",
    sourceGcalOriginalSunriseXml:orig.sunriseXml,
    sourceGcalOriginalArunodayaXml:orig.arunodayaXml};
   rawRows.push(row);clocks++;
@@ -164,7 +193,8 @@ try{
   dateGroups.set(groupKey,g);
  }
 }finally{sweClose(st);}
-want(clocks>=1100&&clocks<=1360&&caseRows.length===172,"incomplete same-instant JPL triage");
+want(clocks===1360&&caseRows.length===172&&eventsWithoutObservation.length===0&&
+ recalculatedSwissDawnDays===216,"original 1360-city-day JPL comparison coverage incomplete");
 want(rootSolvedCount>0&&closeJplRootCount>0,"no physical JPL Tithi root comparisons performed");
 const median=(nums:number[])=>nums.length?nums[Math.floor(nums.length/2)]:null;
 const deltas=[...rootCache.values()].map(x=>Math.abs(x.offsetSeconds)).sort((a,b)=>a-b);
@@ -179,6 +209,8 @@ const report={status:"GCAL_JPL_DE440S_SWISS_TITHI_RESEARCH_DIAGNOSED",
  coverage:{sourceAffectedCityYears:100,originalDistinctDisputedEventDates:172,
   independentResearchCityYears:cityYears.size,sourceDays:source.dailySourceEvidence.length,
   sameInstantRows:clocks,caseRows:caseRows.length,
+  verifiedOriginalSwissShardDayRows:clocks-recalculatedSwissDawnDays,
+  independentlyRecalculatedSwissDawnRows:recalculatedSwissDawnDays,
   originalSourceDaysWithoutIndependentTrace:eventsWithoutObservation.length,
   tithiRootsSolvedExact:rootSolvedCount,observationsWithin30mOfJplTithiRoot:closeJplRootCount},
  concordance:{counts:byAgreement,gcalEqualsJplAtGcalSunrise:gcalJpl,
