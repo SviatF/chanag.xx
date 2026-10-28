@@ -23,6 +23,15 @@ const deltaSeconds=(indMs,gcalSeconds)=>{
  const ind=localSeconds(indMs);
  return ind===null||gcalSeconds===null?null:((ind-gcalSeconds+129600)%86400)-43200;
 };
+/**
+ * Original GCal 11 source XML Tithi: waxing Pratipada=16, Purnima=30,
+ * waning Pratipada=1, Amavasya=15. Independent Swiss indexes 0..29,
+ * waxing 0..14, waning 15..29. Comparing the raw indices is invalid.
+ */
+export function normalizeOriginalGcalTithiIndex(n){
+ if(!Number.isInteger(n)||n<1||n>30)throw Error("Invalid original GCal 1..30 Tithi index");
+ return (n+14)%30;
+}
 const key=(city,year,date)=>city+"/"+year+"/"+date;
 export function compareDawn(raw,shards){
  requireResearch(raw.status==="RAW_GCAL_DAWN_TRACE_COMPLETE_RESEARCH_ONLY"&&
@@ -82,10 +91,13 @@ export function compareDawn(raw,shards){
   const origTithi=original.sunriseXml?.match(/<tithi [^>]*\bindex="(\d+)"/)?.[1]??null;
   const origNakshatra=original.sunriseXml?.match(/<naksatra [^>]*\bname="([^"]+)"/)?.[1]??null;
   const nearestBoundary=ind.closestSunriseBoundarySeconds??null;
+  const normalizedOriginalTithi=origTithi===null?null:normalizeOriginalGcalTithiIndex(+origTithi);
   pairs.push({city:original.city,year:original.year,date:original.date,
    originalSunriseXml:original.sunriseXml,
    originalArunodayaXml:original.arunodayaXml,
    originalTithiIndex:origTithi===null?null:+origTithi,
+   originalTithiIndexIndependentFrame:normalizedOriginalTithi,
+   tithiAtSunriseDisagrees:normalizedOriginalTithi===null?null:normalizedOriginalTithi!==ind.sunriseIndex,
    originalNakshatraName:origNakshatra,
    independentTithiIndex:ind.sunriseIndex,independentArunodayaTithiIndex:ind.arunodayaIndex,
    sunriseDeltaSeconds:+rise.toFixed(3),arunodayaDeltaSeconds:+dawn.toFixed(3),
@@ -109,7 +121,10 @@ export function compareDawn(raw,shards){
   coverage:{rawTargetEventKeys:relevant.size,rawCityYears:raw.uniqueCityYears,
    rawDays:raw.dailySourceEvidence.length,matchedDayClocks:pairs.length,
    sourceDaysWithoutIndependentTrace:missing.length,independentCityYears:seenYears.size},
-  summary:{sunrise:summary("sunriseDeltaSeconds"),arunodaya:summary("arunodayaDeltaSeconds")},
+  summary:{sunrise:summary("sunriseDeltaSeconds"),arunodaya:summary("arunodayaDeltaSeconds"),
+   gcalTithiSourceIndexComparablePairs:pairs.filter(x=>x.tithiAtSunriseDisagrees!==null).length,
+   sunriseTithiDisagreements:pairs.filter(x=>x.tithiAtSunriseDisagrees===true).length,
+   sunriseTithiAgreement:pairs.filter(x=>x.tithiAtSunriseDisagrees===false).length},
   independentlyCertified:false,publicRitualApproval:false,
   matchedDawnClockComparisons:pairs,notComparedSourceDays:missing,
   warning:"Dawn disagreements measure conventions / astronomy. Do not modify fasting or ritual labels to match GCal without scientifically reviewing each boundary."};
