@@ -5,7 +5,9 @@ on:
     paths:
       - "lib/gcal-jpl-tithi-root-triage.ts"
       - "scripts/gcal-jpl-tithi-root-triage.ts"
+      - "scripts/adjudicate-gcal-jpl-model-windows.mjs"
       - "tests/gcal-jpl-tithi-root-triage.test.ts"
+      - "tests/adjudicate-gcal-jpl-model-windows.test.mjs"
       - ".github/workflows/gcal-jpl-tithi-root-triage.yml"
 permissions:
   contents: read
@@ -44,6 +46,10 @@ jobs:
           --original=artifacts/original-gcal/original-gcal-dawn-trace.json
           --shards=artifacts/independent-shards
           --output=artifacts/gcal-jpl-de440s-tithi-audit.json
+      - name: Validate all cases are attributed by observed physical Tithi-model evidence, not ritual guesswork
+        run: |
+          node --test tests/adjudicate-gcal-jpl-model-windows.test.mjs
+          node scripts/adjudicate-gcal-jpl-model-windows.mjs artifacts/gcal-jpl-de440s-tithi-audit.json artifacts/gcal-jpl-de440s-case-adjudication.json
       - name: Enforce research-only status and exact 172-case adjudication coverage
         run: |
           node --input-type=module -e '
@@ -51,7 +57,9 @@ jobs:
           const v=JSON.parse(readFileSync("artifacts/gcal-jpl-de440s-tithi-audit.json","utf8"));
           if(v.coverage?.caseRows!==172||v.coverage?.independentResearchCityYears!==908||
              v.coverage?.originalDistinctDisputedEventDates!==172||v.coverage?.sourceAffectedCityYears!==100||
-             v.tithiRootOffsets?.count<1||v.publicRitualApproval!==false||
+             v.tithiRootOffsets?.count<1||v.coverage?.sameInstantRows!==1360||
+             v.coverage?.originalSourceDaysWithoutIndependentTrace!==0||
+             v.coverage?.independentlyRecalculatedSwissDawnRows!==216||v.publicRitualApproval!==false||
              v.independentlyCertified!==false||v.tithiModelSelectedForPublicCalendar!==false)
              throw Error("Pinned original GCal/JPL/Swiss scientific evidence incomplete or falsely certified");
           console.log("PASS pinned independent JPL Tithi evidence",v.coverage);
@@ -60,6 +68,8 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: gcal-jpl-de440s-exact-tithi-root-evidence
-          path: artifacts/gcal-jpl-de440s-tithi-audit.json
+          path: |
+            artifacts/gcal-jpl-de440s-tithi-audit.json
+            artifacts/gcal-jpl-de440s-case-adjudication.json
           if-no-files-found: error
           retention-days: 30
