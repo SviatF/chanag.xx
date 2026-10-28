@@ -45,14 +45,26 @@ export function adjudicate(rows,summary){
  const add=(arr,r,category,extra={})=>{
   const d=r.researchDawnSequence??[];
   const nearby=Array.isArray(d)?d.filter(x=>x.nearBoundary===true||x.nearNakshatraBoundary===true)
-   .map(x=>({date:x.date,sunriseTithiIndex:x.sunriseIndex,arunodayaTithiIndex:x.arunodayaIndex,
-    nearBoundary:!!x.nearBoundary,nearNakshatraBoundary:!!x.nearNakshatraBoundary})):[];
+   .map(x=>({
+    date:x.date,sunriseTithiIndex:x.sunriseIndex,arunodayaTithiIndex:x.arunodayaIndex,
+    nearBoundary:!!x.nearBoundary,nearNakshatraBoundary:!!x.nearNakshatraBoundary,
+    sunriseTithiMinusFive:x.tithiSunriseSensitivity?.minusFive??null,
+    sunriseTithiPlusFive:x.tithiSunriseSensitivity?.plusFive??null,
+    arunodayaTithiMinusFive:x.tithiArunodayaSensitivity?.minusFive??null,
+    arunodayaTithiPlusFive:x.tithiArunodayaSensitivity?.plusFive??null,
+    closestSunriseBoundarySeconds:x.closestSunriseBoundarySeconds??null,
+    closestArunodayaBoundarySeconds:x.closestArunodayaBoundarySeconds??null
+   })):[];
   const record={city:r.city,year:r.year,date:r.date,category,
    gcalFast:r.gcalEkadashiFast,independentFast:r.independentFastCandidate??null,
    gcalSubtype:r.sourceSubtype??null,independentSubtype:r.subtype??null,
    independentReason:r.independentResearchReason??null,
    independentAmbiguities:r.independentResearchAmbiguities??[],
    boundaryEvidenceOnly:nearby,
+   sensitivityWithinFiveMinutes:nearby.some(x=>x.sunriseTithiMinusFive!==null&&
+    x.sunriseTithiPlusFive!==null&&x.sunriseTithiMinusFive!==x.sunriseTithiPlusFive||
+    x.arunodayaTithiMinusFive!==null&&x.arunodayaTithiPlusFive!==null&&
+    x.arunodayaTithiMinusFive!==x.arunodayaTithiPlusFive),
    ...extra};
   arr.push(record);count(reasons,category);count(dateClusters,r.date);
   if(nearby.length)count(boundaryEvidence,category);
