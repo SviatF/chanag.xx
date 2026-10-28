@@ -45,27 +45,31 @@ foreach ($target in $targets) {
   if (-not $day -or -not $day.parana) { throw "Missing original XML Parana node $($target.city) $($target.date)" }
   $from = [string]$day.parana.from
   $to = [string]$day.parana.to
+  $after = [string]$day.parana.after
+  $before = [string]$day.parana.before
   $results.Add([pscustomobject]@{
     city=$target.city;year=$target.year;date=$target.date;
     sourceSummaryFrom=$target.sourceFrom;sourceSummaryTo=$target.sourceTo;
     originalXmlFrom=$from;originalXmlTo=$to;
+    originalXmlAfter=$after;originalXmlBefore=$before;
     originalParanaXml=$day.parana.OuterXml;
     originalSunriseXml=$day.sunrise.OuterXml;
     originalArunodayaXml=$day.arunodaya.OuterXml;
-    verifiedSourceBlank=([string]::IsNullOrWhiteSpace($from) -and [string]::IsNullOrWhiteSpace($to))
+    verifiedOneSidedAfter=([string]::IsNullOrWhiteSpace($from) -and [string]::IsNullOrWhiteSpace($to) -and
+      $after -match "^\d{2}:\d{2}$" -and [string]::IsNullOrWhiteSpace($before))
   })
   Remove-Item $output -Force
 }
 if ($results.Count -ne 19) { throw "Original XML source proof incomplete" }
-$blank = @($results | Where-Object { $_.verifiedSourceBlank -eq $true }).Count
+$afterOnly = @($results | Where-Object { $_.verifiedOneSidedAfter -eq $true }).Count
 $report = [pscustomobject]@{
-  status = $(if ($blank -eq 19) {"GCAL_ORIGINAL_19_EMPTY_CLOCKS_CONFIRMED"} else {"GCAL_SOURCE_PARSER_MISMATCH"})
-  originalExeGitBlob=$hash;expected=19;replayed=$results.Count;verifiedBlank=$blank;
+  status = $(if ($afterOnly -eq 19) {"GCAL_ORIGINAL_19_AFTER_ONLY_CLOCKS_CONFIRMED"} else {"GCAL_SOURCE_CLOCK_PROVENANCE_MISMATCH"})
+  originalExeGitBlob=$hash;expected=19;replayed=$results.Count;verifiedAfterOnly=$afterOnly;
   independentlyCertified=$false;publicRitualApproval=$false;
-  warning="An absent original GCal XML clock must never be reconstructed from the independent engine."
+  warning="Original GCal after-only Parana is a genuine one-sided lower bound; never fabricate a source upper bound."
   records=@($results.ToArray())
 }
 $report | ConvertTo-Json -Depth 12 | Set-Content (Join-Path $root "original-gcal-clock-proof.json")
 Remove-Item $exe -Force
-Write-Host "[gcal-source-proof] replayed=$($results.Count) original-empty=$blank"
-if ($blank -ne 19) { throw "Original XML differs from extracted clock fields; parser requires repair" }
+Write-Host "[gcal-source-proof] replayed=$($results.Count) after-only=$afterOnly"
+if ($afterOnly -ne 19) { throw "Original source after-only Parana could not be verified for all 19 cases" }
