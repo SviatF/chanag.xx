@@ -82,6 +82,7 @@ for(const record of source.records){
    for(let n=-1;n<=8;n++){
     const d=addIsoDays(date,n),o=observe(d);
     days.push({date:d,sunriseIndex:o.sunriseTithiIndex,arunodayaIndex:o.arunodayaTithiIndex,
+      independentSunriseUtcMs:o.sunriseUtcMs,independentArunodayaUtcMs:o.arunodayaUtcMs,
       nearBoundary:o.nearFiveMinuteAstronomicalBoundary,
       tithiSunriseSensitivity:o.fiveMinuteTithiSensitivity.sunrise,
       tithiArunodayaSensitivity:o.fiveMinuteTithiSensitivity.arunodaya,
@@ -124,6 +125,7 @@ for(const record of source.records){
    rows.push({date,gcalEkadashiFast:expected,independentFastCandidate:classifier.fastCandidates.iskcon,
     independentResearchReason:classifier.reason,independentSunriseTithiIndex:obs.sunriseTithiIndex,
     independentArunodayaTithiIndex:obs.arunodayaTithiIndex,
+    independentSunriseUtcMs:obs.sunriseUtcMs,independentArunodayaUtcMs:obs.arunodayaUtcMs,
     independentSunriseNakshatraIndex:obs.sunriseNakshatraIndex,
     sunriseNakshatraBoundaryMinutes:obs.sunriseNakshatraBoundaryMinutes,
     independentFiveMinuteSensitivity:obs.fiveMinuteTithiSensitivity,
@@ -133,7 +135,7 @@ for(const record of source.records){
     mismatch:expected!==Boolean(classifier.fastCandidates.iskcon===date),
     subtype:classifier.kind,nakshatraSubtype:classifier.nakshatraSubtype,sourceSubtype:sourceType,subtypeMatch:sameSourceKind,
     normalParanaMethodComparable:normalMethodPair,paranaMethodProvenance:"independent-classifier",
-    researchDawnSequence:(expected!==Boolean(classifier.fastCandidates.iskcon===date)||!!sourceType&&!sameSourceKind)?days:null,
+    researchDawnSequence:(expected!==Boolean(classifier.fastCandidates.iskcon===date)||!!sourceType&&!sameSourceKind||!!classifier.kind&&!sourceType)?days:null,
     gcalParana:referenceParana,calculatedParana:computedParana,
     startResidualMinutes:residualStart,endResidualMinutes:residualEnd,
     oneSidedAfterResidualMinutes:afterOnlyResidual,

@@ -60,6 +60,7 @@ function boundary(swed:SwissState,at:number,direction:-1|1){
 
 export type EkadashiMethodDiagnostic={
   city:string;date:string;sunrise:Time;arunodaya:Time;followingSunrise:Time;
+  sunriseUtcMs:number;arunodayaUtcMs:number;followingSunriseUtcMs:number;
   sunriseTithiIndex:number;sunriseTithi:string;
   sunriseNakshatraIndex:number;followingSunriseNakshatraIndex:number;
   sunriseNakshatraBoundaryMinutes:number;followingNakshatraBoundaryMinutes:number;
@@ -144,6 +145,9 @@ export function compareEkadashiArunodaya(city:City,date:string):EkadashiMethodDi
     }
     return {
       city:city.slug,date,sunrise:local(sunrise),arunodaya:local(arunodaya),followingSunrise:local(following),
+      sunriseUtcMs:(sunrise-2440587.5)*86400000,
+      arunodayaUtcMs:(arunodaya-2440587.5)*86400000,
+      followingSunriseUtcMs:(following-2440587.5)*86400000,
       sunriseTithiIndex:atRise,sunriseTithi:tithiName(atRise),
       sunriseNakshatraIndex:sunriseNakshatra.index,followingSunriseNakshatraIndex:followingNakshatra.index,
       sunriseNakshatraBoundaryMinutes:sunriseNakshatra.boundaryMinutes,
