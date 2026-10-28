@@ -12,6 +12,8 @@ on:
       - "scripts/independent-vaishnava-annual-compare.ts"
       - "scripts/aggregate-independent-454.mjs"
       - "scripts/verify-independent-454-research-gate.mjs"
+      - "scripts/adjudicate-independent-454.mjs"
+      - "tests/adjudicate-independent-454.test.mjs"
       - "tests/verify-independent-454-research-gate.test.mjs"
       - ".github/workflows/independent-vaishnava-454.yml"
 concurrency:
@@ -60,8 +62,8 @@ jobs:
       actions: read
     steps:
       - uses: actions/checkout@v4
-      - name: Test the fail-closed research comparison gate
-        run: node --test tests/verify-independent-454-research-gate.test.mjs
+      - name: Test the fail-closed research comparison and forensic adjudication
+        run: node --test tests/verify-independent-454-research-gate.test.mjs tests/adjudicate-independent-454.test.mjs
       - name: Download all current-run research shards
         uses: actions/download-artifact@v4
         with:
@@ -80,6 +82,8 @@ jobs:
         run: gh run download 40560045297 -R ${{ github.repository }} -n independent-454-aggregate-report -D artifacts/previous-summary
       - name: Block any calendar / Parana regression and require genuine parity progress
         run: node scripts/verify-independent-454-research-gate.mjs artifacts/previous-summary/independent-454-summary.json artifacts/independent-454-summary.json artifacts/previous-454 artifacts/independent-454 artifacts/independent-454-regression-gate.json
+      - name: Adjudicate every remaining mismatch without masking scientific uncertainty
+        run: node scripts/adjudicate-independent-454.mjs artifacts/independent-454 artifacts/independent-454-summary.json artifacts/independent-454-adjudication.json
       - if: always()
         uses: actions/upload-artifact@v4
         with:
@@ -87,5 +91,6 @@ jobs:
           path: |
             artifacts/independent-454-summary.json
             artifacts/independent-454-regression-gate.json
+            artifacts/independent-454-adjudication.json
           if-no-files-found: error
           retention-days: 14
