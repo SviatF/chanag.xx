@@ -15,8 +15,8 @@ import {independentParanaAstronomy} from "../lib/independent-parana-astronomy";
 import {calculateIndependentParana,minutesBetween,researchParanaMethodFromIndependentKind} from "../lib/independent-parana";
 import {isGcalEkadashiFast,isoGcalNativeDate,shardFor} from "../lib/native-gcal-comparison";
 const argv=(key:string)=>process.argv.find(x=>x.startsWith("--"+key+"="))?.slice(key.length+3);
-const input=argv("input"),shardSpec=argv("shard")??"0/1";
-if(!input)throw Error("Supply genuine original GCal artifact via --input");
+const input=argv("input"),proofPath=argv("proof"),shardSpec=argv("shard")??"0/1";
+if(!input||!proofPath)throw Error("Supply original GCal source --input and independently replayed raw XML --proof");
 const match=shardSpec.match(/^(\d+)\/(\d+)$/);
 if(!match)throw Error("Bad shard syntax");
 const shard=+match[1],shards=+match[2];
@@ -25,6 +25,20 @@ const source=JSON.parse(readFileSync(input,"utf8"));
 if(source.researchOnly!==true||source.publicRitualApproved!==false||source.hasIndependentSecondMethod!==false||source.completedCityYears!==908||source.expectedCityYears!==908||source.failures?.length)
  throw Error("Native GCal evidence is incomplete, stale or falsely certified");
 if(source.gcalOriginalExeGitBlob!=="1d20f6e0caf29b6293157d258d02287e4edf0481")throw Error("Wrong native GCal binary");
+const rawProof=JSON.parse(readFileSync(proofPath,"utf8"));
+if(rawProof.originalExeGitBlob!==source.gcalOriginalExeGitBlob||rawProof.expected!==19||
+   rawProof.replayed!==19||rawProof.independentlyCertified!==false||rawProof.publicRitualApproval!==false||
+   !Array.isArray(rawProof.records)||rawProof.records.length!==19)
+ throw Error("Missing or unpinned original GCal 11 XML clock proof");
+const afterProof=new Map<string,string>();
+for(const entry of rawProof.records){
+ const match=String(entry.originalParanaXml??"").match(/\bafter="(\d{2}:\d{2})"/);
+ if(!match||entry.originalXmlFrom||entry.originalXmlTo)throw Error("Raw GCal XML does not prove after-only Parana");
+ const key=entry.city+"/"+entry.year+"/"+isoGcalNativeDate(entry.date);
+ if(afterProof.has(key))throw Error("Duplicate original GCal XML one-sided Parana "+key);
+ afterProof.set(key,match[1]);
+}
+if(afterProof.size!==19)throw Error("Unverified original GCal one-sided Parana source count");
 const distinct=new Set<string>(),results=[],failures=[];
 for(const r of source.records){
  const unique=r.city+"/"+r.year;
@@ -48,8 +62,13 @@ for(const record of source.records){
   if(!observation){observation=compareEkadashiArunodaya(city,date);obsCache.set(date,observation);}
   return observation;
  };
- const oracleParana=new Map<string,{date:string;from:string;to:string;sunriseTithi:string}>();
- for(const p of record.parana){const date=isoGcalNativeDate(p.date);oracleParana.set(date,{...p,date});}
+ const oracleParana=new Map<string,{date:string;from:string;to:string;after:string;sunriseTithi:string}>();
+ for(const p of record.parana){
+  const date=isoGcalNativeDate(p.date),sourceAfter=afterProof.get(record.city+"/"+record.year+"/"+date);
+  if((!p.from||!p.to)&&!sourceAfter)throw Error("GCal one-sided reference not independently replayed: "+record.city+"/"+date);
+  if(p.after&&sourceAfter&&p.after!==sourceAfter)throw Error("Raw XML after bound differs from parsed source");
+  oracleParana.set(date,{...p,date,after:p.after||sourceAfter||""});
+ }
  const sourceTypes=new Map<string,string>();
  for(const v of record.mahadvadasi)sourceTypes.set(isoGcalNativeDate(v.date),v.subtype);
  const rows=[];
@@ -95,6 +114,11 @@ for(const record of source.records){
     computedParana?.status==="calculated-research-only";
    const residualStart=normalMethodPair&&computedParana?.from&&referenceParana?.from?minutesBetween(computedParana.from,referenceParana.from):null;
    const residualEnd=normalMethodPair&&computedParana?.to&&referenceParana?.to?minutesBetween(computedParana.to,referenceParana.to):null;
+   // A genuine GCal <parana after="HH:MM"/> has an OPEN upper end.
+   // Verify its lower bound separately; NEVER invent a GCal 'to' time.
+   const afterOnlyResidual=normalMethodPair&&computedParana?.from&&referenceParana?.after&&
+     !referenceParana.from&&!referenceParana.to?
+      minutesBetween(computedParana.from,referenceParana.after):null;
    rows.push({date,gcalEkadashiFast:expected,independentFastCandidate:classifier.fastCandidates.iskcon,
     independentResearchReason:classifier.reason,independentSunriseTithiIndex:obs.sunriseTithiIndex,
     independentArunodayaTithiIndex:obs.arunodayaTithiIndex,
@@ -110,6 +134,7 @@ for(const record of source.records){
     researchDawnSequence:(expected!==Boolean(classifier.fastCandidates.iskcon===date)||!!sourceType&&!sameSourceKind)?days:null,
     gcalParana:referenceParana,calculatedParana:computedParana,
     startResidualMinutes:residualStart,endResidualMinutes:residualEnd,
+    oneSidedAfterResidualMinutes:afterOnlyResidual,
     certified:false});
   }catch(e){failures.push(record.city+"/"+record.year+"/"+date+": "+String(e));}
  }
@@ -122,6 +147,8 @@ for(const record of source.records){
    independentOnlySubtypeCandidates:rows.filter(x=>x.subtype&&!x.sourceSubtype).length,
    pairedParana:rows.filter(x=>x.gcalParana).length,
    comparedParanaStart:rows.filter(x=>x.startResidualMinutes!==null).length,
+   verifiedOneSidedAfter:rows.filter(x=>x.oneSidedAfterResidualMinutes!==null).length,
+   oneSidedAfterOverFive:rows.filter(x=>x.oneSidedAfterResidualMinutes!==null&&x.oneSidedAfterResidualMinutes>5).length,
    comparedParanaEnd:rows.filter(x=>x.endResidualMinutes!==null).length,
    residualStartOverFive:rows.filter(x=>x.startResidualMinutes!==null&&x.startResidualMinutes>5).length,
    residualEndOverFive:rows.filter(x=>x.endResidualMinutes!==null&&x.endResidualMinutes>5).length,
@@ -141,6 +168,8 @@ const report={status:failures.length?"INCOMPLETE":"FULL_SHARD_RESEARCH_COMPARISO
  subtypeMismatches:results.reduce((n,x)=>n+x.unconfirmedSubtypes,0),
  independentOnlySubtypeCandidates:results.reduce((n,x)=>n+x.independentOnlySubtypeCandidates,0),
  paranaStartComparisons:results.reduce((n,x)=>n+x.comparedParanaStart,0),
+ verifiedOneSidedAfterComparisons:results.reduce((n,x)=>n+x.verifiedOneSidedAfter,0),
+ oneSidedAfterOverFiveMinutes:results.reduce((n,x)=>n+x.oneSidedAfterOverFive,0),
  paranaEndComparisons:results.reduce((n,x)=>n+x.comparedParanaEnd,0),
  paranaStartOverFiveMinutes:results.reduce((n,x)=>n+x.residualStartOverFive,0),
  paranaEndOverFiveMinutes:results.reduce((n,x)=>n+x.residualEndOverFive,0)},
