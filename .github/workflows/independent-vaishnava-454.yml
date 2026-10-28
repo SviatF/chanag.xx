@@ -4,6 +4,7 @@ on:
   pull_request:
     paths:
       - "lib/independent-mahadvadashi.ts"
+      - "lib/ekadashi-observance-research.ts"
       - "lib/independent-parana.ts"
       - "lib/independent-parana-astronomy.ts"
       - "lib/native-gcal-comparison.ts"
@@ -12,6 +13,8 @@ on:
       - "scripts/independent-vaishnava-annual-compare.ts"
       - "scripts/aggregate-independent-454.mjs"
       - "scripts/verify-independent-454-research-gate.mjs"
+      - "scripts/adjudicate-independent-454.mjs"
+      - "tests/adjudicate-independent-454.test.mjs"
       - "tests/verify-independent-454-research-gate.test.mjs"
       - ".github/workflows/independent-vaishnava-454.yml"
 concurrency:
@@ -40,8 +43,12 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
         run: gh run download 40515382389 -R ${{ github.repository }} -n gcal-native-all-city-years -D artifacts/native
+      - name: Fetch pinned original GCal XML after-only Parana proof
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh run download 40681650611 -R ${{ github.repository }} -n original-gcal-19-parana-clock-proof -D artifacts/native-proof
       - name: Independent astronomical Parana and Mahadvadashi — partition
-        run: npx tsx scripts/independent-vaishnava-annual-compare.ts --input=artifacts/native/native-city-year-summary.json --shard=${{ matrix.shard }}/16
+        run: npx tsx scripts/independent-vaishnava-annual-compare.ts --input=artifacts/native/native-city-year-summary.json --proof=artifacts/native-proof/original-gcal-clock-proof.json --shard=${{ matrix.shard }}/16
       - if: always()
         uses: actions/upload-artifact@v4
         with:
@@ -60,8 +67,8 @@ jobs:
       actions: read
     steps:
       - uses: actions/checkout@v4
-      - name: Test the fail-closed research comparison gate
-        run: node --test tests/verify-independent-454-research-gate.test.mjs
+      - name: Test the fail-closed research comparison and forensic adjudication
+        run: node --test tests/verify-independent-454-research-gate.test.mjs tests/adjudicate-independent-454.test.mjs
       - name: Download all current-run research shards
         uses: actions/download-artifact@v4
         with:
@@ -80,6 +87,8 @@ jobs:
         run: gh run download 40560045297 -R ${{ github.repository }} -n independent-454-aggregate-report -D artifacts/previous-summary
       - name: Block any calendar / Parana regression and require genuine parity progress
         run: node scripts/verify-independent-454-research-gate.mjs artifacts/previous-summary/independent-454-summary.json artifacts/independent-454-summary.json artifacts/previous-454 artifacts/independent-454 artifacts/independent-454-regression-gate.json
+      - name: Adjudicate every remaining mismatch without masking scientific uncertainty
+        run: node scripts/adjudicate-independent-454.mjs artifacts/independent-454 artifacts/independent-454-summary.json artifacts/independent-454-adjudication.json
       - if: always()
         uses: actions/upload-artifact@v4
         with:
@@ -87,5 +96,6 @@ jobs:
           path: |
             artifacts/independent-454-summary.json
             artifacts/independent-454-regression-gate.json
+            artifacts/independent-454-adjudication.json
           if-no-files-found: error
           retention-days: 14

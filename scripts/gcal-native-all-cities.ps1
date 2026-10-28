@@ -36,7 +36,7 @@ foreach($city in $manifest.cities){
     $sunTithi=[string]$d.sunrise.tithi.name
     $arunodaya=[string]$d.arunodaya.tithi.name
     if($d.fast){$fast.Add(@{date=$date;sunriseTithi=$sunTithi;arunodayaTithi=$arunodaya})}
-    if($d.parana){$parana.Add(@{date=$date;from=[string]$d.parana.from;to=[string]$d.parana.to;sunriseTithi=$sunTithi})}
+    if($d.parana){$parana.Add(@{date=$date;from=[string]$d.parana.from;to=[string]$d.parana.to;after=[string]$d.parana.after;before=[string]$d.parana.before;sunriseTithi=$sunTithi})}
     foreach($festival in @($d.festival)){if($festival -and [string]$festival.name -match "Mahadvadasi"){$mahadvadasi.Add(@{date=$date;subtype=[string]$festival.name})}}
    }
    $records.Add(@{city=$city.slug;year=$year;lat=$lat;lng=$lng;timezone=$tz;days=$days.Count;fasts=@($fast.ToArray());parana=@($parana.ToArray());mahadvadasi=@($mahadvadasi.ToArray())})

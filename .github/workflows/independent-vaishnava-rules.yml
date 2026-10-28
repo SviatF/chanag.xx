@@ -4,6 +4,7 @@ on:
   pull_request:
     paths:
       - "lib/independent-vaishnava-rule-screen.ts"
+      - "lib/ekadashi-observance-research.ts"
       - "tests/independent-vaishnava-rule-screen.test.ts"
       - "scripts/independent-vaishnava-annual-compare.ts"
       - ".github/workflows/independent-vaishnava-rules.yml"
@@ -13,6 +14,7 @@ jobs:
     timeout-minutes: 30
     permissions:
       contents: read
+      actions: read
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -26,12 +28,16 @@ jobs:
           GH_TOKEN: ${{ github.token }}
         run: |
           gh run download 40515382389 -R ${{ github.repository }} -n gcal-native-all-city-years -D artifacts/native
+      - name: Download pinned original GCal 19 after-only XML proof
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh run download 40681650611 -R ${{ github.repository }} -n original-gcal-19-parana-clock-proof -D artifacts/native-proof
       - name: Compare independent Swiss astronomical rules against actual GCal dates
-        run: npx tsx scripts/independent-vaishnava-annual-compare.ts --input=artifacts/native/native-city-year-summary.json --shard=0/16
+        run: npx tsx scripts/independent-vaishnava-annual-compare.ts --input=artifacts/native/native-city-year-summary.json --proof=artifacts/native-proof/original-gcal-clock-proof.json --shard=0/16
       - if: always()
         uses: actions/upload-artifact@v4
         with:
           name: independent-vaishnava-rule-gaps
-          path: artifacts/gcal-rule-screen.json
+          path: artifacts/independent-454/shard-00.json
           if-no-files-found: warn
           retention-days: 14

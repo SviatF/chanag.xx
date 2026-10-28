@@ -70,6 +70,12 @@ export type EkadashiMethodDiagnostic={
   repeatedEkadashiAtFollowingSunrise:boolean;
   closestSunriseBoundarySeconds:number;
   closestArunodayaBoundarySeconds:number;
+  /** Sensitivity only: ±5m changes are NOT substitutes for a verified GCal horizon. */
+  fiveMinuteTithiSensitivity:{
+   sunrise:{minusFive:number;plusFive:number};
+   arunodaya:{minusFive:number;plusFive:number};
+   followingSunrise:{minusFive:number;plusFive:number}
+  };
   nearFiveMinuteAstronomicalBoundary:boolean;
   dwadashiNextSunrise:boolean;
   hariVasara: {dwadashiStart:Time;dwadashiEnd:Time;firstQuarterEnds:Time;researchEarliestPostSunriseAndQuarter:Time;validOrder:boolean}|null;
@@ -108,6 +114,10 @@ export function compareEkadashiArunodaya(city:City,date:string):EkadashiMethodDi
     if(following<=sunrise||following-sunrise>1.2)throw Error("Invalid following sunrise sequence");
     const arunodaya=sunrise-ARUNODAYA_MINUTES_BEFORE_SUNRISE/1440;
     const atRise=tithiAt(swed,sunrise),atArunodaya=tithiAt(swed,arunodaya),atNext=tithiAt(swed,following);
+    const bracket=(jd:number)=>({minusFive:tithiAt(swed,jd-5/1440),
+      plusFive:tithiAt(swed,jd+5/1440)});
+    const fiveMinuteTithiSensitivity={sunrise:bracket(sunrise),
+      arunodaya:bracket(arunodaya),followingSunrise:bracket(following)};
     const sunriseNakshatra=nakshatraAt(sunrise),followingNakshatra=nakshatraAt(following);
     const ekadashi=atRise===10||atRise===25;
     const dashami=atArunodaya===9||atArunodaya===24;
@@ -143,6 +153,7 @@ export function compareEkadashiArunodaya(city:City,date:string):EkadashiMethodDi
       dashamiArunodayaScreen,sunriseAndArunodayaDisagree:atRise!==atArunodaya,
       repeatedEkadashiAtFollowingSunrise:ekadashi&&atRise===atNext,
       closestSunriseBoundarySeconds:riseDistance,closestArunodayaBoundarySeconds:dawnDistance,
+      fiveMinuteTithiSensitivity,
       nearFiveMinuteAstronomicalBoundary:Math.min(riseDistance,dawnDistance)<=300,
       dwadashiNextSunrise,hariVasara,
       conventionProfile:EKADASHI_METHOD_PROFILE,
