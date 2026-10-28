@@ -8,6 +8,7 @@ on:
       - "scripts/adjudicate-gcal-jpl-model-windows.mjs"
       - "tests/gcal-jpl-tithi-root-triage.test.ts"
       - "tests/adjudicate-gcal-jpl-model-windows.test.mjs"
+      - "tsconfig.jpl-research.json"
       - ".github/workflows/gcal-jpl-tithi-root-triage.yml"
 permissions:
   contents: read
@@ -27,7 +28,7 @@ jobs:
       - name: Install pinned repository calculation dependencies
         run: npm install --legacy-peer-deps --no-audit --no-fund
       - name: Type-check research comparator and existing application before long quality CI
-        run: npx tsc --noEmit
+        run: npx tsc --noEmit --project tsconfig.jpl-research.json
       - name: Unit-test original GCal IST clocks, JPL exact 12-degree roots and safeguards
         run: npx vitest run tests/gcal-jpl-tithi-root-triage.test.ts
       - name: Download original GCal 11 XML for every disputed event
