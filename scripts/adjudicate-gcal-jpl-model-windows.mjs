@@ -6,20 +6,19 @@
  */
 import {readFileSync,writeFileSync,mkdirSync} from "node:fs";
 import {dirname} from "node:path";
-const same=(a:number,b:number)=>Number.isInteger(a)&&Number.isInteger(b)&&a===b;
-const assert=(v:boolean,msg:string)=>{if(!v)throw Error("GCal/JPL case triage: "+msg)};
+const assert=(v,msg)=>{if(!v)throw Error("GCal/JPL case triage: "+msg)};
 const dayMs=86400000;
-const key=(city:string,year:number,date:string)=>city+"/"+year+"/"+date;
-export function adjudicateGcalJplModelWindows(data:any,expected=172){
+const key=(city,year,date)=>city+"/"+year+"/"+date;
+export function adjudicateGcalJplModelWindows(data,expected=172){
  assert(data?.status==="GCAL_JPL_DE440S_SWISS_TITHI_RESEARCH_DIAGNOSED"&&
   data.publicRitualApproval===false&&data.independentlyCertified===false&&
   data.coverage?.caseRows===expected,"invalid original three-model science-only source");
- const rows=new Map<string,any>();
+ const rows=new Map();
  for(const r of data.everyMatchedRawGcalDawnRow){
   const k=key(r.city,r.year,r.date);
   assert(!rows.has(k),"duplicate original-source datum "+k);rows.set(k,r);
  }
- const cases=[],totals:Record<string,number>={},typeCounts:Record<string,Record<string,number>>={fast:{},subtype:{},both:{}};
+ const cases=[],totals={},typeCounts={fast:{},subtype:{},both:{}};
  let verifiedFast=0,verifiedSubtype=0,partiallyObserved=0;
  for(const target of data.disputedEventRows){
   const base=Date.parse(target.date+"T00:00:00Z");
