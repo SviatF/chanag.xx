@@ -13,6 +13,7 @@ on:
       - "tests/native-gcal-comparison.test.ts"
       - "scripts/independent-vaishnava-annual-compare.ts"
       - "scripts/compare-gcal-original-dawn.mjs"
+      - "tests/compare-gcal-original-dawn.test.mjs"
       - "scripts/aggregate-independent-454.mjs"
       - "scripts/verify-independent-454-research-gate.mjs"
       - "scripts/adjudicate-independent-454.mjs"
@@ -91,6 +92,8 @@ jobs:
         run: node scripts/verify-independent-454-research-gate.mjs artifacts/previous-summary/independent-454-summary.json artifacts/independent-454-summary.json artifacts/previous-454 artifacts/independent-454 artifacts/independent-454-regression-gate.json
       - name: Adjudicate every remaining mismatch without masking scientific uncertainty
         run: node scripts/adjudicate-independent-454.mjs artifacts/independent-454 artifacts/independent-454-summary.json artifacts/independent-454-adjudication.json
+      - name: Verify original GCal vs Swiss Tithi index normalization
+        run: node --test tests/compare-gcal-original-dawn.test.mjs
       - name: Download original GCal 11 source dawn XML for all remaining disputed events
         env:
           GH_TOKEN: ${{ github.token }}
