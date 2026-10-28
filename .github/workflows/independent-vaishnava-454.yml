@@ -46,7 +46,7 @@ jobs:
       - name: Fetch pinned original GCal XML after-only Parana proof
         env:
           GH_TOKEN: ${{ github.token }}
-        run: gh run download 40680871432 -R ${{ github.repository }} -n original-gcal-19-parana-clock-proof -D artifacts/native-proof
+        run: gh run download 40681650611 -R ${{ github.repository }} -n original-gcal-19-parana-clock-proof -D artifacts/native-proof
       - name: Independent astronomical Parana and Mahadvadashi — partition
         run: npx tsx scripts/independent-vaishnava-annual-compare.ts --input=artifacts/native/native-city-year-summary.json --proof=artifacts/native-proof/original-gcal-clock-proof.json --shard=${{ matrix.shard }}/16
       - if: always()
