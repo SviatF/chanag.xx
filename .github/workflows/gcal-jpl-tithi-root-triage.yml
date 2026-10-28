@@ -26,6 +26,8 @@ jobs:
           node-version: "24"
       - name: Install pinned repository calculation dependencies
         run: npm install --legacy-peer-deps --no-audit --no-fund
+      - name: Type-check research comparator and existing application before long quality CI
+        run: npx tsc --noEmit
       - name: Unit-test original GCal IST clocks, JPL exact 12-degree roots and safeguards
         run: npx vitest run tests/gcal-jpl-tithi-root-triage.test.ts
       - name: Download original GCal 11 XML for every disputed event
