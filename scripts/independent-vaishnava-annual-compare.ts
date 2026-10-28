@@ -61,7 +61,12 @@ for(const record of source.records){
    for(let n=-1;n<=8;n++){
     const d=addIsoDays(date,n),o=observe(d);
     days.push({date:d,sunriseIndex:o.sunriseTithiIndex,arunodayaIndex:o.arunodayaTithiIndex,
-      nearBoundary:o.nearFiveMinuteAstronomicalBoundary,nakshatraIndex:o.sunriseNakshatraIndex,
+      nearBoundary:o.nearFiveMinuteAstronomicalBoundary,
+      tithiSunriseSensitivity:o.fiveMinuteTithiSensitivity.sunrise,
+      tithiArunodayaSensitivity:o.fiveMinuteTithiSensitivity.arunodaya,
+      closestSunriseBoundarySeconds:o.closestSunriseBoundarySeconds,
+      closestArunodayaBoundarySeconds:o.closestArunodayaBoundarySeconds,
+      nakshatraIndex:o.sunriseNakshatraIndex,
       nearNakshatraBoundary:o.sunriseNakshatraBoundaryMinutes<=5});
    }
    const classifier=classifyMahadvadashiSequence(days,date);
@@ -95,6 +100,7 @@ for(const record of source.records){
     independentArunodayaTithiIndex:obs.arunodayaTithiIndex,
     independentSunriseNakshatraIndex:obs.sunriseNakshatraIndex,
     sunriseNakshatraBoundaryMinutes:obs.sunriseNakshatraBoundaryMinutes,
+    independentFiveMinuteSensitivity:obs.fiveMinuteTithiSensitivity,
     boundarySensitiveResearchCase:boundarySensitive,
     independentResearchAmbiguities:classifier.researchAmbiguities,
     independentlyScreenedFast:screen.tentativeFastEligibility,
