@@ -1,0 +1,78 @@
+name: PANCHVANI JPL DE440s vs original GCal Tithi roots (NON-PUBLISHING)
+on:
+  workflow_dispatch:
+  pull_request:
+    paths:
+      - "lib/gcal-jpl-tithi-root-triage.ts"
+      - "scripts/gcal-jpl-tithi-root-triage.ts"
+      - "scripts/adjudicate-gcal-jpl-model-windows.mjs"
+      - "tests/gcal-jpl-tithi-root-triage.test.ts"
+      - "tests/adjudicate-gcal-jpl-model-windows.test.mjs"
+      - "tsconfig.jpl-research.json"
+      - ".github/workflows/gcal-jpl-tithi-root-triage.yml"
+permissions:
+  contents: read
+  actions: read
+concurrency:
+  group: panchvani-jpl-gcal-tithi-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+jobs:
+  jpl-original-gcal-tithi:
+    runs-on: ubuntu-latest
+    timeout-minutes: 35
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "24"
+      - name: Install pinned repository calculation dependencies
+        run: npm install --legacy-peer-deps --no-audit --no-fund
+      - name: Type-check research comparator and existing application before long quality CI
+        run: npx tsc --noEmit --project tsconfig.jpl-research.json
+      - name: Unit-test original GCal IST clocks, JPL exact 12-degree roots and safeguards
+        run: npx vitest run tests/gcal-jpl-tithi-root-triage.test.ts
+      - name: Download original GCal 11 XML for every disputed event
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh run download 40684054890 -R ${{ github.repository }} -n gcal-original-dawn-mismatch-raw-xml -D artifacts/original-gcal
+      - name: Download the proven 16-shard 908-city-year Swiss/Moshier baseline
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh run download 40684909084 -R ${{ github.repository }} -p 'independent-454-shard-*' -D artifacts/verified-shards
+          mkdir -p artifacts/independent-shards
+          find artifacts/verified-shards -type f -name 'shard-??.json' -exec cp -t artifacts/independent-shards {} +
+          test "$(find artifacts/independent-shards -name 'shard-??.json' | wc -l)" -eq 16
+      - name: Compare JPL geocentric Tithi states at both original GCal and Swiss UTC sunrise clocks
+        run: >
+          npx tsx scripts/gcal-jpl-tithi-root-triage.ts
+          --original=artifacts/original-gcal/original-gcal-dawn-trace.json
+          --shards=artifacts/independent-shards
+          --output=artifacts/gcal-jpl-de440s-tithi-audit.json
+      - name: Validate all cases are attributed by observed physical Tithi-model evidence, not ritual guesswork
+        run: |
+          node --test tests/adjudicate-gcal-jpl-model-windows.test.mjs
+          node scripts/adjudicate-gcal-jpl-model-windows.mjs artifacts/gcal-jpl-de440s-tithi-audit.json artifacts/gcal-jpl-de440s-case-adjudication.json
+      - name: Enforce research-only status and exact 172-case adjudication coverage
+        run: |
+          node --input-type=module -e '
+          import {readFileSync} from "node:fs";
+          const v=JSON.parse(readFileSync("artifacts/gcal-jpl-de440s-tithi-audit.json","utf8"));
+          if(v.coverage?.caseRows!==172||v.coverage?.independentResearchCityYears!==908||
+             v.coverage?.originalDistinctDisputedEventDates!==172||v.coverage?.sourceAffectedCityYears!==100||
+             v.tithiRootOffsets?.count<1||v.coverage?.sameInstantRows!==1360||
+             v.coverage?.originalSourceDaysWithoutIndependentTrace!==0||
+             v.coverage?.independentlyRecalculatedSwissDawnRows!==216||v.publicRitualApproval!==false||
+             v.independentlyCertified!==false||v.tithiModelSelectedForPublicCalendar!==false)
+             throw Error("Pinned original GCal/JPL/Swiss scientific evidence incomplete or falsely certified");
+          console.log("PASS pinned independent JPL Tithi evidence",v.coverage);
+          '
+      - if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: gcal-jpl-de440s-exact-tithi-root-evidence
+          path: |
+            artifacts/gcal-jpl-de440s-tithi-audit.json
+            artifacts/gcal-jpl-de440s-case-adjudication.json
+          if-no-files-found: error
+          retention-days: 30
