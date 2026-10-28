@@ -11,7 +11,12 @@ on:
       - "tests/native-gcal-comparison.test.ts"
       - "scripts/independent-vaishnava-annual-compare.ts"
       - "scripts/aggregate-independent-454.mjs"
+      - "scripts/verify-independent-454-research-gate.mjs"
+      - "tests/verify-independent-454-research-gate.test.mjs"
       - ".github/workflows/independent-vaishnava-454.yml"
+concurrency:
+  group: research-454-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
 jobs:
   independent-454:
     strategy:
@@ -22,6 +27,7 @@ jobs:
     timeout-minutes: 55
     permissions:
       contents: read
+      actions: read
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -51,8 +57,11 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       contents: read
+      actions: read
     steps:
       - uses: actions/checkout@v4
+      - name: Test the fail-closed research comparison gate
+        run: node --test tests/verify-independent-454-research-gate.test.mjs
       - name: Download all current-run research shards
         uses: actions/download-artifact@v4
         with:
@@ -61,9 +70,22 @@ jobs:
           merge-multiple: true
       - name: Validate entire research coverage and write counts
         run: node scripts/aggregate-independent-454.mjs artifacts/independent-454 artifacts/independent-454-summary.json
-      - uses: actions/upload-artifact@v4
+      - name: Download last verified research baseline (16 exact shards)
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh run download 40560045297 -R ${{ github.repository }} -p 'independent-454-shard-*' -D artifacts/previous-454
+      - name: Download pinned baseline summary (last successful run)
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh run download 40560045297 -R ${{ github.repository }} -n independent-454-aggregate-report -D artifacts/previous-summary
+      - name: Block any calendar / Parana regression and require genuine parity progress
+        run: node scripts/verify-independent-454-research-gate.mjs artifacts/previous-summary/independent-454-summary.json artifacts/independent-454-summary.json artifacts/previous-454 artifacts/independent-454 artifacts/independent-454-regression-gate.json
+      - if: always()
+        uses: actions/upload-artifact@v4
         with:
           name: independent-454-aggregate-report
-          path: artifacts/independent-454-summary.json
+          path: |
+            artifacts/independent-454-summary.json
+            artifacts/independent-454-regression-gate.json
           if-no-files-found: error
           retention-days: 14

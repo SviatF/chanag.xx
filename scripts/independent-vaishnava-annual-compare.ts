@@ -10,7 +10,7 @@ import {compareEkadashiArunodaya} from "../lib/ekadashi-observance-research";
 import {calculateVratCalendar} from "../lib/vrat";
 import {addIsoDays} from "../lib/india-time";
 import {independentlyScreenVaishnavaDay} from "../lib/independent-vaishnava-rule-screen";
-import {classifyMahadvadashiSequence,identifySourceMahadvadashi} from "../lib/independent-mahadvadashi";
+import {classifyMahadvadashiSequence,identifySourceMahadvadashi,identifySourceNakshatra} from "../lib/independent-mahadvadashi";
 import {independentParanaAstronomy} from "../lib/independent-parana-astronomy";
 import {calculateIndependentParana,minutesBetween,researchParanaMethodFromIndependentKind} from "../lib/independent-parana";
 import {isGcalEkadashiFast,isoGcalNativeDate,shardFor} from "../lib/native-gcal-comparison";
@@ -58,38 +58,50 @@ for(const record of source.records){
   try{
    const obs=observe(date),screen=independentlyScreenVaishnavaDay(obs);
    const days=[];
-   for(let n=-1;n<=6;n++){
+   for(let n=-1;n<=8;n++){
     const d=addIsoDays(date,n),o=observe(d);
     days.push({date:d,sunriseIndex:o.sunriseTithiIndex,arunodayaIndex:o.arunodayaTithiIndex,
-      nearBoundary:o.nearFiveMinuteAstronomicalBoundary});
+      nearBoundary:o.nearFiveMinuteAstronomicalBoundary,nakshatraIndex:o.sunriseNakshatraIndex,
+      nearNakshatraBoundary:o.sunriseNakshatraBoundaryMinutes<=5});
    }
    const classifier=classifyMahadvadashiSequence(days,date);
+   const boundarySensitive=classifier.researchAmbiguities.length>0;
    const expected=fastDays.has(date);
    const sourceType=sourceTypes.get(date)??null;
    const sourceKind=sourceType?identifySourceMahadvadashi(sourceType):null;
-   const sameSourceKind=sourceKind===null?classifier.kind===null:sourceKind===classifier.kind;
+   const sameSourceKind=sourceKind===null?classifier.kind===null:
+    sourceKind==="NAKSHATRA_REVIEW"?classifier.kind===sourceKind&&classifier.nakshatraSubtype===identifySourceNakshatra(sourceType??""):
+    sourceKind===classifier.kind;
    let referenceParana=null,computedParana=null;
    if(expected){
     const paraDate=addIsoDays(date,1);
     const p=oracleParana.get(paraDate);
     if(p){
      referenceParana=p;
-     const inputs=independentParanaAstronomy(city,date,paraDate);
+     const inputs=independentParanaAstronomy(city,date,paraDate,classifier.nakshatraSubtype);
      // Oracle subtypes are comparison labels ONLY, never inputs to independently select a method.
-     const method=researchParanaMethodFromIndependentKind(classifier.kind);
-     computedParana=inputs?calculateIndependentParana({...inputs,method}):null;
+     const method=researchParanaMethodFromIndependentKind(classifier.kind,obs.sunriseTithiIndex,obs.followingSunriseTithiIndex);
+     computedParana=inputs?calculateIndependentParana({...inputs,method,nakshatraSubtype:classifier.nakshatraSubtype}):null;
     }
    }
    // Compare ordinary numerical windows only when BOTH independent prediction and
    // source identify an ordinary case. Keep special mismatches in the gap ledger.
-   const normalMethodPair=sourceKind===null&&classifier.kind===null;
+   const normalMethodPair=sameSourceKind&&
+    computedParana?.status==="calculated-research-only";
    const residualStart=normalMethodPair&&computedParana?.from&&referenceParana?.from?minutesBetween(computedParana.from,referenceParana.from):null;
    const residualEnd=normalMethodPair&&computedParana?.to&&referenceParana?.to?minutesBetween(computedParana.to,referenceParana.to):null;
    rows.push({date,gcalEkadashiFast:expected,independentFastCandidate:classifier.fastCandidates.iskcon,
+    independentResearchReason:classifier.reason,independentSunriseTithiIndex:obs.sunriseTithiIndex,
+    independentArunodayaTithiIndex:obs.arunodayaTithiIndex,
+    independentSunriseNakshatraIndex:obs.sunriseNakshatraIndex,
+    sunriseNakshatraBoundaryMinutes:obs.sunriseNakshatraBoundaryMinutes,
+    boundarySensitiveResearchCase:boundarySensitive,
+    independentResearchAmbiguities:classifier.researchAmbiguities,
     independentlyScreenedFast:screen.tentativeFastEligibility,
     mismatch:expected!==Boolean(classifier.fastCandidates.iskcon===date),
-    subtype:classifier.kind,sourceSubtype:sourceType,subtypeMatch:sameSourceKind,
+    subtype:classifier.kind,nakshatraSubtype:classifier.nakshatraSubtype,sourceSubtype:sourceType,subtypeMatch:sameSourceKind,
     normalParanaMethodComparable:normalMethodPair,paranaMethodProvenance:"independent-classifier",
+    researchDawnSequence:(expected!==Boolean(classifier.fastCandidates.iskcon===date)||!!sourceType&&!sameSourceKind)?days:null,
     gcalParana:referenceParana,calculatedParana:computedParana,
     startResidualMinutes:residualStart,endResidualMinutes:residualEnd,
     certified:false});
@@ -99,7 +111,9 @@ for(const record of source.records){
    unrelatedSourceFastsExcluded:unrelated,sourceParanaEvents:record.parana.length,
    sourceMahadvadashiEvents:record.mahadvadasi.length,observations:rows.length,
    mismatchedCandidates:rows.filter(x=>x.mismatch).length,
+   boundarySensitiveMismatches:rows.filter(x=>x.mismatch&&x.boundarySensitiveResearchCase).length,
    unconfirmedSubtypes:rows.filter(x=>x.sourceSubtype&&x.subtypeMatch!==true).length,
+   independentOnlySubtypeCandidates:rows.filter(x=>x.subtype&&!x.sourceSubtype).length,
    pairedParana:rows.filter(x=>x.gcalParana).length,
    comparedParanaStart:rows.filter(x=>x.startResidualMinutes!==null).length,
    comparedParanaEnd:rows.filter(x=>x.endResidualMinutes!==null).length,
@@ -117,7 +131,9 @@ const report={status:failures.length?"INCOMPLETE":"FULL_SHARD_RESEARCH_COMPARISO
  totals:{sourceEkadashiFasts:results.reduce((n,x)=>n+x.sourceEkadashiFasts,0),
  unrelatedSourceFastsExcluded:results.reduce((n,x)=>n+x.unrelatedSourceFastsExcluded,0),
  candidateMismatches:results.reduce((n,x)=>n+x.mismatchedCandidates,0),
+ boundarySensitiveCandidateMismatches:results.reduce((n,x)=>n+x.boundarySensitiveMismatches,0),
  subtypeMismatches:results.reduce((n,x)=>n+x.unconfirmedSubtypes,0),
+ independentOnlySubtypeCandidates:results.reduce((n,x)=>n+x.independentOnlySubtypeCandidates,0),
  paranaStartComparisons:results.reduce((n,x)=>n+x.comparedParanaStart,0),
  paranaEndComparisons:results.reduce((n,x)=>n+x.comparedParanaEnd,0),
  paranaStartOverFiveMinutes:results.reduce((n,x)=>n+x.residualStartOverFive,0),
