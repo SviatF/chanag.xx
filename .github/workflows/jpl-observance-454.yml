@@ -95,7 +95,11 @@ jobs:
              x.priority.unmilani20270304.length<13||
              x.priority.vijaya20270911And12.length<3||
              x.independentlyCertified!==false||x.publicRitualApproval!==false||
-             x.paranaNotRecomputedForJpl!==true)
+             x.paranaNotRecomputedForJpl!==true||
+             x.counts.tithiOnly.dateRegressed!==0||
+             x.counts.tithiOnly.subtypeRegressed!==0||
+             x.counts.tithiOnly.dateResolved<1||
+             x.counts.tithiOnly.subtypeResolved<1)
              throw Error("JPL 454-city observance evidence invalid");
           console.log("[JPL observance] 908 city-years and 128/104 original gaps audited");
           '
