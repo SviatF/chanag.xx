@@ -24,9 +24,12 @@ const nearest=(roots:readonly [number,number][],at:number)=>{
  return Math.min(lo>0?Math.abs(roots[lo-1][0]-at):Infinity,
   lo<roots.length?Math.abs(roots[lo][0]-at):Infinity);
 };
+const tithiCache=new WeakMap<JplHalfTithiTable,readonly [number,number][]>();
 /** A real 12-degree Moon-Sun transition, not a 6-degree Karana edge. */
 export function nearestJplTithiBoundaryMs(table:JplHalfTithiTable,at:number){
- return nearest(table.halfTithiTransitions.filter(([,index])=>index%2===0),at);
+ let edges=tithiCache.get(table);
+ if(!edges){edges=table.halfTithiTransitions.filter(([,index])=>index%2===0);tithiCache.set(table,edges);}
+ return nearest(edges,at);
 }
 export function researchDawn(
  obs:ResearchDawnInput,table:JplHalfTithiTable,
