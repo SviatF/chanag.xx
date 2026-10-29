@@ -1,0 +1,108 @@
+name: PANCHVANI JPL-driven ISKCON observance 454 cities (RESEARCH)
+on:
+  workflow_dispatch:
+  pull_request:
+    paths:
+      - "lib/jpl-observance-research.ts"
+      - "scripts/jpl-observance-annual-compare.ts"
+      - "scripts/aggregate-jpl-observance-454.mjs"
+      - "tests/jpl-observance-research.test.ts"
+      - ".github/workflows/jpl-observance-454.yml"
+permissions:
+  contents: read
+  actions: read
+concurrency:
+  group: jpl-iskcon-454-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+jobs:
+  independent-jpl-observance:
+    strategy:
+      fail-fast: false
+      matrix:
+        shard: [0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15]
+    runs-on: ubuntu-latest
+    timeout-minutes: 70
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "24"
+      - name: Install existing pinned dependencies
+        run: npm install --legacy-peer-deps --no-audit --no-fund
+      - name: Download original GCal 11 native 454 cities x 2026/27 source
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh run download 40515382389 -R ${{ github.repository }} -n gcal-native-all-city-years -D artifacts/native
+      - name: Download original GCal 19 genuine after-only raw XML proofs
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh run download 40681650611 -R ${{ github.repository }} -n original-gcal-19-parana-clock-proof -D artifacts/native-proof
+      - name: Download SHA-verified JPL sidereal catalog and Swiss Lahiri anchors
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh run download 40780053825 -R ${{ github.repository }} -n wave3ao-global-jpl-sidereal-roots-2026-2028-research-only -D artifacts/pinned-sidereal
+      - name: Test JPL Tithi and Nakshatra input separation
+        run: npx vitest run tests/jpl-observance-research.test.ts
+      - name: Independently recompute fasting candidates for each city-year
+        run: >
+          npx tsx scripts/jpl-observance-annual-compare.ts
+          --input=artifacts/native/native-city-year-summary.json
+          --proof=artifacts/native-proof/original-gcal-clock-proof.json
+          --catalog=artifacts/pinned-sidereal/wave3ao-jpl-global-sidereal-transitions.json
+          --anchors=artifacts/pinned-sidereal/wave3ao-lahiri-6h-anchors.json
+          --shard=${{ matrix.shard }}/16
+      - if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: jpl-iskcon-454-shard-${{ matrix.shard }}
+          path: artifacts/jpl-observance-454/shard-*.json
+          if-no-files-found: warn
+          retention-days: 30
+  aggregate:
+    name: Full 908 city-year GCal source case census (NON-PUBLISHING)
+    needs: independent-jpl-observance
+    if: ${{ always() && needs.independent-jpl-observance.result == 'success' }}
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      actions: read
+    steps:
+      - uses: actions/checkout@v4
+      - name: Fetch locked original Swiss baseline
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh run download 40684909084 -R ${{ github.repository }} -p 'independent-454-shard-*' -D artifacts/source-shards
+          mkdir -p artifacts/old
+          find artifacts/source-shards -type f -name 'shard-??.json' -exec cp -t artifacts/old {} +
+          test "$(find artifacts/old -name 'shard-??.json' | wc -l)" -eq 16
+      - name: Download all 16 JPL research shards
+        uses: actions/download-artifact@v4
+        with:
+          pattern: jpl-iskcon-454-shard-*
+          path: artifacts/new
+          merge-multiple: true
+      - name: Count exact old resolved and newly introduced disagreements
+        run: node scripts/aggregate-jpl-observance-454.mjs artifacts/old artifacts/new artifacts/jpl-observance-454-aggregate.json
+      - name: Enforce original 128 fasting / 104 subtype exhaustive case accounting
+        run: |
+          node --input-type=module -e '
+          import {readFileSync} from "node:fs";
+          const x=JSON.parse(readFileSync("artifacts/jpl-observance-454-aggregate.json","utf8"));
+          if(x.coverage.cities!==454||x.coverage.cityYears!==908||
+             x.counts.originalDateMismatches!==128||
+             x.counts.originalSourceSubtypeMismatches+x.counts.originalExtraSubtypes!==104||
+             x.priority.unmilani20270304.length<13||
+             x.priority.vijaya20270911And12.length<3||
+             x.independentlyCertified!==false||x.publicRitualApproval!==false||
+             x.paranaNotRecomputedForJpl!==true)
+             throw Error("JPL 454-city observance evidence invalid");
+          console.log("[JPL observance] 908 city-years and 128/104 original gaps audited");
+          '
+      - if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: jpl-iskcon-454-complete-comparison-and-priority-cases
+          path: artifacts/jpl-observance-454-aggregate.json
+          if-no-files-found: error
+          retention-days: 30
