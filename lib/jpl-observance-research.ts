@@ -18,13 +18,13 @@ export type ResearchDawnInput={
  sunriseNakshatraIndex:number;sunriseNakshatraBoundaryMinutes:number;
  nearFiveMinuteAstronomicalBoundary:boolean
 };
-const nearest=(roots:readonly [number,number][],at:number)=>{
+const nearest=(roots:ReadonlyArray<readonly [number,number]>,at:number)=>{
  let lo=0,hi=roots.length;
  while(lo<hi){const mid=(lo+hi)>>>1;if(roots[mid][0]<at)lo=mid+1;else hi=mid;}
  return Math.min(lo>0?Math.abs(roots[lo-1][0]-at):Infinity,
   lo<roots.length?Math.abs(roots[lo][0]-at):Infinity);
 };
-const tithiCache=new WeakMap<JplHalfTithiTable,readonly [number,number][]>();
+const tithiCache=new WeakMap<JplHalfTithiTable,ReadonlyArray<readonly [number,number]>>();
 /** A real 12-degree Moon-Sun transition, not a 6-degree Karana edge. */
 export function nearestJplTithiBoundaryMs(table:JplHalfTithiTable,at:number){
  let edges=tithiCache.get(table);
