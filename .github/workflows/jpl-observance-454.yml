@@ -7,6 +7,7 @@ on:
       - "scripts/jpl-observance-annual-compare.ts"
       - "scripts/aggregate-jpl-observance-454.mjs"
       - "tests/jpl-observance-research.test.ts"
+      - "tsconfig.jpl-observance-research.json"
       - ".github/workflows/jpl-observance-454.yml"
 permissions:
   contents: read
@@ -29,6 +30,8 @@ jobs:
           node-version: "24"
       - name: Install existing pinned dependencies
         run: npm install --legacy-peer-deps --no-audit --no-fund
+      - name: Strict fast compile of research-only JPL physical dawn adapter and 454 comparator
+        run: npx tsc --noEmit --project tsconfig.jpl-observance-research.json
       - name: Download original GCal 11 native 454 cities x 2026/27 source
         env:
           GH_TOKEN: ${{ github.token }}
