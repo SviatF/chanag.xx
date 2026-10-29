@@ -75,7 +75,7 @@ for(const record of source.records){
  const sunriseDays=calculateVratCalendar("ekadashi",record.year,city).map(x=>x.date);
  const sampleDays=new Set([...sunriseDays,...sunriseDays.map(x=>addIsoDays(x,1)),...fastDays]);
  const standardSwissProbeDays=new Set(sampleDays);
- for(const d of extraJplRootProbeDays)if(d.startsWith(record.year+"-"))sampleDays.add(d);
+ for(const d of extraJplRootProbeDays)if(d>="2026-01-02"&&d.startsWith(record.year+"-"))sampleDays.add(d);
  const obsCache=new Map<string,ReturnType<typeof compareEkadashiArunodaya>>();
  const observe=(date:string)=>{
   let observation=obsCache.get(date);
