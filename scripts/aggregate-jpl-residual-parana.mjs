@@ -9,8 +9,9 @@ const [root,out]=process.argv.slice(2);
 ok(root&&out,"usage: node aggregate-jpl-residual-parana.mjs SHARDS OUT");
 const fs=readdirSync(root).filter(f=>/^residual-\d{2}\.json$/.test(f)).sort();
 ok(fs.length===16,"Expected all 16 JPL physical residual/parana shards");
-const shards=new Set(),years=0,sourceFast=0,priorDate=0,priorSubtype=0,
- cases=[],parana=[],counter={},byDay=new Map(),risk={UNMILANI:[],VIJAYA:[]};
+const shards=new Set();
+let years=0,priorDate=0,priorSubtype=0;
+const cases=[],parana=[],counter={},byDay=new Map(),risk={UNMILANI:[],VIJAYA:[]};
 const seenCases=new Set(),seenParana=new Set();
 for(const path of fs){
  const o=JSON.parse(readFileSync(join(root,path),"utf8"));
