@@ -1,0 +1,121 @@
+name: PANCHVANI JPL remaining 84/73 and Parana physical research
+on:
+  workflow_dispatch:
+  pull_request:
+    paths:
+      - "lib/jpl-parana-astronomy.ts"
+      - "scripts/jpl-residual-parana-shard.ts"
+      - "scripts/aggregate-jpl-residual-parana.mjs"
+      - "scripts/reconcile-jpl-gcal-unmilani-vijaya.mjs"
+      - "tests/jpl-parana-454-research.test.ts"
+      - "tsconfig.jpl-parana-research.json"
+      - ".github/workflows/jpl-residual-parana-454.yml"
+permissions:
+  contents: read
+  actions: read
+concurrency:
+  group: jpl-residual-parana-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+jobs:
+  independent-jpl-parana:
+    strategy:
+      fail-fast: false
+      matrix:
+        shard: [0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15]
+    runs-on: ubuntu-latest
+    timeout-minutes: 65
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "24"
+      - name: Install existing repository calculation dependencies
+        run: npm install --legacy-peer-deps --no-audit --no-fund
+      - name: Strict TypeScript proof of JPL physical Parana inputs
+        run: npx tsc --noEmit --project tsconfig.jpl-parana-research.json
+      - name: Independent JPL Dvadasi and Swiss Parana solar clocks unit tests
+        run: npx vitest run tests/jpl-parana-454-research.test.ts
+      - name: Download pinned old PANCHVANI full-city JPL Tithi plus Swiss Nakshatra control
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: >
+          gh run download 40869821643
+          -R ${{ github.repository }}
+          -n jpl-iskcon-454-shard-${{ matrix.shard }}
+          -D artifacts/pinned-source
+      - name: Compute exact independent JPL numerical Parana and residual fast/subtype Tithi windows
+        run: >
+          npx tsx scripts/jpl-residual-parana-shard.ts
+          --input=artifacts/pinned-source/shard-$(printf '%02d' ${{ matrix.shard }}).json
+          --output=artifacts/jpl-residual-parana/residual-$(printf '%02d' ${{ matrix.shard }}).json
+      - if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: jpl-parana-residual-shard-${{ matrix.shard }}
+          path: artifacts/jpl-residual-parana/residual-*.json
+          if-no-files-found: warn
+          retention-days: 30
+  aggregate:
+    needs: independent-jpl-parana
+    if: ${{ always() && needs.independent-jpl-parana.result == 'success' }}
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+      - name: Retrieve all 16 non-publishing original source-relative Parana science outputs
+        uses: actions/download-artifact@v4
+        with:
+          pattern: jpl-parana-residual-shard-*
+          path: artifacts/parana-16
+          merge-multiple: true
+      - name: Enforce 84/73 residual, 11 Unmilani, 3 Vijaya and 22246 original source event census
+        run: node scripts/aggregate-jpl-residual-parana.mjs artifacts/parana-16 artifacts/jpl-residual-parana-454-final.json
+      - if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: jpl-residual-parana-454-full-scientific-casebook
+          path: artifacts/jpl-residual-parana-454-final.json
+          if-no-files-found: error
+          retention-days: 30
+
+  source-dawn-adjudication:
+    name: Pin GCal original clocks against JPL 11 Unmilani and 3 Vijaya
+    needs: aggregate
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      actions: read
+    steps:
+      - uses: actions/checkout@v4
+      - name: Download completed JPL physical 454-city residual and Parana casebook
+        uses: actions/download-artifact@v4
+        with:
+          name: jpl-residual-parana-454-full-scientific-casebook
+          path: artifacts/research
+      - name: Download original pinned GCal 11 sunrise and Arunodaya XML for disputed city years
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh run download 40684054890 -R ${{ github.repository }} -n gcal-original-dawn-mismatch-raw-xml -D artifacts/gcal
+      - name: Download physical JPL DE440s 6-degree Tithi transition roots
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh run download 40780053825 -R ${{ github.repository }} -n wave3af-v6-global-jpl-tithi-karana-and-dynamic-impact -D artifacts/jpl
+      - name: Download JPL Moon Nakshatra sidereal catalog and Swiss Lahiri anchor provenance
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh run download 40780053825 -R ${{ github.repository }} -n wave3ao-global-jpl-sidereal-roots-2026-2028-research-only -D artifacts/sidereal
+      - name: Validate all 14 original XML scientific boundary cases at their own GCal UTC dawn
+        run: >
+          node scripts/reconcile-jpl-gcal-unmilani-vijaya.mjs
+          --gcal=artifacts/gcal/original-gcal-dawn-trace.json
+          --jpl=artifacts/jpl/wave3af-jpl-global-tithi-transitions.json
+          --sidereal=artifacts/sidereal/wave3ao-jpl-global-sidereal-transitions.json
+          --residual=artifacts/research/jpl-residual-parana-454-final.json
+          --output=artifacts/original-gcal-jpl-unmilani-vijaya-exact-proof.json
+      - uses: actions/upload-artifact@v4
+        with:
+          name: gcal-original-jpl-exact-unmilani-11-vijaya-3-source-proof
+          path: artifacts/original-gcal-jpl-unmilani-vijaya-exact-proof.json
+          if-no-files-found: error
+          retention-days: 30
