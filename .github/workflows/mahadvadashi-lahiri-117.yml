@@ -87,7 +87,12 @@ jobs:
           if(x.coverage.caseRows!==117||c.PAKSHA_VARDHINI.events!==27||
              c.TRISPRSHA.events!==22||c.VYANJULI.events!==10||
              c.UNMILANI.events!==11||c.VIJAYA.events!==3||
-             c.DATE_ONLY.events!==44||x.publicRitualApproval!==false||
+             c.DATE_ONLY.events!==44||
+             c.TRISPRSHA.currentSunriseSourceTithiDisagree!==22||
+             c.PAKSHA_VARDHINI.futureFullMoonSourceTithiDisagree<25||
+             c.VYANJULI.nextSunriseSourceTithiDisagree<7||
+             c.UNMILANI.previousArunodayaSourceTithiDisagree<10||
+             x.publicRitualApproval!==false||
              x.permissionToPublish!==false)
              throw Error("Incomplete original physical source boundary and Mahadvadashi census");
           console.log("PASS physical evidence and source-subtype case review",c);
