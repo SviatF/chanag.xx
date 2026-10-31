@@ -86,7 +86,7 @@ for(const c of d.allCasePhysicalDawnEvidence){
  const following=details.find(x=>x.date===next),previous=details.find(x=>x.date===prior);
  const futureMoon=details.filter(x=>x.date>c.date&&
   (x.originalGcalTithiAtOriginalSunrise%15===14||
-   x.pinnedJplTithiAtSameOriginalSunrise%15===14||x.mismatch));
+   x.pinnedJplTithiAtSameOriginalSunrise%15===14));
  const futureDiff=futureMoon.filter(x=>x.mismatch);
  const hasAny=details.some(x=>x.mismatch||x.originalArunodayaTithiDisagreement);
  const close=details.some(x=>(x.mismatch&&x.within120SecondsOfJplSixDegreeRoot)||
