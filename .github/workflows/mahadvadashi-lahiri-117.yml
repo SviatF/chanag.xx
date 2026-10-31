@@ -6,6 +6,7 @@ on:
       - "lib/mahadvadashi-documented-rule-research.ts"
       - "lib/direct-swiss-lahiri-nakshatra-research.ts"
       - "scripts/audit-117-mahadvadashi-lahiri.ts"
+      - "scripts/adjudicate-original-gcal-jpl-117-boundaries.mjs"
       - "tests/mahadvadashi-documented-lahiri-research.test.ts"
       - "tsconfig.mahadvadashi-lahiri-research.json"
       - ".github/workflows/mahadvadashi-lahiri-117.yml"
@@ -62,6 +63,35 @@ jobs:
           --catalog=artifacts/sidereal/wave3ao-jpl-global-sidereal-transitions.json
           --anchors=artifacts/sidereal/wave3ao-lahiri-6h-anchors.json
           --output=artifacts/independent-lahiri-117-report.json
+      - name: Download SHA-pinned JPL physical 4512 six-degree Tithi roots
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: >
+          gh run download 40780053825
+          -R ${{ github.repository }}
+          -n wave3af-v6-global-jpl-tithi-karana-and-dynamic-impact
+          -D artifacts/jpl-roots
+      - name: Compare original GCal exact UTC sunrise and Arunodaya against JPL for all 117 residuals and future Moon windows
+        run: >
+          node scripts/adjudicate-original-gcal-jpl-117-boundaries.mjs
+          --residual=artifacts/cases/jpl-residual-parana-454-final.json
+          --gcal=artifacts/gcal/original-gcal-dawn-trace.json
+          --jpl=artifacts/jpl-roots/wave3af-jpl-global-tithi-transitions.json
+          --output=artifacts/independent-117-future-boundary-source-provenance.json
+      - name: Verify original source 27 Paksha-vardhini, 22 Trisprsha, 10 Vyanjuli, 11 Unmilani, 3 Vijaya clusters
+        run: |
+          node --input-type=module -e '
+          import {readFileSync} from "node:fs";
+          const x=JSON.parse(readFileSync("artifacts/independent-117-future-boundary-source-provenance.json","utf8"));
+          const c=x.classification;
+          if(x.coverage.caseRows!==117||c.PAKSHA_VARDHINI.events!==27||
+             c.TRISPRSHA.events!==22||c.VYANJULI.events!==10||
+             c.UNMILANI.events!==11||c.VIJAYA.events!==3||
+             c.DATE_ONLY.events!==44||x.publicRitualApproval!==false||
+             x.permissionToPublish!==false)
+             throw Error("Incomplete original physical source boundary and Mahadvadashi census");
+          console.log("PASS physical evidence and source-subtype case review",c);
+          '
       - name: Fail closed if any source case lacks independently computed astronomy or if production flags turn true
         run: |
           node --input-type=module -e '
@@ -82,6 +112,8 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: independent-117-gcal-rule-predicates-and-direct-lahiri-root-research
-          path: artifacts/independent-lahiri-117-report.json
+          path: |
+            artifacts/independent-lahiri-117-report.json
+            artifacts/independent-117-future-boundary-source-provenance.json
           if-no-files-found: error
           retention-days: 30
