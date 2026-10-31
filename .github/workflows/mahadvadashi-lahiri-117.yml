@@ -1,0 +1,87 @@
+name: PANCHVANI independent Lahiri & documented Mahadvadashi — 117 remaining cases
+on:
+  workflow_dispatch:
+  pull_request:
+    paths:
+      - "lib/mahadvadashi-documented-rule-research.ts"
+      - "lib/direct-swiss-lahiri-nakshatra-research.ts"
+      - "scripts/audit-117-mahadvadashi-lahiri.ts"
+      - "tests/mahadvadashi-documented-lahiri-research.test.ts"
+      - "tsconfig.mahadvadashi-lahiri-research.json"
+      - ".github/workflows/mahadvadashi-lahiri-117.yml"
+permissions:
+  contents: read
+  actions: read
+concurrency:
+  group: independent-lahiri-rule-117-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+jobs:
+  independent-astronomical-rule-proof:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "24"
+      - name: Install pinned repository astronomy calculation dependencies
+        run: npm install --legacy-peer-deps --no-audit --no-fund
+      - name: Strict independent Lahiri and GCal decision table TypeScript check
+        run: npx tsc --noEmit --project tsconfig.mahadvadashi-lahiri-research.json
+      - name: Test original GCal documented Unmilani/Trisprsha/Vyanjuli/Paksha-vardhini/Vijaya predicates
+        run: npx vitest run tests/mahadvadashi-documented-lahiri-research.test.ts
+      - name: Download prior full 454-city 84/73 JPL root and Parana residual casebook
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: >
+          gh run download 41063824469
+          -R ${{ github.repository }}
+          -n jpl-residual-parana-454-full-scientific-casebook
+          -D artifacts/cases
+      - name: Download ORIGINAL pinned GCal 11 sunrise and Arunodaya XML (comparison only)
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: >
+          gh run download 40684054890
+          -R ${{ github.repository }}
+          -n gcal-original-dawn-mismatch-raw-xml
+          -D artifacts/gcal
+      - name: Download SHA-locked JPL DE440s catalog and Swiss Lahiri six-hour anchor source
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: >
+          gh run download 40780053825
+          -R ${{ github.repository }}
+          -n wave3ao-global-jpl-sidereal-roots-2026-2028-research-only
+          -D artifacts/sidereal
+      - name: Independently reconstruct all 117 physical dawn/sunset predicates and solve 3 Swiss Lahiri ingress roots
+        run: >
+          npx tsx scripts/audit-117-mahadvadashi-lahiri.ts
+          --residual=artifacts/cases/jpl-residual-parana-454-final.json
+          --gcal=artifacts/gcal/original-gcal-dawn-trace.json
+          --catalog=artifacts/sidereal/wave3ao-jpl-global-sidereal-transitions.json
+          --anchors=artifacts/sidereal/wave3ao-lahiri-6h-anchors.json
+          --output=artifacts/independent-lahiri-117-report.json
+      - name: Fail closed if any source case lacks independently computed astronomy or if production flags turn true
+        run: |
+          node --input-type=module -e '
+          import {readFileSync} from "node:fs";
+          const r=JSON.parse(readFileSync("artifacts/independent-lahiri-117-report.json","utf8"));
+          if(r.coverage.cityYearsFromParent!==908||r.coverage.citiesFromParent!==454||
+             r.coverage.uniqueSourceComparisonCases!==117||
+             r.coverage.fastingDateDisagreements!==84||
+             r.coverage.bidirectionalSubtypeDisagreements!==73||
+             r.calculations.directSwissLahiriVijayaIngressRoots.length!==3||
+             r.independentlyCertified!==false||r.publicRitualApproval!==false||
+             r.approvedForSEO!==false||r.ayanamsaIndependentlyCertified!==false||
+             r.changingFastingDateApproved!==false)
+             throw Error("Incomplete or falsely certified Lahiri and Gaudiya Mahadvadashi scientific proof");
+          console.log("Independent 117-case, 908-city-year parent and 3 original Vijaya ingress proof PASS");
+          '
+      - if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: independent-117-gcal-rule-predicates-and-direct-lahiri-root-research
+          path: artifacts/independent-lahiri-117-report.json
+          if-no-files-found: error
+          retention-days: 30
