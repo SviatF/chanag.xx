@@ -29,7 +29,7 @@ const params=Object.fromEntries(process.argv.slice(2).map(x=>{
 const required=["residual","gcal","catalog","anchors","output"];
 for(const n of required)if(!params[n])throw Error("Missing science input --"+n);
 const read=(n:string)=>JSON.parse(readFileSync(params[n],"utf8"));
-const check=(yes:boolean,err:string)=>{if(!yes)throw Error("Independent 117-case Mahadvadashi/Lahiri audit: "+err);};
+const check=(yes:boolean,err:string):asserts yes=>{if(!yes)throw Error("Independent 117-case Mahadvadashi/Lahiri audit: "+err);};
 const residual=read("residual"),gcal=read("gcal");
 check(residual.status==="JPL_TITHI_RESIDUAL_AND_PARANA_FULL_454_RESEARCH_COMPLETE"&&
  residual.coverage?.cities===454&&residual.coverage?.cityYears===908&&
@@ -108,7 +108,7 @@ const rootSigned=[];
 try{
  for(const c of residual.allCasePhysicalDawnEvidence){
   const key=sourceEventKey(c.city,c.date),src=original.get(key);
-  check(Boolean(src),"original GCal exact source sunrise missing for residual "+key);
+  check(src!==undefined,"original GCal exact source sunrise missing for residual "+key);
   const city=findCityBySlug(c.city)!;
   check(Math.abs(city.lat-src.latitude)<0.01&&Math.abs(city.lng-src.longitude)<0.01,
    "original GCal city longitude or latitude differs "+key);
@@ -177,7 +177,7 @@ try{
    originalSourceLabelsOnlyUsedAfterIndependentComputation:true});
   if(c.vijaya20270912){
    const next=original.get(sourceEventKey(c.city,"2027-09-13"));
-   check(Boolean(next),"original GCal following Vijaya sunrise source is missing "+c.city);
+   check(next!==undefined,"original GCal following Vijaya sunrise source is missing "+c.city);
    const at=gcalClock("2027-09-13",next.sunriseXml,"sunrise");
    const near=sidereal.table.events.nakshatra.find(([t,idx])=>
      idx===22&&t>=Date.UTC(2027,8,12)&&t<=Date.UTC(2027,8,14));
