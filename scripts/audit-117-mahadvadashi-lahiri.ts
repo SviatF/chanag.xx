@@ -47,7 +47,10 @@ check(jpl.halfTithiBoundaryCount===4512&&
  JPL_V6_ROOTS_ASSET_SHA256==="0cab0c6accaf2e2125fe417bf4a4f14a22453a4013a1609dce6dce84ec44142e"&&
  sidereal.researchOnly===true&&sidereal.table.fullIndependentAyanamsaApproved===false,
  "missing verified JPL moon phase and anchored Lahiri source identity");
-const original=new Map(gcal.dailySourceEvidence.map((r:{city:string;date:string})=>[r.city+"/"+r.date,r]));
+type GcalOriginalDay={city:string;year:number;date:string;latitude:number;longitude:number;
+ sunriseXml:string;arunodayaXml:string;sunsetXml:string};
+const original=new Map<string,GcalOriginalDay>(
+ (gcal.dailySourceEvidence as GcalOriginalDay[]).map(r=>[r.city+"/"+r.date,r]));
 const days=new Map<string,IndependentRuleDay>();
 const sunriseUtc=new Map<string,number>();
 const sourceEventKey=(city:string,date:string)=>city+"/"+date;
