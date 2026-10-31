@@ -29,7 +29,7 @@ const params=Object.fromEntries(process.argv.slice(2).map(x=>{
 const required=["residual","gcal","catalog","anchors","output"];
 for(const n of required)if(!params[n])throw Error("Missing science input --"+n);
 const read=(n:string)=>JSON.parse(readFileSync(params[n],"utf8"));
-const check=(yes:boolean,err:string):asserts yes=>{if(!yes)throw Error("Independent 117-case Mahadvadashi/Lahiri audit: "+err);};
+function check(yes:boolean,err:string):asserts yes {if(!yes)throw Error("Independent 117-case Mahadvadashi/Lahiri audit: "+err);}
 const residual=read("residual"),gcal=read("gcal");
 check(residual.status==="JPL_TITHI_RESIDUAL_AND_PARANA_FULL_454_RESEARCH_COMPLETE"&&
  residual.coverage?.cities===454&&residual.coverage?.cityYears===908&&
